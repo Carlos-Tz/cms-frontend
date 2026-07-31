@@ -1,0 +1,172 @@
+---
+---
+
+<section id="simulador" class="section simulador">
+	<div class="container simulador-grid">
+		<div class="section-head simulador-copy">
+			<span class="eyebrow">Simulador de ahorro</span>
+			<h2 class="section-title">Calcula cuánto ahorras al migrar a <span class="accent">GNC</span></h2>
+			<p class="simulador-text">
+				Compara tu gasto actual en diésel o gasolina contra el costo equivalente en gas natural
+				vehicular y descubre el ahorro mensual estimado para tu flota.
+			</p>
+		</div>
+
+		<form class="card simulador-card" data-simulador>
+			<div class="field">
+				<label for="consumo">Consumo mensual (litros)</label>
+				<input id="consumo" name="consumo" type="number" min="0" step="1" value="1000" required />
+			</div>
+			<div class="field">
+				<label for="precio-actual">Precio actual por litro (MXN)</label>
+				<input id="precio-actual" name="precioActual" type="number" min="0" step="0.1" value="24.5" required />
+			</div>
+			<div class="field">
+				<label for="precio-gnc">Precio equivalente GNC por litro (MXN)</label>
+				<input id="precio-gnc" name="precioGnc" type="number" min="0" step="0.1" value="14.9" required />
+				<span class="hint">Precio de referencia; se ajusta según convenio y volumen.</span>
+			</div>
+
+			<div class="simulador-result">
+				<div class="simulador-result-item">
+					<span class="simulador-result-label">Gasto actual</span>
+					<span class="simulador-result-value" data-result="gastoActual">$0</span>
+				</div>
+				<div class="simulador-result-item">
+					<span class="simulador-result-label">Gasto con GNC</span>
+					<span class="simulador-result-value" data-result="gastoGnc">$0</span>
+				</div>
+				<div class="simulador-result-item simulador-result-item--highlight">
+					<span class="simulador-result-label">Ahorro mensual estimado</span>
+					<span class="simulador-result-value simulador-result-value--highlight" data-result="ahorro">$0</span>
+				</div>
+			</div>
+		</form>
+	</div>
+</section>
+
+<style>
+	.simulador-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 3rem;
+		align-items: center;
+	}
+
+	.simulador-copy .section-head {
+		margin-bottom: 0;
+	}
+
+	.simulador-text {
+		margin-top: 1rem;
+		color: var(--color-text-60);
+		font-size: 1rem;
+		max-width: 30rem;
+	}
+
+	.simulador-card {
+		padding: 2rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1.25rem;
+	}
+
+	.field label {
+		display: block;
+		margin-bottom: 0.3rem;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--color-text-60);
+	}
+	.field input {
+		width: 100%;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-alt);
+		padding: 0.65rem 0.85rem;
+		font-size: 0.95rem;
+		color: var(--color-text);
+	}
+	.field input:focus {
+		outline: none;
+		border-color: var(--color-red);
+	}
+	.field .hint {
+		display: block;
+		margin-top: 0.3rem;
+		font-size: 0.75rem;
+		color: var(--color-text-40);
+	}
+
+	.simulador-result {
+		border-top: 1px solid var(--color-border);
+		padding-top: 1.25rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+	.simulador-result-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		font-size: 0.95rem;
+	}
+	.simulador-result-label {
+		color: var(--color-text-60);
+	}
+	.simulador-result-value {
+		font-weight: 700;
+	}
+	.simulador-result-item--highlight {
+		border-radius: var(--radius-md);
+		background: rgba(200, 16, 46, 0.08);
+		padding: 0.75rem 1rem;
+		margin-top: 0.25rem;
+	}
+	.simulador-result-value--highlight {
+		color: var(--color-red);
+		font-size: 1.15rem;
+	}
+
+	@media (max-width: 860px) {
+		.simulador-grid {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+		}
+	}
+</style>
+
+<script>
+	function formatCurrency(value: number) {
+		return value.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
+	}
+
+	function initSimulador(form: HTMLFormElement) {
+		const consumo = form.querySelector<HTMLInputElement>("#consumo")!;
+		const precioActual = form.querySelector<HTMLInputElement>("#precio-actual")!;
+		const precioGnc = form.querySelector<HTMLInputElement>("#precio-gnc")!;
+		const gastoActualEl = form.querySelector<HTMLElement>('[data-result="gastoActual"]')!;
+		const gastoGncEl = form.querySelector<HTMLElement>('[data-result="gastoGnc"]')!;
+		const ahorroEl = form.querySelector<HTMLElement>('[data-result="ahorro"]')!;
+
+		function recalc() {
+			const litros = Number(consumo.value) || 0;
+			const actual = Number(precioActual.value) || 0;
+			const gnc = Number(precioGnc.value) || 0;
+
+			const gastoActual = litros * actual;
+			const gastoGnc = litros * gnc;
+			const ahorro = Math.max(gastoActual - gastoGnc, 0);
+
+			gastoActualEl.textContent = formatCurrency(gastoActual);
+			gastoGncEl.textContent = formatCurrency(gastoGnc);
+			ahorroEl.textContent = formatCurrency(ahorro);
+		}
+
+		[consumo, precioActual, precioGnc].forEach((input) => input.addEventListener("input", recalc));
+		form.addEventListener("submit", (event) => event.preventDefault());
+		recalc();
+	}
+
+	document.querySelectorAll<HTMLFormElement>("[data-simulador]").forEach(initSimulador);
+</script>

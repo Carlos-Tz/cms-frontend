@@ -1,0 +1,141 @@
+function e(e,t,n,i){Object.defineProperty(e,t,{get:n,set:i,enumerable:!0,configurable:!0})}function t(e){return e&&e.__esModule?e.default:e}var n=globalThis.parcelRequired477,i=n.register;i("jGizm",function(e,t){n("bLswh");var i=n("2zscg");let r=new WeakMap;e.exports.transformPreFilteredExtensions=e=>{if(!e||0===e.length)return[];if(r.has(e))return r.get(e);let t=(e||[]).flatMap(e=>e&&e.environmentKey?[{id:e.id,appId:e.appId,key:e.key,environmentId:e.environmentId,environmentType:e.environmentType===i.ExtensionEnvironment.DEVELOPMENT||e.environmentType===i.ExtensionEnvironment.STAGING||e.environmentType===i.ExtensionEnvironment.PRODUCTION?e.environmentType:i.ExtensionEnvironment.DEVELOPMENT,environmentKey:e.environmentKey,properties:e.properties.reduce((e,t)=>{if(!t.value||!t.key)return e;try{let n=JSON.parse(t.value);e[t.key]=n}catch(n){e[t.key]=t.value}return e},{}),license:e.license?{...e.license,capabilitySet:"CAPABILITY_ADVANCED"===e.license.capabilitySet?"capabilityAdvanced":"capabilityStandard"}:null,userAccess:e.userAccess?{hasAccess:e.userAccess.hasAccess??!1,enabled:e.userAccess.enabled??!1}:null,type:e.type,installationId:e.installationId,appVersion:e.appVersion??void 0,consentUrl:e.consentUrl??void 0,migrationKey:e.migrationKey??void 0,egress:e.egress?.flatMap(e=>e.type&&e.addresses?[{type:e.type,addresses:e.addresses?.flatMap(e=>e??[]),category:e.category??void 0,inScopeEUD:e.inScopeEUD??void 0}]:[])??void 0,sandboxPolicies:e.sandboxPolicies??void 0,scopes:e.scopes??void 0,installationConfig:e.installationConfig?.flatMap(e=>e?.key&&null!==e.value?[{key:e.key,value:e.value}]:[])??void 0,dataClassificationPolicyDecision:{status:"APP_ACCESS_RULES"===e.hiddenBy?"BLOCKED":"ALLOWED"}}]:[]);return r.set(e,t),t}}),i("bLswh",function(t,i){e(t.exports,"ProductEnvironment",()=>n("hBxDy").ProductEnvironment),e(t.exports,"ForgeCDNEnvironment",()=>n("hBxDy").ForgeCDNEnvironment),e(t.exports,"ExtensionEnvironment",()=>n("2zscg").ExtensionEnvironment),e(t.exports,"ConfluenceExtension",()=>n("2zscg").ConfluenceExtension),e(t.exports,"JiraExtension",()=>n("2zscg").JiraExtension),n("9iaDP"),n("2zscg"),n("hBxDy"),n("gwrSD"),n("hcYP2"),n("31kME"),n("d8yi8")}),i("9iaDP",function(t,i){e(t.exports,"ProductEnvironment",()=>n("hBxDy").ProductEnvironment),e(t.exports,"ForgeCDNEnvironment",()=>n("hBxDy").ForgeCDNEnvironment),e(t.exports,"BitbucketExtension",()=>n("2zscg").BitbucketExtension),e(t.exports,"ConfluenceExtension",()=>n("2zscg").ConfluenceExtension),e(t.exports,"ExtensionEnvironment",()=>n("2zscg").ExtensionEnvironment),e(t.exports,"JiraExtension",()=>n("2zscg").JiraExtension),n("2y56N"),n("hBxDy"),n("iztBQ"),n("2zscg")}),i("2y56N",function(e,t){}),i("iztBQ",function(e,t){}),i("2zscg",function(e,t){var n,i=((n={}).DEVELOPMENT="DEVELOPMENT",n.STAGING="STAGING",n.PRODUCTION="PRODUCTION",n);e.exports.ExtensionEnvironment=i,e.exports.ConfluenceExtension={BYLINE:"confluence:contentBylineItem",CONTEXT_MENU:"confluence:contextMenu",CONTENT_ACTION:"confluence:contentAction",FULL_PAGE:"confluence:fullPage",GLOBAL_PAGE:"confluence:globalPage",GLOBAL_SETTINGS:"confluence:globalSettings",HOMEPAGE_FEED:"confluence:homepageFeed",SPACE_PAGE:"confluence:spacePage",SPACE_SETTINGS:"confluence:spaceSettings",CUSTOM_CONTENT:"confluence:customContent",MACRO:"xen:macro",TEST_MODULE:"test:module"},e.exports.JiraExtension={BACKLOG_ACTION:"jira:backlogAction",BOARD_ACTION:"jira:boardAction",PERSONAL_SETTINGS_PAGE:"jira:personalSettingsPage",FULL_PAGE:"jira:fullPage",ISSUE_PANEL:"jira:issuePanel",ISSUE_ACTION:"jira:issueAction",ISSUE_GLANCE:"jira:issueGlance",ISSUE_CONTEXT:"jira:issueContext",ISSUE_ACTIVITY:"jira:issueActivity",UI_MODIFICATIONS:"jira:uiModifications",CUSTOM_FIELD:"jira:customField",CUSTOM_FIELD_TYPE:"jira:customFieldType",ADMIN_PAGE:"jira:adminPage",GLOBAL_PAGE:"jira:globalPage",PROJECT_PAGE:"jira:projectPage",PROJECT_SETTINGS_PAGE:"jira:projectSettingsPage",DASHBOARD_BACKGROUND_SCRIPT:"jira:dashboardBackgroundScript",ISSUE_VIEW_BACKGROUND_SCRIPT:"jira:issueViewBackgroundScript",DASHBOARD_GADGET:"jira:dashboardGadget",WORKFLOW_VALIDATOR:"jira:workflowValidator",WORKFLOW_CONDITION:"jira:workflowCondition",WORKFLOW_POST_FUNCTION:"jira:workflowPostFunction",SERVICE_DESK_QUEUE_PAGE:"jiraServiceManagement:queuePage",SERVICE_DESK_ORGANIZATION_PANEL:"jiraServiceManagement:organizationPanel"},e.exports.BitbucketExtension={CUSTOM_MERGE_CHECK:"bitbucket:mergeCheck",DYNAMIC_PIPELINES_PROVIDER:"bitbucket:dynamicPipelinesProvider",REPOSITORY_CODE_FILE_VIEWER:"bitbucket:repoCodeFileViewer",REPOSITORY_CODE_OVERVIEW_CARD:"bitbucket:repoCodeOverviewCard",REPOSITORY_CODE_OVERVIEW_ACTION:"bitbucket:repoCodeOverviewAction",REPOSITORY_CODE_OVERVIEW_PANEL:"bitbucket:repoCodeOverviewPanel",REPOSITORY_PULL_REQUEST_CARD:"bitbucket:repoPullRequestCard",REPOSITORY_PULL_REQUEST_ACTION:"bitbucket:repoPullRequestAction",REPOSITORY_PULL_REQUEST_OVERVIEW_PANEL:"bitbucket:repoPullRequestOverviewPanel",REPOSITORY_MAIN_MENU_PAGE:"bitbucket:repoMainMenuPage",REPOSITORY_SETTINGS_MENU_PAGE:"bitbucket:repoSettingsMenuPage",PROJECT_SETTINGS_MENU_PAGE:"bitbucket:projectSettingsMenuPage",WORKSPACE_GLOBAL_PAGE:"bitbucket:workspaceGlobalPage",WORKSPACE_PERSONAL_SETTINGS_PAGE:"bitbucket:workspacePersonalSettingsPage",WORKSPACE_SETTINGS_MENU_PAGE:"bitbucket:workspaceSettingsMenuPage"}}),i("gwrSD",function(e,t){n("d8yi8"),n("31kME"),n("hcYP2")}),i("d8yi8",function(e,t){}),i("31kME",function(e,t){}),i("hcYP2",function(e,t){var n,i;(n={}).AdminPage="compass:adminPage",n.ComponentPage="compass:componentPage",n.TeamPage="compass:teamPage",n.ComponentImporter="compass:componentImporter",(i={}).AppConfigurationPage="appConfigurationPage",i.OnboardingFlow="onboardingFlow"}),i("isuYJ",function(e,t){e.exports.conditionalHooksFactory=function(e,t,i){let r=(...o)=>{let a=e(),s=globalThis[n("d5Ozc").CACHE_MAP_KEY];return(s.has(r)||s.set(r,a),s.get(r))?t(...o):i(...o)};return r}}),i("d5Ozc",function(e,t){let n="__conditionalHooksFactory_conditionCacheMap_dont_modify_this_manually_unless_you_want_react_to_blow_up";globalThis[n]=globalThis[n]||new WeakMap,e.exports.CACHE_MAP_KEY=n}),i("6ojvx",function(e,t){var i=n("cozmU");n("bLswh");var r=n("hBxDy");let o=(0,i.createContext)(r.ProductEnvironment.PRODUCTION);e.exports.EnvironmentContext=o}),i("ix7El",function(e,t){var n,i=((n={}).Container="CONTAINER",n.DataClassificationTag="DATA_CLASSIFICATION_TAG",n.ExtensionType="EXTENSION_TYPE",n.PrincipalType="PRINCIPAL_TYPE",n.AppIdEnvironmentId="APP_ID_ENVIRONMENT_ID",n);e.exports.GQLExtensionContextsFilterType=i,e.exports.isRelayNetworkError=e=>e instanceof Error&&"RelayNetwork"===e.name&&"source"in e&&Array.isArray(e.source?.errors),e.exports.isGQLGatewayError=e=>e.extensions&&e.extensions.errorSource&&"GRAPHQL_GATEWAY"===e.extensions.errorSource,e.exports.isGQLUnderlyingServiceError=e=>e.extensions&&e.extensions.errorSource&&"UNDERLYING_SERVICE"===e.extensions.errorSource}),i("iGKcz",function(e,t){e.exports.createAtlAttributionHeader=e=>JSON.stringify({atlWorkspaceAri:e,service:"forge-ui"})}),i("DIyeF",function(e,i){var r=n("gtMdU"),o=n("bDgLe"),a=n("cozmU");let s=(0,a.createContext)({environment:void 0,product:"",page:""}),c=(0,r.isReactCompilerActivePlatform)()?e=>{let i,r,c,l=(0,o.c)(9),{value:d,children:u}=e,E=(0,a.useContext)(n("6ojvx").EnvironmentContext),{product:p,page:g,environment:f}=d;l[0]!==E||l[1]!==f||l[2]!==g||l[3]!==p?(i=()=>({environment:f??E,product:p,page:g}),r=[g,f,E,p],l[0]=E,l[1]=f,l[2]=g,l[3]=p,l[4]=i,l[5]=r):(i=l[4],r=l[5]);let y=(0,n("5xQdV").useMemoOne)(i,r);return l[6]!==u||l[7]!==y?(c=t(a).createElement(s.Provider,{value:y},u),l[6]=u,l[7]=y,l[8]=c):c=l[8],c}:({value:e,children:i})=>{let r=(0,a.useContext)(n("6ojvx").EnvironmentContext),{product:o,page:c,environment:l}=e,d=(0,n("5xQdV").useMemoOne)(()=>({environment:l??r,product:o,page:c}),[c,l,r,o]);return t(a).createElement(s.Provider,{value:d},i)},l=((0,r.isReactCompilerActivePlatform)(),()=>(0,a.useContext)(s));e.exports.MetricsContext=s,e.exports.MetricsContextProvider=c,e.exports.useMetricsContext=l}),i("4K6lC",function(e,i){var r=n("gtMdU"),o=n("bDgLe"),a=n("cozmU"),s=n("852mP");let c="forge-ui",l=e=>t=>{switch(t.eventType){case s.UI_EVENT_TYPE:Promise.resolve(e).then(e=>e.sendUIEvent(t));break;case s.OPERATIONAL_EVENT_TYPE:Promise.resolve(e).then(e=>e.sendOperationalEvent(t));break;case s.TRACK_EVENT_TYPE:Promise.resolve(e).then(e=>e.sendTrackEvent(t));break;case s.SCREEN_EVENT_TYPE:Promise.resolve(e).then(e=>e.sendScreenEvent(t))}};function d(e){return(e.find(e=>e&&e.forgeUIAnalyticsContext)??{}).forgeUIAnalyticsContext??{}}function u(e){return e.reduce((e,t)=>{let n=t&&t.forgeUIAttributes&&"object"==typeof t.forgeUIAttributes?t.forgeUIAttributes:{},i=e.forgeUIAttributes.extensionKey,r=n.extensionKey,o=e.overriddenExtensionKey??(i&&r&&i!==r?i:void 0);return{forgeUIAttributes:{...e.forgeUIAttributes,...n},overriddenExtensionKey:o}},{forgeUIAttributes:{}})}let E=(0,r.isReactCompilerActivePlatform)()?e=>{let i,r,s,E=(0,o.c)(8),{children:g,client:f,commonAttributes:y}=e;E[0]!==y?(i=void 0===y?{}:y,E[0]=y,E[1]=i):i=E[1];let m=i;E[2]!==f||E[3]!==m?(r=e=>{let t,{eventType:i,data:r}=e.payload,{action:o,actionSubject:a,actionSubjectId:s,attributes:c,tags:E,source:g}=r,y=d(e.context),A=g??y.source??"unknown";if(n("cXtTj").default.getExperimentValue("platform_forge_nesting_analytics","isEnabled",!1)){let{forgeUIAttributes:n,overriddenExtensionKey:i}=u(e.context),r={};"rendered"===o&&"forge.ui.renderer"===a&&n.isEmbeddedMacro&&i?r={parentExtensionKey:i}:"rendered"===o&&"forge.ui.embedded_nonforge_macro"===a&&c?.extensionKey&&n.extensionKey&&(r={parentExtensionKey:n.extensionKey}),t={...n,...r}}let x={action:o,actionSubject:a,actionSubjectId:s,...y,source:A,attributes:{...m,...t??e.context.reduce(p,{}),...c},tags:E};l(f)({eventType:i,...x})},E[2]=f,E[3]=m,E[4]=r):r=E[4];let A=r;return E[5]!==g||E[6]!==A?(s=t(a).createElement(n("3d3WW").default,{onEvent:A,channel:c},g),E[5]=g,E[6]=A,E[7]=s):s=E[7],s}:({children:e,client:i,commonAttributes:r={}})=>t(a).createElement(n("3d3WW").default,{onEvent:e=>{let t,{eventType:o,data:a}=e.payload,{action:s,actionSubject:c,actionSubjectId:E,attributes:p,tags:g,source:f}=a,y=d(e.context),m=f??y.source??"unknown";if(n("cXtTj").default.getExperimentValue("platform_forge_nesting_analytics","isEnabled",!1)){let{forgeUIAttributes:n,overriddenExtensionKey:i}=u(e.context),r={};"rendered"===s&&"forge.ui.renderer"===c&&n.isEmbeddedMacro&&i?r={parentExtensionKey:i}:"rendered"===s&&"forge.ui.embedded_nonforge_macro"===c&&p?.extensionKey&&n.extensionKey&&(r={parentExtensionKey:n.extensionKey}),t={...n,...r}}let A={action:s,actionSubject:c,actionSubjectId:E,...y,source:m,attributes:{...r,...t??e.context.reduce((e,t)=>{let n=t&&t.forgeUIAttributes&&"object"==typeof t.forgeUIAttributes?t.forgeUIAttributes:{};return{...e,...n}},{}),...p},tags:g};l(i)({eventType:o,...A})},channel:c},e);function p(e,t){let n=t&&t.forgeUIAttributes&&"object"==typeof t.forgeUIAttributes?t.forgeUIAttributes:{};return{...e,...n}}e.exports.FORGE_UI_ANALYTICS_CHANNEL=c,e.exports.sendEvent=l,e.exports.default=E}),i("2rD5H",function(e,t){let i=e=>`[
+    ${e.map(e=>`"${e}"`).join(", ")}
+  ]`,r=(0,n("iLX84").default)`query FetchPreFilteredForgeAppsQuery($cloudId:ID!$context:ConfluenceExtensionRenderingContextInput$includeHidden:Boolean$locale:String$types:[String]){confluence_forgeExtensionsByType(cloudId:$cloudId context:$context includeHidden:$includeHidden locale:$locale types:$types){id appId appVersion appOwner environmentId environmentType environmentKey consentUrl migrationKey userAccess{enabled hasAccess}key properties{key value}egress{addresses category type inScopeEUD}sandboxPolicies scopes license{active capabilitySet billingPeriod ccpEntitlementId ccpEntitlementSlug isEvaluation subscriptionEndDate trialEndDate type}type installationId hiddenBy}}`;e.exports.getExtensionListQueryOld=(e,t,r)=>{let o=t?.map(e=>`"${e}"`)||["$type"],a=(0,n("iDrrr").fg)("platform-forge-ui-useraccess-in-extension-query")?`userAccess {
+    enabled
+    hasAccess
+  }`:"",s=`
+  query forge_ui_extensionList($contextIds: [ID!]!${t?"":", $type: String!"}, $locale: String) {
+    extensionContexts(contextIds: $contextIds) {
+      id
+      ${o.map(t=>`
+        extensionsByType(type: ${t}, locale: $locale ) {
+          id
+          appId
+          key
+          ${e?`appOwner {
+            name
+          }`:""}
+          environmentId
+          environmentType
+          environmentKey
+          properties
+          license {
+            active
+            type
+            supportEntitlementNumber
+            trialEndDate
+            subscriptionEndDate
+            isEvaluation
+            billingPeriod
+            ccpEntitlementId
+            ccpEntitlementSlug
+						capabilitySet
+            modes
+          }
+          ${a}
+          type
+          appVersion
+          installationId
+          migrationKey
+					installationConfig {
+						key
+						value
+					}
+          egress {
+            type
+            addresses
+						category
+						inScopeEUD
+          }
+					sandboxPolicies
+					scopes
+					consentUrl
+					currentUserConsent {
+						user {
+							aaid
+						}
+						appEnvironmentVersion {
+							id
+						}
+						consentedAt
+					}
+					requiresUserConsent
+          ${r&&r.length>0?`
+                dataClassificationPolicyDecision(input: {
+                  dataClassificationTags: ${i(r)}
+                }) {
+                  status
+                }
+              `:""}
+        }`).join("")}
+    }
+  }`;return(0,n("iLX84").default)`${s}`},e.exports.getExtensionListQuery=(e,t)=>{let r=(0,n("iDrrr").fg)("platform-forge-ui-useraccess-in-extension-query")?`userAccess {
+    enabled
+    hasAccess
+  }`:"",o=`
+  query forge_ui_extensionList($contextIds: [ID!]!, $filter: [ExtensionContextsFilter!]!, $locale: String ) {
+    extensionContexts(contextIds: $contextIds) {
+      id
+      extensions(filter: $filter, locale: $locale) @optIn(to: "Access-Narrowing") {
+        id
+        appId
+        key
+        ${e?`appOwner {
+          name
+        }`:""}
+        environmentId
+        environmentType
+        environmentKey
+        properties
+        license {
+          active
+          type
+          supportEntitlementNumber
+          trialEndDate
+          subscriptionEndDate
+          isEvaluation
+          billingPeriod
+          ccpEntitlementId
+          ccpEntitlementSlug
+					capabilitySet
+          modes
+        }
+        ${r}
+        type
+        appVersion
+        installationId
+        migrationKey
+				installationConfig {
+					key
+					value
+				}
+        egress {
+          type
+          addresses
+					category
+					inScopeEUD
+        }
+				sandboxPolicies
+				scopes
+				consentUrl
+				currentUserConsent {
+					user {
+						aaid
+					}
+					appEnvironmentVersion {
+						id
+					}
+					consentedAt
+				}
+				requiresUserConsent
+        ${t&&t.length>0?`
+              dataClassificationPolicyDecision(input: {
+                dataClassificationTags: ${i(t)}
+              }) {
+                status
+              }
+            `:""}
+      },
+    }
+  }`;return(0,n("iLX84").default)`${o}`},e.exports.FetchPreFilteredForgeAppsQuery=r}),i("hzmpb",function(e,t){var i=n("gtMdU"),r=n("bDgLe"),o=n("cozmU"),a=n("6SsN4"),s=n("852mP");let c=(e,t,i,r,o,a,s,c=[e])=>({variables:{cloudId:e,context:t,includeHidden:a??!1,types:r,locale:o},...s,client:i,errorPolicy:"all",context:{headers:{"atl-attribution":(0,n("iGKcz").createAtlAttributionHeader)(c.sort().join())},allowOnExternalPage:!0}}),l=(0,i.isReactCompilerActivePlatform)()?e=>{let t,i,a,l,u,E,g,f,y=(0,r.c)(28),{cloudId:m,context:A,includeHidden:x,locale:_,types:I,client:P,queryOptions:S}=e;y[0]!==P||y[1]!==m||y[2]!==A||y[3]!==x||y[4]!==_||y[5]!==S||y[6]!==I?(t=c(m,A,P,I,_,x,S),y[0]=P,y[1]=m,y[2]=A,y[3]=x,y[4]=_,y[5]=S,y[6]=I,y[7]=t):t=y[7];let b=t,{error:v,loading:C,data:T}=(0,n("5yGfp").useQuery)(n("2rD5H").FetchPreFilteredForgeAppsQuery,b);y[8]!==T||y[9]!==C?(i=d({loading:C,data:T}),y[8]=T,y[9]=C,y[10]=i):i=y[10];let O=i,{page:N}=(0,n("DIyeF").useMetricsContext)(),{createAnalyticsEvent:L}=(0,n("9DHhW").useAnalyticsEvents)();return y[11]!==L||y[12]!==O||y[13]!==N?(a=()=>{O&&L({eventType:s.OPERATIONAL_EVENT_TYPE,data:{action:"succeeded",actionSubject:"forge.ui.webClient",source:N,tags:["forge"],attributes:{target:"usePrefilteredExtensionList"}}}).fire(n("4K6lC").FORGE_UI_ANALYTICS_CHANNEL)},l=[O,N,L],y[11]=L,y[12]=O,y[13]=N,y[14]=a,y[15]=l):(a=y[14],l=y[15]),(0,o.useEffect)(a,l),y[16]!==L||y[17]!==v||y[18]!==O||y[19]!==N?(u=()=>{if(!O&&v&&v.graphQLErrors.length>0){let e=v.graphQLErrors.find(p);L({eventType:s.OPERATIONAL_EVENT_TYPE,data:{action:"failed",actionSubject:"forge.ui.webClient",source:N,tags:["forge"],attributes:{target:"usePrefilteredExtensionList",errorName:e?(0,n("ix7El").isGQLUnderlyingServiceError)(e)?"componentApi":"componentGraphQL":"uncaught"}}}).fire(n("4K6lC").FORGE_UI_ANALYTICS_CHANNEL)}},E=[O,v,N,L],y[16]=L,y[17]=v,y[18]=O,y[19]=N,y[20]=u,y[21]=E):(u=y[20],E=y[21]),(0,o.useEffect)(u,E),y[22]!==O?(g=O||[],y[22]=O,y[23]=g):g=y[23],y[24]!==v||y[25]!==C||y[26]!==g?(f={error:v,extensions:g,loading:C},y[24]=v,y[25]=C,y[26]=g,y[27]=f):f=y[27],f}:({cloudId:e,context:t,includeHidden:i,locale:r,types:a,client:l,queryOptions:u})=>{let E=c(e,t,l,a,r,i,u),{error:p,loading:g,data:f}=(0,n("5yGfp").useQuery)(n("2rD5H").FetchPreFilteredForgeAppsQuery,E),y=d({loading:g,data:f}),{page:m}=(0,n("DIyeF").useMetricsContext)(),{createAnalyticsEvent:A}=(0,n("9DHhW").useAnalyticsEvents)();return(0,o.useEffect)(()=>{y&&A({eventType:s.OPERATIONAL_EVENT_TYPE,data:{action:"succeeded",actionSubject:"forge.ui.webClient",source:m,tags:["forge"],attributes:{target:"usePrefilteredExtensionList"}}}).fire(n("4K6lC").FORGE_UI_ANALYTICS_CHANNEL)},[y,m,A]),(0,o.useEffect)(()=>{if(!y&&p&&p.graphQLErrors.length>0){let e=p.graphQLErrors.find(e=>(0,n("ix7El").isGQLUnderlyingServiceError)(e)||(0,n("ix7El").isGQLGatewayError)(e));A({eventType:s.OPERATIONAL_EVENT_TYPE,data:{action:"failed",actionSubject:"forge.ui.webClient",source:m,tags:["forge"],attributes:{target:"usePrefilteredExtensionList",errorName:e?(0,n("ix7El").isGQLUnderlyingServiceError)(e)?"componentApi":"componentGraphQL":"uncaught"}}}).fire(n("4K6lC").FORGE_UI_ANALYTICS_CHANNEL)}},[y,p,m,A]),{error:p,extensions:y||[],loading:g}},d=({loading:e,data:t})=>{let i=t?.confluence_forgeExtensionsByType||[];return!e&&i.length>0?(0,n("jGizm").transformPreFilteredExtensions)(i):null},u=new Map,E=(0,i.isReactCompilerActivePlatform)()?e=>{let t,i,c,l,E,p,f,y,m=(0,r.c)(25),{cloudId:A,context:x,includeHidden:_,locale:I,types:P}=e,S=(0,a.useRelayEnvironment)(),[b,v]=(0,o.useState)(null),[C,T]=(0,o.useState)(!0),[O,N]=(0,o.useState)(void 0),{page:L}=(0,n("DIyeF").useMetricsContext)(),{createAnalyticsEvent:k}=(0,n("9DHhW").useAnalyticsEvents)();return m[0]!==A||m[1]!==x||m[2]!==S||m[3]!==_||m[4]!==I||m[5]!==P?(t=()=>{let e=JSON.stringify({cloudId:A,context:x,includeHidden:_,locale:I,types:P});if(!u.has(e)){let t=new Promise((t,i)=>{(0,a.fetchQuery)(S,n("gGKeL").default,{cloudId:A,context:x,includeHidden:_,locale:I,types:P},{networkCacheConfig:{metadata:{headers:{"atl-attribution":(0,n("iGKcz").createAtlAttributionHeader)(A)},allowOnExternalPage:!0}}}).subscribe({next:e=>{t(d({data:e,loading:!1}))},error:t=>{u.delete(e),i(t)}})});u.set(e,t)}u.get(e).then(e=>{v(e),T(!1)}).catch(e=>{N(e),T(!1)})},i=[A,x,_,I,P,S],m[0]=A,m[1]=x,m[2]=S,m[3]=_,m[4]=I,m[5]=P,m[6]=t,m[7]=i):(t=m[6],i=m[7]),(0,o.useEffect)(t,i),m[8]!==k||m[9]!==b||m[10]!==L?(c=()=>{b&&k({eventType:s.OPERATIONAL_EVENT_TYPE,data:{action:"succeeded",actionSubject:"forge.ui.webClient",source:L,tags:["forge"],attributes:{target:"usePrefilteredExtensionList"}}}).fire(n("4K6lC").FORGE_UI_ANALYTICS_CHANNEL)},l=[b,L,k],m[8]=k,m[9]=b,m[10]=L,m[11]=c,m[12]=l):(c=m[11],l=m[12]),(0,o.useEffect)(c,l),m[13]!==k||m[14]!==O||m[15]!==b||m[16]!==L?(E=()=>{if(!b&&O&&(0,n("ix7El").isRelayNetworkError)(O)){let e=O.source.errors.find(g);k({eventType:s.OPERATIONAL_EVENT_TYPE,data:{action:"failed",actionSubject:"forge.ui.webClient",source:L,tags:["forge"],attributes:{target:"useExtensionList",errorName:e?(0,n("ix7El").isGQLUnderlyingServiceError)(e)?"componentApi":"componentGraphQL":"uncaught"}}}).fire(n("4K6lC").FORGE_UI_ANALYTICS_CHANNEL)}},p=[b,O,L,k],m[13]=k,m[14]=O,m[15]=b,m[16]=L,m[17]=E,m[18]=p):(E=m[17],p=m[18]),(0,o.useEffect)(E,p),m[19]!==b?(f=b||[],m[19]=b,m[20]=f):f=m[20],m[21]!==O||m[22]!==C||m[23]!==f?(y={extensions:f,loading:C,error:O},m[21]=O,m[22]=C,m[23]=f,m[24]=y):y=m[24],y}:({cloudId:e,context:t,includeHidden:i,locale:r,types:c})=>{let l=(0,a.useRelayEnvironment)(),[E,p]=(0,o.useState)(null),[g,f]=(0,o.useState)(!0),[y,m]=(0,o.useState)(void 0),{page:A}=(0,n("DIyeF").useMetricsContext)(),{createAnalyticsEvent:x}=(0,n("9DHhW").useAnalyticsEvents)();return(0,o.useEffect)(()=>{let o=JSON.stringify({cloudId:e,context:t,includeHidden:i,locale:r,types:c});if(!u.has(o)){let s=new Promise((s,E)=>{(0,a.fetchQuery)(l,n("gGKeL").default,{cloudId:e,context:t,includeHidden:i,locale:r,types:c},{networkCacheConfig:{metadata:{headers:{"atl-attribution":(0,n("iGKcz").createAtlAttributionHeader)(e)},allowOnExternalPage:!0}}}).subscribe({next:e=>{s(d({data:e,loading:!1}))},error:e=>{u.delete(o),E(e)}})});u.set(o,s)}u.get(o).then(e=>{p(e),f(!1)}).catch(e=>{m(e),f(!1)})},[e,t,i,r,c,l]),(0,o.useEffect)(()=>{E&&x({eventType:s.OPERATIONAL_EVENT_TYPE,data:{action:"succeeded",actionSubject:"forge.ui.webClient",source:A,tags:["forge"],attributes:{target:"usePrefilteredExtensionList"}}}).fire(n("4K6lC").FORGE_UI_ANALYTICS_CHANNEL)},[E,A,x]),(0,o.useEffect)(()=>{if(!E&&y&&(0,n("ix7El").isRelayNetworkError)(y)){let e=y.source.errors.find(e=>(0,n("ix7El").isGQLUnderlyingServiceError)(e)||(0,n("ix7El").isGQLGatewayError)(e));x({eventType:s.OPERATIONAL_EVENT_TYPE,data:{action:"failed",actionSubject:"forge.ui.webClient",source:A,tags:["forge"],attributes:{target:"useExtensionList",errorName:e?(0,n("ix7El").isGQLUnderlyingServiceError)(e)?"componentApi":"componentGraphQL":"uncaught"}}}).fire(n("4K6lC").FORGE_UI_ANALYTICS_CHANNEL)}},[E,y,A,x]),{extensions:E||[],loading:g,error:y}};function p(e){return(0,n("ix7El").isGQLUnderlyingServiceError)(e)||(0,n("ix7El").isGQLGatewayError)(e)}function g(e){return(0,n("ix7El").isGQLUnderlyingServiceError)(e)||(0,n("ix7El").isGQLGatewayError)(e)}e.exports.createUsePrefilteredExtensionListQueryOptions=c,e.exports.usePrefilteredExtensionList=l,e.exports.getPrefilteredExtensionsGQLResult=d,e.exports.usePrefilteredExtensionListRelay=E}),i("gGKeL",function(e,t){var n,i,r,o;let a={fragment:{argumentDefinitions:n=[{defaultValue:null,kind:"LocalArgument",name:"cloudId"},{defaultValue:null,kind:"LocalArgument",name:"context"},{defaultValue:null,kind:"LocalArgument",name:"includeHidden"},{defaultValue:null,kind:"LocalArgument",name:"locale"},{defaultValue:null,kind:"LocalArgument",name:"types"}],kind:"Fragment",name:"usePrefilteredExtensionList_forge_ui_Query",selections:o=[{args:[{kind:"Variable",name:"cloudId",variableName:"cloudId"},{kind:"Variable",name:"context",variableName:"context"},{kind:"Variable",name:"includeHidden",variableName:"includeHidden"},{kind:"Variable",name:"locale",variableName:"locale"},{kind:"Variable",name:"types",variableName:"types"}],concreteType:"ConfluenceForgeExtension",kind:"LinkedField",name:"confluence_forgeExtensionsByType",plural:!0,selections:[{kind:"ScalarField",name:"id"},{kind:"ScalarField",name:"appId"},{kind:"ScalarField",name:"appVersion"},{kind:"ScalarField",name:"appOwner"},{kind:"ScalarField",name:"environmentId"},{kind:"ScalarField",name:"environmentType"},{kind:"ScalarField",name:"environmentKey"},{kind:"ScalarField",name:"consentUrl"},{kind:"ScalarField",name:"migrationKey"},{concreteType:"ConfluenceUserAccess",kind:"LinkedField",name:"userAccess",plural:!1,selections:[{kind:"ScalarField",name:"enabled"},{kind:"ScalarField",name:"hasAccess"}]},i={kind:"ScalarField",name:"key"},{concreteType:"KeyValueHierarchyMap",kind:"LinkedField",name:"properties",plural:!0,selections:[i,{kind:"ScalarField",name:"value"}]},{concreteType:"ConfluenceExtensionEgressDeclaration",kind:"LinkedField",name:"egress",plural:!0,selections:[{kind:"ScalarField",name:"addresses"},{kind:"ScalarField",name:"category"},r={kind:"ScalarField",name:"type"},{kind:"ScalarField",name:"inScopeEUD"}]},{kind:"ScalarField",name:"sandboxPolicies"},{kind:"ScalarField",name:"scopes"},{concreteType:"ConfluenceAppInstallationLicense",kind:"LinkedField",name:"license",plural:!1,selections:[{kind:"ScalarField",name:"active"},{kind:"ScalarField",name:"capabilitySet"},{kind:"ScalarField",name:"billingPeriod"},{kind:"ScalarField",name:"ccpEntitlementId"},{kind:"ScalarField",name:"ccpEntitlementSlug"},{kind:"ScalarField",name:"isEvaluation"},{kind:"ScalarField",name:"subscriptionEndDate"},{kind:"ScalarField",name:"trialEndDate"},r]},r,{kind:"ScalarField",name:"installationId"},{kind:"ScalarField",name:"hiddenBy"}]}],type:"Query"},kind:"Request",operation:{argumentDefinitions:n,kind:"Operation",name:"usePrefilteredExtensionList_forge_ui_Query",selections:o},params:{id:"904e5a459b011295a8e77317b65201f644f4b1769c4e8d76d1712b4870225d5e",metadata:{},name:"usePrefilteredExtensionList_forge_ui_Query",operationKind:"query",text:null}};a.hash="1b992f547bdf43b63a7ddd13074a26b2",e.exports.default=a});
+//# sourceMappingURL=GoalPanel.6fc7c6b6.js.map

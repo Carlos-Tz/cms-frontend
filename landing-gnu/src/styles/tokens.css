@@ -1,0 +1,45 @@
+:root {
+  /* Background */
+  --color-bg: #ffffff;
+  --color-bg-alt: #f2f9ff;
+
+  /* Brand — light blue / cyan / navy, matching the GNU Gas Natural sitemap */
+  --color-navy: #0b3d63;
+  --color-navy-deep: #073456;
+  --color-primary: #2f9bdb;
+  --color-primary-alt: #1f7fc2;
+  --color-primary-light: #7ed3f7;
+  --color-accent: #45d6c9;
+  --color-primary-tint: #cdeeff; /* eyebrow labels, small accents on dark bg */
+  --color-primary-soft: #e8f7ff; /* brand tint on light backgrounds */
+
+  /* Status (semantic — kept identical to the GNU CMS design system) */
+  --color-status-active: #34d399;
+  --color-status-pending: #fbbf24;
+  --color-status-draft: rgba(11, 61, 99, 0.35);
+  --color-status-error: #fb7185;
+
+  /* Text on light backgrounds */
+  --color-text: #0e2c42;
+  --color-text-60: rgba(14, 44, 66, 0.64);
+  --color-text-40: rgba(14, 44, 66, 0.44);
+
+  /* Text on dark backgrounds (hero panel, footer) */
+  --color-text-on-dark: #ffffff;
+  --color-text-on-dark-70: rgba(255, 255, 255, 0.72);
+  --color-text-on-dark-45: rgba(255, 255, 255, 0.45);
+
+  /* Borders / surfaces */
+  --color-border: rgba(11, 61, 99, 0.12);
+  --color-border-hover: rgba(11, 61, 99, 0.28);
+  --color-surface: rgba(47, 155, 219, 0.06);
+  --color-border-on-dark: rgba(255, 255, 255, 0.2);
+  --color-surface-on-dark: rgba(255, 255, 255, 0.08);
+
+  /* Radius & shadow */
+  --radius-lg: 1rem;
+  --radius-md: 0.5rem;
+  --radius-full: 999px;
+  --shadow-cta: 0 10px 30px -5px rgba(47, 155, 219, 0.35);
+  --shadow-card: 0 4px 24px -8px rgba(11, 61, 99, 0.12);
+}

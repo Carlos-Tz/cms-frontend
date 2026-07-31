@@ -1,0 +1,94 @@
+---
+const ubicaciones = [
+	{ ciudad: "Ciudad de México", direccion: "Base central y patio de maniobras", telefono: "+52 55 0000 0000" },
+	{ ciudad: "Monterrey", direccion: "Terminal de carga y distribución de GNC", telefono: "+52 81 0000 0000" },
+	{ ciudad: "Guadalajara", direccion: "Centro de operaciones regional", telefono: "+52 33 0000 0000" },
+];
+---
+
+<section id="ubicaciones" class="section ubicaciones">
+	<div class="container">
+		<div class="section-head">
+			<span class="eyebrow">Ubicaciones</span>
+			<h2 class="section-title">Cobertura en los principales <span class="accent">puntos del país</span></h2>
+		</div>
+
+		<div class="ubicaciones-grid">
+			<div class="ubicaciones-list">
+				{ubicaciones.map((u) => (
+					<div class="ubicacion-item">
+						<span class="ubicacion-dot"></span>
+						<div>
+							<h3 class="ubicacion-ciudad">{u.ciudad}</h3>
+							<p class="ubicacion-direccion">{u.direccion}</p>
+							<p class="ubicacion-telefono">{u.telefono}</p>
+						</div>
+					</div>
+				))}
+			</div>
+
+			<div class="ubicaciones-map" role="img" aria-label="Mapa de cobertura de Traninn Logistic">
+				<span class="ubicaciones-map-label">Mapa próximamente</span>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.ubicaciones-grid {
+		display: grid;
+		grid-template-columns: 1fr 1.2fr;
+		gap: 3rem;
+	}
+
+	.ubicaciones-list {
+		display: flex;
+		flex-direction: column;
+		gap: 1.75rem;
+	}
+
+	.ubicacion-item {
+		display: flex;
+		gap: 0.9rem;
+	}
+	.ubicacion-dot {
+		flex-shrink: 0;
+		margin-top: 0.35rem;
+		width: 0.65rem;
+		height: 0.65rem;
+		border-radius: var(--radius-full);
+		background: var(--color-red);
+	}
+	.ubicacion-ciudad {
+		font-size: 1.05rem;
+	}
+	.ubicacion-direccion {
+		margin-top: 0.25rem;
+		color: var(--color-text-60);
+		font-size: 0.9rem;
+	}
+	.ubicacion-telefono {
+		margin-top: 0.15rem;
+		color: var(--color-text-40);
+		font-size: 0.85rem;
+	}
+
+	.ubicaciones-map {
+		border-radius: var(--radius-lg);
+		border: 1px dashed var(--color-border);
+		background: var(--color-bg-alt);
+		min-height: 18rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--color-text-40);
+		font-size: 0.9rem;
+	}
+
+	@media (max-width: 860px) {
+		.ubicaciones-grid {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+		}
+	}
+</style>

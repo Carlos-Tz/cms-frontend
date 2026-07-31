@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s -o /tmp/out.html -w \"HTTP %{http_code}\\\\n\" http://localhost:4322/)",
+      "Read(//tmp/**)"
+    ]
+  }
+}

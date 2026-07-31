@@ -1,0 +1,115 @@
+WRMCB=function(e){var c=console;if(c&&c.log&&c.error){c.log('Error running batched script.');c.error(e);}}
+;
+try {
+/* module-key = 'com.atlassian.confluence.plugins.confluence-inline-tasks:inline-tasks-macro-browser', location = 'js/macro-browser-overrides.js' */
+define('confluence-inline-tasks/macro-browser-overrides',
+[
+    'jquery',
+    'ajs',
+    'confluence-inline-tasks/space-page-picker-shim',
+    'confluence/meta'
+],
+/**
+ * Defines macro browser overrides for the Tasks Report macro.
+ */
+function (
+    $,
+    AJS,
+    SpacePagePicker,
+    Meta
+) {
+    'use strict';
+
+    return {
+        fields: {
+            string: {
+                // spaceAndPage parameter is defined in atlassian-plugin.xml
+                spaceAndPage: function (param) {
+                    var className = param.multiple ? "autocomplete-multi-space-and-page" : "autocomplete-space-and-page";
+                    var $paramDiv = $(Confluence.Templates.MacroBrowser.macroParameter());
+                    var $input = $paramDiv.find("input[type='text']");
+                    $input.addClass(className).attr("data-none-message", "No encontrado");
+
+                    // CONF-16859 - check if mandatory params are now filled
+                    if (param.required) {
+                        $input.keyup(AJS.MacroBrowser.processRequiredParameters);
+                    }
+
+                    $input.auiSelect2(SpacePagePicker.build({
+                        multiple: param.multiple,
+                        orgElement: $input,
+                        // FIXME - these options below are deprecated and should be removed once the updated
+                        // SpacePagePicker is being used. They're only included because the current version
+                        // of SpacePagePicker will break if they aren't supplied.
+                        inputSpaceId: 'legacy-macro-param-spaces',
+                        inputSpaceCatId: 'legacy-macro-param-space-cats',
+                        inputPageId: 'legacy-macro-param-pages'
+                    }));
+
+                    var options = {
+                        setValue: function (value) {
+                            SpacePagePicker.setValue(value, $input);
+                        }
+                    };
+
+                    return AJS.MacroBrowser.Field($paramDiv, $input, options);
+                }
+            }
+        },
+
+        // Before setting values in the UI, convert storage pages/spaces params into spaceAndPage.
+        beforeParamsSet: function (paramMap) {
+            var str = SpacePagePicker.combineMapToString({
+                page: paramMap.pages,
+                space: paramMap.spaces
+            });
+            if (str) {
+                // This variable sets the input element value.
+                paramMap.spaceAndPage = str;
+            }
+
+            // Set default space value if macro does not have a page or space already set.
+            // This is here to add a filter so that in macro preview, empty params with no pagination
+            // does not cause an entire search on an instance, causing timeouts.
+            var currentSpace = Meta.get("space-key");
+            if (!!currentSpace && !paramMap.spaceAndPage) {
+                paramMap.spaceAndPage = "space:" + currentSpace;
+            }
+
+            // No need in the UI for storage values.
+            delete paramMap.pages;
+            delete paramMap.spaces;
+
+            return paramMap;
+        },
+
+        // Before storing values from the UI, convert spaceAndPage into storage pages/spaces params.
+        beforeParamsRetrieved: function (paramMap) {
+
+            var values = SpacePagePicker.splitStringToMap(paramMap.spaceAndPage);
+
+            if (values.page.length) {
+                paramMap.pages = values.page.join(',');
+            }
+            if (values.space.length) {
+                paramMap.spaces = values.space.join(',');
+            }
+
+            // No need to persist the value used in the UI.
+            delete paramMap.spaceAndPage;
+
+            return paramMap;
+        }
+    };
+});
+
+}catch(e){WRMCB(e)};
+;
+try {
+/* module-key = 'com.atlassian.confluence.plugins.confluence-inline-tasks:inline-tasks-macro-browser', location = 'js/macro-browser-overrides-call.js' */
+// Just in a separate file to avoid hassles when testing confluence-inline-tasks/macro-browser-overrides
+require('confluence/module-exporter')
+.safeRequire('confluence-inline-tasks/macro-browser-overrides', function(overrides) {
+    require('ajs').MacroBrowser.setMacroJsOverride("tasks-report-macro", overrides);
+});
+}catch(e){WRMCB(e)};

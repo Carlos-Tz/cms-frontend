@@ -1,0 +1,140 @@
+WRMCB=function(e){var c=console;if(c&&c.log&&c.error){c.log('Error running batched script.');c.error(e);}}
+;
+try {
+/* module-key = 'com.atlassian.confluence.plugins.gadgets:macro-browser-for-gadgetsplugin', location = 'com/atlassian/confluence/plugins/gadgets/script/gadget-macro-browser.js' */
+AJS.toInit(function ($) {
+    var overrides = {};
+
+    overrides.postPreview = function (iframe, macro) {
+        var hasAJS = iframe.contentWindow.AJS;
+        var userPreferencesMap = {};
+        var keyValuePairs = $("#macro-param-div-preferences input").val().split("&");
+        for (var i = 0, lk = keyValuePairs.length; i < lk; i++) {
+            var keyValue = keyValuePairs[i].split("=");
+            try {
+                userPreferencesMap[decodeURI(keyValue[0])] = decodeURI(keyValue[1]);
+            } catch(e) {
+                //Do nothing, just skip it. It's not essential that we capture all preferences, and not all are valid
+                //to be decoded as a URI
+            }
+        }
+        if (macro.needsConfig && hasAJS) {
+            var bodyConfigured = !!userPreferencesMap["isConfigured"];
+
+            if (!bodyConfigured) {
+                var okButton = $("#macro-browser-dialog .dialog-button-panel .ok");
+                $("#save-warning-span").addClass("gadget-not-configured-warning").text("Primero completa la configuraci\u00f3n en el \u00e1rea de vista previa").removeClass("hidden");
+                okButton.prop("disabled", true);
+            }
+        }
+    };
+
+    overrides.beforeParamsSet = function(selectedParams, inserting) {
+        var userPreferences = selectedParams["preferences"];
+        if (!inserting && userPreferences) {
+            var keyValuePairs = userPreferences.split("&");
+            for (var i = 0, lk = keyValuePairs.length; i < lk; i++) {
+                var keyValue = keyValuePairs[i].split("=");
+                selectedParams[decodeURI(keyValue[0])] = decodeURI(keyValue[1]);
+            }
+        }
+
+        return selectedParams;
+    };
+
+    overrides.updateMacroParametersForPreview = function(params) {
+        params["forceWrite"] = true;
+        return params;
+    };
+
+    overrides.manipulateMarkup = function (macro) {
+        if(AJS.MacroBrowser.gadgetPrefsChanged){
+            var container = top.document.getElementById("macro-insert-container");
+            var preferencesInput = $("#macro-param-div-preferences input", container);
+            var baseVal = "";
+            for (var key in AJS.MacroBrowser.gadgetPrefs)
+            {
+                if (baseVal.length != 0)
+                {
+                    baseVal += "&";
+                }
+                baseVal = baseVal + encodeURI(key) + "=" + encodeURI(AJS.MacroBrowser.gadgetPrefs[key]);
+            }
+            preferencesInput.val(baseVal);
+        }
+    };
+
+    //Adds special behaviour for "gadget" macros : only considered the same if they share the same url as the selected macro
+    overrides.getMacroDetailsFromSelectedMacro = function(metadataList, selectedMacroToUse) {
+        var selectedUrl = selectedMacroToUse.params["url"];
+        for (var i = 0, lm = metadataList.length; i < lm; i++) {
+            var tempMacro = metadataList[i];
+            if (tempMacro.macroName === selectedMacroToUse.name &&
+                tempMacro.gadgetUrl === selectedUrl) {
+                return tempMacro;
+            }
+        }
+    };
+
+    //Add special handling to intepret and merge existing body params for opensocial preference gadgets
+    overrides.beforeParamsRetrieved = function(paramMap, macro, sharedParamMap) {
+        var result="";
+
+        if (macro.nonHiddenUserPrefs) {
+            var first = true;
+            //reparse the possible existing key value pairs
+            var userPreferenceMap = {},
+                previousPreferences = paramMap["preferences"];
+
+            if (previousPreferences) {
+                var keyValuePairs = previousPreferences.split("&");
+                for (var i = 0, lk = keyValuePairs.length; i < lk; i++) {
+                    var keyValue = keyValuePairs[i].split("=");
+                    var userPrefKey = decodeURI(keyValue[0]);
+                    var userPrefValue = decodeURI(keyValue[1]);
+                    userPreferenceMap[userPrefKey] = userPrefValue;
+                }
+            }
+
+            //New values take precedence over existing values
+            for (var param1 in sharedParamMap) {
+                userPreferenceMap[param1] = sharedParamMap[param1];
+            }
+
+            var isDefaultValue = function (macro, name, value)
+            {
+                var params = macro.formDetails.parameters;
+                for (var i = 0; i < params.length; i++)
+                {
+                    if (params[i].name == name)
+                    {
+                        return value == params[i].defaultValue;
+                    }
+                }
+                //Not necessarily bad ... could be a param we don't have metadata for
+                AJS.log("Unable to find matching param for " + name);
+                return false;
+            };
+
+            for (var param in userPreferenceMap) {
+                if (!isDefaultValue(macro, param, userPreferenceMap[param]))
+                {
+                    if (!first)
+                    {
+                        result += "&";
+                    }
+                    first = false;
+                    result = result + encodeURI(param) + "=" + encodeURI(userPreferenceMap[param]);
+                }
+            }
+
+            paramMap["preferences"] = result;
+        }
+
+        return paramMap;
+    };
+
+    AJS.MacroBrowser.setMacroJsOverride("gadget", overrides);
+});
+
+}catch(e){WRMCB(e)};

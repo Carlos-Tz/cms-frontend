@@ -1,0 +1,159 @@
+---
+const socials = [
+	{ label: "Facebook", href: "#", path: "M13.5 9H15V6.5h-1.75C11.6 6.5 10.5 7.6 10.5 9.25V11H9v2.5h1.5V19h2.5v-5.5H15l.5-2.5h-2v-1.25c0-.4.1-.75.5-.75Z" },
+	{ label: "Instagram", href: "#", path: "M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Zm0 6.27a2.47 2.47 0 1 1 0-4.94 2.47 2.47 0 0 1 0 4.94ZM16.2 5H7.8A2.8 2.8 0 0 0 5 7.8v8.4A2.8 2.8 0 0 0 7.8 19h8.4a2.8 2.8 0 0 0 2.8-2.8V7.8A2.8 2.8 0 0 0 16.2 5Zm1.5 11.2c0 .83-.67 1.5-1.5 1.5H7.8c-.83 0-1.5-.67-1.5-1.5V7.8c0-.83.67-1.5 1.5-1.5h8.4c.83 0 1.5.67 1.5 1.5v8.4ZM16.4 7.6a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8Z" },
+	{ label: "LinkedIn", href: "#", path: "M6.94 8.5H4.56V19h2.38V8.5ZM5.75 4.9a1.38 1.38 0 1 0 0 2.76 1.38 1.38 0 0 0 0-2.76ZM19.44 19h-2.38v-5.37c0-1.28-.46-2.15-1.6-2.15-.87 0-1.39.59-1.62 1.15-.08.2-.1.49-.1.77V19H11.4s.03-9.44 0-10.5h2.34v1.49c.31-.48 .87-1.16 2.12-1.16 1.55 0 2.71 1.01 2.71 3.18V19Z" },
+];
+
+const columnas = [
+	{
+		title: "Servicios",
+		links: [
+			{ label: "Transporte de GNC", href: "#servicios" },
+			{ label: "Logística", href: "#servicios" },
+			{ label: "Carga pesada", href: "#servicios" },
+		],
+	},
+	{
+		title: "Empresa",
+		links: [
+			{ label: "Sobre nosotros", href: "#nosotros" },
+			{ label: "Nuestros clientes", href: "#clientes" },
+			{ label: "Ubicaciones", href: "#ubicaciones" },
+		],
+	},
+];
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+	<div class="container footer-grid">
+		<div class="footer-brand">
+			<div class="logo">
+				<span class="logo-part logo-part--red">TRAN</span><span class="logo-part logo-part--light">INN</span>
+				<span class="logo-part logo-part--gray">LOGISTIC</span>
+			</div>
+			<p class="footer-text">Transporte de GNC, logística y carga pesada con cobertura nacional.</p>
+			<div class="socials">
+				{socials.map((s) => (
+					<a href={s.href} aria-label={s.label} class="social-icon">
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d={s.path}></path></svg>
+					</a>
+				))}
+			</div>
+		</div>
+
+		{columnas.map((columna) => (
+			<div class="footer-col">
+				<h3 class="footer-col-title">{columna.title}</h3>
+				<ul>
+					{columna.links.map((link) => (
+						<li><a href={link.href}>{link.label}</a></li>
+					))}
+				</ul>
+			</div>
+		))}
+
+		<div class="footer-col">
+			<h3 class="footer-col-title">Contacto</h3>
+			<ul>
+				<li><a href="#contacto">Captación de leads</a></li>
+				<li><a href="https://wa.me/000000000000" target="_blank" rel="noopener noreferrer">WhatsApp directo</a></li>
+			</ul>
+		</div>
+	</div>
+
+	<div class="container footer-bottom">
+		<p>© {year} Traninn Logistic. Todos los derechos reservados.</p>
+	</div>
+</footer>
+
+<style>
+	.site-footer {
+		background: var(--color-dark);
+		color: var(--color-text-on-dark-60);
+		padding-top: 3.5rem;
+	}
+
+	.footer-grid {
+		display: grid;
+		grid-template-columns: 1.4fr 1fr 1fr 1fr;
+		gap: 2rem;
+		padding-bottom: 2.5rem;
+		border-bottom: 1px solid var(--color-border-on-dark);
+	}
+
+	.logo {
+		font-size: 1.1rem;
+		font-weight: 800;
+	}
+	.logo-part--red { color: var(--color-red); }
+	.logo-part--light { color: #fff; }
+	.logo-part--gray { color: var(--color-gray); margin-left: 0.3rem; }
+
+	.footer-text {
+		margin-top: 0.85rem;
+		font-size: 0.9rem;
+		max-width: 20rem;
+	}
+
+	.socials {
+		display: flex;
+		gap: 0.5rem;
+		margin-top: 1.25rem;
+	}
+	.social-icon {
+		width: 2rem;
+		height: 2rem;
+		border-radius: var(--radius-full);
+		border: 1px solid var(--color-border-on-dark);
+		color: #fff;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: background 0.15s ease, border-color 0.15s ease;
+	}
+	.social-icon:hover {
+		background: var(--color-red);
+		border-color: var(--color-red);
+	}
+
+	.footer-col-title {
+		font-size: 0.8rem;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: #fff;
+		margin-bottom: 1rem;
+	}
+	.footer-col ul {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.65rem;
+		font-size: 0.9rem;
+	}
+	.footer-col a:hover {
+		color: #fff;
+	}
+
+	.footer-bottom {
+		padding: 1.5rem 1.5rem;
+		font-size: 0.8rem;
+		color: var(--color-text-40, rgba(255, 255, 255, 0.4));
+	}
+
+	@media (max-width: 860px) {
+		.footer-grid {
+			grid-template-columns: 1fr 1fr;
+		}
+	}
+	@media (max-width: 560px) {
+		.footer-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>

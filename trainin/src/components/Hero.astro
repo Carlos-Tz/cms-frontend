@@ -1,0 +1,188 @@
+---
+import noimg from "../../assets/images/noimg.jpg";
+
+const slides = [
+	{
+		eyebrow: "Transporte de GNC",
+		title: "Movemos gas natural vehicular con seguridad y puntualidad",
+		text: "Flota especializada y rutas monitoreadas para abastecer tu operación sin interrupciones.",
+	},
+	{
+		eyebrow: "Logística",
+		title: "Logística integral pensada para tu cadena de suministro",
+		text: "Planeación, trazabilidad y soporte en cada tramo del recorrido.",
+	},
+	{
+		eyebrow: "Carga pesada",
+		title: "Carga pesada con la capacidad que tu proyecto necesita",
+		text: "Equipos y unidades certificadas para cargas de alto tonelaje.",
+	},
+];
+---
+
+<section id="inicio" class="hero">
+	<div class="hero-carousel" data-carousel>
+		{slides.map((slide, i) => (
+			<article class="hero-slide" data-slide aria-hidden={i === 0 ? "false" : "true"}>
+				<img src={noimg.src} alt="" class="hero-slide-img" />
+				<div class="hero-slide-overlay"></div>
+				<div class="container hero-slide-content">
+					<span class="eyebrow eyebrow--on-dark">{slide.eyebrow}</span>
+					<h1 class="hero-title">{slide.title}</h1>
+					<p class="hero-text">{slide.text}</p>
+					<div class="hero-actions">
+						<a class="btn-primary" href="#contacto">Solicitar cotización</a>
+						<a class="btn-secondary btn-secondary--on-dark" href="#servicios">Ver servicios</a>
+					</div>
+				</div>
+			</article>
+		))}
+
+		<div class="hero-dots" data-dots>
+			{slides.map((_, i) => (
+				<button class="hero-dot" data-dot data-index={i} aria-label={`Ir al banner ${i + 1}`}></button>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.hero {
+		position: relative;
+		background: var(--color-dark);
+	}
+
+	.hero-carousel {
+		position: relative;
+		height: min(38rem, 82vh);
+		overflow: hidden;
+	}
+
+	.hero-slide {
+		position: absolute;
+		inset: 0;
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity 0.6s ease;
+	}
+	.hero-slide[aria-hidden="false"] {
+		opacity: 1;
+		visibility: visible;
+	}
+
+	.hero-slide-img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.hero-slide-overlay {
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(100deg, rgba(32, 29, 30, 0.92) 0%, rgba(32, 29, 30, 0.75) 45%, rgba(200, 16, 46, 0.55) 100%);
+	}
+
+	.hero-slide-content {
+		position: relative;
+		height: 100%;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: 1.1rem;
+		max-width: 40rem;
+		color: #fff;
+	}
+
+	.eyebrow--on-dark {
+		border-color: rgba(255, 255, 255, 0.35);
+		background: rgba(255, 255, 255, 0.1);
+		color: #fff;
+	}
+
+	.hero-title {
+		font-size: clamp(2rem, 4vw, 3rem);
+		line-height: 1.1;
+	}
+
+	.hero-text {
+		color: var(--color-text-on-dark-60);
+		font-size: 1.05rem;
+		max-width: 34rem;
+	}
+
+	.hero-actions {
+		display: flex;
+		gap: 1rem;
+		flex-wrap: wrap;
+		margin-top: 0.5rem;
+	}
+
+	.btn-secondary--on-dark {
+		color: #fff;
+		border-color: rgba(255, 255, 255, 0.35);
+	}
+	.btn-secondary--on-dark:hover {
+		border-color: #fff;
+	}
+
+	.hero-dots {
+		position: absolute;
+		bottom: 1.5rem;
+		left: 50%;
+		transform: translateX(-50%);
+		display: flex;
+		gap: 0.5rem;
+		z-index: 2;
+	}
+	.hero-dot {
+		width: 2.25rem;
+		height: 0.3rem;
+		border-radius: var(--radius-full);
+		border: none;
+		background: rgba(255, 255, 255, 0.35);
+		cursor: pointer;
+		padding: 0;
+		transition: background 0.2s ease;
+	}
+	.hero-dot[aria-current="true"] {
+		background: var(--color-red);
+	}
+</style>
+
+<script>
+	function initCarousel(root: HTMLElement) {
+		const slides = Array.from(root.querySelectorAll<HTMLElement>("[data-slide]"));
+		const dots = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-dot]"));
+		let active = 0;
+		let timer: ReturnType<typeof setInterval>;
+
+		function show(index: number) {
+			active = (index + slides.length) % slides.length;
+			slides.forEach((slide, i) => slide.setAttribute("aria-hidden", i === active ? "false" : "true"));
+			dots.forEach((dot, i) => dot.setAttribute("aria-current", i === active ? "true" : "false"));
+		}
+
+		function next() {
+			show(active + 1);
+		}
+
+		function restart() {
+			clearInterval(timer);
+			timer = setInterval(next, 6000);
+		}
+
+		dots.forEach((dot) => {
+			dot.addEventListener("click", () => {
+				show(Number(dot.dataset.index));
+				restart();
+			});
+		});
+
+		show(0);
+		restart();
+	}
+
+	document.querySelectorAll<HTMLElement>("[data-carousel]").forEach(initCarousel);
+</script>

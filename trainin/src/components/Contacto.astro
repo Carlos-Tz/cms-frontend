@@ -1,0 +1,138 @@
+---
+---
+
+<section id="contacto" class="section section--dark contacto">
+	<div class="container contacto-grid">
+		<div class="section-head contacto-copy">
+			<span class="eyebrow eyebrow--on-dark">Contacto</span>
+			<h2 class="section-title">Cuéntanos qué necesitas transportar</h2>
+			<p class="contacto-text">
+				Completa el formulario y un asesor de Traninn Logistic te contactará para cotizar tu
+				servicio de transporte de GNC, logística o carga pesada.
+			</p>
+
+			<a class="btn-primary contacto-whatsapp" href="https://wa.me/000000000000" target="_blank" rel="noopener noreferrer">
+				Escribir por WhatsApp
+			</a>
+		</div>
+
+		<form class="card contacto-form" data-lead-form>
+			<div class="field">
+				<label for="nombre">Nombre</label>
+				<input id="nombre" name="nombre" type="text" placeholder="Tu nombre" required />
+			</div>
+			<div class="field">
+				<label for="empresa">Empresa</label>
+				<input id="empresa" name="empresa" type="text" placeholder="Nombre de tu empresa" />
+			</div>
+			<div class="field">
+				<label for="telefono">Teléfono</label>
+				<input id="telefono" name="telefono" type="tel" placeholder="10 dígitos" required />
+			</div>
+			<div class="field">
+				<label for="servicio">Servicio de interés</label>
+				<select id="servicio" name="servicio">
+					<option>Transporte de GNC</option>
+					<option>Logística</option>
+					<option>Carga pesada</option>
+				</select>
+			</div>
+			<div class="field">
+				<label for="mensaje">Mensaje</label>
+				<textarea id="mensaje" name="mensaje" rows="3" placeholder="Cuéntanos brevemente qué necesitas"></textarea>
+			</div>
+			<button type="submit" class="btn-primary contacto-submit">Solicitar contacto</button>
+			<p class="contacto-status" data-lead-status role="status"></p>
+		</form>
+	</div>
+</section>
+
+<style>
+	.contacto-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 3rem;
+		align-items: start;
+	}
+
+	.contacto-copy .section-head {
+		margin-bottom: 1.5rem;
+	}
+
+	.contacto-text {
+		margin-top: 1rem;
+		color: var(--color-text-on-dark-60);
+		max-width: 28rem;
+	}
+
+	.contacto-whatsapp {
+		margin-top: 1.75rem;
+		background: var(--color-whatsapp);
+		box-shadow: 0 10px 30px -8px rgba(37, 211, 102, 0.45);
+	}
+
+	.contacto-form {
+		background: #fff;
+		padding: 2rem;
+		display: flex;
+		flex-direction: column;
+		gap: 1.1rem;
+	}
+
+	.field label {
+		display: block;
+		margin-bottom: 0.3rem;
+		font-size: 0.85rem;
+		font-weight: 600;
+		color: var(--color-text-60);
+	}
+	.field input,
+	.field select,
+	.field textarea {
+		width: 100%;
+		border-radius: var(--radius-md);
+		border: 1px solid var(--color-border);
+		background: var(--color-bg-alt);
+		padding: 0.65rem 0.85rem;
+		font-size: 0.95rem;
+		color: var(--color-text);
+		font-family: inherit;
+	}
+	.field input:focus,
+	.field select:focus,
+	.field textarea:focus {
+		outline: none;
+		border-color: var(--color-red);
+	}
+
+	.contacto-submit {
+		width: 100%;
+		justify-content: center;
+	}
+
+	.contacto-status {
+		font-size: 0.85rem;
+		color: var(--color-red);
+		min-height: 1.2em;
+	}
+
+	@media (max-width: 860px) {
+		.contacto-grid {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+		}
+	}
+</style>
+
+<script>
+	function initLeadForm(form: HTMLFormElement) {
+		const status = form.querySelector<HTMLElement>("[data-lead-status]")!;
+		form.addEventListener("submit", (event) => {
+			event.preventDefault();
+			status.textContent = "¡Gracias! Un asesor de Traninn Logistic te contactará muy pronto.";
+			form.reset();
+		});
+	}
+
+	document.querySelectorAll<HTMLFormElement>("[data-lead-form]").forEach(initLeadForm);
+</script>

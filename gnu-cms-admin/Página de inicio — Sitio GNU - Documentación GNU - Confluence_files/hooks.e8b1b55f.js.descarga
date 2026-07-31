@@ -1,0 +1,1723 @@
+function e(e){return e&&e.__esModule?e.default:e}function t(e,t,r,o){Object.defineProperty(e,t,{get:r,set:o,enumerable:!0,configurable:!0})}var r=globalThis.parcelRequired477,o=r.register;o("bZF61",function(e,t){let r=e=>{let t=5381;for(let r=0;r<e.length;r++)t=(t<<5)+t+e.charCodeAt(r);return t};e.exports.generateHash=r,e.exports.generateHashFromVariables=e=>{try{return r(JSON.stringify(e)).toString()}catch(e){return""}}}),o("fyjce",function(e,t){e.exports.promiseCache=e=>{let{name:t,shouldUseStorageAdapter:o}=e,n=null,a=null,i=new Map,c=r("5oT59").SEARCH_COMBINED_CONFIG_CACHE_KEY,s={getItem:e=>(0,r("6dPGs").getLocalStorageItemAsString)(e),setItem:(e,t)=>(0,r("6dPGs").setLocalStorageItem)(e,t)};function l(){return void 0!==o&&((0,r("iDrrr").fg)("rovo_fps_use_rovo_config")||(0,r("6s56R").isUsingRovoConfigStoreExperiment)())?o:t===c}let d=()=>{if(!n){n=(0,r("7jITD").getInstance)(e);let o=null;try{if(l()){let e=(0,r("esAoV").getSearchClientStorageAdapterFactory)();e&&(a=e(),o=a?.getItem(t)??null),o||(o=(0,r("6dPGs").getLocalStorageItemAsString)(t))}else o=(0,r("6dPGs").getLocalStorageItemAsString)(t)}catch{}if(o){let e=n.deserialize(o);e&&Object.entries(e).forEach(([e,t])=>{t&&"result"in t&&i.set(e,t.result)})}}return n},u=(e,t)=>({storedValue:d().get(e,t??!0),isExpired:d().isExpired(e)}),p=async(e,o,n)=>{d().set(e,o,n);try{let n=await o;i.set(e,n);let c=await d().serialize();c&&(l()?(a??(0,r("esAoV").getSearchClientStorageAdapterFactory)()?.()??s).setItem(t,c):(0,r("6dPGs").setLocalStorageItem)(t,c))}catch{}},m=async(e,t,r)=>{let o=r??d().getRemainingTtl(e),{storedValue:n}=u(e,!0);if(!n)return!1;try{let r=await n,a=t(r);return await p(e,Promise.resolve(a),o||void 0),!0}catch{return!1}};return{get:u,refreshOnAccessDecorator:({key:e,supplier:t,returnExpired:o,onlyRefreshIfExpired:n,expiration:a,analyticsCallback:c,networkCallbacks:s,serveResolvedDuringRefresh:l,traceInfoExtractor:d})=>{let{storedValue:m,isExpired:g}=u(e,o),f=l??!1;if(m&&n&&!g){if(c&&c({refreshTriggered:!1,hit:!0}),f){let t=i.get(e);if(void 0!==t)return t}return m}{let o=(async()=>{s?.onStart();try{let e=await t(),o=d?d():(0,r("8N8EQ").extractTraceInfoFromResponse)(e);return s?.onSuccess(o),e}catch(r){let e=r?.name||"UnknownError",t=r?.message||"An unknown error occurred";throw s?.onError(e,t,void 0),r}})();if(p(e,o,a),!m)return c&&c({refreshTriggered:!0,hit:!1}),o;if(c&&c({refreshTriggered:!0,hit:!0}),f){let t=i.get(e);if(void 0!==t)return t}return m}},clear:e=>{e?i.delete(e):i.clear(),d().clear(e)},update:m,seed:(e,t,r)=>p(e,Promise.resolve(t),r)}}}),o("6dPGs",function(e,t){let o=()=>!(0,r("iDrrr").fg)("fix_ssr_browser_storage_undefined")||"u">typeof window&&"u">typeof localStorage;e.exports.setLocalStorageItem=(e,t)=>{o()&&((0,r("iDrrr").fg)("search_page_use_browser_storage_controls")?r("7dBf8").AtlBrowserStorageLocal.setItem(e,t):localStorage.setItem(e,t))},e.exports.getLocalStorageItem=e=>{if(!o())return null;let t=(0,r("iDrrr").fg)("search_page_use_browser_storage_controls")?r("7dBf8").AtlBrowserStorageLocal.getItem(e):localStorage.getItem(e);return t?JSON.parse(t):null},e.exports.getLocalStorageItemAsString=e=>o()?((0,r("iDrrr").fg)("search_page_use_browser_storage_controls")?r("7dBf8").AtlBrowserStorageLocal.getItem(e):localStorage.getItem(e))||null:null,e.exports.removeLocalStorageItem=e=>{o()&&((0,r("iDrrr").fg)("search_page_use_browser_storage_controls")?r("7dBf8").AtlBrowserStorageLocal.removeItem(e):localStorage.removeItem(e))}}),o("8N8EQ",function(e,t){let r="not_available";e.exports.extractTraceInfoFromResponse=e=>{if(e&&"object"==typeof e&&"extensions"in e){let t=e.extensions,r=t?.gateway;if(r)return{requestId:r.request_id??void 0,traceId:r.trace_id??void 0}}},e.exports.normaliseTraceInfo=e=>({requestId:e?.requestId??r,traceId:e?.traceId??r})}),o("9C63M",function(e,t){let o=new(0,r("aHhuQ").DegradeError)("Promise is degraded");class n{static from(e,t=()=>{},r){return new n(e,t,r??6e3)}constructor(e,t,r=6e3){this.degradablePromiseInternal=void 0,this.degradeTimeout=void 0,this.timeoutMs=void 0,this.degradeInternal=()=>{throw Error("Programming error, cancelling promise is not properly rejected")},this.timeout=()=>{this.degradeInternal()},this.promise=()=>this.degradablePromiseInternal;let n=new Promise((e,r)=>{this.degradeInternal=()=>{r(o),t("timeout")}});e.catch(()=>{t("failure")});let a=Promise.race([e.finally(()=>{this.degradeTimeout&&clearTimeout(this.degradeTimeout)}),n]);this.degradablePromiseInternal=a,this.timeoutMs=r??6e3,this.degradeTimeout=setTimeout(this.timeout,this.timeoutMs)}}e.exports.DegradablePromise=n}),o("dv1ov",function(e,t){let o=(e,t)=>t?async()=>{t.onStart();try{let o=await e(),n=(0,r("8N8EQ").extractTraceInfoFromResponse)(o);return t.onSuccess(n),o}catch(o){let e=o?.name||"UnknownError",r=o?.message||"An unknown error occurred";throw t.onError(e,r),o}}:e,n=(0,r("bHHWv").inMemoryCache)(),a=e=>{let{data:t,errors:r}=e;return!t||!t.search||!!r&&r.length>0||t.search?.results.edges.length===0};e.exports.searchPageQueryCache=n,e.exports.searchDialogQuery=({variables:e,aggAbsoluteUrl:t,originalQuery:i,serveUserShardUI:c=!1,headers:s,networkCallbacks:l,operationName:d=r("bDWrn").SEARCH_DIALOG_OPERATION_NAME})=>(({variables:e,aggAbsoluteUrl:t,originalQuery:i,useCache:c,operationName:s,serveUserShardUI:l=!1,headers:d,networkCallbacks:u})=>{let p;e.experience=e.experience||"search-page",e.skip3pEntityHydration=e.skip3pEntityHydration||e.skipFieldsFor3pInQuickFind||!1,e.includeGithubEntityHydration=!!e.skip3pEntityHydration&&(e.includeGithubEntityHydration||!1),e.includeSpaceSubtype=e.includeSpaceSubtype||!1,e.skipFieldsFor3pInQuickFind=e.skipFieldsFor3pInQuickFind||!1,e.includeSocialSignals=void 0===e.includeSocialSignals||e.includeSocialSignals,e.includeJiraIssueType=e.includeJiraIssueType||!1,e.includeJiraBoardContainer=e.includeJiraBoardContainer||!1,e.includeConfluenceEntity="boolean"!=typeof e.includeConfluenceEntity||e.includeConfluenceEntity,e.includeAutocompleteSuggestions=e.includeAutocompleteSuggestions||!1;let m=(0,r("bDWrn").queryGenerator)(s,l);if(!c)return o(()=>(0,r("b0Mpu").fetchAgg)({variables:e,aggAbsoluteUrl:t,graphQuery:m,operationName:s,headers:d}),u)();return n.inMemoryDecorator((p={query:e.query,entities:e.entities,commonFilters:e.commonFilters,confluenceFilters:e.confluenceFilters,jiraFilters:e.jiraFilters,mercuryFilters:e.mercuryFilters,compassFilters:e.compassFilters,assetsFilters:e.assetsFilters,thirdPartyFilters:e.thirdPartyFilters,cloudIdARI:e.cloudIdARI,sortField:e.sort.at(0)?.field??"",sortOrder:e.sort.at(0)?.order??"",after:e.after,originalQuery:i},(0,r("bZF61").generateHashFromVariables)(p)),o(()=>(0,r("b0Mpu").fetchAgg)({variables:e,aggAbsoluteUrl:t,graphQuery:m,operationName:s,headers:d}),u),a)})({variables:e,aggAbsoluteUrl:t,originalQuery:i,useCache:!1,operationName:d,serveUserShardUI:c,headers:s,networkCallbacks:l}),e.exports.jiraDcProjectFilterOptionsQuery=({variables:e,aggAbsoluteUrl:t,headers:o})=>{let n=(0,r("fR7EZ").dcSpaceFilterOptionsQueryGenerator)(r("bDWrn").jiraDcProjectFilterOptionsOperationName);return(0,r("b0Mpu").fetchAgg)({variables:e,aggAbsoluteUrl:t,graphQuery:n,operationName:r("bDWrn").jiraDcProjectFilterOptionsOperationName,headers:o})},e.exports.spaceARIEntitiesQuery=({variables:e,aggAbsoluteUrl:t,headers:o})=>{let n=(0,r("bDWrn").spaceARIEntitiesQueryGenerator)();return(0,r("b0Mpu").fetchAgg)({variables:e,aggAbsoluteUrl:t,graphQuery:n,operationName:r("bDWrn").spaceARIEntitiesOperationName,headers:o})},e.exports.confluenceDcContentFilterOptionsQuery=({variables:e,aggAbsoluteUrl:t,headers:o})=>{let n=(0,r("bDWrn").confluenceDcContentFilterOptionsQueryGenerator)();return(0,r("b0Mpu").fetchAgg)({variables:e,aggAbsoluteUrl:t,graphQuery:n,operationName:r("bDWrn").confluenceDcContentFilterOptionsOperationName,headers:o})},e.exports.documentARIEntitiesQuery=({variables:e,aggAbsoluteUrl:t,headers:o})=>{let n=(0,r("bDWrn").documentARIEntitiesQueryGenerator)();return(0,r("b0Mpu").fetchAgg)({variables:e,aggAbsoluteUrl:t,graphQuery:n,operationName:r("bDWrn").documentARIEntitiesOperationName,headers:o})},e.exports.confluenceDcPagesQuery=({variables:e,aggAbsoluteUrl:t,headers:o})=>{let n=(0,r("bDWrn").confluenceDcPagesQueryGenerator)();return(0,r("b0Mpu").fetchAgg)({variables:e,aggAbsoluteUrl:t,graphQuery:n,operationName:r("bDWrn").confluenceDcPagesOperationName,headers:o})},e.exports.confluenceDcSpaceFilterOptionsQuery=({variables:e,aggAbsoluteUrl:t,headers:o})=>{let n=(0,r("fR7EZ").dcSpaceFilterOptionsQueryGenerator)(r("bDWrn").confluenceDcSpaceFilterOptionsOperationName);return(0,r("b0Mpu").fetchAgg)({variables:{...e,integration:"ari:cloud:platform::integration/confluence-dc"},aggAbsoluteUrl:t,graphQuery:n,operationName:r("bDWrn").confluenceDcSpaceFilterOptionsOperationName,headers:o})},e.exports.thirdPartySpaceFilterOptionsQuery=({variables:e,aggAbsoluteUrl:t,headers:o})=>{let n=(0,r("bDWrn").thirdPartySpaceFilterOptionsQueryGenerator)();return(0,r("b0Mpu").fetchAgg)({variables:e,aggAbsoluteUrl:t,graphQuery:n,operationName:r("bDWrn").thirdPartySpaceFilterOptionsOperationName,headers:o})},e.exports.thirdPartyRepositoryFilterOptionsQuery=({variables:e,aggAbsoluteUrl:t,headers:o})=>{let n=(0,r("bDWrn").thirdPartyRepositoryFilterOptionsQueryGenerator)();return(0,r("b0Mpu").fetchAgg)({variables:e,aggAbsoluteUrl:t,graphQuery:n,operationName:r("bDWrn").thirdPartyRepositoryFilterOptionsOperationName,headers:o})},e.exports.searchLinkedSitesQuery=({variables:e,aggAbsoluteUrl:t,headers:o})=>{let n=(0,r("bDWrn").searchLinkedSiteQueryGenerator)();return(0,r("b0Mpu").fetchAgg)({variables:e,aggAbsoluteUrl:t,graphQuery:n,operationName:r("bDWrn").searchLinkedSitesOperationName,headers:o})}}),o("b0Mpu",function(e,t){var o=r("gABt9");async function n({graphQuery:e,variables:t,operationName:r,aggAbsoluteUrl:a="/gateway/api/graphql",headers:i}){let c={requestInit:{method:"POST",headers:{"Content-Type":"application/json",...i},body:JSON.stringify({operationName:r,query:e,variables:t})},queryParams:{...r&&{q:r}}};return o.utils.requestService({url:a},c)}e.exports.fetchAgg=n}),o("bHHWv",function(e,t){e.exports.inMemoryCache=e=>{let t=(0,r("7jITD").getInstance)(e),o=e=>e.length?t.get(e):void 0,n=(e,r)=>{e.length&&t.set(e,r)};return{get:o,set:n,has:e=>t.has(e),clear:e=>t.clear(e),inMemoryDecorator:(e,r,a)=>{let i=o(e);if(i)return i;let c=r();return n(e,c),c.catch(()=>{t.clear(e)}),c.then(r=>(a&&a(r)&&t.clear(e),r))}}}}),o("kQgL7",function(e,t){let o=(e,t)=>(0,r("bZF61").generateHash)(`${e}${t}`),n="searchCombinedConfig",a=r("5oT59").SEARCH_COMBINED_CONFIG_CACHE_KEY,i=r("5oT59").SEARCH_COMBINED_CONFIG_BARE_CACHE_KEY,{refreshOnAccessDecorator:c,update:s,seed:l,get:d}=(0,r("fyjce").promiseCache)({name:a,shouldUseStorageAdapter:!0}),{refreshOnAccessDecorator:u,update:p,seed:m}=(0,r("fyjce").promiseCache)({name:i,shouldUseStorageAdapter:!1}),g=({userId:e,cloudId:t,config:r,expiration:n})=>l(o(e||"",t).toString(),r,n),f=e=>(0,r("bZF61").generateHash)(e).toString(),h=async({accountId:e,cloudId:t,config:r,expiration:n})=>{if(!e)return!1;let{storedValue:a,isExpired:i}=d(o(e,t).toString(),!0);return(!a||!!i)&&(await g({userId:e,cloudId:t,config:r,expiration:n}),!0)},y=async({cloudId:e,userId:t,aggAbsoluteUrl:a,onlyRefreshIfExpired:i,expiration:s,degradationCallback:l=()=>{},cacheAnalyticsCallback:d,returnExpired:p,networkCallbacks:m,headers:g})=>((0,r("iDrrr").fg)("rovo_fps_use_rovo_config")?u:c)({key:(0,r("iDrrr").fg)("rovo_fps_use_rovo_config")?f(e||""):o(t||"",e||"").toString(),supplier:()=>{let t=(0,r("b0Mpu").fetchAgg)({graphQuery:`
+query ${n}($cloudId: ID!) {
+  search {
+      configuration(cloudId: $cloudId) {
+        firstPartyProducts {
+          name
+        }
+        thirdPartyProducts {
+          name
+          outboundAuthUrl
+          isUserOAuthed
+          providerId
+          integrationARI
+          workspaceName
+          workspaceUrl
+          datasourceId
+          connectionId
+          connectorSyncType
+          isImpersonationAuthEnabled
+          connectorCreatedAt
+          ${(0,r("6s56R").isUsingRovoConfigStoreExperiment)()?"connectedAt":""}
+          lightIcon
+          entityTypes
+          environmentType
+        }
+        intercomHmac
+        siteMetadata {
+          isRovoEnabled
+          isJiraIssueIndexed
+          applicationMode
+          siteName
+          orgId
+          productEdition
+          productInfo {
+            name
+            dataRegion
+          }
+        }
+    }
+  }
+}`,variables:{cloudId:e},operationName:n,aggAbsoluteUrl:a,headers:g}).then(e=>{if(e.errors?.some(e=>e)){let t=e.errors?.map(e=>e.message).join(", ");throw Error(`Search combined config response had errors: ${t}`)}let t=e.data?.search?.configuration;if(!t)throw Error("Search combined config response missing configuration.");return t});return new(0,r("9C63M").DegradablePromise)(t,l).promise()},onlyRefreshIfExpired:i,expiration:s,returnExpired:p,analyticsCallback:d,networkCallbacks:m,serveResolvedDuringRefresh:!0});e.exports.SEARCH_COMBINED_CONFIG=a,e.exports.updateCombinedConfigCacheEntry=(e,t,r)=>s(o(e,t).toString(),r),e.exports.seedCombinedConfigCacheEntry=g,e.exports.updateBaseCombinedConfigCacheEntry=(e,t)=>p(f(e),t),e.exports.seedBaseCombinedConfigCacheEntry=({cloudId:e,config:t,expiration:r})=>m(f(e),t,r),e.exports.fillSsrCombinedConfigCache=h,e.exports.getCombinedSearchConfig=y}),o("bDWrn",function(e,t){let o=`
+description
+iconUrl
+id
+title
+type
+url
+__typename
+`,n="ResultsCountQuery",a="thirdPartySpaceFilterOptionsQuery",i="teamsWorkspaceFilterOptionsQuery",c="thirdPartyRepositoryFilterOptionsQuery",s="spaceIdFilterOptionsQuery",l="documentIdFilterOptionsQuery",d="confluenceDcContentFilterOptionsQuery",u="confluenceDcPagesQuery",p="CollabContextWorkspaceIsConnectedToWorkspaceQuery";e.exports.SEARCH_PAGE_OPERATION_NAME="SearchPageQuery",e.exports.SEARCH_DIALOG_OPERATION_NAME="SearchDialogQuery",e.exports.queryGenerator=(e,t=!1)=>{let n=(0,r("3TZZX").getSupportedPartials)(t);return`
+	query ${e}(
+		$query: String!
+		$cloudIdARI: [String!]!
+		$tenantId: ID!
+		$limit: Int!
+		$entities: [String!]!
+		$queryVersion: Int
+		$searchSessionId: String
+		$sessionId: String
+		$commonFilters: SearchCommonFilter
+		$confluenceFilters: SearchConfluenceFilter
+		$jiraFilters: SearchJiraFilter
+		$mercuryFilters: SearchMercuryFilter
+		${(0,r("iDrrr").fg)("talent_global_search")?"$talentFilters: SearchTalentFilter":""}
+		$compassFilters: SearchCompassFilter
+		$thirdPartyFilters:  SearchThirdPartyFilter
+		${(0,r("iDrrr").fg)("assets_rovo_search_all")?"$assetsFilters: SearchAssetsFilter":""}
+		$sort: [SearchSortInput]
+		$sourceProduct: String
+		$experimentId: String
+		$shadowExperimentId: String
+		$experimentLayers: [SearchExperimentLayer]
+		$after: String
+		$disableQueryReplacement: Boolean
+		$experience: String!
+		$enableHighlighting: Boolean
+		$skip3pEntityHydration: Boolean!
+		$includeGithubEntityHydration: Boolean! = false
+		$includeJiraIssueType: Boolean!
+		$includeJiraBoardContainer: Boolean!
+		$includeSocialSignals: Boolean!${((e=!1)=>e?"\n		$includeUserSignals: Boolean!":"")(t)}
+		$fanoutExperimentCohort: String
+		$includeSpaceSubtype: Boolean!
+		$includeConfluenceEntity: Boolean!
+		$skipFieldsFor3pInQuickFind: Boolean!
+		$includeAutocompleteSuggestions: Boolean = false
+	) {
+		search {
+			results: search(
+				experience: $experience
+				enableHighlighting: $enableHighlighting
+				fanoutExperimentCohort: $fanoutExperimentCohort
+				query: $query
+				first: $limit
+				after: $after
+				sort: $sort
+				disableQueryReplacement: $disableQueryReplacement
+				filters: {
+					entities: $entities
+					locations: $cloudIdARI
+					commonFilters: $commonFilters
+					confluenceFilters: $confluenceFilters
+					jiraFilters: $jiraFilters
+					${(0,r("iDrrr").fg)("assets_rovo_search_all")?"assetsFilters: $assetsFilters":""}
+					mercuryFilters: $mercuryFilters
+					compassFilters: $compassFilters
+					thirdPartyFilters: $thirdPartyFilters
+					${(0,r("iDrrr").fg)("talent_global_search")?"talentFilters: $talentFilters":""}
+				}
+				analytics: {
+					queryVersion: $queryVersion
+					searchSessionId: $searchSessionId
+					sessionId: $sessionId
+					sourceProduct: $sourceProduct
+				}
+				experimentContext: {
+					experimentId: $experimentId
+					shadowExperimentId: $shadowExperimentId
+					experimentLayers: $experimentLayers
+				}
+			) {
+				edges {
+					node {
+						${o}
+						${n}
+					}
+				}
+				queryInfo {
+					originalQuery
+					replacementQuery
+					suggestedQuery
+					originalQueryType
+					confidenceScore
+					shouldTriggerAutocorrectionExperience
+				}
+				abTest {
+					abTestId
+					controlId
+					experimentId
+				}
+				totalCount
+				totalCounts {
+					product
+					count
+				}
+        pageInfo {
+          endCursor
+        }
+				autocompleteSuggestions @include(if: $includeAutocompleteSuggestions)
+			}
+		}
+	}
+	`},e.exports.resultsCountOperationName=n,e.exports.resultsCountQueryGenerator=()=>`
+	query ${n}(
+		$query: String!
+		$cloudIdARI: String!
+		$limit: Int!
+		$entities: [String!]!
+		$queryVersion: Int
+		$searchSessionId: String
+		$commonFilters: SearchCommonFilter
+		$confluenceFilters: SearchConfluenceFilter
+		$jiraFilters: SearchJiraFilter
+		$mercuryFilters: SearchMercuryFilter
+		${(0,r("iDrrr").fg)("talent_global_search")?"$talentFilters: SearchTalentFilter":""}
+		$compassFilters: SearchCompassFilter
+		$thirdPartyFilters:  SearchThirdPartyFilter
+		${(0,r("iDrrr").fg)("assets_rovo_search_all")?"$assetsFilters: SearchAssetsFilter":""}
+		$sort: [SearchSortInput]
+		$sourceProduct: String
+		$experimentId: String
+		$shadowExperimentId: String
+		$experimentLayers: [SearchExperimentLayer]
+		$disableQueryReplacement: Boolean
+	) {
+		search {
+			results: search(
+				experience: "search-page"
+				query: $query
+				first: $limit
+				sort: $sort
+				disableQueryReplacement: $disableQueryReplacement
+				filters: {
+					entities: $entities
+					locations: [$cloudIdARI]
+					commonFilters: $commonFilters
+					confluenceFilters: $confluenceFilters
+					jiraFilters: $jiraFilters
+					mercuryFilters: $mercuryFilters
+					${(0,r("iDrrr").fg)("talent_global_search")?"talentFilters: $talentFilters":""}
+					compassFilters: $compassFilters
+					thirdPartyFilters: $thirdPartyFilters
+					${(0,r("iDrrr").fg)("assets_rovo_search_all")?"assetsFilters: $assetsFilters":""}
+				}
+		analytics: {
+					queryVersion: $queryVersion
+					searchSessionId: $searchSessionId
+					sourceProduct: $sourceProduct
+				}
+		experimentContext: {
+			experimentId: $experimentId
+			shadowExperimentId: $shadowExperimentId
+			experimentLayers: $experimentLayers
+		}
+			) {
+
+				queryInfo {
+					originalQuery
+					replacementQuery
+					originalQueryType
+					confidenceScore
+					shouldTriggerAutocorrectionExperience
+				}
+				abTest {
+					abTestId
+					controlId
+					experimentId
+				}
+				totalCount
+				totalCounts {
+					product
+					count
+				}
+			}
+		}
+	}
+	`,e.exports.jiraDcProjectFilterOptionsOperationName="jiraDcProjectFilterOptionsQuery",e.exports.confluenceDcSpaceFilterOptionsOperationName="confluenceDcSpaceFilterOptionsQuery",e.exports.thirdPartySpaceFilterOptionsOperationName=a,e.exports.thirdPartySpaceFilterOptionsQueryGenerator=()=>`
+		query ${a} (
+			$query: String!
+			$cloudIdARI: [String!]!
+			$limit: Int!
+			$entities: [String!]!
+			$product: String!
+			$integration: String!
+			$subtypes: [String!]!
+		) {
+		search {
+			search(
+			query: $query
+			first: $limit
+			filters: {
+				entities: $entities,
+				thirdPartyFilters: {
+					titleMatchOnly: true,
+					thirdPartyProducts:[
+						{
+							product: $product,
+							integrationId: $integration,
+							subtypes: $subtypes
+						}
+					]
+				},
+				locations: $cloudIdARI
+			}
+			experience: "search-page"
+			) {
+				edges {
+					node {
+						...on SearchResultGraphDocument {
+							entity {
+								...on ExternalSpace {
+									id
+									displayName
+									icon {
+										url
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	`,e.exports.teamsWorkspaceFilterOptionsOperationName=i,e.exports.teamsWorkspaceFilterOptionsQueryGenerator=()=>`
+		query ${i} (
+			$query: String!
+			$cloudIdARI: [String!]!
+			$limit: Int!
+			$entities: [String!]!
+			$product: String!
+			$integration: String!
+			$subtypes: [String!]!
+		) {
+		search {
+			search(
+			query: $query
+			first: $limit
+			filters: {
+				entities: $entities,
+				thirdPartyFilters: {
+					titleMatchOnly: true,
+					thirdPartyProducts:[
+						{
+							product: $product,
+							integrationId: $integration,
+							subtypes: $subtypes
+						}
+					]
+				},
+				locations: $cloudIdARI
+			}
+			experience: "search-page"
+			) {
+				edges {
+					node {
+						...on SearchResultGraphDocument {
+							entity {
+								...on ExternalConversation {
+									workspace
+									id
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	`,e.exports.thirdPartyRepositoryFilterOptionsOperationName=c,e.exports.thirdPartyRepositoryFilterOptionsQueryGenerator=()=>`
+		query ${c} (
+			$query: String!
+			$cloudIdARI: [String!]!
+			$limit: Int!
+			$entities: [String!]!
+			$product: String!
+			$integration: String!
+			$subtypes: [String!]!
+		) {
+		search {
+			search(
+			query: $query
+			first: $limit
+			filters: {
+				entities: $entities,
+				thirdPartyFilters: {
+					titleMatchOnly: true,
+					thirdPartyProducts:[
+						{
+							product: $product,
+							integrationId: $integration,
+							subtypes: $subtypes
+						}
+					]
+				},
+				locations: $cloudIdARI
+			}
+			experience: "search-page"
+			) {
+				edges {
+					node {
+						...on SearchResultGraphDocument {
+							entity {
+								...on ExternalRepository {
+									id
+									name
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	`,e.exports.spaceARIEntitiesOperationName=s,e.exports.spaceARIEntitiesQueryGenerator=()=>`
+		query ${s} ($ids: [ID!]!) {
+			external_entities(ids: $ids) @optIn(to: "ExternalDataDepotQueryV2"){
+				space {
+					id
+					displayName
+					icon {
+						url
+					}
+				}
+			}
+		}`,e.exports.documentARIEntitiesOperationName=l,e.exports.documentARIEntitiesQueryGenerator=()=>`
+		query ${l} ($ids: [ID!]!) {
+			external_entities(ids: $ids) @optIn(to: "ExternalDataDepotQueryV2"){
+				document {
+					id
+					displayName
+					container @optIn(to: "ExternalDataDepotQueryV2") {
+                        ... on ExternalSpace {
+                            id
+                        }
+                    }
+				}
+			}
+		}`,e.exports.confluenceDcContentFilterOptionsOperationName=d,e.exports.confluenceDcContentFilterOptionsQueryGenerator=()=>`
+		query ${d} (
+			$query: String!
+			$cloudIdARI: String!
+			$limit: Int!
+			$entities: [String!]!
+			$product: String!
+		) {
+		search {
+			search(
+			query: $query
+			first: $limit
+			filters: {
+				entities: $entities,
+				locations: [$cloudIdARI],
+				thirdPartyFilters: {
+					thirdPartyProducts:[
+						{
+							product: $product,
+							integrationId:"ari:cloud:platform::integration/confluence-dc",
+							subtypes:[]
+						}
+					]
+				}
+			}
+			analytics: {searchSessionId: "graphql"}
+			experience: "search-page"
+			) {
+				edges {
+					node {
+					id
+					title
+					description
+					... on SearchResultGraphDocument {
+							entity {
+								...on ExternalDocument {
+									type {
+										category
+									}
+									parentId
+									container @optIn(to: "ExternalDataDepotQueryV2") {
+										...on ExternalSpace {
+											id
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	`,e.exports.confluenceDcPagesOperationName=u,e.exports.confluenceDcPagesQueryGenerator=()=>`
+		query ${u} (
+			$ancestorIds: [ID!]!
+		) {
+			external_entities(ids: $ancestorIds) @optIn(to: "ExternalDataDepotQueryV2") {
+				document {
+					id
+					displayName
+				}
+			}
+		}
+	`,e.exports.searchLinkedSitesOperationName=p,e.exports.searchLinkedSiteQueryGenerator=()=>`
+		query ${p}($id: ID!) {
+			collabContext_workspaceIsConnectedToWorkspace(id: $id) {
+				edges {
+					node {
+						id
+					}
+					cursor
+				}
+				pageInfo {
+					endCursor
+					hasNextPage
+					hasPreviousPage
+					startCursor
+				}
+			}
+		}
+	`}),o("bfn6U",function(e,t){let r=`
+... on SearchResultAssetsObjectSchema {
+	id
+	title
+	type
+	description
+	lastModifiedDate
+	objectSchemaEntity {
+		links {
+			web
+		}
+	}
+}
+`,o=e=>"SearchResultAssetsObjectSchema"===e.__typename,n=`
+... on SearchResultAssetsObjectType {
+	id
+	title
+	type
+	description
+	lastModifiedDate
+	objectSchemaEntity {
+		id
+		name
+		links {
+			web
+		}
+	}
+	objectTypeEntity {
+		icon {
+			url48
+		}
+		links {
+			web
+		}
+	}
+}
+`,a=e=>"SearchResultAssetsObjectType"===e.__typename,i=`
+... on SearchResultAssetsObject {
+	id
+	title
+	description
+	lastModifiedDate
+	type
+	schemaAri
+	typeAri
+	objectSchemaEntity {
+		id
+		name
+		links {
+			web
+		}
+	}
+	objectTypeEntity {
+		id
+		name
+
+	}
+	objectEntity {
+		links {
+			web
+		}
+		avatar {
+			url48
+		}
+	}
+}
+`,c=e=>"SearchResultAssetsObject"===e.__typename;e.exports.isSearchResultAssetsObjectSchema=o,e.exports.isSearchResultAssetsObjectType=a,e.exports.isSearchResultAssetsObject=c,e.exports.isSearchAssetsPartial=e=>o(e)||a(e)||c(e),e.exports.getAssetsPartials=()=>`
+		
+		${r}
+	
+		
+		${n}
+	
+		
+		${i}
+	
+	`}),o("lwDzf",function(e,t){let r=`
+... on SearchResultAtlasProject {
+  project {
+    key
+    state {
+      label
+      value
+    }
+    dueDate {
+      label
+    }
+    isPrivate
+  }
+}
+`,o=`
+... on SearchResultAtlasGoal {
+  goal {
+    description
+    key
+    status {
+      localizedLabel {
+        messageId
+      }
+      value
+      score
+    }
+    targetDate {
+      label
+    }
+  }
+}
+`,n=e=>e?.id?.includes("townsquare")&&"SearchResultAtlasProject"===e.__typename,a=e=>e?.id?.includes("townsquare")&&"SearchResultAtlasGoal"===e.__typename;e.exports.isSearchResultAtlasProjectPartial=n,e.exports.isSearchResultAtlasGoalPartial=a,e.exports.isSearchAtlasPartial=e=>a(e)||n(e)||e?.id?.includes("townsquare")&&"SearchResultAtlasTag"===e.__typename||e?.id?.includes("townsquare")&&"SearchDefaultResult"===e.__typename,e.exports.getAtlasPartials=()=>`
+		${o}
+		${r}
+		
+	`}),o("51pfw",function(e,t){let r=`
+... on SearchResultCompassComponent {
+	lastModifiedDate
+	ownerId
+	tier
+	component {
+		description
+		state
+	}
+}
+`;e.exports.getCompassPartials=()=>r,e.exports.isSearchCompassPartial=e=>"SearchResultCompassComponent"===e.__typename}),o("cz1Yi",function(e,t){let r=e=>"SearchConfluencePageBlogAttachment"===e.__typename,o=`
+... on SearchConfluenceSpace {
+	key
+	lastModified
+	iconPath
+	socialSignal(tenantId: $tenantId) @include(if: $includeSocialSignals) {
+		signal
+		timestamp
+		user {
+			accountId
+			name
+			picture
+			... on AtlassianAccountUser {
+				email
+				extendedProfile {
+					jobTitle
+				}
+			}
+		}
+
+	}
+}
+`,n=e=>"SearchConfluenceSpace"===e.__typename;e.exports.isSearchConfluencePageBlogAttachment=r,e.exports.isSearchConfluenceSpace=n,e.exports.isSearchConfluencePartial=e=>r(e)||n(e),e.exports.getConfluencePartials=(e=!1)=>`
+		
+... on SearchConfluencePageBlogAttachment {
+	lastModified
+	${e?`
+	latestUserAction @include(if: $includeUserSignals)
+	latestUserActionTs @include(if: $includeUserSignals)
+	`:""}
+	isVerified
+	space {
+		id
+		name
+		webUiLink
+	}
+	__typename
+	confluenceEntity @include(if: $includeConfluenceEntity) {
+		... on ConfluencePage {
+			subtype
+			commentCountSummary {
+				total
+			}
+			likesSummary {
+				count
+			}
+		}
+	}
+	socialSignal(tenantId: $tenantId) @include(if: $includeSocialSignals) {
+		signal
+		timestamp
+		user {
+			accountId
+			name
+			picture
+			... on AtlassianAccountUser {
+				email
+				extendedProfile {
+					jobTitle
+				}
+			}
+		}
+	}
+	linkedResults {
+		id
+		title
+		url
+		type
+		description
+		lastModifiedDate
+		category
+		subtype
+		integrationId
+		providerId
+	}
+}
+
+		${o}
+	`}),o("imUxN",function(e,t){let r=e=>"SearchResultJiraProject"===e.__typename,o=`
+... on SearchResultJiraIssue {
+  id
+  title
+  type
+  description
+  url
+  iconUrl
+  lastModifiedDate
+  issueTypeId
+  status {
+    id
+    name
+  }
+  issue {
+    webUrl
+		key
+		assigneeField {
+			user {
+				name
+				picture
+			}
+		}
+    fieldsById(ids: ["project"]) {
+      edges {
+        node {
+          __typename
+          name
+          ... on JiraProjectField {
+            project {
+              id
+              name
+			  projectType
+            }
+          }
+        }
+      }
+    }
+			issueTypeAvatarUrl
+		issueTypeField @include(if: $includeJiraIssueType) {
+			id
+			issueType {
+				id
+				name
+			}
+		}
+  }
+  socialSignal(tenantId: $tenantId) @include(if: $includeSocialSignals) {
+	    signal
+		timestamp
+		user {
+			accountId
+			name
+			picture
+			... on AtlassianAccountUser {
+				email
+				extendedProfile {
+					jobTitle
+				}
+			}
+	    }
+  }
+	linkedResults {
+		id
+		title
+		url
+		type
+		description
+		lastModifiedDate
+		category
+		subtype
+		integrationId
+		providerId
+	}
+  __typename
+}
+`,n=e=>"SearchResultJiraIssue"===e.__typename,a=e=>"SearchResultJiraFilter"===e.__typename,i=e=>"SearchResultJiraDashboard"===e.__typename,c=`
+... on SearchResultJiraBoard {
+  boardId
+  container @include(if: $includeJiraBoardContainer) {
+		__typename
+		... on SearchResultJiraBoardProjectContainer {
+			__typename
+			projectName
+		}
+		... on SearchResultJiraBoardUserContainer {
+			__typename
+			userName
+		}
+	}
+	board {
+		boardFrontendUrl
+		iconUrl
+	}
+  product
+}
+`,s=e=>"SearchResultJiraBoard"===e.__typename;e.exports.isSearchResultJiraProject=r,e.exports.isSearchResultJiraIssue=n,e.exports.isJiraProjectField=e=>"JiraProjectField"===e.__typename&&"Project"===e.name,e.exports.isSearchResultJiraFilter=a,e.exports.isSearchResultJiraDashboard=i,e.exports.isSearchResultJiraBoard=s,e.exports.isSearchJiraPartial=e=>r(e)||n(e)||a(e)||i(e)||s(e)||"SearchResultJiraPlan"===e.__typename,e.exports.getJiraPartials=()=>`
+		
+... on SearchResultJiraProject {
+  projectId
+  projectKey
+  projectType
+  lastModifiedDate
+  project {
+    webUrl
+  }
+	socialSignal(tenantId: $tenantId) @include(if: $includeSocialSignals) {
+		signal
+		timestamp
+		user {
+			accountId
+			name
+			picture
+			... on AtlassianAccountUser {
+				email
+				extendedProfile {
+					jobTitle
+				}
+			}
+		}
+	}
+}
+		${o}
+		
+		
+		${c}
+	`}),o("axZZ7",function(e,t){let o=`
+... on SearchResultMercuryFocusArea {
+	lastModifiedDate
+	focusArea {
+		id
+		uuid
+		name
+		focusAreaType {
+			id
+			name
+			hierarchyLevel
+		}
+		status {
+			key
+			displayName
+		}
+		health {
+			key
+			color
+			displayName
+		}
+		targetDate {
+			targetDate
+			targetDateType
+		}
+		owner {
+			accountId
+			name
+		}
+	}
+}
+`,n=`
+... on SearchResultMercuryFocusAreaStatusUpdate {
+	lastModifiedDate
+	focusArea {
+		name
+	}
+}
+`,a=`
+... on SearchResultMercuryOrganization {
+	lastModifiedDate
+	organization @optIn(to: "Mercury") {
+		id
+		name
+		organizationType {
+			id
+			name
+			hierarchyLevel
+		}
+		status {
+			key
+			displayName
+		}
+		targetDate {
+			targetDate
+			targetDateType
+		}
+		owner {
+			accountId
+			name
+		}
+	}
+}
+`,i=`
+... on SearchResultMercuryOrganizationStatusUpdate {
+	lastModifiedDate
+}
+`,c=`
+... on SearchResultSpfAsk {
+	lastModifiedDate
+	ask @optIn(to: "Spf") {
+		id
+		name
+		status
+		targetDate {
+			targetDate
+			targetDateType
+		}
+	}
+}
+`,s=`
+... on SearchResultMercuryRisk {
+	lastModifiedDate
+	risk @optIn(to: "Mercury") {
+		id
+		name
+		status {
+			key
+			displayName
+		}
+		targetDate {
+			targetDate
+			targetDateType
+		}
+	}
+}
+`,l=e=>e?.id?.includes("mercury")&&"SearchResultMercuryFocusArea"===e.__typename,d=e=>e?.id?.includes("mercury")&&"SearchResultMercuryFocusAreaStatusUpdate"===e.__typename,u=e=>e?.id?.includes("mercury")&&"SearchResultMercuryOrganization"===e.__typename,p=e=>e?.id?.includes("mercury")&&"SearchResultMercuryOrganizationStatusUpdate"===e.__typename,m=e=>e?.id?.includes("passionfruit")&&"SearchResultSpfAsk"===e.__typename,g=e=>e?.id?.includes("mercury")&&"SearchResultMercuryRisk"===e.__typename;e.exports.isSearchResultMercuryFocusAreaPartial=l,e.exports.isSearchResultMercuryFocusAreaStatusUpdatePartial=d,e.exports.isSearchResultMercuryOrganizationPartial=u,e.exports.isSearchResultMercuryOrganizationStatusUpdatePartial=p,e.exports.isSearchResultSpfAskPartial=m,e.exports.isSearchResultMercuryRiskPartial=g,e.exports.isSearchMercuryPartial=e=>l(e)||d(e)||m(e)||g(e)||u(e)||p(e),e.exports.getMercuryPartials=()=>`
+		${o}
+		${n}
+		${(0,r("iDrrr").fg)("platform_passionfruit_search_onboarding_enabled")?c:""}
+		${(0,r("iDrrr").fg)("platform_mercury_risk_search_ui_enabled")?s:""}
+		${(0,r("iDrrr").fg)("platform_organization_search_onboarding_enabled")?a:""}
+		${(0,r("iDrrr").fg)("platform_organization_search_onboarding_enabled")?i:""}
+	`}),o("lqtzf",function(e,t){let r=`
+... on SearchResultTalentPosition {
+	__typename
+	lastModifiedDate
+	position {
+		__typename
+		worker {
+			preferredName
+			user {
+				picture
+			}
+		}
+		fieldValues(
+			fieldIdIsIn: [
+				"positionId",
+				"positionStatus",
+				"positionJobTitle",
+				"positionPositionTitle",
+				"positionKey",
+				"positionExternalPositionKey",
+				"positionWorker"
+			]
+		) {
+			fieldId
+			fieldValue {
+				__typename
+				... on RadarStringFieldValue {
+					__typename
+					stringValue: value
+				}
+			}
+		}
+	}
+}
+`;e.exports.isSearchTalentPartial=e=>e?.id?.includes("radar")&&"SearchResultTalentPosition"===e.__typename,e.exports.getTalentPartials=()=>`
+		${r}
+	`}),o("hABTJ",function(e,t){let r=`
+... on SearchFederatedEmailEntity {
+	sender {
+		email
+		name
+	}
+}
+`,o=`
+... on SearchResultFederated @skip(if: $skipFieldsFor3pInQuickFind) {
+	lastModifiedDate
+	entity {
+		${r}
+	}
+}
+`;var n,a=((n=a||{}).EMAIL="email",n);e.exports.getFederatedPartials=()=>o}),o("5Styu",function(e,t){let o=`
+... on ExternalBranch {
+    name
+    container @optIn(to: "ExternalDataDepotQueryV2") {
+        ... on ExternalRepository {
+            name
+        }
+    }
+}
+`,n=`
+... on ExternalCalendarEvent {
+	attachments {
+		byteSize
+		mimeType
+		thumbnailUrl
+		title
+		url
+	}
+	attendees {
+		isOptional
+		rsvpStatus
+		user {
+			thirdPartyUser {
+				id
+				email
+				name
+			}
+			user {
+				name
+			}
+		}
+	}
+	createdBy {
+		thirdPartyUser {
+			id
+			email
+			externalId
+			name
+			picture
+		}
+		user {
+			name
+		}
+	}
+	eventEndTime
+	eventStartTime
+	eventType
+	location {
+		address
+		coordinates
+		name
+		url
+	}
+	recurringEventId
+	videoMeetingUrl
+}
+`,a=`
+... on ExternalCampaign {
+	status
+	startDate
+	endDate
+	lastUpdated
+	owners {
+		thirdPartyUser {
+			name
+		}
+	}
+	createdBy {
+		thirdPartyUser {
+			name
+		}
+	}
+}
+`,i=`
+... on ExternalCase {
+	displayNumber
+	status
+	isClosed
+	lastUpdated
+	owners {
+		thirdPartyUser {
+			accountId
+			externalId
+			name
+			email
+			id
+		}
+		user {
+			name
+		}
+	}
+	createdBy {
+		thirdPartyUser {
+			name
+		}
+	}
+	container @optIn(to: "ExternalDataDepotQueryV2") {
+		... on ExternalCustomerOrg {
+			id
+			displayName
+		}
+	}
+}
+`,c=`
+... on SearchResultGraphCode {
+    path
+    repository {
+        name
+    }
+}
+`,s=`
+... on ExternalComment {
+	container @optIn(to: "ExternalDataDepotQueryV2") {
+		... on ExternalSpace {
+		displayName
+		url
+		subtype @include(if: $includeSpaceSubtype)
+	   }
+	}
+}
+`,l=`
+... on ExternalCommit {
+    author {
+        user {
+            name
+        }
+    }
+    container @optIn(to: "ExternalDataDepotQueryV2") {
+        ... on ExternalRepository{
+            name
+        }
+    }
+}
+`,d=`
+... on ExternalConversation {
+    id
+    memberCount
+    displayName
+    membershipType
+    workspace
+    topic
+    members {
+        thirdPartyUser {
+            id
+            name
+        }
+        user {
+            id
+            name
+        }
+    }
+}
+`,u=`
+... on ExternalCustomerOrg {
+	country
+	accountType
+	thirdPartyId
+	websiteUrl
+	industry
+	displayName
+	contributors {
+		thirdPartyUser {
+			id
+			name
+		}
+	}
+	contacts {
+		thirdPartyUser {
+			id
+			accountId
+			externalId
+			name
+			nickname
+			email
+			picture
+			extendedProfile {
+				jobTitle
+				department
+				organization
+			}
+		}
+		user {
+			id
+			name
+		}
+	}
+	parent @optIn(to: "ExternalDataDepotQueryV2"){
+		...on ExternalCustomerOrg {
+			id
+			displayName
+		}
+	}
+	customerOrgLastActivity {
+		lastActivityAt
+		event
+	}
+	lifeTimeValue {
+		value
+		currencyCode
+	}
+}
+`,p=`
+... on ExternalDashboard {
+	id
+	url
+	createdAt
+	description
+	displayName
+	workspaceName
+	lastUpdatedAt
+	updateSequenceNumber
+	lastUpdatedBy {
+		thirdPartyUserId
+		userId
+	}
+	owners {
+		userId
+		thirdPartyUser {
+          	  name
+        }
+	}
+	elements {
+		name
+		innerComponents
+	}
+	pages {
+		name
+	}
+}
+`,m=`
+... on ExternalDataTable {
+	id
+	url
+	dataTableType: type
+	createdAt
+	description
+	displayName
+	workspaceName
+	lastUpdatedAt
+	updateSequenceNumber
+	lastUpdatedBy {
+		thirdPartyUserId
+		userId
+	}
+	owners {
+		userId
+		thirdPartyUser {
+          	  name
+        }
+	}
+	columns {
+		name
+		columnType
+		description
+		isRequired
+	}
+}
+`,g=`
+... on ExternalDeal {
+	stage
+	accountName
+	dealClosedAt
+	isClosed
+	thirdPartyId
+	parentId
+	lastActivity {
+		lastActivityAt
+		event
+	}
+	opportunityAmount {
+		value
+		currencyCode
+	}
+	contributors {
+		user {
+			thirdPartyUser {
+				id
+				name
+			}
+		}
+	}
+	contact {
+		thirdPartyUser {
+			id
+			accountId
+			externalId
+			name
+			nickname
+			email
+			picture
+			extendedProfile {
+				jobTitle
+				department
+				organization
+			}
+		}
+		user {
+			id
+			name
+		}
+	}
+	parent @optIn(to: "ExternalDataDepotQueryV2") {
+        ... on ExternalCustomerOrg {
+          id
+          displayName
+        }
+    }
+}
+`,f=`
+... on ExternalDesign {
+    thumbnail {
+        externalUrl
+    }
+}
+`,h=`
+... on ExternalDocument {
+    type {
+        iconUrl
+    }
+    thirdPartyId
+    parent @optIn(to: "ExternalDataDepotQueryV2") {
+        ... on ExternalDocument {
+            displayName
+            url
+        }
+    }
+	container @optIn(to: "ExternalDataDepotQueryV2") {
+		... on ExternalSpace {
+            displayName
+            url
+		}
+	}
+    reactions {
+        reactionType
+        total
+    }
+}
+`,y=`
+... on ExternalLead {
+	status
+	lastUpdated
+	owners {
+		thirdPartyUser {
+			name
+		}
+	}
+	createdBy {
+		thirdPartyUser {
+			name
+		}
+	}
+}
+`,P=`
+... on ExternalMessage {
+    lastUpdated
+    lastActive
+    description
+    reactionCount
+    attachments {
+	    title
+        mimeType
+        thumbnailUrl
+        url
+    }
+    createdBy {
+        thirdPartyUser {
+            id
+            accountId
+            externalId
+            name
+            nickname
+            email
+			picture
+            extendedProfile {
+                jobTitle
+                department
+                organization
+            }
+        }
+        user {
+            id
+            name
+        }
+    }
+    container @optIn(to: "ExternalDataDepotQueryV2") {
+        ... on ExternalConversation {
+            id
+            displayName
+            memberCount
+            membershipType
+            type
+            members {
+                thirdPartyUser {
+                    id
+                    name
+                    nickname
+                    email
+                    extendedProfile {
+                        jobTitle
+                        department
+                        organization
+                    }
+                }
+            }
+        }
+    }
+    associatedWith {
+        edges {
+            node {
+                id
+                createdBy {
+                    thirdPartyUser {
+                        id
+                        accountId
+                        externalId
+                        name
+                        email
+                    }
+                }
+                entity {
+					__typename
+					... on ExternalConversation {
+						id
+						displayName
+						channelId:externalId
+					}
+					... on ThirdPartyUser {
+                        id
+                        email
+						externalId
+                        name
+                        nickname
+                        picture
+                        extendedProfile {
+                            jobTitle
+                            department
+                            organization
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+`,C=`
+... on ExternalProject {
+	assignee {
+		thirdPartyUser {
+			id
+			email
+			name
+		}
+		user {
+			name
+		}
+	}
+	attachments {
+		byteSize
+		mimeType
+		thumbnailUrl
+		title
+		url
+	}
+	createdBy {
+		thirdPartyUser {
+			id
+			email
+			name
+		}
+		user {
+			name
+		}
+	}
+	dueDate
+	key
+	status
+	container @optIn(to: "ExternalDataDepotQueryV2") {
+		... on ExternalSpace {
+		displayName
+		url
+		subtype @include(if: $includeSpaceSubtype)
+	   }
+	}
+}
+`,b=`
+... on ExternalPullRequest {
+    title
+    lastUpdate
+	pullRequestId
+	pullRequestStatus: status
+    container @optIn(to: "ExternalDataDepotQueryV2") {
+        ... on ExternalRepository {
+            name
+        }
+    }
+}
+`,S=`
+... on ExternalRemoteLink {
+  thumbnail {
+    externalUrl
+  }
+}
+`,E=`
+... on ExternalRepository {
+    name
+}
+`,v=`
+... on ExternalVideo {
+    durationInSeconds
+    thumbnailUrl
+    chapters {
+        title
+        startTimeInSeconds
+    }
+    createdBy {
+        thirdPartyUser {
+            id
+            email
+            name
+        }
+        user {
+            name
+        }
+    }
+}
+`,_=`
+... on ExternalWorkItem {
+	assignee {
+		thirdPartyUser {
+			id
+			email
+			name
+		}
+		user {
+			name
+		}
+	}
+	attachments {
+		byteSize
+		mimeType
+		thumbnailUrl
+		title
+		url
+	}
+	collaborators {
+		thirdPartyUser {
+			id
+			email
+			name
+		}
+		user {
+			name
+		}
+	}
+	createdBy {
+		thirdPartyUser {
+			id
+			email
+			name
+		}
+		user {
+			name
+		}
+	}
+	dueDate
+	exceedsMaxCollaborators
+	workItemProject {
+		id
+		name
+	}
+	status
+	subtype
+	team
+	container @optIn(to: "ExternalDataDepotQueryV2") {
+		... on ExternalSpace {
+		displayName
+		url
+		subtype @include(if: $includeSpaceSubtype)
+	   }
+	}
+}
+`,I=`
+... on SearchResultGraphDocument {
+	excerpt @skip(if: $skipFieldsFor3pInQuickFind)
+	permissionLevel @skip(if: $skipFieldsFor3pInQuickFind)
+	initialContributors @skip(if: $skipFieldsFor3pInQuickFind) {
+		name
+		id
+		externalId
+	}
+	subtype
+	integrationId
+	providerId
+	connectorType
+	lastModifiedDate
+	linkedEntities @skip(if: $skipFieldsFor3pInQuickFind) {
+		id
+		title
+		excerpt,
+		permissionLevel,
+		subtype
+		integrationId
+		lastModifiedDate
+		entity @skip(if: $skip3pEntityHydration) {
+			${P}
+		}
+		initialContributors {
+			name
+			id
+			externalId
+		}
+		containerName @optIn(to: "SearchPerformanceImprovementChanges")
+		allContributors @optIn(to: "SearchPerformanceImprovementChanges") {
+			id
+			accountId
+			externalId
+			name
+			nickname
+			email
+			picture
+			extendedProfile {
+				jobTitle
+				department
+				organization
+			}
+		}
+	}
+	entity @skip(if: $skip3pEntityHydration) {
+		${o}
+		${n}
+		${a}
+		${i}
+		${y}
+		${g}
+		${u}
+		${l}
+		${d}
+		${f}
+		${p}
+		${m}
+		${h}
+		${P}
+		${C}
+		${b}
+		${E}
+		${v}
+		${_}
+		${s}
+		${S}
+	}
+	entity @include(if: $includeGithubEntityHydration) {
+		${b}
+		${E}
+		${_}
+	}
+	containerName @optIn(to: "SearchPerformanceImprovementChanges") @skip(if: $skipFieldsFor3pInQuickFind)
+	allContributors @optIn(to: "SearchPerformanceImprovementChanges") @skip(if: $skipFieldsFor3pInQuickFind) {
+		id
+		accountId
+		externalId
+		name
+		nickname
+		email
+		picture
+		extendedProfile {
+			jobTitle
+			department
+			organization
+		}
+	}
+	linkedResults @skip(if: $skipFieldsFor3pInQuickFind) {
+		id
+		title
+		url
+		type
+		description
+		lastModifiedDate
+		category
+		subtype
+		integrationId
+		providerId
+	}
+}
+`;var A,k,R,x,F,w,D,T,O=((A=O||{})[A.active=0]="active",A[A.inactive=1]="inactive",A[A.closed=2]="closed",A),U=((k=U||{})[k.ARCHIVE=0]="ARCHIVE",k[k.AUDIO=1]="AUDIO",k[k.CODE=2]="CODE",k[k.DOCUMENT=3]="DOCUMENT",k[k.FOLDER=4]="FOLDER",k[k.FORM=5]="FORM",k[k.IMAGE=6]="IMAGE",k[k.OTHER=7]="OTHER",k[k.PDF=8]="PDF",k[k.PRESENTATION=9]="PRESENTATION",k[k.SHORTCUT=10]="SHORTCUT",k[k.SPREADSHEET=11]="SPREADSHEET",k[k.VIDEO=12]="VIDEO",k[k.WEB_PAGE=13]="WEB_PAGE",k),N=((R=N||{}).APPOINTMENT="appointment",R.BIRTHDAY="birthday",R.DEFAULT="default",R.EVENT="event",R.FOCUS_TIME="focus_time",R.OUT_OF_OFFICE="out_of_office",R.REMINDER="reminder",R.TASK="task",R.WORKING_LOCATION="working_location",R),L=((x=L||{}).ACCEPTED="accepted",x.DECLINED="declined",x.NOT_RESPONDED="not_responded",x.OTHER="other",x.TENATIVELY_ACCEPTED="tenatively_accepted",x),M=((F=M||{}).TASK="task",F.DEFAULT_TASK="default_task",F.WORK_ITEM="work_item",F.EPIC="epic",F.BUG="bug",F.STORY="story",F.MILESTONE="milestone",F.SECTION="section",F.APPROVAL="approval",F.PROBLEM="problem",F.INCIDENT="incident",F.QUESTION="question",F.ISSUE="issue",F.TICKET="ticket",F.REQUESTED_ITEM="requested_item",F.CATALOG_ITEM="catalog_item",F.OTHER="other",F),G=((w=G||{}).PRIVATE="PRIVATE",w.PUBLIC="PUBLIC",w.SHARED="SHARED",w),$=((D=$||{}).CHANNEL="CHANNEL",D.DIRECT_MESSAGE="DIRECT_MESSAGE",D.GROUP_DIRECT_MESSAGE="GROUP_DIRECT_MESSAGE",D),K=((T={}).BRANCH="branch",T.CALENDAR_EVENT="calendar-event",T.CAMPAIGN="campaign",T.CASE="case",T.LEAD="lead",T.DEAL="deal",T.CUSTOMER_ORG="customer-org",T.CUSTOMER_CONTACT="customer-contact",T.COMMENT="comment",T.COMMIT="commit",T.CONVERSATION="conversation",T.DESIGN="design",T.DOCUMENT="document",T.MESSAGE="message",T.PROJECT="project",T.PULL_REQUEST="pull-request",T.REPOSITORY="repository",T.VIDEO="video",T.WORK_ITEM="work-item",T.SPACE="space",T.REMOTE_LINK="remote-link",T.DASHBOARD="dashboard",T.DATA_TABLE="data-table",T);e.exports.ResourceType=K,e.exports.getGraphPartials=()=>{let e=[I];return(0,r("iDrrr").fg)("rovo_github_code_search")&&e.push(c),e.join("\n")},e.exports.isSearchResultGraphEntity=e=>"SearchResultGraphDocument"===e.__typename,e.exports.isPullRequestEntity=e=>{let{resourceType:t}=r("7avaU").AnyAri.parse(e.id);return"pull-request"===t},e.exports.isDocumentEntity=e=>{let{resourceType:t}=r("7avaU").AnyAri.parse(e.id);return"document"===t},e.exports.isWorkItemEntity=e=>{let{resourceType:t}=r("7avaU").AnyAri.parse(e.id);return"work-item"===t},e.exports.isCodeResult=e=>"SearchResultGraphCode"===e.__typename}),o("lwXsc",function(e,t){let r=`
+... on SearchResultTrelloBoard {
+	type
+	description
+	lastModifiedDate
+}
+`,o=`
+... on SearchResultTrelloCard {
+	type
+	description
+	lastModifiedDate
+	boardName
+	commentsCount
+	linkedResults {
+		id
+		title
+		url
+		type
+		description
+		lastModifiedDate
+		category
+		subtype
+		integrationId
+		providerId
+	}
+}
+`;e.exports.isSearchTrelloPartial=e=>"SearchResultTrelloBoard"===e.__typename||"SearchResultTrelloCard"===e.__typename,e.exports.getTrelloPartials=()=>`
+		${r}
+		${o}
+	`}),o("aqAfG",function(e,t){let r={Atlas:"townsquare",Bitbucket:"bitbucket",Compass:"compass",Confluence:"confluence",Jira:"jira",JiraProductDiscovery:"jira-product-discovery",JiraServiceManagement:"jira-servicedesk",Trello:"trello",Focus:"mercury",Assets:"cmdb",Talent:"radar"},o=Object.values(r);e.exports.ProductKeys1P=r,e.exports.ARI_EXTRACTED_1P_KEYS=o,e.exports.NounKeys={project:"project",goal:"goal",AtlassianWebCrawler:"atlassian-web-crawler"}}),o("aoy1P",function(e,t){let o=r("3L2aM").ConnectorSources.Federated,n=r("3L2aM").ConnectorSources.Lite,a=r("3L2aM").ConnectorSources.Smartlinks,i=r("3L2aM").ConnectorSources.Full;r("3L2aM").ConnectorSources.Backfill;let c=new Map;e.exports.FEDERATED_CONNECTOR_SOURCE=o,e.exports.LITE_CONNECTOR_SOURCE=n,e.exports.SMARTLINKS_CONNECTOR_SOURCE=a,e.exports.FULL_CONNECTOR_SOURCE=i,e.exports.isForgeConnectorProductKey=e=>e.startsWith("forge-connector-"),e.exports.registerForgeConnectorIcon=(e,t)=>{c.set(e,t)}}),o("fR63l",function(e,t){e.exports.ProductKeys3P={AtlassianWebCrawler:"atlassian-web-crawler",Figma:"figma",Github:"github",GoogleDrive:"drive",Loom:"loom",OneDrive:"onedrive",Dropbox:"dropbox",Slack:"slack",Sharepoint:"sharepoint",Teams:"teams",GoogleCalendar:"google-calendar",OutlookCalendar:"outlook-calendar",OutlookMail:"outlook-mail",Gmail:"gmail",AdobeSign:"adobe-sign",Asana:"asana",Zendesk:"zendesk",Airtable:"airtable",Smartsheet:"smartsheet",Notion:"notion",Miro:"miro",Docusign:"docusign",Lucid:"lucid",Monday:"monday",AzureDevops:"azure-devops",Gitlab:"gitlab",ConfluenceDC:"confluence-dc",Canva:"canva",Box:"box",Zeplin:"zeplin",ServiceNow:"servicenow",Freshservice:"freshservice",PowerBI:"power-bi",ClickUp:"clickup",Amplitude:"amplitude",Stripe:"stripe",AdobeXD:"adobexd",Aha:"aha",Mural:"mural",Webex:"webex",Todoist:"todoist",PagerDuty:"pagerduty",Pipedrive:"pipedrive",Hubspot:"hubspot",Dovetail:"dovetail",LaunchDarkly:"launchdarkly",Salesforce:"salesforce",Sentry:"sentry",JiraDC:"jira-dc",Gitbook:"gitbook",AWSS3:"aws-s3",Databricks:"databricks",JsmDC:"jsm-dc",ForgeAdamVitareqDev:"forge-connector-dAkghOClvWGokDftTTaIgNoD6pnNt74z-vitareq-connector",ForgeAdamVitareqProd:"forge-connector-EjfoGWrWrETl3Zc5zkGynPyESZO5Qu93-vitareq-connector",ForgeK15tScrollSitesDev:"forge-connector-h1n3NRFAn84v7ECSONVidlCS88qZh8cy-scroll-sites-connector",ForgeK15tScrollSitesProd:"forge-connector-ofe9zXccOCQ3U4t4kDVywSyJUoZjb1sO-scroll-sites-connector",ForgePioAwsDev:"forge-connector-HaxJprV0zzjjvwLhGkAN2gDPhHZwXNiL-s3-connector",ForgePioAwsProd:"forge-connector-mRcqWRwqkUd4JwapGkvGHUViyySX9MVy-s3-connector",ForgePioClickupDev:"forge-connector-ELuz3hTMhig0Jdrr6ytI45SifO9DfKrY-clickup-connector",ForgePioClickupProd:"forge-connector-uwYqtNjM6w0QIhHOFG0Cq4cnkUM9mt3K-clickup-connector",ForgePioGitbookDev:"forge-connector-Xh70v2yqkzOjTQqTMLxk1lElehWIXoYi-gitbook-connector",ForgePioGitbookProd:"forge-connector-cQ1IDSmJT0DrQuF8pGa4ijz0XZ6IGF5u-gitbook-connector",ForgePioGithubDev:"forge-connector-3QYYBgeNDilQB3Jc7uGMCchNgUGvCi7j-github-connector",ForgePioGithubProd:"forge-connector-0Sw5Yr860fgfx5sYS7kEUoxnGhEvrhhI-github-connector",ForgePioGitlabDev:"forge-connector-psr1wBkasRuKCwsvwi4aTJNhjmlVFebC-gitlab-connector",ForgePioGitlabProd:"forge-connector-QLK5Xf8nBqejSZTulw5s3Cl6fIS24MwL-gitlab-connector",ForgePioGoogleDriveDev:"forge-connector-JhqjCcAP6AHHxkYhY2akTgZsYXY93SMq-google-drive-connector",ForgePioGoogleDriveProd:"forge-connector-pcIwW04B398CSnilRIyzPJ5v5GevlCCo-google-drive-connector",ForgePioGuruDev:"forge-connector-NtY3W5Z8JTBshAgPZFIfT7VjYAARj1P5-guru-connector",ForgePioGuruProd:"forge-connector-mulxOVrXWOZObhFZH5WAqs7Ga2lCPK29-guru-connector",ForgePioHelpjuiceDev:"forge-connector-f1rvRuAyoDWIwDs7Xubi5AZJTuESM5PC-helpjuice-connector",ForgePioHelpjuiceProd:"forge-connector-8durapLyclxZeEexKkwxw6ZpCRpBz4dP-helpjuice-connector",ForgePioHubspotDev:"forge-connector-RtvzhBL0FFFIjLCBHjXI8QfgDqAs79WF-hubspot-connector",ForgePioHubspotProd:"forge-connector-O19vyTOCxgkZ6KSHycRjpzC0543x6Z0J-hubspot-connector",ForgePioSalesforceDev:"forge-connector-50BYkfgS4GXtr6iO8qUeBFbbHHbuFleo-salesforce-connector",ForgePioSalesforceProd:"forge-connector-nn5lJU1KJxJsUNML5GWV3blDYHMT6nAb-salesforce-connector",ForgePioSharepointDev:"forge-connector-cl5i3J8L463hTuQiDt7f1mK4vZllsAo0-sharepoint-connector",ForgePioSharepointProd:"forge-connector-7yrzYPlAOcZAif2tIymeDXBUNUAxI95G-sharepoint-connector",ForgePioStackOverflowDev:"forge-connector-ojk0u9oXGmVmS3BC7VmVSBPPIuuF5df3-stack-overflow-connector",ForgePioStackOverflowProd:"forge-connector-vUmPXguTcgLzdG1R3H0kTUQwxoGnZcsS-stack-overflow-connector",ForgeUtoolityGitbookDev:"forge-connector-FEJ0dhTb8HC3UYmqhPAKYCWVTcpoHsp5-gitbook-connector",ForgeUtoolityGitbookProd:"forge-connector-byNN1wfDuTnx7VndySG7Qq3ZfoXudUcL-gitbook-connector",ForgeGdriveEugeneTestDev:"forge-connector-s7M8FnmJVPQh9FtRqvqwSL3QFtqMijua-gdrive",ForgeGdriveEugeneTestProd:"forge-connector-bkRlqLiPfviKrVtbA6Q0QGN22x6b37mf-gdrive",ForgeUnitoSalesforceDev:"forge-connector-h8rZu86YJHRfyVlmVeUR464Kuhz9OZvV-salesforce",ForgeUnitoSalesforceProd:"forge-connector-qjk3Z8Kt2DWx29hdZHQapEYXAGCPIyd8-salesforce",ForgeUnitoServicenowDev:"forge-connector-52qcnF9TIgxkDKY4OL7xNxAzcM0amb7q-servicenow",ForgeUnitoServicenowProd:"forge-connector-RzFogW4EQLcXYmYpKkItRUhLAn3jETMq-servicenow",ForgeUnitoWrikeDev:"forge-connector-gw0rFhQkj7PuTllmYdHbMaPw6jC18YvO-wrike",ForgeUnitoWrikeProd:"forge-connector-390XhSnH4YgwqVgmyqYOujxVoL3IOUcM-wrike",ForgeUnitoAsanaDev:"forge-connector-6wHDDwNbam77WvGwMKYMGDiTWP8pza54-asana",ForgeUnitoAsanaProd:"forge-connector-sFXfxz3XEDS1wAWWCe345UVrSbUm9zyb-asana",ForgeUnitoBasecampDev:"forge-connector-nImlCTNLZUCtQzFsthpnlYJL0B981lMH-basecamp",ForgeUnitoBasecampProd:"forge-connector-TZqLHQtzvKxRikkh1KQlp4acwCzS5W1Z-basecamp",Zoom:"zoom"},e.exports.ProductResourceTypes3P={AtlassianWebCrawler:"webcrawler-connector",Figma:"figma-connector",Github:"github-connector",GoogleDrive:"google-drive-connector",OneDrive:"onedrive-connector",Dropbox:"dropbox-connector",Slack:"slack-connector",Sharepoint:"sharepoint-connector",Teams:"microsoft-teams-connector",GoogleCalendar:"google-calendar-connector",OutlookCalendar:"outlook-calendar-connector",OutlookMail:"outlook-mail-connector",Gmail:"gmail-connector",AdobeSign:"adobe-sign-connector",Asana:"asana-connector",Zendesk:"zendesk-connector",Airtable:"airtable-connector",Smartsheet:"smartsheet-connector",Notion:"notion-connector",Miro:"miro-connector",Docusign:"docusign-connector",Lucid:"lucid-connector",Monday:"monday-connector",AzureDevops:"azure-devops-connector",Gitlab:"gitlab-connector",ConfluenceDC:"confluence-dc-connector",JiraDC:"jira-dc-connector",JsmDC:"jsm-dc-connector",Canva:"canva-connector",Box:"box-connector",Zeplin:"smartlinks-connector-zeplin",ServiceNow:"servicenow-connector",Freshservice:"freshservice-connector",PowerBI:"smartlinks-connector-power-bi",ClickUp:"smartlinks-connector-clickup",Amplitude:"smartlinks-connector-amplitude",Stripe:"smartlinks-connector-stripe",AdobeXD:"smartlinks-connector-adobexd",Aha:"aha-connector",Mural:"smartlinks-connector-mural",Webex:"smartlinks-connector-webex",Todoist:"smartlinks-connector-todoist",PagerDuty:"smartlinks-connector-pagerduty",Pipedrive:"smartlinks-connector-pipedrive",Hubspot:"hubspot-connector",Dovetail:"smartlinks-connector-dovetail",LaunchDarkly:"smartlinks-connector-launchdarkly",Salesforce:"salesforce-connector",Sentry:"smartlinks-connector-sentry",Gitbook:"gitbook-connector",AWSS3:"aws-s3-connector",Databricks:"databricks-connector",ForgeAdamVitareqDev:"forge-connector-dAkghOClvWGokDftTTaIgNoD6pnNt74z-vitareq-connector",ForgeAdamVitareqProd:"forge-connector-EjfoGWrWrETl3Zc5zkGynPyESZO5Qu93-vitareq-connector",ForgeK15tScrollSitesDev:"forge-connector-h1n3NRFAn84v7ECSONVidlCS88qZh8cy-scroll-sites-connector",ForgeK15tScrollSitesProd:"forge-connector-ofe9zXccOCQ3U4t4kDVywSyJUoZjb1sO-scroll-sites-connector",ForgePioAwsDev:"forge-connector-HaxJprV0zzjjvwLhGkAN2gDPhHZwXNiL-s3-connector",ForgePioAwsProd:"forge-connector-mRcqWRwqkUd4JwapGkvGHUViyySX9MVy-s3-connector",ForgePioClickupDev:"forge-connector-ELuz3hTMhig0Jdrr6ytI45SifO9DfKrY-clickup-connector",ForgePioClickupProd:"forge-connector-uwYqtNjM6w0QIhHOFG0Cq4cnkUM9mt3K-clickup-connector",ForgePioGitbookDev:"forge-connector-Xh70v2yqkzOjTQqTMLxk1lElehWIXoYi-gitbook-connector",ForgePioGitbookProd:"forge-connector-cQ1IDSmJT0DrQuF8pGa4ijz0XZ6IGF5u-gitbook-connector",ForgePioGithubDev:"forge-connector-3QYYBgeNDilQB3Jc7uGMCchNgUGvCi7j-github-connector",ForgePioGithubProd:"forge-connector-0Sw5Yr860fgfx5sYS7kEUoxnGhEvrhhI-github-connector",ForgePioGitlabDev:"forge-connector-psr1wBkasRuKCwsvwi4aTJNhjmlVFebC-gitlab-connector",ForgePioGitlabProd:"forge-connector-QLK5Xf8nBqejSZTulw5s3Cl6fIS24MwL-gitlab-connector",ForgePioGoogleDriveDev:"forge-connector-JhqjCcAP6AHHxkYhY2akTgZsYXY93SMq-google-drive-connector",ForgePioGoogleDriveProd:"forge-connector-pcIwW04B398CSnilRIyzPJ5v5GevlCCo-google-drive-connector",ForgePioGuruDev:"forge-connector-NtY3W5Z8JTBshAgPZFIfT7VjYAARj1P5-guru-connector",ForgePioGuruProd:"forge-connector-mulxOVrXWOZObhFZH5WAqs7Ga2lCPK29-guru-connector",ForgePioHelpjuiceDev:"forge-connector-f1rvRuAyoDWIwDs7Xubi5AZJTuESM5PC-helpjuice-connector",ForgePioHelpjuiceProd:"forge-connector-8durapLyclxZeEexKkwxw6ZpCRpBz4dP-helpjuice-connector",ForgePioHubspotDev:"forge-connector-RtvzhBL0FFFIjLCBHjXI8QfgDqAs79WF-hubspot-connector",ForgePioHubspotProd:"forge-connector-O19vyTOCxgkZ6KSHycRjpzC0543x6Z0J-hubspot-connector",ForgePioSalesforceDev:"forge-connector-50BYkfgS4GXtr6iO8qUeBFbbHHbuFleo-salesforce-connector",ForgePioSalesforceProd:"forge-connector-nn5lJU1KJxJsUNML5GWV3blDYHMT6nAb-salesforce-connector",ForgePioSharepointDev:"forge-connector-cl5i3J8L463hTuQiDt7f1mK4vZllsAo0-sharepoint-connector",ForgePioSharepointProd:"forge-connector-7yrzYPlAOcZAif2tIymeDXBUNUAxI95G-sharepoint-connector",ForgePioStackOverflowDev:"forge-connector-ojk0u9oXGmVmS3BC7VmVSBPPIuuF5df3-stack-overflow-connector",ForgePioStackOverflowProd:"forge-connector-vUmPXguTcgLzdG1R3H0kTUQwxoGnZcsS-stack-overflow-connector",ForgeUtoolityGitbookDev:"forge-connector-FEJ0dhTb8HC3UYmqhPAKYCWVTcpoHsp5-gitbook-connector",ForgeUtoolityGitbookProd:"forge-connector-byNN1wfDuTnx7VndySG7Qq3ZfoXudUcL-gitbook-connector",ForgeGdriveEugeneTestDev:"forge-connector-s7M8FnmJVPQh9FtRqvqwSL3QFtqMijua-gdrive",ForgeGdriveEugeneTestProd:"forge-connector-bkRlqLiPfviKrVtbA6Q0QGN22x6b37mf-gdrive",ForgeUnitoSalesforceDev:"forge-connector-h8rZu86YJHRfyVlmVeUR464Kuhz9OZvV-salesforce",ForgeUnitoSalesforceProd:"forge-connector-qjk3Z8Kt2DWx29hdZHQapEYXAGCPIyd8-salesforce",ForgeUnitoServicenowDev:"forge-connector-52qcnF9TIgxkDKY4OL7xNxAzcM0amb7q-servicenow",ForgeUnitoServicenowProd:"forge-connector-RzFogW4EQLcXYmYpKkItRUhLAn3jETMq-servicenow",ForgeUnitoWrikeDev:"forge-connector-gw0rFhQkj7PuTllmYdHbMaPw6jC18YvO-wrike",ForgeUnitoWrikeProd:"forge-connector-390XhSnH4YgwqVgmyqYOujxVoL3IOUcM-wrike",ForgeUnitoAsanaDev:"forge-connector-6wHDDwNbam77WvGwMKYMGDiTWP8pza54-asana",ForgeUnitoAsanaProd:"forge-connector-sFXfxz3XEDS1wAWWCe345UVrSbUm9zyb-asana",ForgeUnitoBasecampDev:"forge-connector-nImlCTNLZUCtQzFsthpnlYJL0B981lMH-basecamp",ForgeUnitoBasecampProd:"forge-connector-TZqLHQtzvKxRikkh1KQlp4acwCzS5W1Z-basecamp",Zoom:"zoom-connector"}}),o("5PPrc",function(e,t){let r={Document:"document",Spreadsheet:"spreadsheet",Presentation:"presentation",Repository:"repository",PullRequest:"pull-request",Branch:"branch",Commit:"commit",DevopsWorkItem:"devops-work-item",WebPage:"web-page",Conversation:"conversation",Message:"message",Video:"video",Design:"design",Page:"page",Blogpost:"blogpost",Attachment:"attachment",Space:"space",Whiteboard:"whiteboard",Slide:"slide",Comment:"comment",Database:"database",Embed:"embed",Folder:"folder",Calendar:"calendar",SpaceCalendar:"space-calendar",Question:"question",Answer:"answer",Issue:"issue",Epic:"epic",Bug:"bug",Story:"story",Task:"task",Subtask:"subtask",Project:"project",Incident:"incident",Filter:"filter",Plan:"plan",Board:"board",Component:"component",Card:"card",Goal:"goal",Tag:"tag",WorkItem:"work-item",FocusArea:"focus-area",Organization:"organization",Ask:"ask",Risk:"risk",Dashboard:"dashboard",Invoice:"invoice",Deal:"deal",Gliffy:"gliffy",CustomerContact:"customer-contact",CustomerOrg:"customer-org",DataTable:"data-table",AssetsObject:"object",Type:"type",Schema:"schema",Position:"position",Image:"image",Audio:"audio",Pdf:"pdf",Shortcut:"shortcut",Code:"code",Archive:"archive",Other:"other",Notebook:"notebook",Form:"form",Article:"article",Post:"post",Ticket:"ticket",Campaign:"campaign",Case:"case",CatalogItem:"catalog-item",RequestedItem:"requested-item",Demand:"demand",KnowledgeArticle:"knowledge-article",NewsArticle:"news-article",Lead:"lead"};Object.values(r);let o={"ati:cloud:graph:document":r.Document,"ati:cloud:graph:message":r.Message,"ati:cloud:graph:conversation":r.Conversation,"ati:cloud:graph:design":r.Design,"ati:cloud:graph:video":r.Video,"ati:cloud:graph:space":r.Space,"ati:cloud:graph:comment":r.Comment,"ati:cloud:graph:repository":r.Repository,"ati:cloud:graph:pull-request":r.PullRequest,"ati:cloud:graph:commit":r.Commit,"ati:cloud:graph:branch":r.Branch,"ati:cloud:graph:calendar-event":r.Calendar,"ati:cloud:graph:work-item":r.WorkItem,"ati:cloud:graph:project":r.Project,"ati:cloud:graph:deal":r.Deal,"ati:cloud:graph:customer-org":r.CustomerOrg,"ati:cloud:graph:customer-contact":r.CustomerContact,"ati:cloud:graph:dashboard":r.Dashboard,"ati:cloud:graph:data-table":r.DataTable,"ati:cloud:graph:campaign":r.Campaign,"ati:cloud:graph:case":r.Case,"ati:cloud:graph:lead":r.Lead},n=e=>e.startsWith("ati:cloud:graph:");e.exports.TypeFilterValueKey=r,e.exports.NounSubtypeKey={Document:"document",Spreadsheet:"spreadsheet",Presentation:"presentation",File:"file",Database:"database",WebPage:"web-page",Page:"page",Blogpost:"blogpost",Article:"article",Post:"post",Dashboard:"dashboard",Invoice:"invoice",Design:"design",Deal:"deal",Video:"video",Task:"task",Issue:"issue",Space:"space",Project:"project",Repository:"repository",CustomerContact:"customer-contact",CustomerOrg:"customer-org",Image:"image",Archive:"archive",Audio:"audio",Code:"code",Pdf:"pdf",Other:"other",Software:"software",ServiceDesk:"service_desk",Business:"business",DataTable:"data-table",AssetsObject:"object",Schema:"schema",Type:"type",Folder:"folder",Notebook:"notebook",Form:"form",Shortcut:"shortcut",Site:"site",Subsite:"subsite",Drive:"drive",Comment:"comment",Incident:"incident",CatalogItem:"catalog_item",RequestedItem:"requested_item",KnowledgeArticle:"knowledge_article",Demand:"demand",NewsArticle:"news_article",Epic:"epic"},e.exports.mapAtisToTypeFilterConfig=function(e){let t=new Map,r=new Map;for(let t of e)if(n(t)){let e=o[t];e&&(r.has(e)||r.set(e,[]),r.get(e).push(t))}for(let[e,o]of r)t.set(e,{entities3P:o,subTypes3P:[]});return t}}),o("i52Hf",function(t,o){var n=r("gtMdU"),a=r("bDgLe"),i=r("cozmU");let c={small:"_1bsb7vkz _4t3i7vkz _1e0c1txw _4cvr1h6o _1bah1h6o",medium:"_1bsb1tcg _4t3i1tcg _1e0c1txw _4cvr1h6o _1bah1h6o",large:"_1bsbzwfg _4t3izwfg _1e0c1txw _4cvr1h6o _1bah1h6o",xlarge:"_1bsbzwfg _4t3izwfg _1e0c1txw _4cvr1h6o _1bah1h6o"},s=(0,n.isReactCompilerActivePlatform)()?t=>{let o,n,s=(0,a.c)(7),{glyph:l,label:d,size:u}=t,p=c[u],m=d||void 0,g=d?"img":"presentation";return s[0]!==l?(o=e(i).createElement(l,null),s[0]=l,s[1]=o):o=s[1],s[2]!==p||s[3]!==m||s[4]!==g||s[5]!==o?(n=e(i).createElement(r("iMnC5").Box,{xcss:p,"aria-label":m,role:g},o),s[2]=p,s[3]=m,s[4]=g,s[5]=o,s[6]=n):n=s[6],n}:({glyph:t,label:o,size:n})=>e(i).createElement(r("iMnC5").Box,{xcss:c[n],"aria-label":o||void 0,role:o?"img":"presentation"},e(i).createElement(t,null)),l=e=>["xxsmall","xsmall","small","medium","large"].includes(e),d={xxsmall:"small",xsmall:"small",small:"medium",medium:"large",large:"xlarge"},u={small:"_1bsb7vkz _4t3i7vkz",medium:"_1bsb1tcg _4t3i1tcg",large:"_1bsbzwfg _4t3izwfg",xlarge:"_1bsbckbl _4t3ickbl"},p=(t,r="",o)=>({label:n=r,size:a=o})=>e(i).createElement(s,{label:n,glyph:t,size:a&&l(a)?d[a]:"medium"});t.exports.RovoLogoFromGlyph=(t,o="",n="medium")=>({size:a=n,label:c=o,testId:s})=>{let p=a&&l(a)?d[a]:n;return e(i).createElement("span",{"aria-label":c||void 0,"data-testid":s,role:c?"img":"presentation",className:(0,r("hekY6").default)([u[p]])},e(i).createElement(t,null))},t.exports.RovoLogoFromSVG=p,t.exports.RovoLogoFromLogo=(t,r="")=>({size:o,label:n,testId:a})=>e(i).createElement(t,{label:n||r,testId:a,size:o||"medium",appearance:"brand",shouldUseNewLogoDesign:!0}),t.exports.get3PLogo=function(e,t,r){return p(e,t,r)},t.exports.get3PLogoFromURL=function(t,o,n){return p(()=>e(i).createElement("img",{src:t,alt:"",className:(0,r("hekY6").default)(["_1bsb1osq _4t3i1osq _5ral1f51"])}),o,n)}}),o("6suVE",function(t,o){var n=r("gtMdU"),a=r("bDgLe"),i=r("cozmU");let c=(0,r("5mh7K").lazyForPaint)(()=>r("3w7xz").then(e=>e.GithubIcon),{moduleId:"@atlassian/rovo-connectors-config/github/icon"}),s=(0,r("5mh7K").lazyForPaint)(()=>r("3w7xz").then(e=>e.GithubSearchResultIcon),{moduleId:"@atlassian/rovo-connectors-config/github/search-result-icon"}),l=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(c,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(c,null)),d=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(s,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(s,null));t.exports.GithubIcon=l,t.exports.GithubSearchResultIcon=d}),o("5mh7K",function(e,t){let o,n=(e,t)=>{if(e.assets&&e.assets[t])return e.assets[t].map(t=>`${e.publicPath}${t}`)},a={crossOrigin:void 0,manifest:{publicPath:"/",assets:{}},mode:r("hwBK6").MODE.HYDRATE,retry:2,react18:!1,onChunkRender:()=>{},usePostTaskPhases:!1,modernErrorFallback:!1,markedForPreload:[],environment:void 0},i=new Map,c=()=>!!("u"<typeof window)||"nodejs"===window.name;function s(e,t){switch(t.name){case"style":break;case"class":e.className=t.value;break;case"crossorigin":e.crossOrigin=t.value;break;default:e[t.name]=t.value}return e}var l=r("8aG6j"),d=r("cozmU");let u=()=>{},p=(0,d.createContext)({subscribe:()=>u,currentValue:()=>1}),m=[],g=0,f=e=>{g=e,m.slice(0).forEach(t=>t(e))},h=(0,d.createContext)({subscribe:e=>(m.push(e),()=>{let t=m.indexOf(e);-1!==t&&m.splice(t,1)}),currentValue:()=>g,api:{startNextPhase:()=>{f(1)},resetPhase:()=>f(0)}}),y={current:null},P=(0,d.createContext)(y),C=(0,d.createContext)({getIsBoundaryInitialized:()=>!1,fallback:(0,l.jsx)(d.Fragment,{}),setFallback:()=>{a.mode===r("hwBK6").MODE.RENDER&&console.warn("Missing <LooselySuspense /> boundary")}}),b=Symbol.for("@atlassian/react-loosely-lazy/loader-error"),S=e=>"object"==typeof e?Object.assign(e,{[b]:!0}):e,E=({id:e,content:t})=>(0,l.jsxs)(l.Fragment,{children:[(0,l.jsx)("input",{type:"hidden","data-lazy-begin":e}),t.map((e,t)=>{let{tagName:r="",childNodes:o=[],attributes:n=[]}=e,a=Array.from(n).reduce(s,{key:String(t)});return r?o.length?(0,d.createElement)(r.toLowerCase(),{...a,dangerouslySetInnerHTML:{__html:""},suppressHydrationWarning:!0}):(0,d.createElement)(r.toLowerCase(),a):(0,d.createElement)(d.Fragment,a,e.textContent)}),(0,l.jsx)("input",{type:"hidden","data-lazy-end":e})]}),v=({id:e,content:t})=>{let r=((e,t)=>{let r=(0,d.useRef)(null),{current:o}=(0,d.useRef)(t||[]),n=(0,d.useContext)(P).current,a=(0,d.useContext)(p),i=(0,d.useContext)(C);return(0,d.useLayoutEffect)(()=>{let t=r.current,{parentNode:c}=t||{};return n?.placeholderFallBackMounted(e,i.name,!a.currentValue()),c&&!c.contains(o[0])&&o.reverse().forEach(e=>{"LINK"===e.tagName&&"prefetch"===e.rel&&(e.rel=""),c.insertBefore(e,t.nextSibling)}),()=>{n?.placeholderFallBackUnmounted(e,i.name,!a.currentValue()),o.forEach(e=>e.parentNode?.removeChild(e))}},[]),r})(e,t);return(0,l.jsx)("input",{type:"hidden","data-lazy-begin":e,ref:r})};function _({context:e,load:t,onValue:r}){let{subscribe:o,currentValue:n}=(0,d.useContext)(e);(0,d.useMemo)(()=>{let e=null,a=()=>{let o=r(n());return o&&t(),o&&e&&e(),o};e=a()?null:o(a)},[])}class I extends Error{constructor(e){super(`[no-error] React-Loosely-Lazy SSR opt out - ${e}`),this.skipSsr=void 0,this.skipSsr=!0}}let A=new Map;function k(e,t){if(document.querySelector(`link[href="${e}"]`)||document.querySelector(`script[src="${e}"]`))return u;let{crossOrigin:r}=a,o=document.createElement("link");o.rel=t,o.as="script",r&&(o.crossOrigin=r),o.href=e;let n=y.current,i=null;if(n){let t={identifier:e},r=()=>{o.removeEventListener("onload",r),i=null,n.onLoadComplete(t)};o.addEventListener("onload",r),i=r,n.onLoadStart(t)}return document.head?.appendChild(o),()=>{o.parentNode===document.head&&document.head?.removeChild(o),i&&o.removeEventListener("onload",i)}}function R({moduleId:e,rel:t}){let{manifest:r}=a,o=n(r,e);if(!o)throw Error("Unsupported preload strategy");let i=o.map(e=>k(e,t));return()=>{for(let e of i)e()}}let x={then:()=>x,catch:()=>x,finally:()=>x};function F({loader:e,rel:t}){if("u"<typeof __webpack_require__||"u"<typeof __webpack_get_script_filename__)throw Error("Unsupported preload strategy");let r=__webpack_require__.e,o=[];__webpack_require__.e=function(e){let r=__webpack_get_script_filename__(e);return o.push(k(r,t)),x};try{e()}catch(e){}return __webpack_require__.e=r,()=>{for(let e of o)e()}}function w({loader:e}){return e(),u}function D(){}function T(e,{defer:t=0,moduleId:s="",ssr:m=!0}={}){let g=c(),f=(0,r("dZb8A").default)(s),b=g?function({dataLazyId:e,defer:t,loader:o,moduleId:i,ssr:c}){return s=>{let{fallback:u}=(0,d.useContext)(C),{crossOrigin:p,manifest:m,onChunkRender:g,mode:f,react18:h,modernErrorFallback:y,environment:P}=a,b=c||"client"===P?function(e){try{let t;return t=e(),"default"in t?t.default:t}catch(e){throw S(e)}}(o):null;if(g(e,i,t),f===r("hwBK6").MODE.HYDRATE&&h){if(!b)throw new I(i);return(0,l.jsx)(b,{...s})}return y&&!b?u:(0,l.jsxs)(l.Fragment,{children:[(0,l.jsx)("input",{type:"hidden","data-lazy-begin":e}),2!==t&&n(m,i)?.map(e=>(0,l.jsx)("link",{rel:0===t?"preload":"prefetch",href:e,crossOrigin:p,as:"script"},e)),b?(0,l.jsx)(b,{...s}):u,(0,l.jsx)("input",{type:"hidden","data-lazy-end":e})]})}}({dataLazyId:f,defer:t,loader:e,moduleId:s,ssr:m}):function({defer:e,deferred:t,dataLazyId:o,moduleId:n}){let c=(0,d.lazy)(()=>t.promise);return s=>{let[u,m]=(0,d.useState)(()=>({noWait:void 0,phase:1!==e,preloaded:1!==e,started:!1})),{usePostTaskPhases:g}=a,{setFallback:f,getIsBoundaryInitialized:y}=(0,d.useContext)(C),b=(0,d.useContext)(P).current,I=()=>{let e;if(g){if(u.started)return}else if(u.started||!u.phase||!u.noWait)return;if(u.started=!0,b){let t={identifier:n};e=()=>{b.onLoadComplete(t)},b.onLoadStart(t)}let r=t.start().catch(e=>{m(()=>{throw S(e)})});e&&r.then(e)};return g?(0,d.useMemo)(()=>{I()},[]):(_({context:p,load:I,onValue:e=>u.noWait=1===e}),1===e&&_({context:h,load:I,onValue:t=>u.phase=t>=e})),(0,d.useMemo)(()=>{if(g&&y())return;let e=(i.get(o)||[]).shift();e&&f(a.mode===r("hwBK6").MODE.RENDER?(0,l.jsx)(v,{id:o,content:e}):(0,l.jsx)(E,{id:o,content:e}))},[f,y,g]),(0,d.useMemo)(()=>{let{mode:e,react18:t}=a;e===r("hwBK6").MODE.HYDRATE&&t&&f((0,l.jsx)(l.Fragment,{}))},[f]),(0,l.jsx)(c,{...s})}}({dataLazyId:f,defer:t,deferred:((e,{loader:t,preload:r})=>{let n,a={promise:new Promise(e=>{n=t=>{let r;a.result=t,t.default||(r={default:t}),e(r||t)}}),result:void 0,preload:()=>{a.result||r().then(e=>{a.result=e}).catch(()=>{})},start:()=>a.result?(n(a.result),Promise.resolve()):t().then(n)};return A.set(e,a),o?.includes(e)&&a.preload(),a})(f,{loader:()=>{let{retry:o,usePostTaskPhases:n}=a;return function(e,t={}){let r={delay:Math.max(0,t.delay??0),factor:Math.max(0,t.factor??0),maxAttempts:Math.max(0,t.maxAttempts??0)},{maxAttempts:o}=r,n={attempt:1,attemptsRemaining:o},a=async t=>{if(0===n.attemptsRemaining)throw t;n.attempt+=1,n.attemptsRemaining-=1;let o=((e,t)=>{let{attempt:r}=e,{delay:o,factor:n}=t,a=r-1;return 1===a||0===o?0:o+n*o*(a-2)})(n,r);return o&&await new Promise(e=>setTimeout(e,o)),e().catch(a)};return e().catch(a)}(n?()=>(function(e){switch(e){case 0:return(0,r("6zMm4").postTask)(D,{priority:"user-blocking"});case 1:return(0,r("6zMm4").postTask)(D,{priority:"user-visible"});case 2:return(0,r("6zMm4").postTask)(D,{priority:"background"});default:return Promise.resolve()}})(t).then(()=>e()):e,{delay:r("6DjRB").RETRY_DELAY,factor:r("6DjRB").RETRY_FACTOR,maxAttempts:o})},preload:e}),moduleId:s});return b.displayName=`Lazy(${s.split("/").slice(-3).join("/")||"Component"})`,Object.assign(b,{getAssetUrls:()=>{let{manifest:e}=a;return n(e,s)},moduleId:s,preload:o=>(function({loader:e,moduleId:t,priority:o}){if(c())return u;y.current?.onPreload(t,o);let n=o===r("6DjRB").PRIORITY.HIGH?"preload":"prefetch";for(let r of[R,F,w])try{return r({loader:e,moduleId:t,rel:n})}catch(e){}return u})({loader:e,moduleId:s,priority:o??(0===t?r("6DjRB").PRIORITY.HIGH:r("6DjRB").PRIORITY.LOW)})})}let O={ssr:!0,defer:0},U={ssr:!1,defer:2};e.exports.lazyForPaint=function(e,t){return T(e,{...O,...t||{}})},e.exports.lazy=function(e,t){return T(e,{...U,...t||{}})}}),o("3w7xz",function(e,t){e.exports=r("6dFT0")(5)("ECQ6q").then(()=>r("kGNh6"))}),o("6dFT0",function(e,t){e.exports=e=>t=>import(r("clX3F").shardUrl(r("1hiTA").resolve(t),e))}),o("clX3F",function(e,t){Object.defineProperty(e.exports,"__esModule",{value:!0}),e.exports.applyShardToDomain=i,e.exports.domainShardingKey=void 0,e.exports.getDomainShardIndex=o,e.exports.shardUrl=function(e,t){return globalThis[r]?c(e,t):e},e.exports.shardUrlUnchecked=c;let r="__ATLASPACK_ENABLE_DOMAIN_SHARDS";function o(e,t){let r=t+1,o=e.split("").reduce((e,t)=>{let o=(e<<r)-e+t.charCodeAt(0);return o&o},0);return(o%=r)<0&&(o+=r),o}let n=/-\d+$/;function a(e){if(!n.test(e))return e;let t=e.lastIndexOf("-");return e.slice(0,t)}function i(e,t){let r=e.indexOf("."),o=0===t?"":`-${t-1}`;if(-1===r)return`${a(e)}${o}`;let n=a(e.slice(0,r));return`${n}${o}${e.slice(r)}`}function c(e,t){let r=new URL(e),n=o(function(e){let t=e.lastIndexOf("/");if(-1===t||t===e.length-1)throw Error("Expected an absolute URL with a file name, unable to apply sharding.");return e.slice(t+1)}(r.pathname),t);return r.hostname=i(r.hostname,n),r.toString()}e.exports.domainShardingKey=r}),o("1hiTA",function(e,r){t(e.exports,"register",()=>o,e=>o=e),t(e.exports,"resolve",()=>n,e=>n=e);var o,n,a=new Map;o=function(e,t){for(var r=0;r<t.length-1;r+=2)a.set(t[r],{baseUrl:e,path:t[r+1]})},n=function(e){var t=a.get(e);if(null==t)throw Error("Could not resolve bundle with id "+e);return new URL(t.path,t.baseUrl).toString()}}),o("ehKBQ",function(t,o){var n=r("gtMdU"),a=r("bDgLe"),i=r("cozmU");let c=(0,r("5mh7K").lazyForPaint)(()=>r("ilgI1").then(e=>e.GitlabIcon),{moduleId:"@atlassian/rovo-connectors-config/gitlab/icon"}),s=(0,r("5mh7K").lazyForPaint)(()=>r("ilgI1").then(e=>e.GitlabSearchResultIcon),{moduleId:"@atlassian/rovo-connectors-config/gitlab/search-result-icon"}),l=(0,r("5mh7K").lazyForPaint)(()=>r("ilgI1").then(e=>e.GitlabIconBorderless),{moduleId:"@atlassian/rovo-connectors-config/gitlab/icon-borderless"}),d=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(c,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(c,null)),u=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(s,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(s,null)),p=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(l,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(l,null));t.exports.GitlabIcon=d,t.exports.GitlabSearchResultIcon=u,t.exports.GitlabIconBorderless=p}),o("ilgI1",function(e,t){e.exports=r("6dFT0")(5)("1p9Ip").then(()=>r("hYL6T"))}),o("iS3Tu",function(t,o){var n=r("gtMdU"),a=r("bDgLe"),i=r("cozmU");let c=(0,r("5mh7K").lazyForPaint)(()=>r("lbDA4").then(e=>e.GitbookIcon),{moduleId:"@atlassian/rovo-connectors-config/gitbook/icon"}),s=(0,r("5mh7K").lazyForPaint)(()=>r("lbDA4").then(e=>e.GitbookSearchResultIcon),{moduleId:"@atlassian/rovo-connectors-config/gitbook/search-result-icon"}),l=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(c,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(c,null)),d=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(s,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(s,null));t.exports.GitbookIcon=l,t.exports.GitbookSearchResultIcon=d}),o("lbDA4",function(e,t){e.exports=r("6dFT0")(5)("k1ije").then(()=>r("lG6hv"))}),o("dULnI",function(t,o){var n=r("gtMdU"),a=r("bDgLe"),i=r("cozmU");let c=(0,r("5mh7K").lazyForPaint)(()=>r("8WMbv").then(e=>e.AzureDevopsIcon),{moduleId:"@atlassian/rovo-connectors-config/azure-devops/icon"}),s=(0,r("5mh7K").lazyForPaint)(()=>r("8WMbv").then(e=>e.AzureDevopsSearchResultIcon),{moduleId:"@atlassian/rovo-connectors-config/azure-devops/search-result-icon"}),l=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(c,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(c,null)),d=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(s,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(s,null));t.exports.AzureDevopsIcon=l,t.exports.AzureDevopsSearchResultIcon=d}),o("8WMbv",function(e,t){e.exports=r("6dFT0")(5)("axvMK").then(()=>r("fTk3N"))}),o("9Jc29",function(t,o){var n=r("gtMdU"),a=r("bDgLe"),i=r("cozmU");let c=(0,r("5mh7K").lazyForPaint)(()=>r("eauWV").then(e=>e.GoogleDriveIcon),{moduleId:"@atlassian/rovo-connectors-config/google/icon"}),s=(0,r("5mh7K").lazyForPaint)(()=>r("eauWV").then(e=>e.GoogleDriveSearchResultIcon),{moduleId:"@atlassian/rovo-connectors-config/google/search-result-icon"}),l=(0,r("5mh7K").lazyForPaint)(()=>r("eauWV").then(e=>e.GoogleDriveIconBorderless),{moduleId:"@atlassian/rovo-connectors-config/google/icon-borderless"}),d=(0,r("5mh7K").lazyForPaint)(()=>r("eauWV").then(e=>e.GoogleDriveAppSelectorIcon),{moduleId:"@atlassian/rovo-connectors-config/google/app-selector-icon"}),u=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(c,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(c,null)),p=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(s,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(s,null)),m=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(l,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(l,null)),g=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(d,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(d,null));t.exports.GoogleDriveIcon=u,t.exports.GoogleDriveSearchResultIcon=p,t.exports.GoogleDriveIconBorderless=m,t.exports.GoogleDriveAppSelectorIcon=g}),o("eauWV",function(e,t){e.exports=r("6dFT0")(5)("fz4Mg").then(()=>r("aqriX"))}),o("iPmoS",function(t,o){var n=r("gtMdU"),a=r("bDgLe"),i=r("cozmU");let c=(0,r("5mh7K").lazyForPaint)(()=>r("9RFVr").then(e=>e.ForgePioGithubIcon),{moduleId:"@atlassian/rovo-connectors-config/forge-pio-github-prod/icon"}),s=(0,r("5mh7K").lazyForPaint)(()=>r("9RFVr").then(e=>e.ForgePioGithubSearchResultIcon),{moduleId:"@atlassian/rovo-connectors-config/forge-pio-github-prod/search-result-icon"}),l=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(c,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(c,null)),d=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(s,null)),r[0]=t):t=r[0],t}:()=>e(i).createElement(i.Suspense,{fallback:null},e(i).createElement(s,null));t.exports.ForgePioGithubIcon=l,t.exports.ForgePioGithubSearchResultIcon=d}),o("9RFVr",function(e,t){e.exports=r("6dFT0")(5)("cNleL").then(()=>r("gcarM"))}),o("eSwze",function(e,t){e.exports.mapForgeConnectorToThirdPartyConfig=(e,t)=>{if(!e.lightIcon||!e.workspaceName)return;let o=(0,r("i52Hf").get3PLogoFromURL)(e.lightIcon,e.workspaceName,"medium"),n=(0,r("i52Hf").get3PLogoFromURL)(e.lightIcon,e.providerId,"large"),a=e.type;(0,r("aoy1P").registerForgeConnectorIcon)(a,o);let i=e.entityTypes?(0,r("5PPrc").mapAtisToTypeFilterConfig)(e.entityTypes):new Map;return t&&(0,r("iDrrr").fg)("rovo-search-dynamic-forge-config")&&t(a,i),{id:e.type,displayName:e.environmentType?`${e.workspaceName} (${e.environmentType})`:e.workspaceName,resourceType:e.type,datasourceId:e.datasourceId,connectionId:e.connectionId,providerId:e.providerId,outboundAuthUrl:e.outboundAuthUrl,integrationAri:e.integrationId?e.integrationId:`ari:cloud:platform::integration/${e.providerId}`,filters:["lastUpdated","universalTypeFilter"],displayWorkspaceNameAsProductName:!0,isEnabled:()=>!0,userNeedsOAuth:!e.isUserOAuthed,requiresOauth:!!e.isUserOAuthed||!!e.outboundAuthUrl,icon:o,searchResultIcon:n,typeFilterConfig:i,workspaceName:e.workspaceName,connectorSources:[r("aoy1P").FULL_CONNECTOR_SOURCE]}}}),o("8ICvC",function(t,o){[...r("fmJYG").DEFAULT_CLOUD_GRAPH_DEVINFO_PULL_REQUEST_ENTITY_ATI,...r("iM9d2").DEFAULT_CLOUD_GRAPH_DEVINFO_REPOSITORY_ENTITY_ATI];var n=r("gtMdU"),a=r("bDgLe"),i=r("cozmU");let c=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r,o,n,c=(0,a.c)(4);return c[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement("g",{clipPath:"url(#clip0_2230_18702)"},e(i).createElement("g",{clipPath:"url(#clip1_2230_18702)"},e(i).createElement("g",{clipPath:"url(#clip2_2230_18702)"},e(i).createElement("path",{d:"M32.2106 25.0334C23.981 21.0541 21.5768 20.4595 18.1093 20.4595C14.0407 20.4595 10.5731 22.1519 7.47546 26.9087L6.96689 27.6863C6.55078 28.3267 6.45831 28.5553 6.45831 28.8298C6.45831 29.1042 6.59701 29.3329 7.10559 29.6531L12.33 32.9006C12.6074 33.0835 12.8386 33.175 13.0698 33.175C13.3472 33.175 13.5321 33.0378 13.8095 32.6261L14.6417 31.3454C15.9363 29.3787 17.0921 28.7383 18.5716 28.7383C19.8662 28.7383 21.3919 29.1042 23.2875 30.019L28.7431 32.5804C29.2979 32.8548 29.8989 32.7176 30.1763 32.0773L32.7654 26.4056C33.0428 25.7653 32.8579 25.3536 32.2106 25.0334ZM8.2152 15.0166C16.4448 18.9959 18.849 19.5905 22.3166 19.5905C26.3851 19.5905 29.8527 17.8981 32.9504 13.1413L33.4589 12.3637C33.875 11.7233 33.9675 11.4947 33.9675 11.2202C33.9675 10.9458 33.8288 10.7171 33.3202 10.3969L28.0958 7.14943C27.8184 6.96648 27.5872 6.875 27.3561 6.875C27.0787 6.875 26.8937 7.01222 26.6163 7.42387L25.7841 8.70457C24.4896 10.6713 23.3337 11.3117 21.8542 11.3117C20.5597 11.3117 19.0339 10.9458 17.1384 10.031L11.6827 7.46961C11.1279 7.19517 10.5269 7.33239 10.2495 7.97274L7.6604 13.6444C7.38299 14.2847 7.56793 14.6964 8.2152 15.0166Z",fill:"#1868DB"})))),c[0]=t):t=c[0],c[1]===Symbol.for("react.memo_cache_sentinel")?(r=e(i).createElement("clipPath",{id:"clip0_2230_18702"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),c[1]=r):r=c[1],c[2]===Symbol.for("react.memo_cache_sentinel")?(o=e(i).createElement("clipPath",{id:"clip1_2230_18702"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),c[2]=o):o=c[2],c[3]===Symbol.for("react.memo_cache_sentinel")?(n=e(i).createElement("svg",{width:"40",height:"40",viewBox:"0 0 40 40",fill:"none",xmlns:"http://www.w3.org/2000/svg"},t,e(i).createElement("defs",null,r,o,e(i).createElement("clipPath",{id:"clip2_2230_18702"},e(i).createElement("rect",{width:"27.5092",height:"26.3",fill:"white",transform:"translate(6.45831 6.875)"})))),c[3]=n):n=c[3],n}:()=>e(i).createElement("svg",{width:"40",height:"40",viewBox:"0 0 40 40",fill:"none",xmlns:"http://www.w3.org/2000/svg"},e(i).createElement("g",{clipPath:"url(#clip0_2230_18702)"},e(i).createElement("g",{clipPath:"url(#clip1_2230_18702)"},e(i).createElement("g",{clipPath:"url(#clip2_2230_18702)"},e(i).createElement("path",{d:"M32.2106 25.0334C23.981 21.0541 21.5768 20.4595 18.1093 20.4595C14.0407 20.4595 10.5731 22.1519 7.47546 26.9087L6.96689 27.6863C6.55078 28.3267 6.45831 28.5553 6.45831 28.8298C6.45831 29.1042 6.59701 29.3329 7.10559 29.6531L12.33 32.9006C12.6074 33.0835 12.8386 33.175 13.0698 33.175C13.3472 33.175 13.5321 33.0378 13.8095 32.6261L14.6417 31.3454C15.9363 29.3787 17.0921 28.7383 18.5716 28.7383C19.8662 28.7383 21.3919 29.1042 23.2875 30.019L28.7431 32.5804C29.2979 32.8548 29.8989 32.7176 30.1763 32.0773L32.7654 26.4056C33.0428 25.7653 32.8579 25.3536 32.2106 25.0334ZM8.2152 15.0166C16.4448 18.9959 18.849 19.5905 22.3166 19.5905C26.3851 19.5905 29.8527 17.8981 32.9504 13.1413L33.4589 12.3637C33.875 11.7233 33.9675 11.4947 33.9675 11.2202C33.9675 10.9458 33.8288 10.7171 33.3202 10.3969L28.0958 7.14943C27.8184 6.96648 27.5872 6.875 27.3561 6.875C27.0787 6.875 26.8937 7.01222 26.6163 7.42387L25.7841 8.70457C24.4896 10.6713 23.3337 11.3117 21.8542 11.3117C20.5597 11.3117 19.0339 10.9458 17.1384 10.031L11.6827 7.46961C11.1279 7.19517 10.5269 7.33239 10.2495 7.97274L7.6604 13.6444C7.38299 14.2847 7.56793 14.6964 8.2152 15.0166Z",fill:"#1868DB"})))),e(i).createElement("defs",null,e(i).createElement("clipPath",{id:"clip0_2230_18702"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),e(i).createElement("clipPath",{id:"clip1_2230_18702"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),e(i).createElement("clipPath",{id:"clip2_2230_18702"},e(i).createElement("rect",{width:"27.5092",height:"26.3",fill:"white",transform:"translate(6.45831 6.875)"})))),s=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r,o,n,c=(0,a.c)(4);return c[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement("g",{clipPath:"url(#clip0_2230_18710)"},e(i).createElement("g",{clipPath:"url(#clip1_2230_18710)"},e(i).createElement("g",{clipPath:"url(#clip2_2230_18710)"},e(i).createElement("path",{d:"M34.4312 30.4727L21.2001 4.01056C20.9397 3.43756 20.6792 3.33337 20.3667 3.33337C20.1062 3.33337 19.7937 3.43756 19.4811 3.95846C17.6058 6.92764 16.7724 10.3656 16.7724 13.9599C16.7724 18.9606 19.3248 23.6488 23.0754 31.202C23.4921 32.0354 23.8047 32.1917 24.5339 32.1917H33.7019C34.3791 32.1917 34.7437 31.9313 34.7437 31.4103C34.7437 31.1499 34.6916 30.9936 34.4312 30.4727ZM15.2097 17.9709C14.1679 16.4082 13.8553 16.304 13.5949 16.304C13.3344 16.304 13.1781 16.4082 12.7093 17.3458L6.09377 30.5769C5.8854 30.9936 5.83331 31.1499 5.83331 31.3583C5.83331 31.775 6.19795 32.1917 6.97931 32.1917H16.3036C16.9287 32.1917 17.3975 31.6708 17.6579 30.6811C17.9705 29.4309 18.0747 28.337 18.0747 27.0347C18.0747 23.3884 16.4598 19.8462 15.2097 17.9709Z",fill:"#1868DB"})))),c[0]=t):t=c[0],c[1]===Symbol.for("react.memo_cache_sentinel")?(r=e(i).createElement("clipPath",{id:"clip0_2230_18710"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),c[1]=r):r=c[1],c[2]===Symbol.for("react.memo_cache_sentinel")?(o=e(i).createElement("clipPath",{id:"clip1_2230_18710"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),c[2]=o):o=c[2],c[3]===Symbol.for("react.memo_cache_sentinel")?(n=e(i).createElement("svg",{width:"40",height:"40",viewBox:"0 0 40 40",fill:"none",xmlns:"http://www.w3.org/2000/svg"},t,e(i).createElement("defs",null,r,o,e(i).createElement("clipPath",{id:"clip2_2230_18710"},e(i).createElement("rect",{width:"28.9104",height:"28.8583",fill:"white",transform:"translate(5.83331 3.33337)"})))),c[3]=n):n=c[3],n}:()=>e(i).createElement("svg",{width:"40",height:"40",viewBox:"0 0 40 40",fill:"none",xmlns:"http://www.w3.org/2000/svg"},e(i).createElement("g",{clipPath:"url(#clip0_2230_18710)"},e(i).createElement("g",{clipPath:"url(#clip1_2230_18710)"},e(i).createElement("g",{clipPath:"url(#clip2_2230_18710)"},e(i).createElement("path",{d:"M34.4312 30.4727L21.2001 4.01056C20.9397 3.43756 20.6792 3.33337 20.3667 3.33337C20.1062 3.33337 19.7937 3.43756 19.4811 3.95846C17.6058 6.92764 16.7724 10.3656 16.7724 13.9599C16.7724 18.9606 19.3248 23.6488 23.0754 31.202C23.4921 32.0354 23.8047 32.1917 24.5339 32.1917H33.7019C34.3791 32.1917 34.7437 31.9313 34.7437 31.4103C34.7437 31.1499 34.6916 30.9936 34.4312 30.4727ZM15.2097 17.9709C14.1679 16.4082 13.8553 16.304 13.5949 16.304C13.3344 16.304 13.1781 16.4082 12.7093 17.3458L6.09377 30.5769C5.8854 30.9936 5.83331 31.1499 5.83331 31.3583C5.83331 31.775 6.19795 32.1917 6.97931 32.1917H16.3036C16.9287 32.1917 17.3975 31.6708 17.6579 30.6811C17.9705 29.4309 18.0747 28.337 18.0747 27.0347C18.0747 23.3884 16.4598 19.8462 15.2097 17.9709Z",fill:"#1868DB"})))),e(i).createElement("defs",null,e(i).createElement("clipPath",{id:"clip0_2230_18710"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),e(i).createElement("clipPath",{id:"clip1_2230_18710"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),e(i).createElement("clipPath",{id:"clip2_2230_18710"},e(i).createElement("rect",{width:"28.9104",height:"28.8583",fill:"white",transform:"translate(5.83331 3.33337)"})))),l=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r,o,n,c=(0,a.c)(4);return c[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement("g",{clipPath:"url(#clip0_2230_18700)"},e(i).createElement("g",{clipPath:"url(#clip1_2230_18700)"},e(i).createElement("g",{clipPath:"url(#clip2_2230_18700)"},e(i).createElement("path",{d:"M22.0686 7.09728C25.7026 8.16332 29.3723 8.16332 33.0063 7.09728C33.3269 7.02621 33.5407 7.23942 33.4694 7.55923C32.4362 11.2904 32.4362 14.7372 33.4694 18.4683C33.5407 18.7526 33.3269 19.0014 33.0063 18.8948C29.3723 17.8998 25.7026 17.8998 22.0686 18.8948C21.7836 19.0014 21.5342 18.7526 21.6411 18.4683C22.603 14.7372 22.603 11.2904 21.6411 7.55923C21.5342 7.23942 21.7836 7.02621 22.0686 7.09728ZM23.5294 20.3161V20.9202C23.5294 23.7275 21.5698 25.7885 19.1472 25.7885C16.7245 25.7885 14.8006 23.8341 14.8006 21.4177C14.8006 19.0014 16.7601 17.0825 19.5034 17.0825H20.216V8.58973C19.8597 8.5542 19.5034 8.5542 19.1472 8.5542C12.0217 8.5542 6.25 14.3108 6.25 21.4532C6.25 28.5957 12.0217 34.3168 19.1472 34.3168C26.2727 34.3168 32.08 28.5602 32.08 21.4532V20.3161H23.5294Z",fill:"#1868DB"})))),c[0]=t):t=c[0],c[1]===Symbol.for("react.memo_cache_sentinel")?(r=e(i).createElement("clipPath",{id:"clip0_2230_18700"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),c[1]=r):r=c[1],c[2]===Symbol.for("react.memo_cache_sentinel")?(o=e(i).createElement("clipPath",{id:"clip1_2230_18700"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),c[2]=o):o=c[2],c[3]===Symbol.for("react.memo_cache_sentinel")?(n=e(i).createElement("svg",{width:"40",height:"40",viewBox:"0 0 40 40",fill:"none",xmlns:"http://www.w3.org/2000/svg"},t,e(i).createElement("defs",null,r,o,e(i).createElement("clipPath",{id:"clip2_2230_18700"},e(i).createElement("rect",{width:"27.2333",height:"27.2333",fill:"white",transform:"translate(6.25 7.08334)"})))),c[3]=n):n=c[3],n}:()=>e(i).createElement("svg",{width:"40",height:"40",viewBox:"0 0 40 40",fill:"none",xmlns:"http://www.w3.org/2000/svg"},e(i).createElement("g",{clipPath:"url(#clip0_2230_18700)"},e(i).createElement("g",{clipPath:"url(#clip1_2230_18700)"},e(i).createElement("g",{clipPath:"url(#clip2_2230_18700)"},e(i).createElement("path",{d:"M22.0686 7.09728C25.7026 8.16332 29.3723 8.16332 33.0063 7.09728C33.3269 7.02621 33.5407 7.23942 33.4694 7.55923C32.4362 11.2904 32.4362 14.7372 33.4694 18.4683C33.5407 18.7526 33.3269 19.0014 33.0063 18.8948C29.3723 17.8998 25.7026 17.8998 22.0686 18.8948C21.7836 19.0014 21.5342 18.7526 21.6411 18.4683C22.603 14.7372 22.603 11.2904 21.6411 7.55923C21.5342 7.23942 21.7836 7.02621 22.0686 7.09728ZM23.5294 20.3161V20.9202C23.5294 23.7275 21.5698 25.7885 19.1472 25.7885C16.7245 25.7885 14.8006 23.8341 14.8006 21.4177C14.8006 19.0014 16.7601 17.0825 19.5034 17.0825H20.216V8.58973C19.8597 8.5542 19.5034 8.5542 19.1472 8.5542C12.0217 8.5542 6.25 14.3108 6.25 21.4532C6.25 28.5957 12.0217 34.3168 19.1472 34.3168C26.2727 34.3168 32.08 28.5602 32.08 21.4532V20.3161H23.5294Z",fill:"#1868DB"})))),e(i).createElement("defs",null,e(i).createElement("clipPath",{id:"clip0_2230_18700"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),e(i).createElement("clipPath",{id:"clip1_2230_18700"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),e(i).createElement("clipPath",{id:"clip2_2230_18700"},e(i).createElement("rect",{width:"27.2333",height:"27.2333",fill:"white",transform:"translate(6.25 7.08334)"})))),d=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r,o,n=(0,a.c)(3);return n[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement("g",{clipPath:"url(#clip0_2230_18718)"},e(i).createElement("g",{clipPath:"url(#clip1_2230_18718)"},e(i).createElement("path",{fillRule:"evenodd",clipRule:"evenodd",d:"M30.3575 6.41167H9.64252C7.85835 6.41167 6.41168 7.85833 6.41168 9.6425V30.3575C6.41168 32.1417 7.85835 33.5883 9.64252 33.5883H30.3575C32.1417 33.5883 33.5884 32.1417 33.5884 30.3575V9.6425C33.5884 7.85833 32.1417 6.41167 30.3575 6.41167ZM18.1184 25.9858C18.1184 26.5792 17.6375 27.0592 17.045 27.0592H12.5025C11.9092 27.0592 11.4292 26.5783 11.4292 25.9858V12.5025C11.4292 11.9092 11.91 11.4292 12.5025 11.4292H17.045C17.6383 11.4292 18.1184 11.91 18.1184 12.5025V25.9858ZM28.5709 19.7958C28.5709 20.3892 28.09 20.8692 27.4975 20.8692H22.955C22.3617 20.8692 21.8817 20.3883 21.8817 19.7958V12.5025C21.8817 11.9092 22.3625 11.4292 22.955 11.4292H27.4975C28.0909 11.4292 28.5709 11.91 28.5709 12.5025V19.7958Z",fill:"#1868DB"}))),n[0]=t):t=n[0],n[1]===Symbol.for("react.memo_cache_sentinel")?(r=e(i).createElement("clipPath",{id:"clip0_2230_18718"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),n[1]=r):r=n[1],n[2]===Symbol.for("react.memo_cache_sentinel")?(o=e(i).createElement("svg",{width:"40",height:"40",viewBox:"0 0 40 40",fill:"none",xmlns:"http://www.w3.org/2000/svg"},t,e(i).createElement("defs",null,r,e(i).createElement("clipPath",{id:"clip1_2230_18718"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})))),n[2]=o):o=n[2],o}:()=>e(i).createElement("svg",{width:"40",height:"40",viewBox:"0 0 40 40",fill:"none",xmlns:"http://www.w3.org/2000/svg"},e(i).createElement("g",{clipPath:"url(#clip0_2230_18718)"},e(i).createElement("g",{clipPath:"url(#clip1_2230_18718)"},e(i).createElement("path",{fillRule:"evenodd",clipRule:"evenodd",d:"M30.3575 6.41167H9.64252C7.85835 6.41167 6.41168 7.85833 6.41168 9.6425V30.3575C6.41168 32.1417 7.85835 33.5883 9.64252 33.5883H30.3575C32.1417 33.5883 33.5884 32.1417 33.5884 30.3575V9.6425C33.5884 7.85833 32.1417 6.41167 30.3575 6.41167ZM18.1184 25.9858C18.1184 26.5792 17.6375 27.0592 17.045 27.0592H12.5025C11.9092 27.0592 11.4292 26.5783 11.4292 25.9858V12.5025C11.4292 11.9092 11.91 11.4292 12.5025 11.4292H17.045C17.6383 11.4292 18.1184 11.91 18.1184 12.5025V25.9858ZM28.5709 19.7958C28.5709 20.3892 28.09 20.8692 27.4975 20.8692H22.955C22.3617 20.8692 21.8817 20.3883 21.8817 19.7958V12.5025C21.8817 11.9092 22.3625 11.4292 22.955 11.4292H27.4975C28.0909 11.4292 28.5709 11.91 28.5709 12.5025V19.7958Z",fill:"#1868DB"}))),e(i).createElement("defs",null,e(i).createElement("clipPath",{id:"clip0_2230_18718"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),e(i).createElement("clipPath",{id:"clip1_2230_18718"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})))),u=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r,o,n=(0,a.c)(3);return n[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement("g",{clipPath:"url(#clip0_2230_18698)"},e(i).createElement("g",{clipPath:"url(#clip1_2230_18698)"},e(i).createElement("path",{d:"M19.5833 19.3159V26.7434H12.1417V19.3159H19.5833V11.8934H6.00833C5.28333 11.8984 4.7 12.4801 4.705 13.1934C4.705 13.1993 4.705 13.2051 4.705 13.2109V32.8876C4.69 33.6009 5.26583 34.1901 5.99 34.2051C5.99583 34.2051 6.0025 34.2051 6.00833 34.2051H25.7033C26.4283 34.2001 27.0117 33.6184 27.0067 32.9051C27.0067 32.8993 27.0067 32.8934 27.0067 32.8876V19.3159H19.5833Z",fill:"#1868DB"}),e(i).createElement("path",{d:"M19.5833 4.46666V11.8933H27.0425V19.3158H34.4616V5.76666C34.4766 5.05332 33.9008 4.46416 33.1766 4.44916C33.1708 4.44916 33.1641 4.44916 33.1583 4.44916L19.5833 4.46666Z",fill:"#1868DB"}))),n[0]=t):t=n[0],n[1]===Symbol.for("react.memo_cache_sentinel")?(r=e(i).createElement("clipPath",{id:"clip0_2230_18698"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),n[1]=r):r=n[1],n[2]===Symbol.for("react.memo_cache_sentinel")?(o=e(i).createElement("svg",{width:"40",height:"40",viewBox:"0 0 40 40",fill:"none",xmlns:"http://www.w3.org/2000/svg"},t,e(i).createElement("defs",null,r,e(i).createElement("clipPath",{id:"clip1_2230_18698"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})))),n[2]=o):o=n[2],o}:()=>e(i).createElement("svg",{width:"40",height:"40",viewBox:"0 0 40 40",fill:"none",xmlns:"http://www.w3.org/2000/svg"},e(i).createElement("g",{clipPath:"url(#clip0_2230_18698)"},e(i).createElement("g",{clipPath:"url(#clip1_2230_18698)"},e(i).createElement("path",{d:"M19.5833 19.3159V26.7434H12.1417V19.3159H19.5833V11.8934H6.00833C5.28333 11.8984 4.7 12.4801 4.705 13.1934C4.705 13.1993 4.705 13.2051 4.705 13.2109V32.8876C4.69 33.6009 5.26583 34.1901 5.99 34.2051C5.99583 34.2051 6.0025 34.2051 6.00833 34.2051H25.7033C26.4283 34.2001 27.0117 33.6184 27.0067 32.9051C27.0067 32.8993 27.0067 32.8934 27.0067 32.8876V19.3159H19.5833Z",fill:"#1868DB"}),e(i).createElement("path",{d:"M19.5833 4.46666V11.8933H27.0425V19.3158H34.4616V5.76666C34.4766 5.05332 33.9008 4.46416 33.1766 4.44916C33.1708 4.44916 33.1641 4.44916 33.1583 4.44916L19.5833 4.46666Z",fill:"#1868DB"}))),e(i).createElement("defs",null,e(i).createElement("clipPath",{id:"clip0_2230_18698"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),e(i).createElement("clipPath",{id:"clip1_2230_18698"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})))),p=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r,o,n=(0,a.c)(3);return n[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement("g",{clipPath:"url(#clip0_2230_18694)"},e(i).createElement("g",{clipPath:"url(#clip1_2230_18694)"},e(i).createElement("path",{d:"M37.8564 20.4181C34.509 17.0708 29.0684 17.1063 25.7566 20.4181L22.9696 23.2051C21.4309 24.7439 18.9314 24.7439 17.3927 23.2051L15.0771 20.8895L9.02573 26.9409L11.3413 29.2565C16.2215 34.1367 24.1378 34.1367 29.018 29.2565L37.8564 20.4181ZM2.5 19.5848C5.84737 22.9322 11.2198 22.9648 14.5671 19.6174L17.3897 16.7948C18.9285 15.256 21.4279 15.256 22.9667 16.7948L25.2823 19.1104L31.3336 13.0591L29.018 10.7435C24.1378 5.86326 16.2215 5.86326 11.3413 10.7435L2.50296 19.5818L2.5 19.5848Z",fill:"#1868DB"}))),n[0]=t):t=n[0],n[1]===Symbol.for("react.memo_cache_sentinel")?(r=e(i).createElement("clipPath",{id:"clip0_2230_18694"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),n[1]=r):r=n[1],n[2]===Symbol.for("react.memo_cache_sentinel")?(o=e(i).createElement("svg",{width:"40",height:"40",viewBox:"0 0 40 40",fill:"none",xmlns:"http://www.w3.org/2000/svg"},t,e(i).createElement("defs",null,r,e(i).createElement("clipPath",{id:"clip1_2230_18694"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})))),n[2]=o):o=n[2],o}:()=>e(i).createElement("svg",{width:"40",height:"40",viewBox:"0 0 40 40",fill:"none",xmlns:"http://www.w3.org/2000/svg"},e(i).createElement("g",{clipPath:"url(#clip0_2230_18694)"},e(i).createElement("g",{clipPath:"url(#clip1_2230_18694)"},e(i).createElement("path",{d:"M37.8564 20.4181C34.509 17.0708 29.0684 17.1063 25.7566 20.4181L22.9696 23.2051C21.4309 24.7439 18.9314 24.7439 17.3927 23.2051L15.0771 20.8895L9.02573 26.9409L11.3413 29.2565C16.2215 34.1367 24.1378 34.1367 29.018 29.2565L37.8564 20.4181ZM2.5 19.5848C5.84737 22.9322 11.2198 22.9648 14.5671 19.6174L17.3897 16.7948C18.9285 15.256 21.4279 15.256 22.9667 16.7948L25.2823 19.1104L31.3336 13.0591L29.018 10.7435C24.1378 5.86326 16.2215 5.86326 11.3413 10.7435L2.50296 19.5818L2.5 19.5848Z",fill:"#1868DB"}))),e(i).createElement("defs",null,e(i).createElement("clipPath",{id:"clip0_2230_18694"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})),e(i).createElement("clipPath",{id:"clip1_2230_18694"},e(i).createElement("rect",{width:"40",height:"40",fill:"white"})))),m=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r=(0,a.c)(1);return r[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement("svg",{height:"100%",viewBox:"0 0 24 24"},e(i).createElement("path",{fill:"var(--tile-color,#ffc716)",d:"M0 6a6 6 0 0 1 6-6h12a6 6 0 0 1 6 6v12a6 6 0 0 1-6 6H6a6 6 0 0 1-6-6z"}),e(i).createElement("path",{fill:"var(--icon-color, #101214)",fillRule:"evenodd",d:"M8.34 11.495a3.64 3.64 0 0 0 3.155-3.154h2.3V6.523h-2.537a3.638 3.638 0 1 0-4.735 4.735v2.538H8.34zM7.887 9.25a1.364 1.364 0 1 0 0-2.727 1.364 1.364 0 0 0 0 2.727",clipRule:"evenodd"}),e(i).createElement("path",{fill:"var(--icon-color, #101214)",d:"M19.25 7.43a2.27 2.27 0 1 1-4.54 0 2.27 2.27 0 0 1 4.55 0M7.43 19.25a2.27 2.27 0 1 0 0-4.54 2.27 2.27 0 0 0 0 4.55m9.55-.01a2.27 2.27 0 1 0 0-4.54 2.27 2.27 0 0 0 0 4.55m-3.18-3.19h-3.18v1.82h3.18zm2.27-5.46v3.18h1.82v-3.18z"})),r[0]=t):t=r[0],t}:()=>e(i).createElement("svg",{height:"100%",viewBox:"0 0 24 24"},e(i).createElement("path",{fill:"var(--tile-color,#ffc716)",d:"M0 6a6 6 0 0 1 6-6h12a6 6 0 0 1 6 6v12a6 6 0 0 1-6 6H6a6 6 0 0 1-6-6z"}),e(i).createElement("path",{fill:"var(--icon-color, #101214)",fillRule:"evenodd",d:"M8.34 11.495a3.64 3.64 0 0 0 3.155-3.154h2.3V6.523h-2.537a3.638 3.638 0 1 0-4.735 4.735v2.538H8.34zM7.887 9.25a1.364 1.364 0 1 0 0-2.727 1.364 1.364 0 0 0 0 2.727",clipRule:"evenodd"}),e(i).createElement("path",{fill:"var(--icon-color, #101214)",d:"M19.25 7.43a2.27 2.27 0 1 1-4.54 0 2.27 2.27 0 0 1 4.55 0M7.43 19.25a2.27 2.27 0 1 0 0-4.54 2.27 2.27 0 0 0 0 4.55m9.55-.01a2.27 2.27 0 1 0 0-4.54 2.27 2.27 0 0 0 0 4.55m-3.18-3.19h-3.18v1.82h3.18zm2.27-5.46v3.18h1.82v-3.18z"})),g=(0,n.isReactCompilerActivePlatform)()?()=>{let t,r,o,n,c=(0,a.c)(4);return c[0]===Symbol.for("react.memo_cache_sentinel")?(t=e(i).createElement("g",{clipPath:"url(#clip0_2321_14935)"},e(i).createElement("g",{clipPath:"url(#clip1_2321_14935)"},e(i).createElement("g",{clipPath:"url(#clip2_2321_14935)"},e(i).createElement("path",{d:"M0 8.10156C0 3.68328 3.58172 0.101562 8 0.101562H24C28.4183 0.101562 32 3.68328 32 8.10156V24.1016C32 28.5198 28.4183 32.1016 24 32.1016H8C3.58172 32.1016 0 28.5198 0 24.1016V8.10156Z",fill:"#FB9700"}),e(i).createElement("path",{d:"M16.5762 5.00928L19.6123 11.7729L26.9834 12.5708L27.3369 13.6597L21.8418 18.6372L23.3623 25.8931L22.4355 26.5669L16.0039 22.8784L9.57227 26.5669L8.64551 25.8931L10.165 18.6372L4.66992 13.6597L5.02441 12.5708L12.3955 11.7729L15.4316 5.00928H16.5762ZM15.9082 16.9458C14.5408 16.946 13.4326 18.0549 13.4326 19.4224V20.3267C14.1301 20.7301 14.9385 20.964 15.8008 20.9702H15.8711C16.794 20.9636 17.6552 20.696 18.3848 20.2388V19.4224C18.3848 18.0548 17.2758 16.9458 15.9082 16.9458ZM15.9082 12.4341C14.8828 12.4342 14.0519 13.2651 14.0518 14.2905C14.0518 15.3161 14.8827 16.1478 15.9082 16.1479C16.9339 16.1479 17.7656 15.3162 17.7656 14.2905C17.7655 13.265 16.9338 12.4341 15.9082 12.4341Z",fill:"#101214"})))),c[0]=t):t=c[0],c[1]===Symbol.for("react.memo_cache_sentinel")?(r=e(i).createElement("clipPath",{id:"clip0_2321_14935"},e(i).createElement("rect",{width:"32",height:"32",fill:"white",transform:"translate(0 0.101562)"})),c[1]=r):r=c[1],c[2]===Symbol.for("react.memo_cache_sentinel")?(o=e(i).createElement("clipPath",{id:"clip1_2321_14935"},e(i).createElement("rect",{width:"32",height:"32",fill:"white",transform:"translate(0 0.101562)"})),c[2]=o):o=c[2],c[3]===Symbol.for("react.memo_cache_sentinel")?(n=e(i).createElement("svg",{width:"32",height:"33",viewBox:"0 0 32 33",fill:"none",xmlns:"http://www.w3.org/2000/svg"},t,e(i).createElement("defs",null,r,o,e(i).createElement("clipPath",{id:"clip2_2321_14935"},e(i).createElement("path",{d:"M0 8.10156C0 3.68328 3.58172 0.101562 8 0.101562H24C28.4183 0.101562 32 3.68328 32 8.10156V24.1016C32 28.5198 28.4183 32.1016 24 32.1016H8C3.58172 32.1016 0 28.5198 0 24.1016V8.10156Z",fill:"white"})))),c[3]=n):n=c[3],n}:()=>e(i).createElement("svg",{width:"32",height:"33",viewBox:"0 0 32 33",fill:"none",xmlns:"http://www.w3.org/2000/svg"},e(i).createElement("g",{clipPath:"url(#clip0_2321_14935)"},e(i).createElement("g",{clipPath:"url(#clip1_2321_14935)"},e(i).createElement("g",{clipPath:"url(#clip2_2321_14935)"},e(i).createElement("path",{d:"M0 8.10156C0 3.68328 3.58172 0.101562 8 0.101562H24C28.4183 0.101562 32 3.68328 32 8.10156V24.1016C32 28.5198 28.4183 32.1016 24 32.1016H8C3.58172 32.1016 0 28.5198 0 24.1016V8.10156Z",fill:"#FB9700"}),e(i).createElement("path",{d:"M16.5762 5.00928L19.6123 11.7729L26.9834 12.5708L27.3369 13.6597L21.8418 18.6372L23.3623 25.8931L22.4355 26.5669L16.0039 22.8784L9.57227 26.5669L8.64551 25.8931L10.165 18.6372L4.66992 13.6597L5.02441 12.5708L12.3955 11.7729L15.4316 5.00928H16.5762ZM15.9082 16.9458C14.5408 16.946 13.4326 18.0549 13.4326 19.4224V20.3267C14.1301 20.7301 14.9385 20.964 15.8008 20.9702H15.8711C16.794 20.9636 17.6552 20.696 18.3848 20.2388V19.4224C18.3848 18.0548 17.2758 16.9458 15.9082 16.9458ZM15.9082 12.4341C14.8828 12.4342 14.0519 13.2651 14.0518 14.2905C14.0518 15.3161 14.8827 16.1478 15.9082 16.1479C16.9339 16.1479 17.7656 15.3162 17.7656 14.2905C17.7655 13.265 16.9338 12.4341 15.9082 12.4341Z",fill:"#101214"})))),e(i).createElement("defs",null,e(i).createElement("clipPath",{id:"clip0_2321_14935"},e(i).createElement("rect",{width:"32",height:"32",fill:"white",transform:"translate(0 0.101562)"})),e(i).createElement("clipPath",{id:"clip1_2321_14935"},e(i).createElement("rect",{width:"32",height:"32",fill:"white",transform:"translate(0 0.101562)"})),e(i).createElement("clipPath",{id:"clip2_2321_14935"},e(i).createElement("path",{d:"M0 8.10156C0 3.68328 3.58172 0.101562 8 0.101562H24C28.4183 0.101562 32 3.68328 32 8.10156V24.1016C32 28.5198 28.4183 32.1016 24 32.1016H8C3.58172 32.1016 0 28.5198 0 24.1016V8.10156Z",fill:"white"})))),f={[r("aqAfG").ProductKeys1P.Confluence]:{displayName:"Confluence",icon:(0,r("i52Hf").RovoLogoFromLogo)(r("bltJZ").ConfluenceIcon,"Confluence"),searchResultIcon:(0,r("i52Hf").RovoLogoFromSVG)(c,"Confluence","large")},[r("aqAfG").ProductKeys1P.Atlas]:{displayName:"Home",icon:(0,r("i52Hf").RovoLogoFromLogo)(r("NlHoa").AtlassianIcon,"Home"),searchResultIcon:(0,r("i52Hf").RovoLogoFromSVG)(s,"Home","large")},[r("aqAfG").ProductKeys1P.Jira]:{displayName:"Jira",icon:(0,r("i52Hf").RovoLogoFromLogo)(r("bltJZ").JiraIcon,"Jira"),searchResultIcon:(0,r("i52Hf").RovoLogoFromSVG)(r("3h5an").JiraSearchResultIcon,"Jira","large")},[r("aqAfG").ProductKeys1P.JiraProductDiscovery]:{displayName:"Jira Product Discovery",icon:(0,r("i52Hf").RovoLogoFromLogo)(r("bltJZ").JiraProductDiscoveryIcon,"Jira Product Discovery"),searchResultIcon:(0,r("i52Hf").RovoLogoFromSVG)(l,"Jira Product Discovery","large")},[r("aqAfG").ProductKeys1P.JiraServiceManagement]:{displayName:"Jira Service Management",icon:(0,r("i52Hf").RovoLogoFromLogo)(r("bltJZ").JiraServiceManagementIcon,"Jira Service Management"),searchResultIcon:(0,r("i52Hf").RovoLogoFromSVG)(r("aIhxJ").JiraServiceManagementSearchResultIcon,"Jira Service Management","large")},[r("aqAfG").ProductKeys1P.Bitbucket]:{displayName:"Bitbucket",icon:(0,r("i52Hf").RovoLogoFromLogo)(r("bltJZ").BitbucketIcon,"Bitbucket"),searchResultIcon:(0,r("i52Hf").RovoLogoFromLogo)(r("bltJZ").BitbucketIcon,"Bitbucket")},[r("aqAfG").ProductKeys1P.Trello]:{displayName:"Trello",icon:(0,r("i52Hf").RovoLogoFromLogo)(r("bltJZ").TrelloIcon,"Trello"),searchResultIcon:(0,r("i52Hf").RovoLogoFromSVG)(d,"Trello","large")},[r("aqAfG").ProductKeys1P.Compass]:{displayName:"Compass",icon:(0,r("i52Hf").RovoLogoFromLogo)(r("bltJZ").CompassIcon,"Compass"),searchResultIcon:(0,r("i52Hf").RovoLogoFromSVG)(u,"Compass","large")},[r("aqAfG").ProductKeys1P.Focus]:{displayName:"Focus",icon:(0,r("i52Hf").RovoLogoFromLogo)(r("bltJZ").FocusIcon,"Focus"),searchResultIcon:(0,r("i52Hf").RovoLogoFromSVG)(p,"Focus","large")},[r("aqAfG").ProductKeys1P.Assets]:{displayName:"Assets",icon:(0,r("i52Hf").RovoLogoFromLogo)(r("bltJZ").AssetsIcon,"Assets"),searchResultIcon:(0,r("i52Hf").RovoLogoFromSVG)(m,"Assets","large")},[r("aqAfG").ProductKeys1P.Talent]:{displayName:"Talent",icon:(0,r("i52Hf").RovoLogoFromLogo)(r("bltJZ").TalentIcon,"Talent"),searchResultIcon:(0,r("i52Hf").RovoLogoFromSVG)(g,"Talent","large")}},h=[r("aqAfG").ProductKeys1P.Confluence,r("aqAfG").ProductKeys1P.Jira,r("aqAfG").ProductKeys1P.JiraProductDiscovery,r("aqAfG").ProductKeys1P.JiraServiceManagement,r("aqAfG").ProductKeys1P.Atlas,r("aqAfG").ProductKeys1P.Trello,r("aqAfG").ProductKeys1P.Bitbucket,r("aqAfG").ProductKeys1P.Compass,r("aqAfG").ProductKeys1P.Focus,r("aqAfG").ProductKeys1P.Assets,r("aqAfG").ProductKeys1P.Talent];r("aqAfG").ProductKeys1P.Confluence,f[r("aqAfG").ProductKeys1P.Confluence],r("aqAfG").ProductKeys1P.Jira,f[r("aqAfG").ProductKeys1P.Jira],r("aqAfG").ProductKeys1P.Atlas,f[r("aqAfG").ProductKeys1P.Atlas],r("aqAfG").ProductKeys1P.Compass,f[r("aqAfG").ProductKeys1P.Compass],r("aqAfG").ProductKeys1P.Trello,f[r("aqAfG").ProductKeys1P.Trello],r("aqAfG").ProductKeys1P.Bitbucket,f[r("aqAfG").ProductKeys1P.Bitbucket],r("aqAfG").ProductKeys1P.Assets,f[r("aqAfG").ProductKeys1P.Assets],r("aqAfG").ProductKeys1P.Talent,f[r("aqAfG").ProductKeys1P.Talent],r("aqAfG").ProductKeys1P.Focus,f[r("aqAfG").ProductKeys1P.Focus],t.exports.FirstPartyConfigs=f,t.exports.ProductsOrder1P=h}),o("7pCWA",function(e,t){let o=()=>!!(0,r("iDrrr").fg)("rovo_cas_use_rovo_config")||"test"===r("cXtTj").default.getExperimentValue("rovo_cas_use_rovo_config_exp","cohort","control");var n=r("gtMdU"),a=r("bDgLe"),i=r("cozmU");let c=e=>e?`/gateway/api/assist/rovo/v1/resources/icon/${e}`:"",s="help_aggregator",l={loom:"Loom",goal:"Goals",project:"Projects"},d=e=>{let t=r("8ICvC").FirstPartyConfigs[e];return t?.displayName?t.displayName:l[e]??""},u={[r("fR63l").ProductKeys3P.AtlassianWebCrawler]:"Web Pages"},p=new Set([r("fR63l").ProductKeys3P.JiraDC,r("fR63l").ProductKeys3P.JsmDC,r("fR63l").ProductKeys3P.ConfluenceDC]),m=(e,t,o)=>{if(void 0!==o&&p.has(o)&&"string"==typeof t&&""!==t)return t;if("string"==typeof e&&""!==e)return e;if(o){let e=r("fd0l2").ThirdPartyConfigsSync.get(o)?.displayName;if("string"==typeof e&&""!==e)return e;let t=u[o];if(t)return t}return""},g=new Set([r("aqAfG").ProductKeys1P.JiraProductDiscovery,r("aqAfG").ProductKeys1P.Assets,r("aqAfG").ProductKeys1P.Focus,r("aqAfG").ProductKeys1P.Talent]),f=new Set([r("aqAfG").ProductKeys1P.Atlas]),h=new Set([...Object.values(r("aqAfG").ProductKeys1P),r("aqAfG").NounKeys.goal,r("aqAfG").NounKeys.project,"loom"].filter(e=>!g.has(e)&&!f.has(e))),y=e=>h.has(e),P=new Set([r("fR63l").ProductKeys3P.JsmDC]),C=e=>!P.has(e),b={"adobe-sign-connector":"adobe_sign","adobexd-connector":"adobe_xd","aha-connector":"aha","airtable-connector":"airtable","asana-connector":"asana","aws-connector":"aws","azure-connector":"azure","azure-devops-connector":"azure_devops","bitbucket-connector":"bitbucket","box-connector":"box","canva-connector":"canva","clickup-connector":"clickup","confluence-dc-connector":"confluence-dc","confluent-connector":"confluent","databricks-connector":"databricks","datadog-connector":"datadog","docker-connector":"docker","docusign-connector":"docusign","dovetail-connector":"dovetail","dropbox-connector":"dropbox","entra-id-connector":"entra","figma-connector":"figma","freshservice-connector":"freshservice","github-connector":"github","gitlab-connector":"gitlab","gmail-connector":"gmail","google-calendar-connector":"google_calendar","google-cloud-platform-connector":"gcp","google-drive-connector":"google_drive","hubspot-connector":"hubspot","jenkins-connector":"jenkins","jira-dc-connector":"jira_dc","launchdarkly-connector":"launchdarkly","loom-connector":"loom","lucid-connector":"lucid","microsoft-connector":"microsoft","microsoft-teams-connector":"teams","miro-connector":"miro","monday-connector":"monday","mural-connector":"mural","notion-connector":"notion","onedrive-connector":"microsoft_onedrive","outlook-calendar-connector":"microsoft_outlook_calendar","outlook-mail-connector":"microsoft_outlook_mail","pagerduty-connector":"pagerduty","pipedrive-connector":"pipedrive","salesforce-connector":"salesforce","sentry-connector":"sentry","servicenow-connector":"servicenow","sharepoint-connector":"microsoft_sharepoint","slack-connector":"slack","smartlinks-connector-adobexd":"adobe_xd_sl","smartlinks-connector-airtable":"airtable_sl","smartlinks-connector-amplitude":"amplitude","smartlinks-connector-asana":"asana_sl","smartlinks-connector-box":"box_sl","smartlinks-connector-clickup":"clickup_sl","smartlinks-connector-docusign":"docusign_sl","smartlinks-connector-dovetail":"dovetail_sl","smartlinks-connector-dropbox":"dropbox_sl","smartlinks-connector-figma":"figma_sl","smartlinks-connector-gdrive":"google_drive_sl","smartlinks-connector-gitlab":"gitlab_sl","smartlinks-connector-hubspot":"hubspot_sl","smartlinks-connector-launchdarkly":"launchdarkly_sl","smartlinks-connector-lucid":"lucid_sl","smartlinks-connector-miro":"miro_sl","smartlinks-connector-mural":"mural_sl","smartlinks-connector-notion":"notion_sl","smartlinks-connector-onedrive":"microsoft_onedrive_sl","smartlinks-connector-pagerduty":"pagerduty_sl","smartlinks-connector-pipedrive":"pipedrive_sl","smartlinks-connector-power-bi":"microsoft_power_bi","smartlinks-connector-salesforce":"salesforce_sl","smartlinks-connector-sentry":"sentry_sl","smartlinks-connector-sharepoint":"microsoft_sharepoint_sl","smartlinks-connector-slack":"slack_sl","smartlinks-connector-smartsheet":"smartsheet_sl","smartlinks-connector-stripe":"stripe_sl","smartlinks-connector-teams":"microsoft_teams_sl","smartlinks-connector-todoist":"todoist","smartlinks-connector-webex":"cisco_webex","smartlinks-connector-zeplin":"zeplin","smartsheet-connector":"smartsheet","splunk-connector":"splunk","stripe-connector":"stripe","webcrawler-connector":"atlassian-web-crawler","zendesk-connector":"zendesk"},S={"jira-servicedesk":"jsm",goal:"atlas_goal",project:"atlas_project","adobe-sign":"adobe_sign","azure-devops":"azure_devops","entra-id":"entra","google-calendar":"google_calendar","google-cloud-platform":"gcp","jira-dc":"jira_dc","outlook-calendar":"microsoft_outlook_calendar","power-bi":"microsoft_power_bi",webex:"cisco_webex"},E=e=>S[e]??e,v=(e,t)=>(t?b[t]:void 0)??E(e),_=(e={})=>{let{accessibleProducts:t,thirdPartyConfigs:o,isConfigLoaded:n,onOAuthSuccess:a}=(0,r("hCtla").useRovoConfig)({cloudId:e.cloudId,aggAbsoluteUrl:void 0,multiSiteSearchInRovo:void 0,preloadDataProvider:void 0,shouldBypassPreloadProvider:void 0,onForgeConnectorTypeMapping:void 0}),l=!e.cloudId,u=(0,i.useRef)(o);u.current=o;let p=(0,i.useCallback)(e=>{if(l)return;let t=((e,t)=>{if(e){for(let[r,o]of Object.entries(e))if(o&&v(r,o.resourceType)===t)return{product:r}}})(u.current,e);t&&a(t)},[l,a]);return(0,i.useMemo)(()=>{if(l)return{connectors:{},isFetching:!1,error:null,lastFetchedAt:null,hasFetchAttempted:!1,markUserConnected:p};let e=[],r=new Set,a=new Set;if(o)for(let[t,n]of Object.entries(o)){if(!C(t)){a.add(E(t));continue}let o=v(t,n?.resourceType);if(!n){a.add(o);continue}r.add(o),e.push({source:o,iconUrl:c(o),friendlyName:m(n.displayName,n.workspaceName,t),isUserOAuthed:!0!==n.userNeedsOAuth,outboundAuthUrl:n.outboundAuthUrl??"",connectorCreatedAt:n.connectorCreatedAt??null,connectedAt:n.connectedAt??null,resourceType:n.resourceType??null,providerId:n.providerId??null,datasourceId:n.datasourceId??null,connectorSyncType:n.connectorSyncType??null}),a.add(E(t))}if(t)for(let o of t){if(!y(o))continue;let t=E(o);r.has(t)||a.has(t)||(r.add(t),e.push({source:t,iconUrl:c(t),friendlyName:d(o),isUserOAuthed:!0,outboundAuthUrl:"",connectorCreatedAt:null,connectedAt:null,resourceType:null,providerId:null,datasourceId:null,connectorSyncType:null}))}if(n){let t={source:s,iconUrl:c(s),friendlyName:"Atlassian Support Docs",isUserOAuthed:!0,outboundAuthUrl:"",connectorCreatedAt:null,connectedAt:null,resourceType:null,providerId:null,datasourceId:null,connectorSyncType:null};if(r.has(t.source)){let r=e.findIndex(e=>e.source===t.source);e.splice(r,1)}e.push(t)}return{connectors:(e=>{let t=[...e].sort((e,t)=>e.friendlyName.localeCompare(t.friendlyName,void 0,{sensitivity:"base"})||(e.source<t.source?-1:+(e.source>t.source))),r={};for(let e of t)r[e.source]=e;return r})(e),isFetching:!n,error:null,lastFetchedAt:null,hasFetchAttempted:n,markUserConnected:p}},[l,t,o,n,p])},I=(0,r("8s9DV").createStore)({name:"rovoConfigSiteIdStore",initialState:{siteId:void 0},actions:{setSiteId:e=>({getState:t,setState:r})=>{t().siteId!==e&&r({siteId:e})}}}),A=(0,r("kBr4q").createStateHook)(I,{selector:e=>e.siteId}),k=(0,r("kBr4q").createActionsHook)(I),R=(0,n.isReactCompilerActivePlatform)()?()=>{let{setSiteId:e}=k();return e}:()=>{let{setSiteId:e}=k();return e},x=e=>(...t)=>{console.warn(`[RAOC-23] No-op stub called: ${e}. Under rovo_cas_use_rovo_config FG, connectors-store actions are not yet wired.`,...t)},F={setKnowledgeSources:x("setKnowledgeSources"),setError:x("setError"),markLastUsed:x("markLastUsed")},w=(0,n.isReactCompilerActivePlatform)()?()=>{let e,t,r,o,n,i,c,s=(0,a.c)(16),l=R(),d=A();s[0]!==d?(e={cloudId:d},s[0]=d,s[1]=e):e=s[1];let u=_(e);s[2]!==u?({markUserConnected:t,...r}=u,s[2]=u,s[3]=t,s[4]=r):(t=s[3],r=s[4]),s[5]!==l?(o=async(e,t)=>{l(t)},s[5]=l,s[6]=o):o=s[6];let p=o;s[7]!==l?(n=async(e,t,r)=>{r?.onStart?.(),l(t)},s[7]=l,s[8]=n):n=s[8];let m=n;s[9]!==t||s[10]!==p||s[11]!==m?(i={...F,markUserConnected:t,fetchIfEmpty:p,prefetchIfEmpty:m},s[9]=t,s[10]=p,s[11]=m,s[12]=i):i=s[12];let g=i,f=r;return s[13]!==g||s[14]!==f?(c=[f,g],s[13]=g,s[14]=f,s[15]=c):c=s[15],c}:()=>{let e=R(),{markUserConnected:t,...r}=_({cloudId:A()});return[r,(0,i.useMemo)(()=>({...F,markUserConnected:t,fetchIfEmpty:async(t,r)=>{e(r)},prefetchIfEmpty:async(t,r,o)=>{o?.onStart?.(),e(r)}}),[e,t])]},D=((0,n.isReactCompilerActivePlatform)(),()=>w()),T=(0,n.isReactCompilerActivePlatform)()?()=>{let[,e]=w();return e}:()=>{let[,e]=w();return e},O=(0,n.isReactCompilerActivePlatform)()?()=>{let e,t=(0,a.c)(3),[r,o]=w(),n=r.connectors;return t[0]!==o||t[1]!==n?(e=[n,o],t[0]=o,t[1]=n,t[2]=e):e=t[2],e}:()=>{let[e,t]=w();return[e.connectors,t]},U=(0,n.isReactCompilerActivePlatform)()?()=>{let e,t,r=(0,a.c)(5),[o,n]=w();r[0]!==o.connectors?(e=Object.values(o.connectors),r[0]=o.connectors,r[1]=e):e=r[1];let i=e;return r[2]!==n||r[3]!==i?(t=[i,n],r[2]=n,r[3]=i,r[4]=t):t=r[4],t}:()=>{let[e,t]=w();return[Object.values(e.connectors),t]},N=(0,n.isReactCompilerActivePlatform)()?()=>{let e,t=(0,a.c)(3),[r,o]=w();return t[0]!==o||t[1]!==r.isFetching?(e=[r.isFetching,o],t[0]=o,t[1]=r.isFetching,t[2]=e):e=t[2],e}:()=>{let[e,t]=w();return[e.isFetching,t]},L=(0,n.isReactCompilerActivePlatform)()?()=>{let e,t=(0,a.c)(3),[r,o]=w(),n=r.hasFetchAttempted&&!r.isFetching;return t[0]!==o||t[1]!==n?(e=[n,o],t[0]=o,t[1]=n,t[2]=e):e=t[2],e}:()=>{let[e,t]=w();return[e.hasFetchAttempted&&!e.isFetching,t]},M=(0,n.isReactCompilerActivePlatform)()?()=>{let e,t=(0,a.c)(2),[o]=w();return t[0]!==o.connectors?(e=Object.values(o.connectors).filter(r("7pCWA").isNewlyEnabledApp),t[0]=o.connectors,t[1]=e):e=t[1],e}:()=>{let[e]=w();return Object.values(e.connectors).filter(r("7pCWA").isNewlyEnabledApp)};(0,n.isReactCompilerActivePlatform)();let G="rovo-connectors-metadata",$=e=>{try{let t={lastUsedAt:{}};for(let[r,o]of Object.entries(e))o.lastUsedAt&&(t.lastUsedAt[r]=o.lastUsedAt);localStorage.setItem(G,JSON.stringify(t))}catch{}},K=(0,r("8s9DV").createStore)({name:"connectorsStore",initialState:{connectors:{},isFetching:!1,error:null,lastFetchedAt:null,hasFetchAttempted:!1},actions:{setKnowledgeSources:e=>({getState:t,setState:r})=>{let o=t().connectors,n=(()=>{try{let e=localStorage.getItem(G);if(e){let t=JSON.parse(e);if(t&&"object"==typeof t)return{lastUsedAt:t.lastUsedAt??{}}}}catch{}return{lastUsedAt:{}}})(),a=Date.now(),i={};e.knowledgeSources.forEach(e=>{let t=o[e.source];i[e.source]={...e,lastUsedAt:t?.lastUsedAt??n.lastUsedAt[e.source]}}),r({connectors:i,isFetching:!1,error:null,lastFetchedAt:a,hasFetchAttempted:!0})},setError:e=>({setState:t})=>{t({error:e,isFetching:!1})},markUserConnected:e=>({getState:t,setState:r})=>{let o=t().connectors[e];if(!o)return;let n={...t(),connectors:{...t().connectors,[e]:{...o,isUserOAuthed:!0}}};r(n),$(n.connectors)},markLastUsed:e=>({getState:t,setState:r})=>{let o=t().connectors[e];if(!o)return;let n={...t(),connectors:{...t().connectors,[e]:{...o,lastUsedAt:Date.now()}}};r(n),$(n.connectors)},fetchIfEmpty:(e,t)=>async({getState:t,setState:r,dispatch:o})=>{let{isFetching:n,lastFetchedAt:a,hasFetchAttempted:i}=t();if(!n&&null===a&&!i){r({isFetching:!0,hasFetchAttempted:!0});try{let t=await e();o(K.actions.setKnowledgeSources(t))}catch(e){o(K.actions.setError(e instanceof Error?e:Error(String(e))))}}},prefetchIfEmpty:(e,t,r)=>async({getState:t,setState:o,dispatch:n})=>{let{isFetching:a,lastFetchedAt:i,hasFetchAttempted:c}=t();if(!a&&null===i&&!c){r?.onStart?.(),o({isFetching:!0});try{let t=await e();n(K.actions.setKnowledgeSources(t)),r?.onSuccess?.()}catch(t){let e=t instanceof Error?t:Error(String(t));o({error:e,isFetching:!1,hasFetchAttempted:!1}),r?.onError?.(e)}}}}}),j=(0,r("kBr4q").createHook)(K),H=(0,r("kBr4q").createActionsHook)(K),q=(0,r("kBr4q").createHook)(K,{selector:e=>e.connectors}),B=(0,r("kBr4q").createHook)(K,{selector:e=>Object.values(e.connectors)}),z=(0,r("kBr4q").createHook)(K,{selector:e=>e.isFetching}),V=(0,r("kBr4q").createHook)(K,{selector:e=>e.hasFetchAttempted&&!e.isFetching}),Q=e=>{if(e.isUserOAuthed||!e.connectorCreatedAt)return!1;let t=new Date(e.connectorCreatedAt).getTime();return!isNaN(t)&&Date.now()-t<=2592e6},W=(0,r("fjHkB").createSelector)(e=>e.connectors,e=>Object.values(e).filter(Q)),J=(0,r("kBr4q").createStateHook)(K,{selector:W});(0,r("kBr4q").createActionsHook)(K),e.exports.useKnowledgeSourcesStore=(...e)=>o()?D():j(...e),e.exports.useKnowledgeSourcesActions=()=>o()?T():H(),e.exports.useConnectors=(...e)=>o()?O():q(...e),e.exports.useEnabledKnowledgeSources=(...e)=>o()?U():B(...e),e.exports.useConnectorsIsFetching=(...e)=>o()?N():z(...e),e.exports.useConnectorsDataReady=(...e)=>o()?L():V(...e),e.exports.isNewlyEnabledApp=Q,e.exports.useNewlyEnabledConnectors=(...e)=>o()?M():J(...e)}),o("fd0l2",function(e,t){let o=new Map([[r("fR63l").ProductKeys3P.AtlassianWebCrawler,r("jAKKt").atlassianWebCrawlerConfig],[r("fR63l").ProductKeys3P.Figma,r("7dzhu").figmaConfig],[r("fR63l").ProductKeys3P.Github,r("aZX0c").githubConfig],[r("fR63l").ProductKeys3P.GoogleDrive,r("kFYBW").googleDriveConfig],[r("fR63l").ProductKeys3P.Sharepoint,r("gOrBS").sharepointConfig],[r("fR63l").ProductKeys3P.Loom,r("lSeWC").loomConfig],[r("fR63l").ProductKeys3P.OneDrive,r("4TRyZ").oneDriveConfig],[r("fR63l").ProductKeys3P.Dropbox,r("2qza4").dropboxConfig],[r("fR63l").ProductKeys3P.Slack,r("kDG5l").slackConfig],[r("fR63l").ProductKeys3P.Teams,r("6sCQO").teamsConfig],[r("fR63l").ProductKeys3P.GoogleCalendar,r("6eg6r").googleCalendarConfig],[r("fR63l").ProductKeys3P.Gmail,r("52jas").gmailConfig],[r("fR63l").ProductKeys3P.OutlookCalendar,r("ijAga").outlookCalendarConfig],[r("fR63l").ProductKeys3P.OutlookMail,r("dPp45").outlookMail],[r("fR63l").ProductKeys3P.Asana,r("4Be7r").asanaConfig],[r("fR63l").ProductKeys3P.Zendesk,r("kmEEk").zendeskConfig],[r("fR63l").ProductKeys3P.Airtable,r("52Drw").airtableConfig],[r("fR63l").ProductKeys3P.Smartsheet,r("aaz0Y").smartsheetConfig],[r("fR63l").ProductKeys3P.Notion,r("kcCFv").notionConfig],[r("fR63l").ProductKeys3P.Miro,r("6lsSn").miroConfig],[r("fR63l").ProductKeys3P.Docusign,r("k521G").docusignConfig],[r("fR63l").ProductKeys3P.Lucid,r("43W2t").lucidConfig],[r("fR63l").ProductKeys3P.Monday,r("6ThsT").mondayConfig],[r("fR63l").ProductKeys3P.AzureDevops,r("4x6XK").azureDevopsConfig],[r("fR63l").ProductKeys3P.Gitlab,r("382mb").gitlabConfig],[r("fR63l").ProductKeys3P.ConfluenceDC,r("8oQ7k").confluenceDCConfig],[r("fR63l").ProductKeys3P.JiraDC,r("79ijY").jiraDCConfig],[r("fR63l").ProductKeys3P.JsmDC,r("e7BOf").jsmDCConfig],[r("fR63l").ProductKeys3P.Canva,r("fg2gb").canvaConfig],[r("fR63l").ProductKeys3P.Box,r("fauGM").boxConfig],[r("fR63l").ProductKeys3P.Zoom,r("bj13p").zoomConfig],[r("fR63l").ProductKeys3P.Zeplin,r("3VdqU").zeplinConfig],[r("fR63l").ProductKeys3P.ServiceNow,r("iN1Vs").serviceNowConfig],[r("fR63l").ProductKeys3P.Freshservice,r("fA9zj").freshserviceConfig],[r("fR63l").ProductKeys3P.PowerBI,r("iTxTm").powerBIConfig],[r("fR63l").ProductKeys3P.ClickUp,r("5pWqV").clickUpConfig],[r("fR63l").ProductKeys3P.Amplitude,r("juuLe").amplitudeConfig],[r("fR63l").ProductKeys3P.Stripe,r("3juV6").stripeConfig],[r("fR63l").ProductKeys3P.AdobeXD,r("hIDj1").adobeXDConfig],[r("fR63l").ProductKeys3P.Aha,r("7WW80").ahaConfig],[r("fR63l").ProductKeys3P.AdobeSign,r("au9jr").adobeSignConfig],[r("fR63l").ProductKeys3P.Mural,r("diJOH").muralConfig],[r("fR63l").ProductKeys3P.Webex,r("5bQLl").webexConfig],[r("fR63l").ProductKeys3P.Todoist,r("dVIA3").todoistConfig],[r("fR63l").ProductKeys3P.PagerDuty,r("emznk").pagerDutyConfig],[r("fR63l").ProductKeys3P.Pipedrive,r("fMCQp").pipedriveConfig],[r("fR63l").ProductKeys3P.Hubspot,r("cdiu6").hubSpotConfig],[r("fR63l").ProductKeys3P.Dovetail,r("8djpu").dovetailConfig],[r("fR63l").ProductKeys3P.LaunchDarkly,r("3P9fk").launchDarklyConfig],[r("fR63l").ProductKeys3P.Salesforce,r("lPRuX").salesforceConfig],[r("fR63l").ProductKeys3P.Sentry,r("2zNcl").sentryConfig],[r("fR63l").ProductKeys3P.Gitbook,r("h8Js2").gitbookConfig],[r("fR63l").ProductKeys3P.AWSS3,r("9Om9G").awss3Config],[r("fR63l").ProductKeys3P.Databricks,r("kiNtZ").databricksConfig],[r("fR63l").ProductKeys3P.ForgeAdamVitareqDev,r("1RpaO").forgeAdamVitareqConfig],[r("fR63l").ProductKeys3P.ForgeAdamVitareqProd,r("jENKA").forgeAdamVitareqConfig],[r("fR63l").ProductKeys3P.ForgeK15tScrollSitesDev,r("j34lg").forgeK15tScrollSitesConfig],[r("fR63l").ProductKeys3P.ForgeK15tScrollSitesProd,r("in2Pi").forgeK15tScrollSitesConfig],[r("fR63l").ProductKeys3P.ForgePioAwsDev,r("7vbr8").forgePioAwsConfig],[r("fR63l").ProductKeys3P.ForgePioAwsProd,r("k6vRK").forgePioAwsConfig],[r("fR63l").ProductKeys3P.ForgePioClickupDev,r("aiL8h").forgePioClickupConfig],[r("fR63l").ProductKeys3P.ForgePioClickupProd,r("cY0ZT").forgePioClickupConfig],[r("fR63l").ProductKeys3P.ForgePioGitbookDev,r("9SYma").forgePioGitbookConfig],[r("fR63l").ProductKeys3P.ForgePioGitbookProd,r("ie06K").forgePioGitbookConfig],[r("fR63l").ProductKeys3P.ForgePioGithubDev,r("h5NUz").forgePioGithubConfig],[r("fR63l").ProductKeys3P.ForgePioGithubProd,r("9Y160").forgePioGithubConfig],[r("fR63l").ProductKeys3P.ForgePioGitlabDev,r("hdy05").forgePioGitlabConfig],[r("fR63l").ProductKeys3P.ForgePioGitlabProd,r("djF8v").forgePioGitlabConfig],[r("fR63l").ProductKeys3P.ForgePioGoogleDriveDev,r("dChew").forgePioGoogleDriveConfig],[r("fR63l").ProductKeys3P.ForgePioGoogleDriveProd,r("TCovD").forgePioGoogleDriveConfig],[r("fR63l").ProductKeys3P.ForgePioGuruDev,r("feDPe").forgePioGuruConfig],[r("fR63l").ProductKeys3P.ForgePioGuruProd,r("klS4t").forgePioGuruConfig],[r("fR63l").ProductKeys3P.ForgePioHelpjuiceDev,r("hFdyH").forgePioHelpjuiceConfig],[r("fR63l").ProductKeys3P.ForgePioHelpjuiceProd,r("e6TPF").forgePioHelpjuiceConfig],[r("fR63l").ProductKeys3P.ForgePioHubspotDev,r("7piBv").forgePioHubspotConfig],[r("fR63l").ProductKeys3P.ForgePioHubspotProd,r("3yXQ1").forgePioHubspotConfig],[r("fR63l").ProductKeys3P.ForgePioSalesforceDev,r("cmwLF").forgePioSalesforceConfig],[r("fR63l").ProductKeys3P.ForgePioSalesforceProd,r("brRUk").forgePioSalesforceConfig],[r("fR63l").ProductKeys3P.ForgePioSharepointDev,r("dwyZc").forgePioSharepointConfig],[r("fR63l").ProductKeys3P.ForgePioSharepointProd,r("9sIt4").forgePioSharepointConfig],[r("fR63l").ProductKeys3P.ForgePioStackOverflowDev,r("7UyZr").forgePioStackOverflowConfig],[r("fR63l").ProductKeys3P.ForgePioStackOverflowProd,r("2KPYZ").forgePioStackOverflowConfig],[r("fR63l").ProductKeys3P.ForgeUtoolityGitbookDev,r("9lVxQ").forgeUtoolityGitbookConfig],[r("fR63l").ProductKeys3P.ForgeUtoolityGitbookProd,r("1HfnT").forgeUtoolityGitbookConfig],[r("fR63l").ProductKeys3P.ForgeGdriveEugeneTestDev,r("9JBuG").forgeGdriveEugeneTestDevConfig],[r("fR63l").ProductKeys3P.ForgeGdriveEugeneTestProd,r("aHqTQ").forgeGdriveEugeneTestProdConfig],[r("fR63l").ProductKeys3P.ForgeUnitoSalesforceDev,r("34wuK").forgeUnitoSalesforceConfig],[r("fR63l").ProductKeys3P.ForgeUnitoSalesforceProd,r("g36Mb").forgeUnitoSalesforceConfig],[r("fR63l").ProductKeys3P.ForgeUnitoServicenowDev,r("eODbN").forgeUnitoServicenowConfig],[r("fR63l").ProductKeys3P.ForgeUnitoServicenowProd,r("2k3z5").forgeUnitoServicenowConfig],[r("fR63l").ProductKeys3P.ForgeUnitoWrikeDev,r("lHAGV").forgeUnitoWrikeConfig],[r("fR63l").ProductKeys3P.ForgeUnitoWrikeProd,r("iPw5B").forgeUnitoWrikeConfig],[r("fR63l").ProductKeys3P.ForgeUnitoAsanaDev,r("3LgSg").forgeUnitoAsanaConfig],[r("fR63l").ProductKeys3P.ForgeUnitoAsanaProd,r("bRkOn").forgeUnitoAsanaConfig],[r("fR63l").ProductKeys3P.ForgeUnitoBasecampDev,r("eoGOF").forgeUnitoBasecampConfig],[r("fR63l").ProductKeys3P.ForgeUnitoBasecampProd,r("jWqmd").forgeUnitoBasecampConfig]]);e.exports.ThirdPartyConfigsSync=o}),o("hCtla",function(e,t){let o;var n=r("cozmU");let a=(e,t)=>{let r,o=e.firstPartyProducts||[],n=e.thirdPartyProducts||[],a=e.siteMetadata;return{firstPartyConfig:{resources:(r=a?.siteName||"",o.map(e=>({id:`ari:cloud:${e.name}::site/${t||""}`,baseUrl:"",siteName:r||""}))),intercomHmac:e.intercomHmac||"",siteMetadata:a?[{siteId:t||"",siteName:a.siteName||"",isNounsAvailable:!1,isRovoEnabled:a.isRovoEnabled??!1,isJiraIssueIndexed:a.isJiraIssueIndexed??!1,productEdition:((e,t)=>{if(e&&t&&0!==t.length)return t.reduce((t,r)=>(t[r.name]=e,t),{})})(a.productEdition,o),productDataRegions:(e=>{if(e&&0!==e.length)return e.reduce((e,t)=>(t?.name&&t.dataRegion&&(e[t.name]=Array.isArray(t.dataRegion)?t.dataRegion:[t.dataRegion]),e),{})})(a.productInfo),rovoFeatures:void 0}]:[]},thirdPartyConfig:n.map(e=>({type:e.name,outboundAuthUrl:e.outboundAuthUrl||"",isUserOAuthed:e.isUserOAuthed,providerId:e.providerId||"",connectionId:e.connectionId??void 0,isImpersonationAuthEnabled:e.isImpersonationAuthEnabled??void 0,integrationId:e.integrationARI?e.integrationARI:void 0,workspaceName:e.workspaceName??void 0,workspaceUrl:e.workspaceUrl??void 0,datasourceId:e.datasourceId??void 0,connectorSyncType:e.connectorSyncType??void 0,connectorCreatedAt:e.connectorCreatedAt??void 0,connectedAt:e.connectedAt??void 0,lightIcon:e.lightIcon??void 0,entityTypes:e.entityTypes??void 0,environmentType:e.environmentType??void 0}))}},i=new Set(["servicenow","zendesk"]),c=()=>{let e={"ai-3p-connector:sharepoint-domain":"sharepoint","ai-3p-connector:google-workspace":"drive","lite-connector-gdrive":"drive","smartlinks-connector-gdrive":"drive","smartlinks-connector-gdrive-rsl":"drive","smartlinks-connector-salesforce":"salesforce","smartlinks-connector-airtable":"airtable","smartlinks-connector-figma":"figma","smartlinks-connector-gitlab":"gitlab","smartlinks-connector-miro":"miro","smartlinks-connector-asana":"asana","smartlinks-connector-smartsheet":"smartsheet","smartlinks-connector-dropbox":"dropbox","smartlinks-connector-box":"box","smartlinks-connector-lucid":"lucid","smartlinks-connector-hubspot":"hubspot","smartlinks-connector-docusign":"docusign","smartlinks-connector-slack":"slack","smartlinks-connector-teams":"teams","smartlinks-connector-azure-devops":"azure-devops","smartlinks-connector-notion":"notion","smartlinks-connector-onedrive":"onedrive","smartlinks-connector-sharepoint":"sharepoint"};return r("fd0l2").ThirdPartyConfigsSync.forEach(t=>{t.resourceType&&(e[t.resourceType]=t.id)}),e},s=(e,t)=>{let o=c(),n=new Map,a=[],s={};return e.forEach(e=>{if((0,r("aoy1P").isForgeConnectorProductKey)(e.type)&&(0,r("iDrrr").fg)("rovo-search-dynamic-forge-config")){let o=(0,r("eSwze").mapForgeConnectorToThirdPartyConfig)(e,t);if(o){let t=e.type;a.push(t),s[t]=o}return}let c=o[e.type]||"";if(!c)return;let{providerId:l,datasourceId:d}=e;a.push(c);let u={},p=r("fd0l2").ThirdPartyConfigsSync.get(c);if(p){let t,o="slack"===c&&(0,r("iDrrr").fg)("ai_3p_slack_connector_status_transition_enabled"),a=i.has(c)&&e.connectorSyncType===r("aoy1P").FEDERATED_CONNECTOR_SOURCE;t=e.type.startsWith(r("aoy1P").SMARTLINKS_CONNECTOR_SOURCE)?r("aoy1P").SMARTLINKS_CONNECTOR_SOURCE:e.type.startsWith(r("aoy1P").LITE_CONNECTOR_SOURCE)?r("aoy1P").LITE_CONNECTOR_SOURCE:a?r("aoy1P").FEDERATED_CONNECTOR_SOURCE:o?"federated"===e.connectorSyncType?r("aoy1P").FEDERATED_CONNECTOR_SOURCE:r("aoy1P").FULL_CONNECTOR_SOURCE:p.isFederated?r("aoy1P").FEDERATED_CONNECTOR_SOURCE:r("aoy1P").FULL_CONNECTOR_SOURCE,n.set(l,(n.get(l)||new Set).add(t));let m=s[c],g=m?.connectorSources?.includes(r("aoy1P").FULL_CONNECTOR_SOURCE)||!1,f=a?"":g&&m?.outboundAuthUrl?m.outboundAuthUrl:e.outboundAuthUrl,h=!a&&(g&&m?m.userNeedsOAuth:!e.isUserOAuthed),y=t===r("aoy1P").SMARTLINKS_CONNECTOR_SOURCE&&!g&&((0,r("iDrrr").fg)("rovo_cas_use_rovo_config")||"test"===r("cXtTj").default.getExperimentValue("rovo_cas_use_rovo_config_exp","cohort","control"))?e.type:p.resourceType;u={...p,resourceType:y,outboundAuthUrl:f,userNeedsOAuth:h,providerId:l,datasourceId:d,connectionId:e.connectionId,workspaceName:e.workspaceName,workspaceUrl:e.workspaceUrl,connectorSources:Array.from(n.get(l)||[]),impersonationEnabled:e.isImpersonationAuthEnabled,connectorCreatedAt:e.connectorCreatedAt??void 0,connectedAt:e.connectedAt??void 0};let P=[],{datasources:C,...b}=u;b.datasourceId=e.datasourceId,b.connectionId=e.connectionId,P.push({...b,...e,outboundAuthUrl:a?"":e.outboundAuthUrl,userNeedsOAuth:!a&&!e.isUserOAuthed,integrationAri:e.integrationId||b.integrationAri}),P.push(...(s[c]?.datasources||[]).map(({datasources:e,...t})=>t)),u.datasources=P,s[c]=u}}),{productKeys:[...new Set(a.filter(e=>!!(0,r("aoy1P").isForgeConnectorProductKey)(e)||r("hGRCq").allProductKeys.includes(e)))],thirdPartyConfigs:s}};var l=r("gABt9");let d=async()=>{try{let e=await l.utils.requestService({url:"/gateway/api/me"},{requestInit:{method:"GET",headers:{"Content-Type":"application/json"}}});return e?.account_id??null}catch{return null}},u=async()=>"u"<typeof window?null:(o||(o=d().then(e=>(null==e&&(o=void 0),e))),o),p=({dependency:e,source:t,moreContext:r})=>({source:t,action:"failedDependency",actionSubject:"searchPage",eventType:"track",attributes:{additionalAttributes:{failedDependency:e,...r||{}}}}),m=async e=>{try{let t=await (0,r("cFPRS").getSentryClient)();if(!t)return;t.withScope(o=>{for(let[e,t]of Object.entries(r("3X0xX").COMMON_TAGS))o.setTag(e,t);t.captureException(e,o)})}catch(e){console.error(e)}},g=(e,{taskId:t,task:r,moreContext:o})=>({action:e,actionSubject:"ui",eventType:"operational",attributes:{additionalAttributes:{task:r,taskId:t,hostname:"u">typeof window?window.location.hostname:"",...o}}}),f=(e,t,o)=>{let n=[],a=[...new Set(e.resources.flatMap(e=>{let{id:t}=e,o=t.match(r("9XgN6").EXTRACT_PRODUCT_FROM_ARI);return o&&o.length>=2&&o[1]?[o[1]]:[]}))];n.push(...a);let i=e.resources.flatMap(e=>{let{id:t}=e,o=t.match(r("9XgN6").EXTRACT_PRODUCT_FROM_ARI);return o&&o.length>=2&&("project"===o[1]||"goal"===o[1])?[o[1]]:[]});if(i.length>0&&n.push("townsquare"),(0,r("9XgN6").isRovoEnabledForSite)(e,o)){let e=t.productKeys||[];return n.push(...e),{products:n,nouns:i,thirdPartyConfigs:t.thirdPartyConfigs}}return{products:n,nouns:i,thirdPartyConfigs:{}}},h=(e,t,r)=>`${e}\u0000${t}\u0000${r??"\0product"}`,y=new Set,P=new Set,C=0,b=e=>(P.add(e),()=>{P.delete(e)}),S=()=>C,E=[],v="advancedSearchScreen";e.exports.useRovoConfig=({cloudId:e,aggAbsoluteUrl:t,multiSiteSearchInRovo:o,preloadDataProvider:i,shouldBypassPreloadProvider:l,onForgeConnectorTypeMapping:d})=>{let{createAnalyticsEvent:_}=(0,r("9DHhW").useAnalyticsEvents)(),I=(0,n.useCallback)(e=>{_({...e,source:e.source||v,attributes:{...e.attributes?.commonAttributes,...e.attributes?.additionalAttributes}}).fire("fabric-elements")},[_]),A="search-page/combined-config-ux",k="search-page/combined-config-network",[R,x]=(0,n.useState)(),[F,w]=(0,n.useState)(!1),[D,T]=(0,n.useState)({}),[O,U]=(0,n.useState)(void 0),[N,L]=(0,n.useState)(),[M,G]=(0,n.useState)({nouns:[]}),$=(0,n.useRef)(M.thirdPartyConfigs);$.current=M.thirdPartyConfigs;let K=(0,n.useCallback)(({product:t,datasourceId:o})=>{let n,a=$.current,i=a?.[t];if(!i||void 0!==o&&!i.datasources?.some(e=>e.datasourceId===o))return;let s=a;if(void 0===o)!1!==i.userNeedsOAuth&&(s={...a,[t]:{...i,userNeedsOAuth:!1}});else{let e=i.datasources??[],r=e.findIndex(e=>e.datasourceId===o);if(r>=0&&!1!==e[r].userNeedsOAuth){let o=e.map((e,t)=>t===r?{...e,userNeedsOAuth:!1}:e);s={...a,[t]:{...i,datasources:o}}}}if($.current=s,G(e=>({...e,thirdPartyConfigs:s})),e&&(n=h(e,t,o),y.has(n)||(y.add(n),C++,P.forEach(e=>e()))),e){let n=c();(0,r("kQgL7").updateBaseCombinedConfigCacheEntry)(e,e=>({...e,thirdPartyProducts:e.thirdPartyProducts?.map(e=>{if(o){if(e.datasourceId===o)return{...e,isUserOAuthed:!0}}else if(n[e.name]===t)return{...e,isUserOAuthed:!0};return e})}))}},[e]),j=(0,n.useMemo)(()=>!e&&R?(0,r("9XgN6").getFirstCloudId)(R):"",[R,e]);(0,n.useEffect)(()=>{let n=e||j,a=!1;return n&&o&&(0,r("dv1ov").searchLinkedSitesQuery)({variables:{id:`ari:cloud:confluence::site/${n}`},aggAbsoluteUrl:t}).then(e=>{let t=(e?.data?.collabContext_workspaceIsConnectedToWorkspace?.edges??[]).map(e=>e.node.id),r=`ari:cloud:confluence::site/${n}`,o=t.findIndex(e=>e===r);o>0&&(t.splice(o,1),t.unshift(r)),a||U(t)}).catch(e=>{a||m(e)}),()=>{a=!0}},[e,j,o,t]),(0,n.useEffect)(()=>{if(!R){if(!e||D.productKeys)return;let o=()=>{var o,n,i;let c,l=crypto.randomUUID(),h=performance.now(),y={taskId:l,task:A},P=async e=>{I((({requestName:e,cacheHit:t,refreshTriggered:r,source:o})=>({source:o,action:"requestCacheAccess",actionSubject:"searchPage",eventType:"track",attributes:{additionalAttributes:{requestName:e,cacheHit:t,refreshTriggered:r}}}))({requestName:"search-combined-config",cacheHit:e.hit,refreshTriggered:e.refreshTriggered,source:v}))},C=(o=crypto.randomUUID(),n=e=>I(e),i={uxTaskId:l},c={taskId:o,task:k},{onStart:()=>{n(g("taskStart",{...c,moreContext:i}))},onSuccess:e=>{let t=performance.now()-h,o=(0,r("iDrrr").fg)("rovo-search-vitalstats-tracing-headers")?(0,r("8N8EQ").normaliseTraceInfo)(e):{};n(g("taskSuccess",{...c,moreContext:{...i,timeTaken:t,...o}}))},onError:(e,t,o)=>{let a=performance.now()-h,s=(0,r("iDrrr").fg)("rovo-search-vitalstats-tracing-headers")?(0,r("8N8EQ").normaliseTraceInfo)(o):{};n(g("taskFail",{...c,moreContext:{...i,errorName:e,errorMessage:t,timeTaken:a,...s}}))}});I(g("taskStart",y)),(0,r("kQgL7").getCombinedSearchConfig)({cloudId:e,aggAbsoluteUrl:t,degradationCallback:e=>{I((({dependency:e,reason:t,source:r})=>({source:r,action:"degradedDependency",actionSubject:"searchPage",eventType:"track",attributes:{additionalAttributes:{degradedDependency:e,reason:t}}}))({dependency:"search-combined-config",reason:e,source:v}))},cacheAnalyticsCallback:P,expiration:6e4,returnExpired:!0,onlyRefreshIfExpired:!0,networkCallbacks:C}).then(t=>{L(t),e&&u().then(o=>(0,r("kQgL7").fillSsrCombinedConfigCache)({accountId:o,cloudId:e,config:t,expiration:6e4})).catch(e=>{m(e)});let{firstPartyConfig:o,thirdPartyConfig:n}=a(t,e),i=s(n,d);x(o),T(i),G(f(o,i,e)),w(!0),I(g("taskSuccess",{...y,moreContext:{timeTaken:performance.now()-h}}))}).catch(e=>{m(e),I(p({dependency:"search-combined-config",source:v})),I(g("taskFail",{...y,moreContext:{error:e.name,timeTaken:performance.now()-h}})),x({resources:[],intercomHmac:"",siteMetadata:[]}),T({productKeys:E,thirdPartyConfigs:{}})})},n=null,c=!1,h=()=>{if(!c){c=!0;try{n=i?.getPreloadedSearch({cloudId:e})??null}catch{n=null}}return n},y=!1;if(l&&(y=l(h())),i&&!y){try{let t=h();if(t&&t.config){let n=crypto.randomUUID(),i=performance.now(),c={isSSREvent:!0,isConfigFromCache:!!t.isConfigFromCache},l={taskId:n,task:A,moreContext:c};I(g("taskStart",l));try{let o;L(t.config);let{firstPartyConfig:n,thirdPartyConfig:p}=a(t.config,e);x(n),T(s(p,d));let f=t.config;!t.isConfigFromCache&&f&&e&&((0,r("kQgL7").seedBaseCombinedConfigCacheEntry)({cloudId:e,config:f,expiration:6e4}).catch(e=>{m(e)}),u().then(t=>(0,r("kQgL7").fillSsrCombinedConfigCache)({accountId:t,cloudId:e,config:f,expiration:6e4})).catch(e=>{m(e)})),I((o={...l,moreContext:{...c,timeTaken:performance.now()-i}},g("taskSuccess",o)));return}catch(t){let e;m(t),I((e={...l,moreContext:{...c,error:t instanceof Error?t.name:"unknown",timeTaken:performance.now()-i}},g("taskFail",e))),o();return}}t&&!t.config&&I(p({dependency:"search-config-ssr",source:v,moreContext:{cacheFailReason:t.cacheFailReason??"none",configFailReason:t.configFailReason??"none",preloadPayloadWithoutConfig:!0}})),o()}catch(e){m(e),o()}return}o()}},[R,D.productKeys,e,t,I,i,l,A,k,d]),(0,n.useEffect)(()=>{D.productKeys&&R&&!M.products&&(G(f(R,D,e)),w(!0))},[D,R,e,M.products]);let H=M.products,q=(0,r("9XgN6").isRovoEnabledForSite)(R,e),B=(0,r("9XgN6").getJiraIssueIndexedForTenant)(R,e),z=(0,r("9XgN6").getProductEdition)(R,e),V=(0,r("9XgN6").getProductDataRegions)(R,e),Q=(0,r("9XgN6").getRovoFeatures)(R,e),W=(0,n.useSyncExternalStore)(b,S,()=>0),J=(0,n.useMemo)(()=>{let t=M.thirdPartyConfigs;return!("u"<typeof window)&&e&&(e=>{if(0===y.size)return!1;let t=`${e}\u0000`;for(let e of y)if(e.startsWith(t))return!0;return!1})(e)?((e,t)=>{let r;if(!e)return e;for(let[o,n]of Object.entries(e)){let a;if(!n)continue;let i=t(o);if(n.datasources?.length){let e=!1,r=n.datasources.map(r=>!1!==r.userNeedsOAuth&&null!=r.datasourceId&&t(o,r.datasourceId)?(e=!0,{...r,userNeedsOAuth:!1}):r);e&&(a=r)}let c=i&&!1!==n.userNeedsOAuth;if(!c&&!a)continue;let s={...n,...c?{userNeedsOAuth:!1}:{},...a?{datasources:a}:{}};(r=r??{...e})[o]=s}return r??e})(t,(t,r)=>y.has(h(e,t,r))):t},[M.thirdPartyConfigs,e,W]);return(0,n.useMemo)(()=>({accessibleProducts:H,accessibleNouns:M.nouns,thirdPartyConfigs:J,firstCloudId:j,intercomHmac:R?.intercomHmac,isRovoEnabled:q,isJiraIssueIndexed:B,productEdition:z,productDataRegions:V,rovoFeatures:Q,isConfigLoaded:F,linkedCloudARIs:O,combinedConfigResponse:N,onOAuthSuccess:K}),[H,M.nouns,J,j,R?.intercomHmac,q,B,z,V,Q,F,O,N,K])}}),o("9XgN6",function(e,t){let r=/ari:cloud:.*?\/(.*)/;e.exports.EXTRACT_PRODUCT_FROM_ARI=/ari:cloud:(.*)::/,e.exports.getFirstCloudId=e=>{let t=e.resources[0]?.id.match(r);return t?t[1]:""},e.exports.isRovoEnabledForSite=(e,t)=>!!t&&!!e&&!!e.siteMetadata&&e.siteMetadata.find(e=>e.siteId===t)?.isRovoEnabled,e.exports.getJiraIssueIndexedForTenant=(e,t)=>!!t&&!!e&&!!e.siteMetadata&&e.siteMetadata.find(e=>e.siteId===t)?.isJiraIssueIndexed,e.exports.getProductEdition=(e,t)=>{if(t&&e&&e.siteMetadata)return e.siteMetadata.find(e=>e.siteId===t&&!!e.productEdition)?.productEdition},e.exports.getProductDataRegions=(e,t)=>{if(t&&e&&e.siteMetadata)return e.siteMetadata.find(e=>e.siteId===t&&!!e.productDataRegions)?.productDataRegions},e.exports.getRovoFeatures=(e,t)=>{if(t&&e&&e.siteMetadata)return e.siteMetadata.find(e=>e.siteId===t&&!!e.rovoFeatures)?.rovoFeatures}}),o("hGRCq",function(e,t){let o=[...Object.values(r("aqAfG").ProductKeys1P),...Object.values(r("fR63l").ProductKeys3P)];e.exports.allProductKeys=o}),o("3X0xX",function(e,t){e.exports.SENTRY_DSN="https://dcf49f8a57e71c9e77d30808a7708f8c@o55978.ingest.us.sentry.io/4506951588773888",e.exports.UNKNOWN_TAG="unknown",e.exports.COMMON_TAGS={search:!0}}),o("cFPRS",function(e,t){let o,n=window.BUILD_KEY||window.__buildInfo?.FRONTEND_VERSION,a=e=>"development"!==e.environment&&e.tags?.search?(e.request?.url&&(e.request.url=e.request.url.split("?")[0]),e.request?.headers?.Referer&&(e.request.headers.Referer=e.request.headers.Referer.split("?")[0]),e):null,i=async()=>{if(!o){if("development"===(0,r("22XrW").getEnvironment)())return;o=r("55apF").then(e=>(e.init({dsn:r("3X0xX").SENTRY_DSN,attachStacktrace:!0,release:n||r("3X0xX").UNKNOWN_TAG,environment:(0,r("22XrW").getEnvironment)(),beforeSend:a}),e)).catch(()=>{})}return o};e.exports.getSentryClient=i}),o("22XrW",function(e,t){e.exports.getEnvironment=()=>window.location.hostname.includes("localhost")?"development":window.location.hostname.includes("jira-dev.com")||window.location.hostname.includes("stg.atlassian.com")?"staging":"production"}),o("55apF",function(e,t){let o=r("6dFT0")(5);e.exports=Promise.all([o("kT6dz"),o("aAWLw")]).then(()=>r("eieXD"))}),o("ekfm7",function(e,t){var o=r("cozmU");let n=(0,r("lJ6db").createHookWithAssistanceService)(({enabled:e=!0,assistanceServiceInjectedParams:{assistanceService:t,experienceTracker:n,siteId:a}})=>{let[{hasFetchAttempted:i,isFetching:c}]=(0,r("7pCWA").useKnowledgeSourcesStore)(),{fetchIfEmpty:s}=(0,r("7pCWA").useKnowledgeSourcesActions)(),l=(0,o.useCallback)(async()=>{n.start({id:r("irnO2").ExperienceName.FETCH_CONNECTED_KNOWLEDGE_SOURCES_STORE,name:r("irnO2").ExperienceName.FETCH_CONNECTED_KNOWLEDGE_SOURCES_STORE});try{let e=await t.getAgentKnowledgeConfiguration();return n.succeed({name:r("irnO2").ExperienceName.FETCH_CONNECTED_KNOWLEDGE_SOURCES_STORE}),e}catch(e){throw n.fail({name:r("irnO2").ExperienceName.FETCH_CONNECTED_KNOWLEDGE_SOURCES_STORE,error:e instanceof Error?e:Error(String(e))}),e}},[t,n]);(0,o.useEffect)(()=>{!e||i||c||s(l,a)},[e,i,c,s,l,a])});e.exports.useEnsureConnectorsLoaded=n}),o("aHhuQ",function(e,t){e.exports.DegradeError=class extends Error{constructor(...e){super(...e),this.isDegraded=!0}}}),o("7jITD",function(e,t){class r{get(e,t=!1){let r=this.map[e];if(r)if(r.isExpired())return delete this.map[e],t?r.getResult():void 0;else return r.getResult()}set(e,t,r){let n=new o({result:t,expirationTime:Date.now()+(r||this.expiration),accessCount:0});this.map[e]=n}has(e){return e in this.map}clear(e){e?delete this.map[e]:this.map={}}async serialize(){let e={},t=Object.entries(this.map).map(([t,r])=>(async()=>{e[t]={result:await r.getResult(),expirationTime:r.getExpirationTime(),accessCount:r.getAccessCount()}})());return await Promise.all(t),JSON.stringify(e)}deserialize(e){try{let t=JSON.parse(e);for(let e in t){let{result:r,expirationTime:n,accessCount:a}=t[e];this.map[e]=new o({result:Promise.resolve(r),expirationTime:n,accessCount:a})}return t}catch{}}isExpired(e){let t=this.map[e];return!t||t.isExpired()}getRemainingTtl(e){let t=this.map[e];if(t)return Math.max(0,t.getExpirationTime()-Date.now())}constructor(e={}){this.map=void 0,this.expiration=void 0;let{expiration:t=9e5}=e;this.map={},this.expiration=t}}class o{getResult(){return this.accessCount++,this.result}isExpired(){return this.expirationTime<Date.now()}getExpirationTime(){return this.expirationTime}getAccessCount(){return this.accessCount}constructor({result:e,expirationTime:t,accessCount:r}){this.result=void 0,this.expirationTime=void 0,this.accessCount=void 0,this.result=e,this.expirationTime=t,this.accessCount=r}}e.exports.getInstance=e=>new r(e)}),o("6s56R",function(e,t){e.exports.isUsingRovoConfigStoreExperiment=()=>!!(0,r("iDrrr").fg)("rovo_cas_use_rovo_config")||"test"===r("cXtTj").default.getExperimentValue("rovo_cas_use_rovo_config_exp","cohort","control")}),o("3TZZX",function(e,t){e.exports.getSupportedPartials=(e=!1)=>`
+		${(0,r("cz1Yi").getConfluencePartials)(e)}
+		${(0,r("imUxN").getJiraPartials)()}
+		${(0,r("lwXsc").getTrelloPartials)()}
+		${(0,r("lwDzf").getAtlasPartials)()}
+		${(0,r("51pfw").getCompassPartials)()}
+		${(0,r("axZZ7").getMercuryPartials)()}
+		${(0,r("5Styu").getGraphPartials)()}
+		${(0,r("hABTJ").getFederatedPartials)()}
+		${(0,r("iDrrr").fg)("assets_rovo_search_all")?(0,r("bfn6U").getAssetsPartials)():""}
+		${(0,r("iDrrr").fg)("talent_global_search")?(0,r("lqtzf").getTalentPartials)():""}
+	`}),o("fR7EZ",function(e,t){e.exports.dcSpaceFilterOptionsQueryGenerator=e=>`
+		query ${e} (
+			$query: String!
+			$cloudIdARI: String!
+			$limit: Int!
+			$entities: [String!]!
+			$product: String!
+			$integration: String!
+			$containerTypes: [String!]
+			) {
+		search {
+			search(
+			query: $query
+			first: $limit
+			filters: {
+				entities: $entities,
+				thirdPartyFilters: {
+					containerTypes : $containerTypes,
+					thirdPartyProducts:[
+						{
+							product: $product,
+							integrationId: $integration,
+					subtypes:[]
+					}
+					]
+				},
+				locations: [$cloudIdARI]
+			}
+			experience: "search-page"
+			) {
+				edges {
+					node {
+					...on SearchResultGraphDocument {
+						entity {
+							...on ExternalSpace {
+									id
+									key
+									displayName
+									icon {
+										height
+										isDefault
+										url
+										width
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	`}),o("3L2aM",function(e,t){e.exports.ConnectorSources={Federated:"federated",Smartlinks:"smartlinks",Lite:"lite-connector",Full:"full-connector",Backfill:"backfill"}}),o("hwBK6",function(e,t){e.exports.MODE={RENDER:"RENDER",HYDRATE:"HYDRATE"}}),o("dZb8A",function(e,r){t(e.exports,"default",()=>o);function o(e){for(var t,r=e.length,o=r^r,n=0;r>=4;)t=(65535&(t=255&e.charCodeAt(n)|(255&e.charCodeAt(++n))<<8|(255&e.charCodeAt(++n))<<16|(255&e.charCodeAt(++n))<<24))*0x5bd1e995+(((t>>>16)*0x5bd1e995&65535)<<16),t^=t>>>24,o=(65535&o)*0x5bd1e995+(((o>>>16)*0x5bd1e995&65535)<<16)^(t=(65535&t)*0x5bd1e995+(((t>>>16)*0x5bd1e995&65535)<<16)),r-=4,++n;switch(r){case 3:o^=(255&e.charCodeAt(n+2))<<16;case 2:o^=(255&e.charCodeAt(n+1))<<8;case 1:o^=255&e.charCodeAt(n),o=(65535&o)*0x5bd1e995+(((o>>>16)*0x5bd1e995&65535)<<16)}return o^=o>>>13,o=(65535&o)*0x5bd1e995+(((o>>>16)*0x5bd1e995&65535)<<16),((o^=o>>>15)>>>0).toString(36)}}),o("6DjRB",function(e,t){e.exports.PRIORITY={HIGH:0,LOW:2},e.exports.RETRY_DELAY=300,e.exports.RETRY_FACTOR=1});
+//# sourceMappingURL=hooks.e8b1b55f.js.map

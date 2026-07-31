@@ -1,0 +1,649 @@
+---
+import { Image } from 'astro:assets';
+import noimg from '../../assets/images/noimg.jpg';
+
+const nav = [
+	{ href: '#inicio', label: 'Inicio' },
+	{ href: '#nosotros', label: 'Sobre nosotros' },
+	{ href: '#productos', label: 'Productos' },
+	{ href: '#contacto', label: 'Contacto' },
+];
+
+const productos = [
+	{
+		name: 'EDRM',
+		full: 'Estación de Regulación y Medición',
+		desc: 'Diseño, fabricación e instalación de estaciones de regulación y medición de gas natural, con control de presión y medición certificada para procesos industriales.',
+	},
+	{
+		name: 'Compresoras',
+		full: 'Sistemas de compresión',
+		desc: 'Equipos de compresión de gas natural dimensionados a la demanda de tu planta, con mantenimiento preventivo y monitoreo remoto.',
+	},
+	{
+		name: 'Valvulería',
+		full: 'Válvulas industriales',
+		desc: 'Suministro de válvulas y accesorios de alta especificación para líneas de gas natural, cumpliendo normativa nacional e internacional.',
+	},
+];
+
+const clientes = Array.from({ length: 6 });
+const banners = [
+	{ eyebrow: 'Ingeniería en gas natural', title: 'Soluciones integrales para tu industria', text: 'Diseñamos, instalamos y damos mantenimiento a sistemas de gas natural para plantas industriales en todo México.' },
+	{ eyebrow: 'Más de una década de experiencia', title: 'Seguridad y eficiencia en cada proyecto', text: 'Equipos certificados y personal especializado que acompañan tu operación de principio a fin.' },
+	{ eyebrow: 'Servicio y mantenimiento', title: 'Tu operación, siempre en marcha', text: 'Monitoreo y mantenimiento preventivo para que tu suministro de gas natural nunca se detenga.' },
+];
+
+const currentYear = 2026;
+---
+
+<html lang="es">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<link rel="icon" href="/favicon.ico" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<meta name="description" content="Tectuus — Ingeniería y soluciones en gas natural: EDRM, compresoras y valvulería para la industria." />
+		<title>Tectuus — Soluciones en gas natural para tu industria</title>
+	</head>
+	<body>
+		<a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+		<header class="site-header">
+			<div class="wrap site-header__inner">
+				<a class="brand" href="#inicio">
+					<span class="brand__mark" aria-hidden="true">
+						<img src="/favicon.svg" alt="" width="22" height="22" />
+					</span>
+					<span class="brand__text">TECTUUS</span>
+				</a>
+
+				<input type="checkbox" id="nav-toggle" class="nav-toggle" />
+				<label for="nav-toggle" class="nav-toggle__btn" aria-label="Abrir menú">
+					<span></span><span></span><span></span>
+				</label>
+
+				<div class="nav-panel">
+					<nav class="site-nav" aria-label="Principal">
+						{nav.map((item) => (
+							<a href={item.href}>{item.label}</a>
+						))}
+					</nav>
+
+					<div class="site-header__side">
+						<div class="social-row" aria-label="Redes sociales">
+							<a href="#" aria-label="Facebook" class="social-icon">
+								<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M13.5 21v-7.9h2.65l.4-3.08h-3.05V8.05c0-.89.25-1.5 1.52-1.5h1.63V3.84C15.94 3.76 15.06 3.7 14.03 3.7c-2.24 0-3.78 1.37-3.78 3.87v2.16H7.6v3.08h2.65V21h3.25Z"/></svg>
+							</a>
+							<a href="#" aria-label="Instagram" class="social-icon">
+								<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3.2c2.4 0 2.7 0 3.65.05 2.4.11 3.52 1.24 3.63 3.63.05.95.05 1.24.05 3.65s0 2.7-.05 3.65c-.11 2.4-1.23 3.52-3.63 3.63-.95.05-1.24.05-3.65.05s-2.7 0-3.65-.05c-2.4-.11-3.52-1.24-3.63-3.63C4.67 13.7 4.66 13.4 4.66 11s0-2.7.06-3.65C4.83 5 5.95 3.87 8.35 3.76 9.3 3.7 9.6 3.7 12 3.7Zm0-1.7C9.55 1.5 9.24 1.5 8.28 1.55c-3.09.14-4.8 1.85-4.95 4.94C3.3 7.45 3.3 7.76 3.3 10.2v1.6c0 2.44 0 2.75.05 3.71.14 3.09 1.85 4.8 4.94 4.94.96.05 1.27.05 3.71.05s2.75 0 3.71-.05c3.08-.14 4.8-1.85 4.94-4.94.05-.96.05-1.27.05-3.71v-1.6c0-2.44 0-2.75-.05-3.71-.14-3.08-1.85-4.8-4.94-4.94C14.75 1.5 14.44 1.5 12 1.5Zm0 5.3a4.7 4.7 0 1 0 0 9.4 4.7 4.7 0 0 0 0-9.4Zm0 7.75a3.05 3.05 0 1 1 0-6.1 3.05 3.05 0 0 1 0 6.1Zm5-7.94a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0Z"/></svg>
+							</a>
+							<a href="#" aria-label="LinkedIn" class="social-icon">
+								<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.94 5a1.94 1.94 0 1 1-3.88 0 1.94 1.94 0 0 1 3.88 0ZM3.4 8.75h3.5V21H3.4V8.75Zm6.2 0h3.36v1.68h.05c.47-.87 1.6-1.8 3.3-1.8 3.53 0 4.18 2.24 4.18 5.16V21H16.9v-6.13c0-1.46-.03-3.35-2.05-3.35-2.05 0-2.37 1.58-2.37 3.24V21H9.6V8.75Z"/></svg>
+							</a>
+						</div>
+						<a class="btn-primary btn-primary--sm" href="https://wa.me/5215500000000" target="_blank" rel="noopener">Escríbenos</a>
+					</div>
+				</div>
+			</div>
+		</header>
+
+		<main id="contenido">
+			<!-- INICIO / Carrusel de banners -->
+			<section id="inicio" class="hero">
+				<div class="carousel" data-carousel role="region" aria-roledescription="carrusel" aria-label="Destacados">
+					<div class="carousel__track">
+						{banners.map((b, i) => (
+							<article class="carousel__slide" data-slide aria-hidden={i === 0 ? 'false' : 'true'}>
+								<div class="carousel__media">
+									<Image src={noimg} alt="" inferSize width={1200} />
+								</div>
+								<div class="carousel__copy">
+									<span class="eyebrow">{b.eyebrow}</span>
+									<h1>{b.title}</h1>
+									<p>{b.text}</p>
+									<div class="hero__actions">
+										<a class="btn-primary" href="#productos">Conoce nuestros productos</a>
+										<a class="btn-secondary" href="#contacto">Contáctanos</a>
+									</div>
+								</div>
+							</article>
+						))}
+					</div>
+
+					<button type="button" class="carousel__arrow carousel__arrow--prev" data-prev aria-label="Diapositiva anterior">
+						<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+					</button>
+					<button type="button" class="carousel__arrow carousel__arrow--next" data-next aria-label="Siguiente diapositiva">
+						<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+					</button>
+
+					<div class="carousel__dots" role="tablist" aria-label="Seleccionar diapositiva">
+						{banners.map((_, i) => (
+							<button
+								type="button"
+								class="carousel__dot"
+								data-dot
+								role="tab"
+								aria-label={`Ir a la diapositiva ${i + 1}`}
+								aria-selected={i === 0 ? 'true' : 'false'}
+							></button>
+						))}
+					</div>
+				</div>
+			</section>
+
+			<!-- Nuestros clientes -->
+			<section class="section section--muted" aria-label="Nuestros clientes">
+				<div class="wrap">
+					<p class="section__kicker">Nuestros clientes</p>
+					<div class="clients-grid">
+						{clientes.map(() => (
+							<div class="clients-grid__item">
+								<Image src={noimg} alt="Cliente" inferSize width={160} />
+							</div>
+						))}
+					</div>
+				</div>
+			</section>
+
+			<!-- SOBRE NOSOTROS / ¿Quiénes somos? -->
+			<section id="nosotros" class="section">
+				<div class="wrap split">
+					<div class="split__media">
+						<Image src={noimg} alt="Equipo Tectuus en planta" inferSize width={640} />
+					</div>
+					<div class="split__copy">
+						<span class="eyebrow">¿Quiénes somos?</span>
+						<h2>Especialistas en gas natural para la industria</h2>
+						<p>
+							En Tectuus, parte de GNU Gas Natural, diseñamos e implementamos soluciones de gas natural
+							a la medida de cada planta industrial: desde la estación de regulación y medición hasta
+							la compresión y valvulería que mantienen tu operación segura y en marcha.
+						</p>
+						<p>
+							Nuestro equipo acompaña cada proyecto de principio a fin, con ingeniería certificada,
+							instalación y mantenimiento preventivo pensado para reducir paros no programados.
+						</p>
+					</div>
+				</div>
+
+				<div class="wrap">
+					<div class="video-block">
+						<video class="video-block__player" controls preload="none" poster={noimg.src}>
+							<source src="" type="video/mp4" />
+							Tu navegador no soporta el elemento de video.
+						</video>
+						<p class="video-block__caption">Conoce cómo trabajamos en campo</p>
+					</div>
+				</div>
+			</section>
+
+			<!-- PRODUCTOS -->
+			<section id="productos" class="section section--muted">
+				<div class="wrap">
+					<span class="eyebrow">Productos</span>
+					<h2>Todo lo que tu planta necesita en gas natural</h2>
+					<div class="cards-grid">
+						{productos.map((p) => (
+							<article class="card card--product">
+								<div class="card--product__media">
+									<Image src={noimg} alt={p.name} inferSize width={480} />
+								</div>
+								<h3 class="card__title">{p.name}</h3>
+								<p class="card__subtitle">{p.full}</p>
+								<p class="card--product__desc">{p.desc}</p>
+								<a class="btn-secondary" href="#contacto">Solicitar información</a>
+							</article>
+						))}
+					</div>
+				</div>
+			</section>
+
+			<!-- CONTACTO / Captación de leads -->
+			<section id="contacto" class="section">
+				<div class="wrap split split--reverse">
+					<div class="split__copy">
+						<span class="eyebrow">Contacto</span>
+						<h2>Hablemos de tu proyecto</h2>
+						<p>
+							Cuéntanos sobre tu planta y necesidades de gas natural. Un especialista de Tectuus se
+							pondrá en contacto contigo en menos de 24 horas.
+						</p>
+						<ul class="contact-list">
+							<li><strong>Teléfono:</strong> (55) 0000 0000</li>
+							<li><strong>Correo:</strong> contacto@tectuus.com</li>
+							<li><strong>Ubicación:</strong> Ciudad de México, México</li>
+						</ul>
+					</div>
+					<form class="card lead-form" method="post">
+						<div class="field">
+							<label for="nombre">Nombre</label>
+							<input id="nombre" name="nombre" type="text" placeholder="Tu nombre" required />
+						</div>
+						<div class="field">
+							<label for="empresa">Empresa</label>
+							<input id="empresa" name="empresa" type="text" placeholder="Nombre de tu empresa" />
+						</div>
+						<div class="field">
+							<label for="email">Correo</label>
+							<input id="email" name="email" type="email" placeholder="tu@empresa.com" required />
+						</div>
+						<div class="field">
+							<label for="telefono">Teléfono</label>
+							<input id="telefono" name="telefono" type="tel" placeholder="(55) 0000 0000" />
+						</div>
+						<div class="field">
+							<label for="mensaje">Mensaje</label>
+							<textarea id="mensaje" name="mensaje" rows="4" placeholder="Cuéntanos sobre tu proyecto"></textarea>
+							<span class="hint">Respondemos en menos de 24 horas hábiles.</span>
+						</div>
+						<button class="btn-primary lead-form__submit" type="submit">Enviar mensaje</button>
+					</form>
+				</div>
+			</section>
+		</main>
+
+		<footer class="site-footer">
+			<div class="wrap site-footer__inner">
+				<div class="brand brand--footer">
+					<span class="brand__mark" aria-hidden="true">
+						<img src="/favicon.svg" alt="" width="22" height="22" />
+					</span>
+					<span class="brand__text">TECTUUS</span>
+				</div>
+
+				<nav class="site-footer__nav" aria-label="Principal">
+					{nav.map((item) => (
+						<a href={item.href}>{item.label}</a>
+					))}
+				</nav>
+
+				<div class="social-row" aria-label="Redes sociales">
+					<a href="#" aria-label="Facebook" class="social-icon social-icon--footer">
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M13.5 21v-7.9h2.65l.4-3.08h-3.05V8.05c0-.89.25-1.5 1.52-1.5h1.63V3.84C15.94 3.76 15.06 3.7 14.03 3.7c-2.24 0-3.78 1.37-3.78 3.87v2.16H7.6v3.08h2.65V21h3.25Z"/></svg>
+					</a>
+					<a href="#" aria-label="Instagram" class="social-icon social-icon--footer">
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3.2c2.4 0 2.7 0 3.65.05 2.4.11 3.52 1.24 3.63 3.63.05.95.05 1.24.05 3.65s0 2.7-.05 3.65c-.11 2.4-1.23 3.52-3.63 3.63-.95.05-1.24.05-3.65.05s-2.7 0-3.65-.05c-2.4-.11-3.52-1.24-3.63-3.63C4.67 13.7 4.66 13.4 4.66 11s0-2.7.06-3.65C4.83 5 5.95 3.87 8.35 3.76 9.3 3.7 9.6 3.7 12 3.7Zm0-1.7C9.55 1.5 9.24 1.5 8.28 1.55c-3.09.14-4.8 1.85-4.95 4.94C3.3 7.45 3.3 7.76 3.3 10.2v1.6c0 2.44 0 2.75.05 3.71.14 3.09 1.85 4.8 4.94 4.94.96.05 1.27.05 3.71.05s2.75 0 3.71-.05c3.08-.14 4.8-1.85 4.94-4.94.05-.96.05-1.27.05-3.71v-1.6c0-2.44 0-2.75-.05-3.71-.14-3.08-1.85-4.8-4.94-4.94C14.75 1.5 14.44 1.5 12 1.5Zm0 5.3a4.7 4.7 0 1 0 0 9.4 4.7 4.7 0 0 0 0-9.4Zm0 7.75a3.05 3.05 0 1 1 0-6.1 3.05 3.05 0 0 1 0 6.1Zm5-7.94a1.1 1.1 0 1 1-2.2 0 1.1 1.1 0 0 1 2.2 0Z"/></svg>
+					</a>
+					<a href="#" aria-label="LinkedIn" class="social-icon social-icon--footer">
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.94 5a1.94 1.94 0 1 1-3.88 0 1.94 1.94 0 0 1 3.88 0ZM3.4 8.75h3.5V21H3.4V8.75Zm6.2 0h3.36v1.68h.05c.47-.87 1.6-1.8 3.3-1.8 3.53 0 4.18 2.24 4.18 5.16V21H16.9v-6.13c0-1.46-.03-3.35-2.05-3.35-2.05 0-2.37 1.58-2.37 3.24V21H9.6V8.75Z"/></svg>
+					</a>
+				</div>
+			</div>
+			<p class="site-footer__legal">GNU Gas Natural {currentYear} · Tectuus. Todos los derechos reservados.</p>
+		</footer>
+
+		<a class="whatsapp-fab" href="https://wa.me/5215500000000" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
+			<svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.33 4.95L2 22l5.28-1.39a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.8 14.03c-.24.68-1.4 1.33-1.94 1.4-.5.08-1.12.11-1.8-.11-.42-.13-.96-.31-1.65-.6-2.9-1.25-4.8-4.16-4.94-4.35-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.12 1.02-2.41.27-.29.58-.36.78-.36.19 0 .39 0 .56.01.18.01.42-.07.65.5.24.58.82 2 .89 2.15.07.14.12.31.02.5-.1.19-.15.31-.29.48-.14.17-.3.37-.43.5-.14.14-.29.29-.13.57.17.29.75 1.24 1.6 2 1.11.99 2.05 1.3 2.33 1.44.29.14.46.12.63-.07.17-.19.71-.83.9-1.11.19-.29.38-.24.63-.14.26.1 1.63.77 1.91.91.29.14.48.21.55.33.07.12.07.68-.17 1.36Z"/></svg>
+		</a>
+
+		<script>
+			const root = document.querySelector('[data-carousel]');
+
+			if (root) {
+				const slides = Array.from(root.querySelectorAll('[data-slide]'));
+				const dots = Array.from(root.querySelectorAll('[data-dot]'));
+				const prevBtn = root.querySelector('[data-prev]');
+				const nextBtn = root.querySelector('[data-next]');
+				const AUTOPLAY_MS = 6000;
+				const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+				let index = 0;
+				let timer = 0;
+
+				function show(nextIndex: number) {
+					index = (nextIndex + slides.length) % slides.length;
+					slides.forEach((slide, n) => {
+						const active = n === index;
+						slide.classList.toggle('is-active', active);
+						slide.toggleAttribute('inert', !active);
+						slide.setAttribute('aria-hidden', active ? 'false' : 'true');
+					});
+					dots.forEach((dot, n) => {
+						const active = n === index;
+						dot.classList.toggle('is-active', active);
+						dot.setAttribute('aria-selected', active ? 'true' : 'false');
+					});
+				}
+
+				function next() { show(index + 1); }
+				function prev() { show(index - 1); }
+
+				function play() {
+					stop();
+					if (!reduceMotion) timer = window.setInterval(next, AUTOPLAY_MS);
+				}
+				function stop() {
+					window.clearInterval(timer);
+				}
+
+				nextBtn?.addEventListener('click', () => { next(); play(); });
+				prevBtn?.addEventListener('click', () => { prev(); play(); });
+				dots.forEach((dot, n) => dot.addEventListener('click', () => { show(n); play(); }));
+
+				root.addEventListener('mouseenter', stop);
+				root.addEventListener('mouseleave', play);
+				root.addEventListener('focusin', stop);
+				root.addEventListener('focusout', play);
+
+				let touchStartX = 0;
+				root.addEventListener('touchstart', (e: Event) => { touchStartX = (e as TouchEvent).changedTouches[0].clientX; }, { passive: true });
+				root.addEventListener('touchend', (e: Event) => {
+					const dx = (e as TouchEvent).changedTouches[0].clientX - touchStartX;
+					if (Math.abs(dx) > 40) {
+						dx < 0 ? next() : prev();
+						play();
+					}
+				}, { passive: true });
+
+				show(0);
+				play();
+			}
+		</script>
+	</body>
+</html>
+
+<style is:global>
+	:root {
+		/* Backgrounds */
+		--color-bg: #ffffff;
+		--color-bg-muted: #f4f2f0;
+
+		/* Brand — from the Tectuus sitemap board */
+		--color-navy: #163a64;
+		--color-navy-dark: #0e2946;
+		--color-green: #2fa84c;
+		--color-green-dark: #227d3a;
+		--color-cyan: #3ec6ef;
+		--color-taupe: #6b665e;
+		--color-taupe-dark: #55514a;
+		--color-heading-muted: #86807a;
+
+		/* Text on light backgrounds */
+		--color-text: #16202c;
+		--color-text-60: rgba(22, 32, 44, 0.64);
+		--color-text-40: rgba(22, 32, 44, 0.42);
+		--color-text-on-dark: #ffffff;
+		--color-text-on-dark-60: rgba(255, 255, 255, 0.68);
+
+		/* Borders / surfaces */
+		--color-border: rgba(22, 58, 100, 0.14);
+		--color-border-hover: rgba(22, 58, 100, 0.3);
+		--color-surface: rgba(22, 58, 100, 0.04);
+
+		/* Radius & shadow */
+		--radius-lg: 1rem;
+		--radius-md: 0.5rem;
+		--radius-full: 999px;
+		--shadow-cta: 0 10px 30px -8px rgba(22, 58, 100, 0.35);
+		--shadow-card: 0 4px 24px -8px rgba(22, 58, 100, 0.12);
+	}
+
+	* { box-sizing: border-box; }
+
+	html { scroll-behavior: smooth; }
+
+	body {
+		margin: 0;
+		font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+		color: var(--color-text);
+		background: var(--color-bg);
+		-webkit-font-smoothing: antialiased;
+	}
+
+	img { max-width: 100%; display: block; }
+
+	h1, h2, h3 { font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; margin: 0.5rem 0 1rem; }
+	h1 { font-size: clamp(2rem, 4vw, 3rem); color: var(--color-text-on-dark); }
+	h2 { font-size: clamp(1.5rem, 2.4vw, 2rem); color: var(--color-navy); }
+	h3 { font-size: 1.125rem; }
+	p { line-height: 1.6; }
+
+	.wrap { max-width: 72rem; margin: 0 auto; padding: 0 1.5rem; }
+
+	.skip-link {
+		position: absolute; left: -999px; top: 0; background: var(--color-navy);
+		color: #fff; padding: 0.5rem 1rem; z-index: 100;
+	}
+	.skip-link:focus { left: 1rem; top: 1rem; }
+
+	/* Eyebrow */
+	.eyebrow {
+		display: inline-block;
+		border-radius: var(--radius-full);
+		border: 1px solid rgba(47, 168, 76, 0.4);
+		background: rgba(47, 168, 76, 0.1);
+		padding: 0.25rem 0.75rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+		color: var(--color-green-dark);
+	}
+	.hero .eyebrow { border-color: rgba(62, 198, 239, 0.5); background: rgba(62, 198, 239, 0.14); color: #bdeeff; }
+
+	/* Buttons */
+	.btn-primary {
+		display: inline-block;
+		border-radius: var(--radius-full);
+		padding: 0.75rem 1.5rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: #fff;
+		background: linear-gradient(to right, var(--color-navy), var(--color-navy-dark));
+		box-shadow: var(--shadow-cta);
+		transition: filter 0.15s ease;
+		text-decoration: none;
+	}
+	.btn-primary:hover { filter: brightness(1.12); }
+	.btn-primary--sm { padding: 0.5rem 1.1rem; box-shadow: none; }
+
+	.btn-secondary {
+		display: inline-block;
+		border-radius: var(--radius-full);
+		padding: 0.75rem 1.5rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--color-navy);
+		border: 1px solid var(--color-border);
+		transition: color 0.15s ease, border-color 0.15s ease;
+		text-decoration: none;
+	}
+	.btn-secondary:hover { border-color: var(--color-border-hover); color: var(--color-navy-dark); }
+	.hero .btn-secondary { color: #fff; border-color: rgba(255,255,255,0.4); }
+	.hero .btn-secondary:hover { border-color: #fff; }
+
+	/* Header */
+	.site-header {
+		position: sticky; top: 0; z-index: 20;
+		background: rgba(255,255,255,0.92);
+		backdrop-filter: blur(8px);
+		border-bottom: 1px solid var(--color-border);
+	}
+	.site-header__inner { display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; padding: 0.9rem 1.5rem; position: relative; }
+	.nav-panel { display: flex; align-items: center; gap: 1.5rem; }
+	.nav-toggle { display: none; }
+	.nav-toggle__btn { display: none; flex-direction: column; justify-content: center; gap: 4px; width: 2.25rem; height: 2.25rem; cursor: pointer; }
+	.nav-toggle__btn span { display: block; width: 100%; height: 2px; background: var(--color-navy); border-radius: 2px; }
+	.brand { display: flex; align-items: center; gap: 0.6rem; text-decoration: none; }
+	.brand__mark {
+		display: flex; align-items: center; justify-content: center;
+		width: 2.25rem; height: 2.25rem; border-radius: var(--radius-full);
+		background: var(--color-navy);
+	}
+	.brand__mark img { filter: invert(1) brightness(2); }
+	.brand__text { font-weight: 800; letter-spacing: 0.02em; color: var(--color-navy); }
+	.site-nav { display: flex; gap: 1.75rem; }
+	.site-nav a { color: var(--color-text-60); text-decoration: none; font-size: 0.9rem; font-weight: 500; }
+	.site-nav a:hover { color: var(--color-navy); }
+	.site-header__side { display: flex; align-items: center; gap: 1rem; }
+
+	@media (max-width: 860px) {
+		.nav-toggle__btn { display: flex; }
+		.nav-panel {
+			position: absolute; top: 100%; left: 0; right: 0;
+			flex-direction: column; align-items: stretch; gap: 1rem;
+			background: #fff; border-bottom: 1px solid var(--color-border);
+			padding: 1rem 1.5rem 1.5rem;
+			max-height: 0; overflow: hidden; opacity: 0;
+			transition: max-height 0.2s ease, opacity 0.2s ease;
+		}
+		.site-nav { flex-direction: column; gap: 1rem; }
+		.site-header__side { flex-direction: column; align-items: stretch; gap: 1rem; }
+		.site-header__side .btn-primary--sm { text-align: center; }
+		.nav-toggle:checked ~ .nav-panel { max-height: 24rem; opacity: 1; }
+	}
+
+	.social-row { display: flex; gap: 0.5rem; }
+	.social-icon {
+		display: flex; align-items: center; justify-content: center;
+		width: 2rem; height: 2rem; border-radius: var(--radius-full);
+		background: var(--color-green); color: #fff;
+	}
+	.social-icon--footer { background: rgba(255,255,255,0.12); }
+
+	/* Hero / carousel */
+	.hero { background: var(--color-navy); }
+	.carousel { position: relative; overflow: hidden; }
+	.carousel__track { display: grid; }
+	.carousel__slide {
+		grid-area: 1 / 1;
+		display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 2rem;
+		max-width: 72rem; margin: 0 auto; padding: 4rem 1.5rem;
+		opacity: 0;
+		transition: opacity 0.6s ease;
+		pointer-events: none;
+	}
+	.carousel__slide:first-child { opacity: 1; pointer-events: auto; }
+	.carousel__slide.is-active { opacity: 1; pointer-events: auto; }
+	.carousel__slide[inert] a { cursor: default; }
+	.carousel__media { border-radius: var(--radius-lg); overflow: hidden; order: 2; box-shadow: var(--shadow-card); }
+	.carousel__media img { transform: scale(1.08); transition: transform 6s ease; }
+	.carousel__slide.is-active .carousel__media img { transform: scale(1); }
+	.carousel__copy { order: 1; }
+	.carousel__copy p { color: var(--color-text-on-dark-60); max-width: 34rem; }
+	.hero__actions { display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap; }
+
+	.carousel__arrow {
+		position: absolute; top: 50%; transform: translateY(-50%); z-index: 2;
+		width: 2.75rem; height: 2.75rem; border-radius: var(--radius-full);
+		background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3); color: #fff;
+		display: flex; align-items: center; justify-content: center; cursor: pointer;
+		transition: background 0.15s ease, border-color 0.15s ease;
+	}
+	.carousel__arrow:hover { background: rgba(255,255,255,0.24); border-color: rgba(255,255,255,0.55); }
+	.carousel__arrow--prev { left: 1rem; }
+	.carousel__arrow--next { right: 1rem; }
+
+	.carousel__dots { position: absolute; bottom: 1.25rem; left: 50%; transform: translateX(-50%); z-index: 2; display: flex; gap: 0.5rem; }
+	.carousel__dot {
+		width: 0.6rem; height: 0.6rem; padding: 0.35rem; background-clip: content-box;
+		border-radius: var(--radius-full); border: none; background-color: rgba(255,255,255,0.4);
+		cursor: pointer; transition: background-color 0.2s ease;
+	}
+	.carousel__dot:hover { background-color: rgba(255,255,255,0.65); }
+	.carousel__dot.is-active { background-color: #fff; }
+
+	@media (max-width: 800px) {
+		.carousel__slide { grid-template-columns: 1fr; padding: 2.5rem 1.5rem 3.5rem; }
+		.carousel__media { order: 1; }
+		.carousel__copy { order: 2; }
+	}
+	@media (max-width: 640px) {
+		.carousel__arrow { display: none; }
+	}
+
+	/* Sections */
+	.section { padding: 4.5rem 0; }
+	.section--muted { background: var(--color-bg-muted); }
+	.section__kicker {
+		font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+		color: var(--color-taupe); margin: 0 0 1.5rem;
+	}
+
+	.split { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
+	.split--reverse .split__copy { order: 1; }
+	.split--reverse .lead-form { order: 2; }
+	.split__media img { border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
+	@media (max-width: 800px) {
+		.split { grid-template-columns: 1fr; }
+		.split--reverse .split__copy { order: unset; }
+		.split--reverse .lead-form { order: unset; }
+	}
+
+	.clients-grid {
+		display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1.5rem; align-items: center;
+	}
+	.clients-grid__item {
+		background: #fff; border: 1px solid var(--color-border); border-radius: var(--radius-md);
+		padding: 1rem; display: flex; align-items: center; justify-content: center;
+	}
+	.clients-grid__item img { filter: grayscale(1); opacity: 0.65; }
+
+	.video-block { margin-top: 3.5rem; text-align: center; }
+	.video-block__player {
+		width: 100%; max-width: 48rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-card);
+		background: #000;
+	}
+	.video-block__caption { margin-top: 0.75rem; color: var(--color-text-60); font-size: 0.9rem; }
+
+	/* Cards */
+	.card {
+		border-radius: var(--radius-lg);
+		border: 1px solid var(--color-border);
+		background: #fff;
+		box-shadow: var(--shadow-card);
+		padding: 1.25rem 1.5rem;
+	}
+	.cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+	.card--product { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+	.card--product__media { overflow: hidden; }
+	.card--product h3, .card--product p, .card--product .btn-secondary { margin-left: 1.5rem; margin-right: 1.5rem; }
+	.card__title { font-size: 1.25rem; font-weight: 700; color: var(--color-navy); margin: 1.25rem 0 0.15rem; }
+	.card__subtitle { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-green-dark); margin: 0 0 0.75rem; }
+	.card--product__desc { color: var(--color-text-60); font-size: 0.925rem; flex: 1; }
+	.card--product .btn-secondary { margin-bottom: 1.5rem; align-self: flex-start; }
+
+	/* Contact list */
+	.contact-list { list-style: none; margin: 1.5rem 0 0; padding: 0; display: grid; gap: 0.6rem; color: var(--color-text-60); }
+
+	/* Form */
+	.field { margin-bottom: 1.1rem; }
+	.field label { display: block; margin-bottom: 0.3rem; font-size: 0.875rem; color: var(--color-text-60); font-weight: 500; }
+	.field input, .field textarea {
+		width: 100%; border-radius: var(--radius-md); border: 1px solid var(--color-border);
+		background: var(--color-surface); padding: 0.6rem 0.8rem; font-size: 0.9rem; color: var(--color-text);
+		font-family: inherit;
+	}
+	.field input::placeholder, .field textarea::placeholder { color: var(--color-text-40); }
+	.field input:focus, .field textarea:focus { outline: none; border-color: var(--color-navy); }
+	.field .hint { display: block; margin-top: 0.3rem; font-size: 0.75rem; color: var(--color-text-40); }
+	.lead-form__submit { width: 100%; text-align: center; border: none; cursor: pointer; }
+
+	/* Footer */
+	.site-footer { background: var(--color-taupe); color: var(--color-text-on-dark); padding: 3rem 0 1.5rem; }
+	.site-footer__inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.5rem; }
+	.brand--footer .brand__text { color: #fff; }
+	.brand--footer .brand__mark { background: var(--color-taupe-dark); }
+	.site-footer__nav { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+	.site-footer__nav a { color: var(--color-text-on-dark-60); text-decoration: none; font-size: 0.9rem; }
+	.site-footer__nav a:hover { color: #fff; }
+	.site-footer__legal { text-align: center; color: rgba(255,255,255,0.5); font-size: 0.8rem; margin: 2rem 0 0; }
+
+	/* WhatsApp floating button */
+	.whatsapp-fab {
+		position: fixed; right: 1.5rem; bottom: 1.5rem; z-index: 30;
+		width: 3.5rem; height: 3.5rem; border-radius: var(--radius-full);
+		background: var(--color-green); color: #fff;
+		display: flex; align-items: center; justify-content: center;
+		box-shadow: 0 10px 24px -6px rgba(47, 168, 76, 0.55);
+		transition: transform 0.15s ease;
+	}
+	.whatsapp-fab:hover { transform: translateY(-2px); }
+
+	@media (prefers-reduced-motion: reduce) {
+		.carousel__slide { animation: none; opacity: 1; }
+		.carousel__slide:not(:first-child) { display: none; }
+	}
+</style>

@@ -1,0 +1,55 @@
+---
+import noimg from "../../assets/images/noimg.jpg";
+
+const clientes = Array.from({ length: 6 }, (_, i) => `Cliente ${i + 1}`);
+---
+
+<section id="clientes" class="section clientes">
+	<div class="container">
+		<div class="section-head clientes-head">
+			<span class="eyebrow">Nuestros clientes</span>
+			<h2 class="section-title">Empresas que confían en <span class="accent">Traninn</span></h2>
+		</div>
+
+		<div class="clientes-grid">
+			{clientes.map((nombre) => (
+				<div class="cliente-logo">
+					<img src={noimg.src} alt={nombre} />
+				</div>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.clientes-head {
+		text-align: center;
+		margin-left: auto;
+		margin-right: auto;
+	}
+
+	.clientes-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.cliente-logo {
+		border-radius: var(--radius-md);
+		border: 1px solid var(--color-border);
+		overflow: hidden;
+		aspect-ratio: 3 / 2;
+		filter: grayscale(1);
+		opacity: 0.75;
+		transition: filter 0.2s ease, opacity 0.2s ease;
+	}
+	.cliente-logo:hover {
+		filter: grayscale(0);
+		opacity: 1;
+	}
+	.cliente-logo img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+</style>

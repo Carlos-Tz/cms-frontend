@@ -1,0 +1,96 @@
+---
+import noimg from "../../assets/images/noimg.jpg";
+
+const servicios = [
+	{
+		title: "Transporte de GNC",
+		text: "Distribución de gas natural comprimido con unidades especializadas y protocolos de seguridad certificados.",
+	},
+	{
+		title: "Logística",
+		text: "Planeación de rutas, trazabilidad en tiempo real y coordinación integral de tu cadena de suministro.",
+	},
+	{
+		title: "Carga pesada",
+		text: "Transporte de carga de alto tonelaje con equipos certificados para proyectos industriales y de construcción.",
+	},
+];
+---
+
+<section id="servicios" class="section section--alt servicios">
+	<div class="container">
+		<div class="section-head">
+			<span class="eyebrow">Nuestros servicios</span>
+			<h2 class="section-title">Soluciones de transporte <span class="accent">a tu medida</span></h2>
+		</div>
+
+		<div class="servicios-grid">
+			{servicios.map((servicio) => (
+				<article class="card servicio-card">
+					<div class="servicio-image">
+						<img src={noimg.src} alt="" />
+					</div>
+					<div class="servicio-body">
+						<h3 class="servicio-title">{servicio.title}</h3>
+						<p class="servicio-text">{servicio.text}</p>
+						<a class="servicio-link" href="#contacto">Solicitar información →</a>
+					</div>
+				</article>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.servicios-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.servicio-card {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.servicio-image {
+		aspect-ratio: 16 / 10;
+	}
+	.servicio-image img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.servicio-body {
+		padding: 1.5rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+
+	.servicio-title {
+		font-size: 1.15rem;
+	}
+	.servicio-title::before {
+		content: "";
+		display: inline-block;
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: var(--radius-full);
+		background: var(--color-red);
+		margin-right: 0.5rem;
+	}
+
+	.servicio-text {
+		color: var(--color-text-60);
+		font-size: 0.9rem;
+	}
+
+	.servicio-link {
+		margin-top: 0.5rem;
+		font-size: 0.85rem;
+		font-weight: 700;
+		color: var(--color-red);
+	}
+</style>

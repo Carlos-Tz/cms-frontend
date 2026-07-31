@@ -1,0 +1,103 @@
+WRMCB=function(e){var c=console;if(c&&c.log&&c.error){c.log('Error running batched script.');c.error(e);}}
+;
+try {
+/* module-key = 'com.atlassian.confluence.plugins.confluence-create-content-plugin:create-from-template-resources', location = 'com/atlassian/confluence/plugins/createcontent/soy/create-from-template-macro.soy' */
+// This file was automatically generated from create-from-template-macro.soy.
+// Please don't edit this file by hand.
+
+/**
+ * @fileoverview Templates in namespace Confluence.Templates.Blueprints.CreateFromTemplate.
+ */
+
+if (typeof Confluence == 'undefined') { var Confluence = {}; }
+if (typeof Confluence.Templates == 'undefined') { Confluence.Templates = {}; }
+if (typeof Confluence.Templates.Blueprints == 'undefined') { Confluence.Templates.Blueprints = {}; }
+if (typeof Confluence.Templates.Blueprints.CreateFromTemplate == 'undefined') { Confluence.Templates.Blueprints.CreateFromTemplate = {}; }
+
+
+Confluence.Templates.Blueprints.CreateFromTemplate.macroTemplate = function(opt_data, opt_ignored) {
+  return '<button class=\'aui-button create-from-template-button\'' + ((! opt_data.hasCreatePermission) ? 'aria-disabled=\'true\' data-tooltip="' + soy.$$escapeHtml('No tienes permiso para crear contenido aqu\xed, o bien el espacio no existe.') + '"' : 'data-space-key=\'' + soy.$$escapeHtml(opt_data.spaceKey) + '\' href=\'' + soy.$$escapeHtml(opt_data.createContentUrl) + '\'' + ((opt_data.title) ? 'data-title=\'' + soy.$$escapeHtml(opt_data.title) + '\'' : '') + ((opt_data.templateId) ? 'data-template-id=\'' + soy.$$escapeHtml(opt_data.templateId) + '\'' : '') + ((opt_data.contentBlueprintId) ? 'data-content-blueprint-id=\'' + soy.$$escapeHtml(opt_data.contentBlueprintId) + '\'' : '')) + 'disabled=\'true\' >' + soy.$$escapeHtml(opt_data.buttonLabel) + '</button>' + soy.$$escapeHtml(webResourceManager_requireResource('com.atlassian.confluence.plugins.confluence-create-content-plugin:create-from-template-resources'));
+};
+if (goog.DEBUG) {
+  Confluence.Templates.Blueprints.CreateFromTemplate.macroTemplate.soyTemplateName = 'Confluence.Templates.Blueprints.CreateFromTemplate.macroTemplate';
+}
+
+}catch(e){WRMCB(e)};
+;
+try {
+/* module-key = 'com.atlassian.confluence.plugins.confluence-create-content-plugin:create-from-template-resources', location = 'com/atlassian/confluence/plugins/createcontent/js/create-from-template-macro.js' */
+define('confluence-plugins/create-content/create-from-template', [
+    'jquery',
+    'skate',
+    'wrm',
+    'confluence/legacy'
+], function (
+    $,
+    skate,
+    WRM,
+    Confluence
+) {
+
+ /**
+ * Handler for the Create-from-template Macro button.
+ */
+    var CREATE_BUTTON_CLASS = 'create-from-template-button';
+
+    function bindEvents(element) {
+        var $button = $(element);
+
+        if ($button.attr('aria-disabled') == "true") {
+            // Hook a tooltip to the button explaining that the user cannot create content in the space specified.
+            var defaultOptions = {
+                live: true, // Created links are handled automatically
+                gravity: 'n', // Point the arrow to the top
+                title: 'data-tooltip',
+                delayIn: 250,
+                delayOut: 0
+            };
+
+            $button.tooltip(defaultOptions);
+        } else {
+            // Hook the button to the Create dialog
+            $button.click(function (e) {
+                $button.addClass('launching-dialog');   // for diagnosing a flaky WebDriver test; confirm click handler
+
+                Confluence.Blueprint.loadDialogAndOpenTemplate($button.data());
+
+                return false;
+            });
+        }
+    }
+
+    function onCreateButton(element) {
+        // Create content button relies on resources being loaded in the context "create-content" to decide which
+        // dialog to show. These resources are currently being loaded by the button in the header, but if we remove
+        // the header they would break. This call will guarantee they keep working even in this case.
+        // -----------
+        // The following plugins are contributing to "create-content" context:
+        //  - confluence-business-blueprints
+        //  - confluence-create-content-plugin
+        //  - confluence-inline-tasks
+        //  - confluence-knowledge-base
+        var spinner = $(element).spin();
+        $(element).click(function(e) {
+            e.preventDefault();
+        });
+        WRM.require(['wr!com.atlassian.confluence.plugins.confluence-create-content-plugin:resources'], function () {
+            bindEvents(element);
+        })
+        .always(function() {
+            element.disabled = false;
+            spinner.spinStop();
+        })
+    }
+
+    skate(CREATE_BUTTON_CLASS, {
+        type: skate.types.CLASS,
+        created: onCreateButton
+    });
+});
+
+require('confluence/module-exporter').safeRequire('confluence-plugins/create-content/create-from-template');
+
+}catch(e){WRMCB(e)};

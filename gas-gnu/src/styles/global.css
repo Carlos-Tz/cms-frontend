@@ -1,0 +1,190 @@
+:root {
+  /* Background */
+  --color-bg: #ffffff;
+  --color-bg-alt: #f2f7fd;
+  --color-bg-dark: #0b2b5c;
+
+  /* Brand (from GNU GNV site map) */
+  --color-primary: #1657c4;
+  --color-primary-alt: #0d3a85;
+  --color-accent: #4fa3e3;
+  --color-primary-tint: #e8f1fb;
+  --color-primary-soft: rgba(22, 87, 196, 0.08);
+
+  /* Status */
+  --color-status-active: #22a06b;
+  --color-status-pending: #e0a72e;
+  --color-status-draft: rgba(11, 43, 92, 0.35);
+  --color-status-error: #e0483f;
+
+  /* Text */
+  --color-text: #12213f;
+  --color-text-60: rgba(18, 33, 63, 0.64);
+  --color-text-40: rgba(18, 33, 63, 0.44);
+  --color-on-dark: #ffffff;
+  --color-on-dark-70: rgba(255, 255, 255, 0.72);
+  --color-on-dark-45: rgba(255, 255, 255, 0.45);
+
+  /* Borders / surfaces */
+  --color-border: rgba(11, 43, 92, 0.12);
+  --color-border-hover: rgba(11, 43, 92, 0.28);
+  --color-surface: #ffffff;
+
+  /* Radius & shadow */
+  --radius-lg: 1rem;
+  --radius-md: 0.5rem;
+  --radius-full: 999px;
+  --shadow-cta: 0 10px 30px -8px rgba(13, 58, 133, 0.45);
+  --shadow-card: 0 4px 20px -6px rgba(11, 43, 92, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+a {
+  color: inherit;
+}
+
+.container {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+section {
+  padding: 4.5rem 0;
+}
+
+.eyebrow {
+  display: inline-block;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(22, 87, 196, 0.3);
+  background: var(--color-primary-soft);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-primary-alt);
+}
+
+.eyebrow--on-dark {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-on-dark);
+}
+
+h1, h2, h3, h4 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.section-heading {
+  font-size: 1.75rem;
+  margin-top: 0.75rem;
+}
+
+.section-sub {
+  margin-top: 0.75rem;
+  color: var(--color-text-60);
+  font-size: 1rem;
+  max-width: 40rem;
+}
+
+.gradient-text {
+  background: linear-gradient(to right, var(--color-primary), var(--color-accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Buttons */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  padding: 0.85rem 1.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-on-dark);
+  background: linear-gradient(to right, var(--color-primary), var(--color-accent));
+  box-shadow: var(--shadow-cta);
+  transition: filter 0.15s ease, transform 0.15s ease;
+  text-decoration: none;
+}
+.btn-primary:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: var(--radius-full);
+  padding: 0.8rem 1.65rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-primary-alt);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  transition: color 0.15s ease, border-color 0.15s ease;
+  text-decoration: none;
+}
+.btn-secondary:hover {
+  color: var(--color-primary);
+  border-color: var(--color-border-hover);
+}
+
+.btn-secondary--on-dark {
+  color: var(--color-on-dark);
+  border-color: rgba(255, 255, 255, 0.3);
+  background: transparent;
+}
+.btn-secondary--on-dark:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+/* Card */
+.card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  padding: 1.5rem;
+}
+
+.card--tight {
+  padding: 1.25rem;
+}
+
+.grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.grid--auto {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}

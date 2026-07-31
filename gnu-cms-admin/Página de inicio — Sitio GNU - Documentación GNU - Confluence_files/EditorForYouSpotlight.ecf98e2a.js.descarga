@@ -1,0 +1,2 @@
+var e=globalThis.parcelRequired477;(0,e.register)("lLYUy",function(o,r){Object.defineProperty(o.exports,"EditorForYouSpotlight",{get:()=>e("166II").EditorForYouSpotlight,set:void 0,enumerable:!0,configurable:!0})});
+//# sourceMappingURL=EditorForYouSpotlight.ecf98e2a.js.map

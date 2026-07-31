@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"console.log\\(require\\('fs'\\).existsSync\\('node_modules/astro/dist/assets/services/sharp.js'\\)\\)\")",
+      "Bash(curl -s -o /tmp/out.html -w \"HTTP %{http_code}\\\\n\" http://localhost:4322/)",
+      "Read(//tmp/**)",
+      "Bash(curl -sf http://localhost:4322/ -o /dev/null -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(node -e \"require.resolve\\('playwright'\\)\")",
+      "Bash(npx playwright *)",
+      "Bash(mkdir -p /c/Users/Gilda/AppData/Local/Temp/claude/c--Users-Gilda-Documents-GNU-CMS-tectuus/495006a6-3131-49c3-a0dc-cc5cab939f3c/scratchpad)",
+      "Bash(node -e 'process.env.NODE_PATH='\\\\''__TRACKED_VAR__'\\\\''; require\\('\\\\''module'\\\\''\\).Module._initPaths\\(\\); const {chromium}=require\\('\\\\''playwright'\\\\''\\); console.log\\(typeof chromium\\)')",
+      "Bash(node shot.js)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:4321/)",
+      "Bash(curl -sf http://localhost:4321/ -o /dev/null -w \"HTTP %{http_code}\\\\n\")",
+      "Bash(npm ls *)",
+      "Read(//c//**)"
+    ]
+  }
+}
