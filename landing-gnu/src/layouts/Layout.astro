@@ -12,12 +12,12 @@ const {
 } = Astro.props;
 
 const navLinks = [
-  { href: "#inicio", label: "Inicio" },
-  { href: "#servicios", label: "Nuestros Servicios" },
-  { href: "#nosotros", label: "Sobre Nosotros" },
-  { href: "#sostenible", label: "Desarrollo Sostenible" },
-  { href: "#blog", label: "Blog" },
-  { href: "#contacto", label: "Contacto" },
+  { href: "/", label: "Inicio" },
+  { href: "/nuestros-servicios", label: "Nuestros Servicios" },
+  { href: "/sobre-nosotros", label: "Sobre Nosotros" },
+  { href: "/desarrollo-sostenible", label: "Desarrollo Sostenible" },
+  { href: "/blog", label: "Blog" },
+  { href: "/contacto", label: "Contacto" },
 ];
 ---
 
@@ -31,6 +31,12 @@ const navLinks = [
     <meta name="generator" content={Astro.generator} />
     <meta name="description" content={description} />
     <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <header class="site-header">
@@ -44,7 +50,7 @@ const navLinks = [
               />
             </svg>
           </span>
-          GNU <span style="color: var(--color-primary-alt);">Gas Natural</span>
+          GNU <span style="color: var(--color-primary-light);">Gas Natural</span>
         </a>
         <nav class="nav" aria-label="Principal">
           {navLinks.map((link) => (
@@ -100,9 +106,9 @@ const navLinks = [
           </div>
           <div>
             <p class="footer-heading">Servicios</p>
-            <a class="footer-link" href="#servicios">Gas Natural Comprimido (GNC)</a>
-            <a class="footer-link" href="#servicios">Gas Natural Domiciliario (GND)</a>
-            <a class="footer-link" href="#servicios">Gas Natural Vehicular (GNV)</a>
+            <a class="footer-link" href="/nuestros-servicios">Gas Natural Comprimido (GNC)</a>
+            <a class="footer-link" href="/nuestros-servicios">Gas Natural Domiciliario (GND)</a>
+            <a class="footer-link" href="/nuestros-servicios">Gas Natural Vehicular (GNV)</a>
           </div>
           <div>
             <p class="footer-heading">Contacto</p>
@@ -129,5 +135,30 @@ const navLinks = [
         <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.05-1.35A10 10 0 1 0 12 2zm0 18.1a8.06 8.06 0 0 1-4.1-1.12l-.3-.18-3 .8.8-2.93-.19-.3A8.1 8.1 0 1 1 12 20.1zm4.44-6.06c-.24-.12-1.43-.7-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.53.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.35-1.67-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02 0 1.19.87 2.34 1 2.5.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/>
       </svg>
     </a>
+
+    <script>
+      const revealTargets = document.querySelectorAll(
+        ".section-head, .card, .blog-card, .logo-card, .simulator"
+      );
+
+      if ("IntersectionObserver" in window && revealTargets.length) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+        );
+
+        revealTargets.forEach((el) => {
+          el.classList.add("reveal");
+          observer.observe(el);
+        });
+      }
+    </script>
   </body>
 </html>

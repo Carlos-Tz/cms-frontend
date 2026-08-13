@@ -1,0 +1,23 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import SectionRenderer from "../../../components/SectionRenderer.astro";
+import PageHero from "../../../components/sections/PageHero.astro";
+import { fetchData } from "../../../functions/fetch";
+
+type PageResponse = {
+  status: string;
+  data: { slug: string; path: string; title: string; sections: Array<{ type: string; content: Record<string, any> }> };
+  meta: Record<string, any>;
+};
+
+const pageResponse: PageResponse | undefined = await fetchData("pages/proposito-empresarial");
+const page = pageResponse?.data;
+const sections = page?.sections ?? [];
+---
+
+<Layout title={page ? `${page.title} — GNU Gas Natural` : "Propósito empresarial — GNU Gas Natural"}>
+  <main>
+    {!page && <PageHero title="Propósito empresarial" subtitle="Contenido en preparación." />}
+    <SectionRenderer sections={sections} />
+  </main>
+</Layout>

@@ -1,0 +1,38 @@
+---
+import { mediaUrl } from "../../functions/fetch";
+
+interface Logo {
+  image: string;
+  name: string;
+  url: string | null;
+}
+
+interface Props {
+  title?: string | null;
+  logos: Logo[];
+}
+
+const { title, logos } = Astro.props;
+---
+
+<section class="section">
+  <div class="container">
+    <div class="section-head section-head--center">
+      <span class="eyebrow">Nuestros Clientes</span>
+      <h2 class="section-title">{title ?? "Nuestros clientes"}</h2>
+    </div>
+    <div class="logo-grid">
+      {logos.map((logo) =>
+        logo.url ? (
+          <a class="logo-card" href={logo.url} target="_blank" rel="noopener noreferrer">
+            <img class="logo-card__img" src={mediaUrl(logo.image)} alt={logo.name} />
+          </a>
+        ) : (
+          <div class="logo-card">
+            <img class="logo-card__img" src={mediaUrl(logo.image)} alt={logo.name} />
+          </div>
+        )
+      )}
+    </div>
+  </div>
+</section>

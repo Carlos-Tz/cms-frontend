@@ -4,7 +4,40 @@
       "Bash(curl -s -o /tmp/out2.html -w \"%{http_code}\\\\n\" http://localhost:4321/)",
       "Read(//tmp/**)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:4321/@fs/C:/Users/Gilda/Documents/GNU CMS/landing-gnu/src/assets/images/noimg.jpg?origWidth=900&origHeight=497&origFormat=jpg\")",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:4321/@fs/C:/Users/Gilda/Documents/GNU%20CMS/landing-gnu/src/assets/images/noimg.jpg?origWidth=900&origHeight=497&origFormat=jpg\")"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"http://localhost:4321/@fs/C:/Users/Gilda/Documents/GNU%20CMS/landing-gnu/src/assets/images/noimg.jpg?origWidth=900&origHeight=497&origFormat=jpg\")",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro dev stop 2>&1)",
+      "Read(//c/Users/Gilda/Documents/cms-frontend/landing-gnu/**)",
+      "Bash(rm \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu/src/pages/blog/index.jsx\")",
+      "Bash(ls \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu/src/pages/blog/\" 2>&1)",
+      "Read(//c/Users/Gilda/Documents/cms-frontend/landing-gnu/src/pages/blog//**)",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro check 2>&1 | tail -100)",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro dev stop 2>&1; npx astro dev --background 2>&1; sleep 3)",
+      "Bash(curl -s http://localhost:4321/blog -o 'C:\\\\Users\\\\Gilda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Gilda-Documents-cms-frontend-landing-gnu\\\\7cbae7f0-f4f5-4126-b428-c88f1657a00b\\\\scratchpad/blog.html' -w 'blog: HTTP %{http_code}\\\\n')",
+      "Bash(curl -s http://localhost:4321/blog/beneficios-del-gas-natural -o 'C:\\\\Users\\\\Gilda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Gilda-Documents-cms-frontend-landing-gnu\\\\7cbae7f0-f4f5-4126-b428-c88f1657a00b\\\\scratchpad/blog-post.html' -w 'post: HTTP %{http_code}\\\\n')",
+      "Bash(curl -s http://localhost:4321/blog/no-existe-slug -o 'C:\\\\Users\\\\Gilda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Gilda-Documents-cms-frontend-landing-gnu\\\\7cbae7f0-f4f5-4126-b428-c88f1657a00b\\\\scratchpad/blog-404.html' -w 'unknown-slug: HTTP %{http_code}\\\\n')",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro dev logs 2>&1 | tail -20)",
+      "Bash(rm \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu/src/pages/nosotros/index.astro\")",
+      "Bash(rmdir \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu/src/pages/nosotros\")",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro check 2>&1 | tail -150)",
+      "Bash(curl -s http://localhost:4321/sobre-nosotros/valores -o 'C:\\\\Users\\\\Gilda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Gilda-Documents-cms-frontend-landing-gnu\\\\7cbae7f0-f4f5-4126-b428-c88f1657a00b\\\\scratchpad/valores.html')",
+      "Bash(curl -s http://localhost:4321/sobre-nosotros -o 'C:\\\\Users\\\\Gilda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Gilda-Documents-cms-frontend-landing-gnu\\\\7cbae7f0-f4f5-4126-b428-c88f1657a00b\\\\scratchpad/sobre-nosotros.html')",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro dev logs 2>&1 | tail -40)",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro check 2>&1 | tail -60)",
+      "Bash(curl -s -o /tmp/resp.json -w \"HTTP %{http_code}\\\\n\" -X POST \"https://gnu-headless-cms.165.227.59.215.sslip.io/api/public/gnu/leads\" -H \"Content-Type: application/json\" -d '{\"name\":\"Test Probe\",\"email\":\"probe@example.com\",\"phone\":\"0000000000\",\"message\":\"connectivity check - please ignore\"}')",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro dev logs 2>&1 | tail -30)",
+      "Bash(curl -s -o /tmp/resp2.json -w \"HTTP %{http_code}\\\\n\" -X POST \"https://gnu-headless-cms.165.227.59.215.sslip.io/api/public/gnu/leads\" -H \"Content-Type: application/json\" -d '{\"name\":\"Juan Pérez\",\"email\":\"juan@example.com\",\"phone\":\"8181234567\",\"message\":\"Quiero cotizar GNV para mi flotilla.\"}')",
+      "Bash(curl -s -o /tmp/resp3.json -w \"HTTP %{http_code}\\\\n\" -X POST \"https://gnu-headless-cms.165.227.59.215.sslip.io/api/public/gnu/leads\" -H \"Content-Type: application/json\" -d '{\"name\":\"Juan Perez\",\"email\":\"juan@example.com\",\"phone\":\"8181234567\",\"message\":\"Quiero cotizar GNV para mi flotilla.\"}')",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro check 2>&1 | tail -40)",
+      "Bash(curl -s http://localhost:4321/ -o 'C:\\\\Users\\\\Gilda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Gilda-Documents-cms-frontend-landing-gnu\\\\7cbae7f0-f4f5-4126-b428-c88f1657a00b\\\\scratchpad/home.html' -w 'HTTP %{http_code}\\\\n')",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro check 2>&1 | tail -80)",
+      "Bash(curl -s http://localhost:4321/ -o 'C:\\\\Users\\\\Gilda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Gilda-Documents-cms-frontend-landing-gnu\\\\7cbae7f0-f4f5-4126-b428-c88f1657a00b\\\\scratchpad/home2.html' -w 'HTTP %{http_code}\\\\n')",
+      "Bash(curl -s http://localhost:4321/nuestros-servicios -o 'C:\\\\Users\\\\Gilda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Gilda-Documents-cms-frontend-landing-gnu\\\\7cbae7f0-f4f5-4126-b428-c88f1657a00b\\\\scratchpad/servicios.html' -w 'HTTP %{http_code}\\\\n')",
+      "Bash(rm -rf \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu/src/pages/desarrollo{-sostenible\")",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro dev logs 2>&1 | tail -15)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\Gilda\\Documents\\cms-frontend\\landing-gnu\\src\\pages\\blog",
+      "C:\\Users\\Gilda\\Documents\\cms-frontend\\landing-gnu\\src\\pages\\desarrollo{-sostenible"
     ]
   }
 }

@@ -1,150 +1,100 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import LeadCaptureForm from "../components/sections/LeadCaptureForm.astro";
 import noImg from "../assets/images/noimg.jpg";
+import { fetchData, mediaUrl } from "../functions/fetch";
 
-const stats = [
-  { value: "+120", label: "Estaciones de servicio" },
-  { value: "+15 años", label: "De experiencia en el mercado" },
-  { value: "Hasta 40%", label: "De ahorro frente a otros combustibles" },
-];
+type Slide = {
+  image: string;
+  title: string | null;
+  subtitle: string | null;
+  link_url: string | null;
+  link_label: string | null;
+};
 
-const services = [
-  {
-    tag: "GNC",
-    title: "Gas Natural Comprimido",
-    text: "Abastecimiento para flotillas y transporte pesado con la red de estaciones GNC más amplia del país.",
-  },
-  {
-    tag: "GND",
-    title: "Gas Natural Domiciliario",
-    text: "Suministro continuo y seguro directo a tu hogar o negocio, sin tanques ni recargas manuales.",
-  },
-  {
-    tag: "GNV",
-    title: "Gas Natural Vehicular",
-    text: "Conversión e instalación de kits vehiculares certificados para reducir tu costo por kilómetro.",
-  },
-];
+type FuelPrice = {
+  fuel: string;
+  label: string;
+  price_per_unit: number;
+  unit: string;
+  equivalence_factor: number;
+};
 
-const about = [
-  {
-    title: "Propósito empresarial",
-    text: "Impulsar la transición energética de México con soluciones de gas natural accesibles y confiables.",
-  },
-  {
-    title: "Valores",
-    text: "Seguridad, integridad, cercanía con el cliente y compromiso ambiental en cada operación.",
-  },
-  {
-    title: "Certificaciones",
-    text: "Cumplimos las normas NOM y estándares internacionales de manejo y distribución de gas natural.",
-  },
-  {
-    title: "Nuestra historia",
-    text: "Más de 15 años conectando ciudades con energía limpia, desde la primera estación GNC hasta hoy.",
-  },
-];
+type Logo = {
+  image: string;
+  name: string;
+  url: string | null;
+};
 
-const sustainability = [
-  {
-    title: "Distintivo ESR",
-    text: "Reconocidos como Empresa Socialmente Responsable por nuestras prácticas éticas y comunitarias.",
-  },
-  {
-    title: "EcoVadis",
-    text: "Evaluados de forma independiente en desempeño ambiental, laboral y de cadena de suministro.",
-  },
-  {
-    title: "Voluntariado",
-    text: "Programas activos de voluntariado corporativo en las comunidades donde operamos.",
-  },
-  {
-    title: "Iniciativas de RSE",
-    text: "Proyectos de reducción de huella de carbono y educación ambiental para clientes y colaboradores.",
-  },
-];
+type PageSection = { type: string; content: Record<string, any> };
+type PageResponse = {
+  status: string;
+  data: { slug: string; path: string; title: string; sections: PageSection[] };
+  meta: Record<string, any>;
+};
 
-const testimonials = [
-  {
-    quote: "Desde que cambiamos nuestra flotilla a GNV redujimos el gasto en combustible casi a la mitad.",
-    name: "Logística del Bajío",
-    role: "Cliente GNV desde 2021",
-  },
-  {
-    quote: "El servicio a domicilio nunca ha fallado. Instalación rápida y facturación muy clara.",
-    name: "Familia Herrera",
-    role: "Cliente GND",
-  },
-  {
-    quote: "La atención y el soporte técnico de GNU son el motivo por el que seguimos con ellos.",
-    name: "Grupo Industrial Norte",
-    role: "Cliente GNC",
-  },
-];
+const pageResponse: PageResponse | undefined = await fetchData("pages/inicio");
+const sections = pageResponse?.data?.sections ?? [];
+const getSection = (type: string) => sections.find((section) => section.type === type)?.content;
 
-const blogPosts = [
-  { tag: "Guía", title: "¿Por qué elegir gas natural?" },
-  { tag: "Beneficios", title: "Beneficios del gas natural para tu bolsillo" },
-  { tag: "Sostenibilidad", title: "Impacto del gas natural en el medio ambiente" },
-  { tag: "Comparativa", title: "Gas natural vs. otros combustibles" },
-];
+const bannerCarousel = getSection("banner_carousel") as { slides: Slide[] } | undefined;
+const savingsSimulator = getSection("savings_simulator") as
+  | { title: string; intro: string; fuel_prices: FuelPrice[] }
+  | undefined;
+const clientsShowcase = getSection("clients_showcase") as
+  | { title: string; logos: Logo[] }
+  | undefined;
+const leadCaptureForm = getSection("lead_capture_form") as
+  | { title: string; intro: string; submit_label: string; fields: string[] }
+  | undefined;
 
-const stations = [
-  { name: "Estación Reforma", address: "Av. Reforma 120, CDMX" },
-  { name: "Estación Bajío", address: "Blvd. Adolfo López Mateos 45, León" },
-  { name: "Estación Industrial Norte", address: "Carr. Federal 57, Km 12, Monterrey" },
+const fallbackSlides: Slide[] = [
+  { image: noImg.src, title: "Hasta 40% menos que la gasolina", subtitle: "Ahorro real", link_url: null, link_label: null },
+  { image: noImg.src, title: "+120 estaciones en todo México", subtitle: "Cobertura nacional", link_url: null, link_label: null },
+  { image: noImg.src, title: "Menor huella de carbono desde hoy", subtitle: "Energía responsable", link_url: null, link_label: null },
 ];
+const slides: Slide[] = bannerCarousel?.slides?.length
+  ? bannerCarousel.slides.map((slide) => ({ ...slide, image: mediaUrl(slide.image) }))
+  : fallbackSlides;
+
+const fuelPrices = savingsSimulator?.fuel_prices ?? [];
+const gasNaturalPrice = fuelPrices.find((fuel) => fuel.fuel === "gas-natural");
+const comparableFuels = fuelPrices.filter((fuel) => fuel.fuel !== "gas-natural");
+
+const fallbackLogos: Logo[] = [{ image: noImg.src, name: "Cliente de ejemplo", url: null }];
+const logos: Logo[] = clientsShowcase?.logos?.length
+  ? clientsShowcase.logos.map((logo) => ({ ...logo, image: mediaUrl(logo.image) }))
+  : fallbackLogos;
 ---
 
 <Layout>
   <main id="inicio">
-    <!-- Hero -->
-    <section class="hero">
-      <div class="container hero__inner">
-        <div>
-          <span class="eyebrow eyebrow--on-dark">GNU · Gas Natural 2025</span>
-          <h1 class="hero__title">
-            Energía limpia que <span class="gradient-text">impulsa</span> tu día a día
-          </h1>
-          <p class="hero__subtitle">
-            Gas Natural Comprimido, Domiciliario y Vehicular con la red de estaciones más
-            confiable de México. Ahorra, cuida el ambiente y simplifica tu abastecimiento.
-          </p>
-          <div class="hero__actions">
-            <a class="btn-primary" href="#simulador">Simula tu ahorro</a>
-            <a class="btn-secondary btn-secondary--on-dark" href="#contacto">Encuentra tu estación</a>
-          </div>
-          <div class="hero__stats">
-            {stats.map((stat) => (
-              <div>
-                <p class="hero__stat-value">{stat.value}</p>
-                <p class="hero__stat-label">{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div class="banner-carousel" id="banner-carousel">
-          <div class="banner-carousel__track">
-            <div class="banner-slide is-active">
-              <img class="banner-slide__img" src={noImg.src} alt="" />
-              <span class="banner-slide__eyebrow">Ahorro real</span>
-              <p class="banner-slide__title">Hasta 40% menos que la gasolina</p>
-            </div>
-            <div class="banner-slide">
-              <img class="banner-slide__img" src={noImg.src} alt="" />
-              <span class="banner-slide__eyebrow">Cobertura nacional</span>
-              <p class="banner-slide__title">+120 estaciones en todo México</p>
-            </div>
-            <div class="banner-slide">
-              <img class="banner-slide__img" src={noImg.src} alt="" />
-              <span class="banner-slide__eyebrow">Energía responsable</span>
-              <p class="banner-slide__title">Menor huella de carbono desde hoy</p>
+    <!-- Hero: full-bleed carousel driven by the CMS -->
+    <section class="hero" id="banner-carousel">
+      <div class="hero__track">
+        {slides.map((slide, index) => (
+          <div class={"hero-slide" + (index === 0 ? " is-active" : "")}>
+            <img class="hero-slide__img" src={slide.image} alt="" />
+            <div class="hero-slide__scrim" aria-hidden="true" />
+            <div class="container hero-slide__content">
+              {slide.title && (
+                index === 0 ? (
+                  <h1 class="hero-slide__title">{slide.title}</h1>
+                ) : (
+                  <p class="hero-slide__title">{slide.title}</p>
+                )
+              )}
+              {slide.subtitle && <p class="hero-slide__subtitle">{slide.subtitle}</p>}
+              {slide.link_url && slide.link_label && (
+                <a class="btn-primary hero-slide__cta" href={slide.link_url} target="_blank" rel="noopener noreferrer">
+                  {slide.link_label}
+                </a>
+              )}
             </div>
           </div>
-          <div class="banner-carousel__dots" role="tablist" aria-label="Banners"></div>
-        </div>
+        ))}
       </div>
+      <div class="hero__dots" role="tablist" aria-label="Banners"></div>
     </section>
 
     <!-- Simulador de ahorro -->
@@ -153,14 +103,22 @@ const stations = [
         <div class="simulator">
           <div>
             <span class="eyebrow eyebrow--on-dark">Simulador de ahorro</span>
-            <h2 class="hero__title" style="font-size: 1.75rem; margin-top: 0.75rem;">
-              Calcula cuánto puedes ahorrar con gas natural
+            <h2 class="simulator__heading">
+              {savingsSimulator?.title ?? "Calcula cuánto puedes ahorrar con gas natural"}
             </h2>
-            <p class="hero__subtitle" style="margin-top: 0.75rem;">
-              Ingresa tu gasto mensual actual en gasolina o diésel y descubre tu ahorro estimado
-              al cambiarte a GNU Gas Natural.
+            <p class="simulator__lead">
+              {savingsSimulator?.intro ??
+                "Ingresa tu gasto mensual actual en gasolina o diésel y descubre tu ahorro estimado al cambiarte a GNU Gas Natural."}
             </p>
             <form id="savings-form" style="margin-top: 1.5rem;">
+              <div class="field field--on-dark">
+                <label for="current-fuel">Combustible actual</label>
+                <select id="current-fuel" name="current-fuel">
+                  {comparableFuels.map((fuel) => (
+                    <option value={fuel.fuel}>{fuel.label}</option>
+                  ))}
+                </select>
+              </div>
               <div class="field field--on-dark">
                 <label for="monthly-spend">Gasto mensual actual (MXN)</label>
                 <input type="number" id="monthly-spend" name="monthly-spend" min="0" placeholder="Ej. 4500" required />
@@ -170,7 +128,7 @@ const stations = [
           </div>
           <div class="simulator__result">
             <p class="simulator__result-value" id="savings-value">$0 MXN</p>
-            <p class="simulator__result-label">Ahorro mensual estimado (35% en promedio)</p>
+            <p class="simulator__result-label">Ahorro mensual estimado</p>
             <p class="simulator__result-label" id="savings-annual" style="margin-top: 0.75rem;">
               Ahorro anual estimado: $0 MXN
             </p>
@@ -179,222 +137,66 @@ const stations = [
       </div>
     </section>
 
-    <!-- Nuestros Servicios -->
-    <section class="section section--alt" id="servicios">
-      <div class="container">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">Nuestros Servicios</span>
-          <h2 class="section-title">Una solución de gas natural para cada necesidad</h2>
-          <p class="section-subtitle">
-            Del hogar a la flotilla industrial, tenemos el formato de gas natural correcto para ti.
-          </p>
-        </div>
-        <div class="grid grid--3">
-          {services.map((service) => (
-            <div class="card">
-              <div class="card__icon" aria-hidden="true">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8">
-                  <path d="M12 3c1.2 3-1.5 4.2-1.5 7.3a3.5 3.5 0 0 0 7 0c0-1-.4-1.8-1-2.3.9 2.6-.8 3.6-1.7 3.6a1.7 1.7 0 0 1-1.7-1.8c0-1.7 1.7-2.6.9-5.2-1.7 1-3.5 2.9-3.5 5.2a4.5 4.5 0 0 0 4.5 4.5"/>
-                  <path d="M5 21h14"/>
-                </svg>
-              </div>
-              <p class="eyebrow" style="margin-bottom: 0.5rem;">{service.tag}</p>
-              <p class="card__title">{service.title}</p>
-              <p class="card__text">{service.text}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    <!-- Nuestros Clientes / Testimoniales -->
+    <!-- Nuestros Clientes -->
     <section class="section">
       <div class="container">
         <div class="section-head section-head--center">
           <span class="eyebrow">Nuestros Clientes</span>
-          <h2 class="section-title">Historias de ahorro reales</h2>
+          <h2 class="section-title">{clientsShowcase?.title ?? "Nuestros clientes"}</h2>
         </div>
-        <div class="grid grid--3">
-          {testimonials.map((item) => (
-            <div class="testimonial">
-              <p class="testimonial__quote">“{item.quote}”</p>
-              <div class="testimonial__author">
-                <img class="testimonial__avatar" src={noImg.src} alt="" />
-                <div>
-                  <p class="testimonial__name">{item.name}</p>
-                  <p class="testimonial__role">{item.role}</p>
-                </div>
+        <div class="logo-grid">
+          {logos.map((logo) =>
+            logo.url ? (
+              <a class="logo-card" href={logo.url} target="_blank" rel="noopener noreferrer">
+                <img class="logo-card__img" src={logo.image} alt={logo.name} />
+              </a>
+            ) : (
+              <div class="logo-card">
+                <img class="logo-card__img" src={logo.image} alt={logo.name} />
               </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    <!-- Sobre Nosotros -->
-    <section class="section section--alt" id="nosotros">
-      <div class="container">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">Sobre Nosotros</span>
-          <h2 class="section-title">Quiénes somos en GNU Gas Natural</h2>
-          <p class="section-subtitle">
-            Una compañía mexicana enfocada en llevar energía más limpia y económica a más hogares y empresas.
-          </p>
-        </div>
-        <div class="grid grid--4">
-          {about.map((item) => (
-            <div class="card card--surface">
-              <p class="card__title">{item.title}</p>
-              <p class="card__text">{item.text}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    <!-- Desarrollo Sostenible -->
-    <section class="section" id="sostenible">
-      <div class="container">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">Desarrollo Sostenible</span>
-          <h2 class="section-title">Compromiso ambiental y social</h2>
-          <p class="section-subtitle">
-            El gas natural es el paso intermedio más limpio hacia la energía del futuro, y trabajamos
-            todos los días para probarlo.
-          </p>
-        </div>
-        <div class="grid grid--4">
-          {sustainability.map((item) => (
-            <div class="card">
-              <p class="card__title">{item.title}</p>
-              <p class="card__text">{item.text}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-
-    <!-- Blog -->
-    <section class="section section--alt" id="blog">
-      <div class="container">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">Blog</span>
-          <h2 class="section-title">Aprende más sobre el gas natural</h2>
-        </div>
-        <div class="grid grid--4">
-          {blogPosts.map((post) => (
-            <a href="#" class="blog-card">
-              <img class="blog-card__cover" src={noImg.src} alt="" />
-              <div class="blog-card__body">
-                <p class="blog-card__tag">{post.tag}</p>
-                <p class="blog-card__title">{post.title}</p>
-                <span class="blog-card__link">Leer más →</span>
-              </div>
-            </a>
-          ))}
+            )
+          )}
         </div>
       </div>
     </section>
 
     <!-- Contacto -->
-    <section class="section" id="contacto">
-      <div class="container">
+    <section class="section section--alt" id="contacto">
+      <div class="container" style="max-width: 34rem;">
         <div class="section-head section-head--center">
           <span class="eyebrow">Contacto</span>
-          <h2 class="section-title">Hablemos de tu proyecto de gas natural</h2>
+          <h2 class="section-title">{leadCaptureForm?.title ?? "Hablemos de tu proyecto de gas natural"}</h2>
           <p class="section-subtitle">
-            Déjanos tus datos y un asesor te contactará, o localiza la estación más cercana a ti.
+            {leadCaptureForm?.intro ??
+              "Déjanos tus datos y un asesor te contactará."}
           </p>
         </div>
-        <div class="grid" style="grid-template-columns: 1fr; gap: 2rem;">
-          <div class="grid" style="grid-template-columns: 1fr 1fr; gap: 2rem;">
-            <div class="card">
-              <p class="card__title" style="margin-bottom: 1rem;">Cotiza sin compromiso</p>
-              <form>
-                <div class="field">
-                  <label for="name">Nombre completo</label>
-                  <input type="text" id="name" name="name" placeholder="Tu nombre" required />
-                </div>
-                <div class="field">
-                  <label for="email">Correo electrónico</label>
-                  <input type="email" id="email" name="email" placeholder="tucorreo@ejemplo.com" required />
-                </div>
-                <div class="field">
-                  <label for="phone">Teléfono</label>
-                  <input type="tel" id="phone" name="phone" placeholder="Ej. 55 1234 5678" />
-                </div>
-                <div class="field">
-                  <label for="message">Mensaje</label>
-                  <textarea id="message" name="message" rows="3" placeholder="Cuéntanos qué necesitas"></textarea>
-                </div>
-                <button type="submit" class="btn-primary">Enviar mensaje</button>
-              </form>
-            </div>
-            <div class="map-card">
-              <p class="card__title" style="margin-bottom: 1rem;">Mapa de estaciones</p>
-              <div
-                style="border-radius: var(--radius-md); background: var(--color-surface); border: 1px dashed var(--color-border-hover); height: 10rem; display:flex; align-items:center; justify-content:center; color: var(--color-text-40); font-size: 0.875rem; margin-bottom: 1rem;"
-              >
-                Mapa interactivo próximamente
-              </div>
-              {stations.map((station) => (
-                <div class="station-row">
-                  <span class="station-pin" aria-hidden="true">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11z"/>
-                      <circle cx="12" cy="10" r="2.5"/>
-                    </svg>
-                  </span>
-                  <div>
-                    <p class="station-name">{station.name}</p>
-                    <p class="station-address">{station.address}</p>
-                  </div>
-                </div>
-              ))}
-              <a href="#" class="btn-secondary" style="margin-top: 1rem; width: 100%; justify-content: center;">
-                Ver todas las estaciones
-              </a>
-            </div>
-          </div>
-
-          <div class="cta-banner">
-            <span class="eyebrow eyebrow--on-dark">¿Listo para ahorrar?</span>
-            <h3 class="cta-banner__title" style="margin-top: 0.75rem;">
-              Cambia a gas natural y empieza a ahorrar desde el primer mes
-            </h3>
-            <div class="cta-banner__actions">
-              <a class="btn-primary" href="#simulador">Simula tu ahorro</a>
-              <a
-                class="btn-secondary btn-secondary--on-dark"
-                href="https://wa.me/525555550192"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Escríbenos por WhatsApp
-              </a>
-            </div>
-          </div>
-        </div>
+        <LeadCaptureForm
+          formId="home-lead-form"
+          title="Cotiza sin compromiso"
+          submit_label={leadCaptureForm?.submit_label ?? "Enviar mensaje"}
+          fields={leadCaptureForm?.fields}
+        />
       </div>
     </section>
   </main>
 </Layout>
 
 <script>
-  const track = document.querySelector<HTMLElement>(".banner-carousel__track");
-  const slides = Array.from(document.querySelectorAll<HTMLElement>(".banner-slide"));
-  const dotsContainer = document.querySelector<HTMLElement>(".banner-carousel__dots");
+  const track = document.querySelector<HTMLElement>(".hero__track");
+  const slides = Array.from(document.querySelectorAll<HTMLElement>(".hero-slide"));
+  const dotsContainer = document.querySelector<HTMLElement>(".hero__dots");
 
   if (track && slides.length && dotsContainer) {
     slides.forEach((_, index) => {
       const dot = document.createElement("button");
-      dot.className = "banner-carousel__dot" + (index === 0 ? " is-active" : "");
+      dot.className = "hero__dot" + (index === 0 ? " is-active" : "");
       dot.setAttribute("aria-label", `Ir al banner ${index + 1}`);
       dot.addEventListener("click", () => showSlide(index));
       dotsContainer.appendChild(dot);
     });
 
-    const dots = Array.from(dotsContainer.querySelectorAll<HTMLButtonElement>(".banner-carousel__dot"));
+    const dots = Array.from(dotsContainer.querySelectorAll<HTMLButtonElement>(".hero__dot"));
     let current = 0;
 
     function showSlide(index: number) {
@@ -410,21 +212,41 @@ const stations = [
     }, 5000);
   }
 
-  const savingsForm = document.querySelector<HTMLFormElement>("#savings-form");
-  const savingsValue = document.querySelector<HTMLElement>("#savings-value");
-  const savingsAnnual = document.querySelector<HTMLElement>("#savings-annual");
-  const SAVINGS_RATE = 0.35;
+</script>
+
+<script is:inline define:vars={{ comparableFuels, gasNaturalPrice }}>
+  const savingsForm = document.querySelector("#savings-form");
+  const savingsValue = document.querySelector("#savings-value");
+  const savingsAnnual = document.querySelector("#savings-annual");
+  const fuelSelect = document.querySelector("#current-fuel");
+  const FALLBACK_SAVINGS_RATE = 0.35;
 
   savingsForm?.addEventListener("submit", (event) => {
     event.preventDefault();
-    const input = document.querySelector<HTMLInputElement>("#monthly-spend");
+    const input = document.querySelector("#monthly-spend");
     const spend = Number(input?.value ?? 0);
     if (!Number.isFinite(spend) || spend <= 0) return;
 
-    const monthlySavings = Math.round(spend * SAVINGS_RATE);
+    const selectedFuel = comparableFuels.find((fuel) => fuel.fuel === fuelSelect?.value);
+    let monthlySavings;
+
+    if (selectedFuel && gasNaturalPrice) {
+      const unitsConsumed = spend / selectedFuel.price_per_unit;
+      const gasNaturalUnitsNeeded = unitsConsumed * selectedFuel.equivalence_factor;
+      const gasNaturalCost = gasNaturalUnitsNeeded * gasNaturalPrice.price_per_unit;
+      monthlySavings = Math.max(0, Math.round(spend - gasNaturalCost));
+    } else {
+      monthlySavings = Math.round(spend * FALLBACK_SAVINGS_RATE);
+    }
+
     const annualSavings = monthlySavings * 12;
 
-    if (savingsValue) savingsValue.textContent = `$${monthlySavings.toLocaleString("es-MX")} MXN`;
+    if (savingsValue) {
+      savingsValue.textContent = `$${monthlySavings.toLocaleString("es-MX")} MXN`;
+      savingsValue.classList.remove("is-updated");
+      void savingsValue.offsetWidth;
+      savingsValue.classList.add("is-updated");
+    }
     if (savingsAnnual) savingsAnnual.textContent = `Ahorro anual estimado: $${annualSavings.toLocaleString("es-MX")} MXN`;
   });
 </script>

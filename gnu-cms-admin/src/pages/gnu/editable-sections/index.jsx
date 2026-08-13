@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router'
-import { fetchData, updateSection, uploadMedia } from '../../functions/fetch'
+import { Link } from 'react-router'
+import { fetchData, updateSection, uploadMedia } from '../../../functions/fetch'
 
 const SECTION_LABELS = {
   banner_carousel: 'Carrusel de banners',
@@ -577,7 +577,6 @@ function SectionCard({ section, onUpdated }) {
 }
 
 export default function EditableSections() {
-  const { site } = useParams()
   const [sections, setSections] = useState([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -590,7 +589,7 @@ export default function EditableSections() {
       setLoading(true)
       setError('')
 
-      const res = await fetchData(`/api/admin/sections?site=${site}`)
+      const res = await fetchData('/api/admin/sections?site=gnu&page=inicio')
 
       if (cancelled) return
 
@@ -609,7 +608,7 @@ export default function EditableSections() {
     return () => {
       cancelled = true
     }
-  }, [site])
+  }, [])
 
   function handleUpdated(updatedSection) {
     setSections((prev) => prev.map((s) => (s.id === updatedSection.id ? updatedSection : s)))
@@ -618,14 +617,14 @@ export default function EditableSections() {
   return (
     <main className="min-h-screen bg-[#0b0611] text-white">
       <div className="mx-auto max-w-4xl px-6 py-8">
-        <Link to="/home" className="text-sm text-white/50 transition hover:text-white/80">
+        <Link to="/gnu/select-page" className="text-sm text-white/50 transition hover:text-white/80">
           &larr; Back
         </Link>
 
         <header className="mt-4 mb-8">
-          <h1 className="text-2xl font-bold tracking-tight">Secciones editables</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Landing Page — Sitio GNU</h1>
           <p className="mt-1 text-sm text-white/60">
-            Sitio: <span className="text-[#c9a3ff]">{site}</span>
+            Secciones editables
             {total > 0 && <span className="text-white/40"> · {total} secciones</span>}
           </p>
         </header>

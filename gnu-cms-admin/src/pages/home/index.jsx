@@ -14,7 +14,7 @@ export default function Home() {
   const navigate = useNavigate()
 
   const handleOpenPage = (page) => {
-    navigate(`/editable-sections/${page.site}`)
+    navigate(`/${page.site}/select-page`)
   }
 
   const handleLogout = async () => {

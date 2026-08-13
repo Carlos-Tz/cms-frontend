@@ -1,0 +1,55 @@
+---
+interface Props {
+  title?: string | null;
+  body: string;
+  video_url?: string | null;
+}
+
+const { title, body, video_url } = Astro.props;
+
+function toEmbedUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "");
+
+    if (host === "youtube.com" || host === "m.youtube.com") {
+      if (parsed.pathname === "/watch") {
+        const id = parsed.searchParams.get("v");
+        if (id) return `https://www.youtube.com/embed/${id}`;
+      }
+      if (parsed.pathname.startsWith("/embed/")) return url;
+      if (parsed.pathname.startsWith("/shorts/")) {
+        return `https://www.youtube.com/embed/${parsed.pathname.split("/")[2]}`;
+      }
+    }
+
+    if (host === "youtu.be") {
+      return `https://www.youtube.com/embed/${parsed.pathname.slice(1)}`;
+    }
+
+    if (host === "vimeo.com") {
+      return `https://player.vimeo.com/video/${parsed.pathname.slice(1)}`;
+    }
+
+    if (host === "player.vimeo.com") return url;
+
+    return url;
+  } catch {
+    return url;
+  }
+}
+
+const embedUrl = video_url ? toEmbedUrl(video_url) : null;
+---
+
+<section class="section">
+  <div class="container" style="max-width: 46rem;">
+    {title && <h2 class="section-title">{title}</h2>}
+    <div class="prose" set:html={body} />
+    {embedUrl && (
+      <div class="rich-text__video">
+        <iframe src={embedUrl} title={title ?? "Video"} loading="lazy" allowfullscreen></iframe>
+      </div>
+    )}
+  </div>
+</section>

@@ -1,45 +1,54 @@
 :root {
-  /* Background */
+  /* Fonts */
+  --font-display: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Backgrounds */
   --color-bg: #ffffff;
-  --color-bg-alt: #f2f9ff;
+  --color-bg-alt: #f5f5f7;
+  --color-ink: #0a0e12;
+  --color-ink-soft: #14191f;
 
-  /* Brand — light blue / cyan / navy, matching the GNU Gas Natural sitemap */
-  --color-navy: #0b3d63;
-  --color-navy-deep: #073456;
-  --color-primary: #2f9bdb;
-  --color-primary-alt: #1f7fc2;
-  --color-primary-light: #7ed3f7;
-  --color-accent: #45d6c9;
-  --color-primary-tint: #cdeeff; /* eyebrow labels, small accents on dark bg */
-  --color-primary-soft: #e8f7ff; /* brand tint on light backgrounds */
+  /* Brand — crisp blue (primary actions/links) + energy teal (sparing accent) */
+  --color-navy: #1d1d1f;
+  --color-navy-deep: #0a0e12;
+  --color-primary: #0071e3;
+  --color-primary-alt: #0059b3;
+  --color-primary-light: #4da8ff;
+  --color-accent: #00c7b1;
+  --color-primary-tint: #cfe8ff;
+  --color-primary-soft: #eaf4ff;
 
-  /* Status (semantic — kept identical to the GNU CMS design system) */
+  /* Status */
   --color-status-active: #34d399;
   --color-status-pending: #fbbf24;
-  --color-status-draft: rgba(11, 61, 99, 0.35);
+  --color-status-draft: rgba(29, 29, 31, 0.35);
   --color-status-error: #fb7185;
 
   /* Text on light backgrounds */
-  --color-text: #0e2c42;
-  --color-text-60: rgba(14, 44, 66, 0.64);
-  --color-text-40: rgba(14, 44, 66, 0.44);
+  --color-text: #1d1d1f;
+  --color-text-60: rgba(29, 29, 31, 0.62);
+  --color-text-40: rgba(29, 29, 31, 0.42);
 
-  /* Text on dark backgrounds (hero panel, footer) */
+  /* Text on dark backgrounds */
   --color-text-on-dark: #ffffff;
   --color-text-on-dark-70: rgba(255, 255, 255, 0.72);
   --color-text-on-dark-45: rgba(255, 255, 255, 0.45);
 
   /* Borders / surfaces */
-  --color-border: rgba(11, 61, 99, 0.12);
-  --color-border-hover: rgba(11, 61, 99, 0.28);
-  --color-surface: rgba(47, 155, 219, 0.06);
-  --color-border-on-dark: rgba(255, 255, 255, 0.2);
-  --color-surface-on-dark: rgba(255, 255, 255, 0.08);
+  --color-border: rgba(29, 29, 31, 0.1);
+  --color-border-hover: rgba(29, 29, 31, 0.2);
+  --color-surface: rgba(0, 113, 227, 0.05);
+  --color-border-on-dark: rgba(255, 255, 255, 0.14);
+  --color-surface-on-dark: rgba(255, 255, 255, 0.06);
 
   /* Radius & shadow */
-  --radius-lg: 1rem;
-  --radius-md: 0.5rem;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.75rem;
+  --radius-xl: 2.5rem;
   --radius-full: 999px;
-  --shadow-cta: 0 10px 30px -5px rgba(47, 155, 219, 0.35);
-  --shadow-card: 0 4px 24px -8px rgba(11, 61, 99, 0.12);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }

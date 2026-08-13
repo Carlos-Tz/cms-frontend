@@ -1,0 +1,54 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SectionRenderer from "../../components/SectionRenderer.astro";
+import { fetchData } from "../../functions/fetch";
+
+type PageResponse = {
+  status: string;
+  data: { slug: string; path: string; title: string; sections: Array<{ type: string; content: Record<string, any> }> };
+  meta: Record<string, any>;
+};
+
+const pageResponse: PageResponse | undefined = await fetchData("pages/sobre-nosotros");
+const page = pageResponse?.data;
+const sections = page?.sections ?? [];
+
+const children = [
+  { slug: "proposito-empresarial", label: "Propósito empresarial" },
+  { slug: "valores", label: "Valores" },
+  { slug: "certificaciones", label: "Certificaciones" },
+  { slug: "nuestra-historia", label: "Nuestra historia" },
+];
+---
+
+<Layout title={page ? `${page.title} — GNU Gas Natural` : "Sobre Nosotros — GNU Gas Natural"}>
+  <main>
+    {!page && (
+      <section class="page-hero">
+        <div class="page-hero__scrim" aria-hidden="true"></div>
+        <div class="container page-hero__content">
+          <h1 class="page-hero__title">Sobre Nosotros</h1>
+        </div>
+      </section>
+    )}
+
+    <SectionRenderer sections={sections} />
+
+    <section class="section">
+      <div class="container">
+        <div class="section-head section-head--center">
+          <span class="eyebrow">Conoce más</span>
+          <h2 class="section-title">Explora Sobre Nosotros</h2>
+        </div>
+        <div class="grid grid--4">
+          {children.map((child) => (
+            <a class="card" href={`/sobre-nosotros/${child.slug}`}>
+              <p class="card__title">{child.label}</p>
+              <span class="blog-card__link">Ver más →</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
+</Layout>

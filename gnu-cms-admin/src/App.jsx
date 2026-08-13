@@ -3,8 +3,24 @@ import { Routes, Route, useNavigate } from 'react-router'
 import heroImage from './assets/hero.png'
 import Login from './pages/login'
 import Home from './pages/home'
-import EditPage from './pages/edit-page'
-import EditableSections from './pages/editable-sections'
+import EditableSections from './pages/gnu/editable-sections'
+import GnuBlog from './pages/gnu/blog'
+import GnuContacto from './pages/gnu/contacto'
+import GnuNuestrosServicios from './pages/gnu/nuestros-servicios'
+import GnuDesarrolloSostenible from './pages/gnu/desarrollo-sostenible'
+import GnuDesarrolloSostenPortada from './pages/gnu/desarrollo-sostenible/portada'
+import GnuDistintivoEsr from './pages/gnu/desarrollo-sostenible/distintivo-esr'
+import GnuEcoVadis from './pages/gnu/desarrollo-sostenible/ecovadis'
+import GnuVoluntariado from './pages/gnu/desarrollo-sostenible/voluntariado'
+import GnuIniciativasRse from './pages/gnu/desarrollo-sostenible/iniciativas-rse'
+import GnuSobreNosotros from './pages/gnu/sobre-nosotros'
+import GnuSobreNosotrosPortada from './pages/gnu/sobre-nosotros/portada'
+import GnuPropositoEmpresarial from './pages/gnu/sobre-nosotros/proposito-empresarial'
+import GnuValores from './pages/gnu/sobre-nosotros/valores'
+import GnuCertificaciones from './pages/gnu/sobre-nosotros/certificaciones'
+import GnuNuestraHistoria from './pages/gnu/sobre-nosotros/nuestra-historia'
+import GnuSelectPage from './pages/gnu/select-page'
+import GasNaturalSelectPage from './pages/gas-natural/select-page'
 
 const FEATURES = [
   {
@@ -105,8 +121,24 @@ export default function App() {
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Login />} />
       <Route path="/home" element={<Home />} />
-      <Route path="/edit-page" element={<EditPage />} />
-      <Route path="/editable-sections/:site" element={<EditableSections />} />
+      <Route path="/gnu/select-page" element={<GnuSelectPage />} />
+      <Route path="/gnu/blog" element={<GnuBlog />} />
+      <Route path="/gnu/contacto" element={<GnuContacto />} />
+      <Route path="/gnu/nuestros-servicios" element={<GnuNuestrosServicios />} />
+      <Route path="/gnu/desarrollo-sostenible" element={<GnuDesarrolloSostenible />} />
+      <Route path="/gnu/desarrollo-sostenible/portada" element={<GnuDesarrolloSostenPortada />} />
+      <Route path="/gnu/desarrollo-sostenible/distintivo-esr" element={<GnuDistintivoEsr />} />
+      <Route path="/gnu/desarrollo-sostenible/ecovadis" element={<GnuEcoVadis />} />
+      <Route path="/gnu/desarrollo-sostenible/voluntariado" element={<GnuVoluntariado />} />
+      <Route path="/gnu/desarrollo-sostenible/iniciativas-rse" element={<GnuIniciativasRse />} />
+      <Route path="/gnu/sobre-nosotros" element={<GnuSobreNosotros />} />
+      <Route path="/gnu/sobre-nosotros/portada" element={<GnuSobreNosotrosPortada />} />
+      <Route path="/gnu/sobre-nosotros/proposito-empresarial" element={<GnuPropositoEmpresarial />} />
+      <Route path="/gnu/sobre-nosotros/valores" element={<GnuValores />} />
+      <Route path="/gnu/sobre-nosotros/certificaciones" element={<GnuCertificaciones />} />
+      <Route path="/gnu/sobre-nosotros/nuestra-historia" element={<GnuNuestraHistoria />} />
+      <Route path="/gas-natural/select-page" element={<GasNaturalSelectPage />} />
+      <Route path="/gnu/editable-sections" element={<EditableSections />} />
     </Routes>
   )
 }

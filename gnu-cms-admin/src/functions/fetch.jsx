@@ -66,11 +66,80 @@ export async function updateSection(id, content) {
             },
             body: JSON.stringify({ content }),
         })
-
-        return await response.json()
+        const res = await response.json()
+        console.log('On PUT sections response ', res)
+        return res
     } catch (error) {
         console.error('Error updating section:', error)
         return { status: 'error', meta: { message: 'No se pudo actualizar la sección' } }
+    }
+}
+
+export async function createBlogPost(payload) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/blog-posts`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        })
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error creating blog post:', error)
+        return { status: 'error', meta: { message: 'No se pudo crear el artículo' } }
+    }
+}
+
+export async function updateBlogPost(id, payload) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/blog-posts/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        })
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error updating blog post:', error)
+        return { status: 'error', meta: { message: 'No se pudo actualizar el artículo' } }
+    }
+}
+
+export async function deleteBlogPost(id) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/blog-posts/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json',
+            },
+        })
+
+        if (response.status === 204) {
+            return { status: 'success' }
+        }
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error deleting blog post:', error)
+        return { status: 'error', meta: { message: 'No se pudo eliminar el artículo' } }
     }
 }
 
