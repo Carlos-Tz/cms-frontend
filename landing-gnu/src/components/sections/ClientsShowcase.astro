@@ -13,6 +13,8 @@ interface Props {
 }
 
 const { title, logos } = Astro.props;
+const useMarquee = logos.length >= 4;
+const marqueeLogos = useMarquee ? [...logos, ...logos] : logos;
 ---
 
 <section class="section">
@@ -21,18 +23,50 @@ const { title, logos } = Astro.props;
       <span class="eyebrow">Nuestros Clientes</span>
       <h2 class="section-title">{title ?? "Nuestros clientes"}</h2>
     </div>
-    <div class="logo-grid">
-      {logos.map((logo) =>
-        logo.url ? (
-          <a class="logo-card" href={logo.url} target="_blank" rel="noopener noreferrer">
-            <img class="logo-card__img" src={mediaUrl(logo.image)} alt={logo.name} />
-          </a>
-        ) : (
-          <div class="logo-card">
-            <img class="logo-card__img" src={mediaUrl(logo.image)} alt={logo.name} />
-          </div>
-        )
-      )}
-    </div>
+    {useMarquee ? (
+      <div class="logo-marquee">
+        <div class="logo-marquee__track">
+          {marqueeLogos.map((logo) => (
+            <div class="logo-marquee__item">
+              {logo.url ? (
+                <a class="logo-card" href={logo.url} target="_blank" rel="noopener noreferrer">
+                  <div class="logo-card__figure">
+                    <img class="logo-card__img" src={mediaUrl(logo.image)} alt={logo.name} />
+                  </div>
+                  <span class="logo-card__name">{logo.name}</span>
+                </a>
+              ) : (
+                <div class="logo-card">
+                  <div class="logo-card__figure">
+                    <img class="logo-card__img" src={mediaUrl(logo.image)} alt={logo.name} />
+                  </div>
+                  <span class="logo-card__name">{logo.name}</span>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    ) : (
+      <div class="logo-grid">
+        {logos.map((logo) =>
+          logo.url ? (
+            <a class="logo-card" href={logo.url} target="_blank" rel="noopener noreferrer">
+              <div class="logo-card__figure">
+                <img class="logo-card__img" src={mediaUrl(logo.image)} alt={logo.name} />
+              </div>
+              <span class="logo-card__name">{logo.name}</span>
+            </a>
+          ) : (
+            <div class="logo-card">
+              <div class="logo-card__figure">
+                <img class="logo-card__img" src={mediaUrl(logo.image)} alt={logo.name} />
+              </div>
+              <span class="logo-card__name">{logo.name}</span>
+            </div>
+          )
+        )}
+      </div>
+    )}
   </div>
 </section>

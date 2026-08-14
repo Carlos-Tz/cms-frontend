@@ -60,11 +60,26 @@ function ImageField({ label, value, onChange, error }) {
   return (
     <div className="space-y-2 rounded-xl border border-dashed border-white/15 p-4">
       <span className="block text-sm text-white/70">{label}</span>
-      <div className="flex h-20 items-center justify-center overflow-hidden rounded-lg bg-white/5 text-sm text-white/40">
+      <div className="relative flex h-20 items-center justify-center overflow-hidden rounded-lg bg-white/5 text-sm text-white/40">
         {value ? (
           <img src={value} alt="" className="h-full w-full object-contain" />
         ) : (
-          <span>{uploading ? 'Subiendo…' : 'Sin imagen'}</span>
+          <span>Sin imagen</span>
+        )}
+        {uploading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/60 text-white">
+            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 animate-spin">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" className="opacity-25" />
+              <path
+                d="M21 12a9 9 0 0 0-9-9"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                className="opacity-90"
+              />
+            </svg>
+            <span className="text-[10px]">Subiendo…</span>
+          </div>
         )}
       </div>
       <input
@@ -272,7 +287,7 @@ function RichTextEditor({ content, onChange, errors }) {
       </Field>
       <Field label="Contenido (HTML)" hint="Se guarda tal como se escribe." error={fieldError(errors, 'content.body')}>
         <textarea
-          rows={5}
+          rows={15}
           value={content.body ?? ''}
           onChange={(e) => onChange({ ...content, body: e.target.value })}
           className={inputClass}

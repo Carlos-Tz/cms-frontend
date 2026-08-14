@@ -6,6 +6,12 @@ dist/
 # dependencies
 node_modules/
 
+inspiration/
+
+DESIGN-apple.md
+gaseco-schema
+tesla-schema
+
 # logs
 npm-debug.log*
 yarn-debug.log*

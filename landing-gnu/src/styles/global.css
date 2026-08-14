@@ -143,7 +143,7 @@ button {
   color: var(--color-accent);
 }
 
-/* Buttons */
+/* Buttons — one bright accent carries every action; press scales down like a physical key */
 .btn-primary {
   display: inline-flex;
   align-items: center;
@@ -151,16 +151,19 @@ button {
   border-radius: var(--radius-full);
   padding: 0.8125rem 1.75rem;
   font-size: 0.9375rem;
-  font-weight: 600;
-  color: #ffffff;
-  background: var(--color-primary);
+  font-weight: 700;
+  color: var(--color-ink);
+  background: var(--color-accent);
   border: none;
-  transition: background 0.15s ease, transform 0.15s ease;
+  transition: filter 0.15s ease, transform 0.15s var(--ease-out);
 }
 
 .btn-primary:hover {
-  background: var(--color-primary-alt);
-  transform: translateY(-1px);
+  filter: brightness(0.94);
+}
+
+.btn-primary:active {
+  transform: scale(0.96);
 }
 
 .btn-secondary {
@@ -174,12 +177,16 @@ button {
   color: var(--color-text);
   border: 1px solid var(--color-border);
   background: transparent;
-  transition: color 0.15s ease, border-color 0.15s ease;
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s var(--ease-out);
 }
 
 .btn-secondary:hover {
   color: var(--color-primary);
   border-color: var(--color-border-hover);
+}
+
+.btn-secondary:active {
+  transform: scale(0.96);
 }
 
 .btn-secondary--on-dark {
@@ -247,8 +254,8 @@ button {
   position: sticky;
   top: 0;
   z-index: 40;
-  background: rgba(10, 14, 18, 0.72);
-  backdrop-filter: blur(16px);
+  background: rgba(10, 10, 11, 0.78);
+  backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--color-border-on-dark);
 }
 
@@ -417,13 +424,15 @@ button {
   background: var(--color-accent);
 }
 
-/* Simulador de ahorro */
+/* Simulador de ahorro — full-bleed dark tile; the color change is the section divider */
+.simulator-band {
+  background: var(--color-ink);
+  padding: clamp(3.5rem, 8vw, 6rem) 0;
+}
+
 .simulator {
   display: grid;
   gap: 2.5rem;
-  border-radius: var(--radius-xl);
-  background: var(--color-ink);
-  padding: 3rem;
   color: #ffffff;
 }
 
@@ -448,9 +457,10 @@ button {
 
 .simulator__result {
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-ink-2);
   border: 1px solid var(--color-border-on-dark);
   padding: 2rem;
+  box-shadow: var(--shadow-float);
 }
 
 .simulator__result-value {
@@ -499,6 +509,23 @@ button {
   color: var(--color-text);
 }
 
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 2.75rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%231d1d1f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.875rem;
+}
+
+.field select option {
+  background: #ffffff;
+  color: var(--color-text);
+}
+
 .field input::placeholder,
 .field textarea::placeholder {
   color: var(--color-text-40);
@@ -518,32 +545,125 @@ button {
 
 .field--on-dark input,
 .field--on-dark select {
-  background: rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.08);
   border-color: var(--color-border-on-dark);
+  color: #ffffff;
+}
+
+.field--on-dark select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.875rem;
+}
+
+.field--on-dark select option {
+  background: var(--color-ink-2);
   color: #ffffff;
 }
 
 .logo-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1.5rem;
 }
 
+/* Client card — image thumbnail + name caption, shared shape for grid and marquee */
 .logo-card {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 6rem;
+  flex-direction: column;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: var(--color-bg-alt);
-  padding: 1rem;
+  overflow: hidden;
+  text-decoration: none;
+  transition: transform 0.3s var(--ease-out), border-color 0.3s ease;
+}
+
+.logo-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-border-hover);
+}
+
+.logo-card__figure {
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--color-bg);
 }
 
 .logo-card__img {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) opacity(0.72);
+  transform: scale(1.01);
+  transition: filter 0.4s ease, transform 0.5s var(--ease-out);
+}
+
+.logo-card:hover .logo-card__img {
+  filter: grayscale(0) opacity(1);
+  transform: scale(1.06);
+}
+
+.logo-card__name {
+  padding: 0.875rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+  transition: color 0.3s ease;
+}
+
+.logo-card:hover .logo-card__name {
+  color: var(--color-primary);
+}
+
+/* Logo marquee — continuous strip, pauses on hover/focus, static list if motion is reduced */
+.logo-marquee {
+  overflow: hidden;
+  padding: 0.5rem 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.logo-marquee__track {
+  display: flex;
+  align-items: stretch;
+  gap: 1.5rem;
+  width: max-content;
+  animation: logo-marquee-scroll 30s linear infinite;
+}
+
+.logo-marquee:hover .logo-marquee__track,
+.logo-marquee:focus-within .logo-marquee__track {
+  animation-play-state: paused;
+}
+
+.logo-marquee__item {
+  flex: 0 0 auto;
+  width: 13rem;
+}
+
+.logo-marquee__item .logo-card:hover {
+  transform: translateY(-4px) scale(1.01);
+}
+
+@keyframes logo-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-marquee__track {
+    animation: none;
+    flex-wrap: wrap;
+    overflow-x: auto;
+  }
 }
 
 /* Map / stations */
@@ -607,6 +727,11 @@ button {
   width: 100%;
   object-fit: cover;
   background: var(--color-bg-alt);
+  transition: transform 0.5s var(--ease-out);
+}
+
+.blog-card:hover .blog-card__cover {
+  transform: scale(1.06);
 }
 
 .blog-card__body {
@@ -649,6 +774,19 @@ button {
   padding: 9rem 0 5rem;
   text-align: center;
   overflow: hidden;
+}
+
+.page-hero::before {
+  content: "";
+  position: absolute;
+  top: -12rem;
+  left: 50%;
+  width: 36rem;
+  height: 36rem;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(41, 151, 255, 0.22), transparent 70%);
+  z-index: 0;
+  pointer-events: none;
 }
 
 .page-hero__img {

@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import LeadCaptureForm from "../components/sections/LeadCaptureForm.astro";
+import StationsMap from "../components/sections/StationsMap.astro";
 import noImg from "../assets/images/noimg.jpg";
 import { fetchData, mediaUrl } from "../functions/fetch";
 
@@ -37,6 +38,12 @@ const pageResponse: PageResponse | undefined = await fetchData("pages/inicio");
 const sections = pageResponse?.data?.sections ?? [];
 const getSection = (type: string) => sections.find((section) => section.type === type)?.content;
 
+const contactoResponse: PageResponse | undefined = await fetchData("pages/contacto");
+const contactoSections = contactoResponse?.data?.sections ?? [];
+const stationsMap = contactoSections.find((section) => section.type === "stations_map")?.content as
+  | { title: string; center: string; zoom?: string | number }
+  | undefined;
+
 const bannerCarousel = getSection("banner_carousel") as { slides: Slide[] } | undefined;
 const savingsSimulator = getSection("savings_simulator") as
   | { title: string; intro: string; fuel_prices: FuelPrice[] }
@@ -65,6 +72,8 @@ const fallbackLogos: Logo[] = [{ image: noImg.src, name: "Cliente de ejemplo", u
 const logos: Logo[] = clientsShowcase?.logos?.length
   ? clientsShowcase.logos.map((logo) => ({ ...logo, image: mediaUrl(logo.image) }))
   : fallbackLogos;
+const useLogoMarquee = logos.length >= 4;
+const marqueeLogos = useLogoMarquee ? [...logos, ...logos] : logos;
 ---
 
 <Layout>
@@ -98,9 +107,8 @@ const logos: Logo[] = clientsShowcase?.logos?.length
     </section>
 
     <!-- Simulador de ahorro -->
-    <section class="section" id="simulador">
-      <div class="container">
-        <div class="simulator">
+    <section class="simulator-band" id="simulador">
+      <div class="container simulator">
           <div>
             <span class="eyebrow eyebrow--on-dark">Simulador de ahorro</span>
             <h2 class="simulator__heading">
@@ -133,7 +141,6 @@ const logos: Logo[] = clientsShowcase?.logos?.length
               Ahorro anual estimado: $0 MXN
             </p>
           </div>
-        </div>
       </div>
     </section>
 
@@ -144,24 +151,56 @@ const logos: Logo[] = clientsShowcase?.logos?.length
           <span class="eyebrow">Nuestros Clientes</span>
           <h2 class="section-title">{clientsShowcase?.title ?? "Nuestros clientes"}</h2>
         </div>
-        <div class="logo-grid">
-          {logos.map((logo) =>
-            logo.url ? (
-              <a class="logo-card" href={logo.url} target="_blank" rel="noopener noreferrer">
-                <img class="logo-card__img" src={logo.image} alt={logo.name} />
-              </a>
-            ) : (
-              <div class="logo-card">
-                <img class="logo-card__img" src={logo.image} alt={logo.name} />
-              </div>
-            )
-          )}
-        </div>
+        {useLogoMarquee ? (
+          <div class="logo-marquee">
+            <div class="logo-marquee__track">
+              {marqueeLogos.map((logo) => (
+                <div class="logo-marquee__item">
+                  {logo.url ? (
+                    <a class="logo-card" href={logo.url} target="_blank" rel="noopener noreferrer">
+                      <div class="logo-card__figure">
+                        <img class="logo-card__img" src={logo.image} alt={logo.name} />
+                      </div>
+                      <span class="logo-card__name">{logo.name}</span>
+                    </a>
+                  ) : (
+                    <div class="logo-card">
+                      <div class="logo-card__figure">
+                        <img class="logo-card__img" src={logo.image} alt={logo.name} />
+                      </div>
+                      <span class="logo-card__name">{logo.name}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div class="logo-grid">
+            {logos.map((logo) =>
+              logo.url ? (
+                <a class="logo-card" href={logo.url} target="_blank" rel="noopener noreferrer">
+                  <div class="logo-card__figure">
+                    <img class="logo-card__img" src={logo.image} alt={logo.name} />
+                  </div>
+                  <span class="logo-card__name">{logo.name}</span>
+                </a>
+              ) : (
+                <div class="logo-card">
+                  <div class="logo-card__figure">
+                    <img class="logo-card__img" src={logo.image} alt={logo.name} />
+                  </div>
+                  <span class="logo-card__name">{logo.name}</span>
+                </div>
+              )
+            )}
+          </div>
+        )}
       </div>
     </section>
 
     <!-- Contacto -->
-    <section class="section section--alt" id="contacto">
+    <section class="section" id="contacto">
       <div class="container" style="max-width: 34rem;">
         <div class="section-head section-head--center">
           <span class="eyebrow">Contacto</span>
@@ -179,6 +218,10 @@ const logos: Logo[] = clientsShowcase?.logos?.length
         />
       </div>
     </section>
+
+    {stationsMap?.center && (
+      <StationsMap title={stationsMap.title ?? "Dónde encontrarnos"} center={stationsMap.center} zoom={stationsMap.zoom} />
+    )}
   </main>
 </Layout>
 
@@ -220,6 +263,24 @@ const logos: Logo[] = clientsShowcase?.logos?.length
   const savingsAnnual = document.querySelector("#savings-annual");
   const fuelSelect = document.querySelector("#current-fuel");
   const FALLBACK_SAVINGS_RATE = 0.35;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let currentMonthly = 0;
+
+  function animateCount(el, from, to, duration, format) {
+    if (!el) return;
+    if (prefersReducedMotion || from === to) {
+      el.textContent = format(to);
+      return;
+    }
+    const start = performance.now();
+    function tick(now) {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = format(Math.round(from + (to - from) * eased));
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
 
   savingsForm?.addEventListener("submit", (event) => {
     event.preventDefault();
@@ -242,7 +303,8 @@ const logos: Logo[] = clientsShowcase?.logos?.length
     const annualSavings = monthlySavings * 12;
 
     if (savingsValue) {
-      savingsValue.textContent = `$${monthlySavings.toLocaleString("es-MX")} MXN`;
+      animateCount(savingsValue, currentMonthly, monthlySavings, 650, (v) => `$${v.toLocaleString("es-MX")} MXN`);
+      currentMonthly = monthlySavings;
       savingsValue.classList.remove("is-updated");
       void savingsValue.offsetWidth;
       savingsValue.classList.add("is-updated");

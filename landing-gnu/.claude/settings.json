@@ -33,7 +33,15 @@
       "Bash(curl -s http://localhost:4321/ -o 'C:\\\\Users\\\\Gilda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Gilda-Documents-cms-frontend-landing-gnu\\\\7cbae7f0-f4f5-4126-b428-c88f1657a00b\\\\scratchpad/home2.html' -w 'HTTP %{http_code}\\\\n')",
       "Bash(curl -s http://localhost:4321/nuestros-servicios -o 'C:\\\\Users\\\\Gilda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Gilda-Documents-cms-frontend-landing-gnu\\\\7cbae7f0-f4f5-4126-b428-c88f1657a00b\\\\scratchpad/servicios.html' -w 'HTTP %{http_code}\\\\n')",
       "Bash(rm -rf \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu/src/pages/desarrollo{-sostenible\")",
-      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro dev logs 2>&1 | tail -15)"
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && npx astro dev logs 2>&1 | tail -15)",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && find . -maxdepth 3 -iname \"gaseco-schema*\" -o -iname \"tesla-schema*\" -o -iname \"DESIGN-apple.md\" 2>/dev/null)",
+      "Bash(cd \"/c/Users/Gilda/Documents/cms-frontend/landing-gnu\" && ls -la gaseco-schema tesla-schema DESIGN-apple.md 2>&1)",
+      "Read(//c/Users/Gilda/Documents/cms-frontend/landing-gnu/inspiration/**)",
+      "Bash(curl -s http://localhost:4321/ -o 'C:\\\\Users\\\\Gilda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Gilda-Documents-cms-frontend-landing-gnu\\\\7cbae7f0-f4f5-4126-b428-c88f1657a00b\\\\scratchpad/redesign2.html' -w 'HTTP %{http_code}\\\\n')",
+      "Bash(curl -s http://localhost:4321/nuestros-servicios -o 'C:\\\\Users\\\\Gilda\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Gilda-Documents-cms-frontend-landing-gnu\\\\7cbae7f0-f4f5-4126-b428-c88f1657a00b\\\\scratchpad/serv2.html')",
+      "Bash(curl -s http://localhost:4321/ -o /tmp/home.html -w \"%{http_code}\\\\n\")",
+      "Bash(curl -s \"https://gnu-headless-cms.165.227.59.215.sslip.io/api/public/gnu/pages/contacto\")",
+      "Bash(curl -s http://localhost:4321/ -o /tmp/home2.html -w \"%{http_code}\\\\n\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\Gilda\\Documents\\cms-frontend\\landing-gnu\\src\\pages\\blog",
