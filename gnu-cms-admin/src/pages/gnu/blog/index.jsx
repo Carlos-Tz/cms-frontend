@@ -1,61 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { fetchData, createBlogPost, updateBlogPost, deleteBlogPost, uploadMedia } from '../../../functions/fetch'
+import { fetchData, createBlogPost, updateBlogPost, deleteBlogPost } from '../../../functions/fetch'
+import { inputClass, buttonSecondaryClass, Field, CharHint, WordHint, ImageField } from '../../../components/form-fields'
 
 const SITE_ID = 1
-
-const inputClass =
-  'w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#863bff]'
-
-const buttonSecondaryClass =
-  'rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white/80 transition hover:border-white/30 hover:text-white'
-
-function Field({ label, required, hint, children }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm text-white/70">
-        {label}
-        {required && <span className="ml-1 text-rose-400">*</span>}
-      </span>
-      {children}
-      {hint && <span className="mt-1 block text-xs text-white/40">{hint}</span>}
-    </label>
-  )
-}
-
-function ImageField({ label, value, onChange }) {
-  const [uploading, setUploading] = useState(false)
-
-  async function handleFile(file) {
-    if (!file) return
-    setUploading(true)
-    const res = await uploadMedia(file)
-    setUploading(false)
-    if (res?.status === 'success') {
-      onChange(res.data.url)
-    }
-  }
-
-  return (
-    <div className="space-y-2 rounded-xl border border-dashed border-white/15 p-4">
-      <span className="block text-sm text-white/70">{label}</span>
-      <div className="flex h-28 items-center justify-center overflow-hidden rounded-lg bg-white/5 text-sm text-white/40">
-        {value ? (
-          <img src={value} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <span>{uploading ? 'Subiendo…' : 'Sin imagen'}</span>
-        )}
-      </div>
-      <input
-        type="file"
-        accept="image/*"
-        disabled={uploading}
-        onChange={(e) => handleFile(e.target.files?.[0])}
-        className="block w-full text-xs text-white/60"
-      />
-    </div>
-  )
-}
 
 function emptyForm() {
   return { slug: '', title: '', excerpt: '', body: '', cover_image: '', published_at: '' }
@@ -297,14 +245,16 @@ export default function Blog() {
                     onChange={(e) => updateField('title', e.target.value)}
                     className={inputClass}
                   />
+                  <CharHint value={form.title} recommended={60} max={90} />
                 </Field>
-                <Field label="Extracto">
+                <Field label="Extracto" hint="Se usa como descripción corta en la lista de artículos y ayuda al SEO.">
                   <input
                     type="text"
                     value={form.excerpt}
                     onChange={(e) => updateField('excerpt', e.target.value)}
                     className={inputClass}
                   />
+                  <CharHint value={form.excerpt} recommended={140} max={180} />
                 </Field>
                 <Field label="Contenido (HTML)" hint="Se guarda tal como se escribe.">
                   <textarea
@@ -313,9 +263,11 @@ export default function Blog() {
                     onChange={(e) => updateField('body', e.target.value)}
                     className={inputClass}
                   />
+                  <WordHint value={form.body} recommendedMin={800} recommendedMax={2500} />
                 </Field>
                 <ImageField
                   label="Imagen de portada"
+                  hint="1344×756 px (relación 16:9) · JPG · máx. 5 MB, ideal menos de 800 KB. Se usa como miniatura en la lista y como imagen grande en el detalle del artículo."
                   value={form.cover_image}
                   onChange={(value) => updateField('cover_image', value)}
                 />

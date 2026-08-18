@@ -1,12 +1,38 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { fetchData, updateSection, uploadMedia } from '../functions/fetch'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
+import { fetchData, updateSection } from '../functions/fetch'
+import {
+  inputClass,
+  buttonSecondaryClass,
+  fieldError,
+  Field,
+  CharHint,
+  ImageField,
+  DynamicItem,
+  AddButton,
+  updateArrayItem,
+} from './form-fields'
+
+delete L.Icon.Default.prototype._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+})
+
+const DEFAULT_MAP_CENTER = { lat: 25.6714, lng: -100.3094 }
 
 const SECTION_LABELS = {
   page_hero: 'Encabezado de página',
   feature_grid: 'Cuadrícula de características',
   rich_text: 'Texto enriquecido',
   clients_showcase: 'Clientes',
+  stations_map: 'Mapa de estaciones',
 }
 
 const DEFAULT_CONTENT = {
@@ -14,116 +40,13 @@ const DEFAULT_CONTENT = {
   feature_grid: { title: '', items: [] },
   rich_text: { title: null, body: '', video_url: null },
   clients_showcase: { title: '', logos: [] },
+  stations_map: { title: '', center: '', zoom: '12' },
 }
 
-const inputClass =
-  'w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#863bff]'
-
-const buttonSecondaryClass =
-  'rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white/80 transition hover:border-white/30 hover:text-white'
-
-function fieldError(errors, path) {
-  const messages = errors?.[path]
-  return Array.isArray(messages) ? messages[0] : undefined
-}
-
-function Field({ label, required, hint, error, children }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm text-white/70">
-        {label}
-        {required && <span className="ml-1 text-rose-400">*</span>}
-      </span>
-      {children}
-      {error ? (
-        <span className="mt-1 block text-xs text-rose-400">{error}</span>
-      ) : hint ? (
-        <span className="mt-1 block text-xs text-white/40">{hint}</span>
-      ) : null}
-    </label>
-  )
-}
-
-function ImageField({ label, value, onChange, error }) {
-  const [uploading, setUploading] = useState(false)
-
-  async function handleFile(file) {
-    if (!file) return
-    setUploading(true)
-    const res = await uploadMedia(file)
-    setUploading(false)
-    if (res?.status === 'success') {
-      onChange(res.data.url)
-    }
-  }
-
-  return (
-    <div className="space-y-2 rounded-xl border border-dashed border-white/15 p-4">
-      <span className="block text-sm text-white/70">{label}</span>
-      <div className="relative flex h-20 items-center justify-center overflow-hidden rounded-lg bg-white/5 text-sm text-white/40">
-        {value ? (
-          <img src={value} alt="" className="h-full w-full object-contain" />
-        ) : (
-          <span>Sin imagen</span>
-        )}
-        {uploading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/60 text-white">
-            <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 animate-spin">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-              <path
-                d="M21 12a9 9 0 0 0-9-9"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                className="opacity-90"
-              />
-            </svg>
-            <span className="text-[10px]">Subiendo…</span>
-          </div>
-        )}
-      </div>
-      <input
-        type="file"
-        accept="image/*"
-        disabled={uploading}
-        onChange={(e) => handleFile(e.target.files?.[0])}
-        className="block w-full text-xs text-white/60"
-      />
-      {error && <span className="block text-xs text-rose-400">{error}</span>}
-    </div>
-  )
-}
-
-function DynamicItem({ title, onRemove, children }) {
-  return (
-    <div className="space-y-4 rounded-xl border border-dashed border-white/15 p-4">
-      <div className="flex items-center justify-between">
-        <strong className="text-sm text-[#c9a3ff]">{title}</strong>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="rounded-full border border-rose-400/40 px-3 py-1 text-xs font-medium text-rose-300 transition hover:border-rose-400/70"
-        >
-          Eliminar
-        </button>
-      </div>
-      {children}
-    </div>
-  )
-}
-
-function AddButton({ onClick, children }) {
-  return (
-    <button type="button" onClick={onClick} className={buttonSecondaryClass}>
-      {children}
-    </button>
-  )
-}
-
-function updateArrayItem(list, index, key, value) {
-  const next = [...list]
-  next[index] = { ...next[index], [key]: value }
-  return next
+function parseCenter(center) {
+  const match = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/.exec(center ?? '')
+  if (!match) return null
+  return { lat: Number(match[1]), lng: Number(match[2]) }
 }
 
 function FeatureGridEditor({ content, onChange, errors }) {
@@ -150,11 +73,13 @@ function FeatureGridEditor({ content, onChange, errors }) {
           onChange={(e) => onChange({ ...content, title: e.target.value })}
           className={inputClass}
         />
+        <CharHint value={content.title} recommended={50} max={70} />
       </Field>
       {items.map((item, i) => (
         <DynamicItem key={i} title={`Tarjeta ${i + 1}`} onRemove={() => removeItem(i)}>
           <ImageField
             label="Icono"
+            hint="96×96 px (cuadrado 1:1) · PNG con fondo transparente · máx. 5 MB, ideal menos de 50 KB. Es un glifo simple, se muestra muy pequeño (24×24 px)."
             value={item.icon}
             onChange={(value) => updateItem(i, 'icon', value)}
             error={fieldError(errors, `content.items.${i}.icon`)}
@@ -167,6 +92,7 @@ function FeatureGridEditor({ content, onChange, errors }) {
                 onChange={(e) => updateItem(i, 'title', e.target.value)}
                 className={inputClass}
               />
+              <CharHint value={item.title} recommended={30} max={40} />
             </Field>
             <Field label="Texto" error={fieldError(errors, `content.items.${i}.text`)}>
               <input
@@ -175,6 +101,7 @@ function FeatureGridEditor({ content, onChange, errors }) {
                 onChange={(e) => updateItem(i, 'text', e.target.value)}
                 className={inputClass}
               />
+              <CharHint value={item.text} recommended={140} max={180} />
             </Field>
           </div>
         </DynamicItem>
@@ -208,11 +135,13 @@ function ClientsShowcaseEditor({ content, onChange, errors }) {
           onChange={(e) => onChange({ ...content, title: e.target.value })}
           className={inputClass}
         />
+        <CharHint value={content.title} recommended={50} max={70} />
       </Field>
       {logos.map((logo, i) => (
         <DynamicItem key={i} title={`Cliente ${i + 1}`} onRemove={() => removeLogo(i)}>
           <ImageField
             label="Logo"
+            hint="800×500 px (relación 16:10) · PNG con fondo transparente · máx. 5 MB, ideal menos de 300 KB."
             value={logo.image}
             onChange={(value) => updateLogo(i, 'image', value)}
             error={fieldError(errors, `content.logos.${i}.image`)}
@@ -225,6 +154,7 @@ function ClientsShowcaseEditor({ content, onChange, errors }) {
                 onChange={(e) => updateLogo(i, 'name', e.target.value)}
                 className={inputClass}
               />
+              <CharHint value={logo.name} recommended={30} max={40} />
             </Field>
             <Field label="Enlace" error={fieldError(errors, `content.logos.${i}.url`)}>
               <input
@@ -254,6 +184,7 @@ function PageHeroEditor({ content, onChange, errors }) {
             onChange={(e) => onChange({ ...content, title: e.target.value })}
             className={inputClass}
           />
+          <CharHint value={content.title} recommended={40} max={55} />
         </Field>
         <Field label="Subtítulo" error={fieldError(errors, 'content.subtitle')}>
           <input
@@ -262,10 +193,12 @@ function PageHeroEditor({ content, onChange, errors }) {
             onChange={(e) => onChange({ ...content, subtitle: e.target.value })}
             className={inputClass}
           />
+          <CharHint value={content.subtitle} recommended={90} max={110} />
         </Field>
       </div>
       <ImageField
         label="Imagen"
+        hint="2400×900 px aprox. (relación 2.6:1) · JPG · máx. 5 MB, ideal menos de 1 MB. Se muestra oscurecida detrás del texto: usa tonos medios/oscuros para mantener el contraste."
         value={content.image}
         onChange={(value) => onChange({ ...content, image: value })}
         error={fieldError(errors, 'content.image')}
@@ -284,8 +217,13 @@ function RichTextEditor({ content, onChange, errors }) {
           onChange={(e) => onChange({ ...content, title: e.target.value || null })}
           className={inputClass}
         />
+        <CharHint value={content.title} recommended={50} max={70} />
       </Field>
-      <Field label="Contenido (HTML)" hint="Se guarda tal como se escribe." error={fieldError(errors, 'content.body')}>
+      <Field
+        label="Contenido (HTML)"
+        hint="Se guarda tal como se escribe. Recomendado 300-1500 caracteres (1-4 párrafos); el contenedor tiene un ancho máximo de ~736 px."
+        error={fieldError(errors, 'content.body')}
+      >
         <textarea
           rows={15}
           value={content.body ?? ''}
@@ -306,11 +244,118 @@ function RichTextEditor({ content, onChange, errors }) {
   )
 }
 
+function StationsMapPicker({ latitude, longitude, onPick }) {
+  const containerRef = useRef(null)
+  const mapRef = useRef(null)
+  const markerRef = useRef(null)
+
+  useEffect(() => {
+    const map = L.map(containerRef.current).setView([latitude, longitude], 12)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(map)
+
+    map.on('click', (event) => {
+      onPick(event.latlng.lat, event.latlng.lng)
+    })
+
+    mapRef.current = map
+
+    return () => {
+      map.remove()
+      mapRef.current = null
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    const map = mapRef.current
+    if (!map) return
+
+    if (markerRef.current) {
+      markerRef.current.setLatLng([latitude, longitude])
+    } else {
+      markerRef.current = L.marker([latitude, longitude]).addTo(map)
+    }
+  }, [latitude, longitude])
+
+  return <div ref={containerRef} className="h-64 w-full rounded-xl" />
+}
+
+function StationsMapEditor({ content, onChange, errors }) {
+  const parsed = parseCenter(content.center) ?? DEFAULT_MAP_CENTER
+
+  function handlePick(lat, lng) {
+    onChange({ ...content, center: `${lat.toFixed(6)},${lng.toFixed(6)}` })
+  }
+
+  const embedSrc = content.center
+    ? `https://www.google.com/maps?q=${encodeURIComponent(content.center)}&z=${content.zoom || 12}&output=embed`
+    : null
+
+  return (
+    <div className="space-y-4">
+      <Field label="Título" error={fieldError(errors, 'content.title')}>
+        <input
+          type="text"
+          value={content.title ?? ''}
+          onChange={(e) => onChange({ ...content, title: e.target.value })}
+          className={inputClass}
+        />
+        <CharHint value={content.title} recommended={40} max={60} />
+      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field
+          label="Centro del mapa"
+          hint="Dirección o coordenadas 'lat,lng'. Puedes escribirlo o hacer clic en el mapa de abajo."
+          error={fieldError(errors, 'content.center')}
+        >
+          <input
+            type="text"
+            placeholder="25.671400,-100.309400"
+            value={content.center ?? ''}
+            onChange={(e) => onChange({ ...content, center: e.target.value })}
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Zoom" hint="10-14 es un buen valor para una ciudad" error={fieldError(errors, 'content.zoom')}>
+          <input
+            type="number"
+            min="1"
+            max="20"
+            value={content.zoom ?? ''}
+            onChange={(e) => onChange({ ...content, zoom: e.target.value })}
+            className={inputClass}
+          />
+        </Field>
+      </div>
+      <div>
+        <span className="mb-1 block text-sm text-white/70">
+          Haz clic en el mapa para ubicar el centro
+        </span>
+        <StationsMapPicker latitude={parsed.lat} longitude={parsed.lng} onPick={handlePick} />
+      </div>
+      {embedSrc && (
+        <div>
+          <span className="mb-1 block text-sm text-white/70">Vista previa (como se ve en el sitio)</span>
+          <iframe
+            src={embedSrc}
+            loading="lazy"
+            title="Vista previa del mapa"
+            className="h-56 w-full rounded-xl border border-white/10"
+          />
+        </div>
+      )}
+    </div>
+  )
+}
+
 const SECTION_EDITORS = {
   page_hero: PageHeroEditor,
   feature_grid: FeatureGridEditor,
   rich_text: RichTextEditor,
   clients_showcase: ClientsShowcaseEditor,
+  stations_map: StationsMapEditor,
 }
 
 function SectionCard({ section, onUpdated }) {
@@ -446,9 +491,11 @@ function CreateSectionForm({ onCreated }) {
   )
 }
 
-export default function PageSectionsEditor({ site = 'gnu', page, title, backTo }) {
+// Headless: the section cards + create-form, without page chrome (header/back link).
+// Lets a host page (e.g. the Contacto admin page) embed section editing inline
+// alongside its own content instead of duplicating a "Back" link and title.
+export function SectionsFields({ site = 'gnu', page, onTotalChange }) {
   const [sections, setSections] = useState([])
-  const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -468,7 +515,7 @@ export default function PageSectionsEditor({ site = 'gnu', page, title, backTo }
 
       if (res?.status === 'success') {
         setSections(res.data)
-        setTotal(res.meta?.total ?? res.data.length)
+        onTotalChange?.(res.meta?.total ?? res.data.length)
       } else {
         setError('No se pudieron cargar las secciones.')
       }
@@ -481,6 +528,7 @@ export default function PageSectionsEditor({ site = 'gnu', page, title, backTo }
     return () => {
       cancelled = true
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [site, page])
 
   function handleUpdated(updatedSection) {
@@ -493,10 +541,27 @@ export default function PageSectionsEditor({ site = 'gnu', page, title, backTo }
         return prev.map((s) => (s.id === newSection.id ? newSection : s))
       }
       const next = [...prev, newSection].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
-      setTotal(next.length)
+      onTotalChange?.(next.length)
       return next
     })
   }
+
+  if (loading) return <p className="text-sm text-white/60">Cargando secciones…</p>
+  if (error) return <p className="text-sm text-rose-400">{error}</p>
+
+  return (
+    <div className="space-y-4">
+      {sections.length === 0 && <p className="text-sm text-white/50">No hay secciones para esta página.</p>}
+      {sections.map((section) => (
+        <SectionCard key={section.id} section={section} onUpdated={handleUpdated} />
+      ))}
+      <CreateSectionForm onCreated={handleCreated} />
+    </div>
+  )
+}
+
+export default function PageSectionsEditor({ site = 'gnu', page, title, backTo }) {
+  const [total, setTotal] = useState(0)
 
   return (
     <main className="min-h-screen bg-[#0b0611] text-white">
@@ -513,20 +578,7 @@ export default function PageSectionsEditor({ site = 'gnu', page, title, backTo }
           </p>
         </header>
 
-        {loading && <p className="text-sm text-white/60">Cargando secciones…</p>}
-        {!loading && error && <p className="text-sm text-rose-400">{error}</p>}
-
-        {!loading && !error && (
-          <div className="space-y-4">
-            {sections.length === 0 && (
-              <p className="text-sm text-white/50">No hay secciones para esta página.</p>
-            )}
-            {sections.map((section) => (
-              <SectionCard key={section.id} section={section} onUpdated={handleUpdated} />
-            ))}
-            <CreateSectionForm onCreated={handleCreated} />
-          </div>
-        )}
+        <SectionsFields site={site} page={page} onTotalChange={setTotal} />
       </div>
     </main>
   )

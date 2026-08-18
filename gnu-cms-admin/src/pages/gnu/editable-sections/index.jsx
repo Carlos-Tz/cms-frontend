@@ -1,6 +1,17 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import { fetchData, updateSection, uploadMedia } from '../../../functions/fetch'
+import { fetchData, updateSection } from '../../../functions/fetch'
+import {
+  inputClass,
+  buttonSecondaryClass,
+  fieldError,
+  Field,
+  CharHint,
+  ImageField,
+  DynamicItem,
+  AddButton,
+  updateArrayItem,
+} from '../../../components/form-fields'
 
 const SECTION_LABELS = {
   banner_carousel: 'Carrusel de banners',
@@ -13,116 +24,6 @@ const SECTION_LABELS = {
 }
 
 const NETWORK_OPTIONS = ['facebook', 'instagram', 'twitter', 'linkedin', 'youtube', 'tiktok']
-
-const inputClass =
-  'w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none placeholder:text-white/30 focus:border-[#863bff]'
-
-const buttonSecondaryClass =
-  'rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white/80 transition hover:border-white/30 hover:text-white'
-
-function fieldError(errors, path) {
-  const messages = errors?.[path]
-  return Array.isArray(messages) ? messages[0] : undefined
-}
-
-function Field({ label, required, hint, error, children }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-sm text-white/70">
-        {label}
-        {required && <span className="ml-1 text-rose-400">*</span>}
-      </span>
-      {children}
-      {error ? (
-        <span className="mt-1 block text-xs text-rose-400">{error}</span>
-      ) : hint ? (
-        <span className="mt-1 block text-xs text-white/40">{hint}</span>
-      ) : null}
-    </label>
-  )
-}
-
-function ImageField({ label, value, onChange, error }) {
-  const [uploading, setUploading] = useState(false)
-
-  async function handleFile(file) {
-    if (!file) return
-    setUploading(true)
-    const res = await uploadMedia(file)
-    setUploading(false)
-    if (res?.status === 'success') {
-      onChange(res.data.url)
-    }
-  }
-
-  return (
-    <div className="space-y-2 rounded-xl border border-dashed border-white/15 p-4">
-      <span className="block text-sm text-white/70">{label}</span>
-      <div className="relative flex h-28 items-center justify-center overflow-hidden rounded-lg bg-white/5 text-sm text-white/40">
-        {value ? (
-          <img src={value} alt="" className="h-full w-full object-cover" />
-        ) : (
-          <span>Sin imagen</span>
-        )}
-        {uploading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 text-white">
-            <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5 animate-spin">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" className="opacity-25" />
-              <path
-                d="M21 12a9 9 0 0 0-9-9"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                className="opacity-90"
-              />
-            </svg>
-            <span className="text-xs">Subiendo…</span>
-          </div>
-        )}
-      </div>
-      <input
-        type="file"
-        accept="image/*"
-        disabled={uploading}
-        onChange={(e) => handleFile(e.target.files?.[0])}
-        className="block w-full text-xs text-white/60"
-      />
-      {error && <span className="block text-xs text-rose-400">{error}</span>}
-    </div>
-  )
-}
-
-function DynamicItem({ title, onRemove, children }) {
-  return (
-    <div className="space-y-4 rounded-xl border border-dashed border-white/15 p-4">
-      <div className="flex items-center justify-between">
-        <strong className="text-sm text-[#c9a3ff]">{title}</strong>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="rounded-full border border-rose-400/40 px-3 py-1 text-xs font-medium text-rose-300 transition hover:border-rose-400/70"
-        >
-          Eliminar
-        </button>
-      </div>
-      {children}
-    </div>
-  )
-}
-
-function AddButton({ onClick, children }) {
-  return (
-    <button type="button" onClick={onClick} className={buttonSecondaryClass}>
-      {children}
-    </button>
-  )
-}
-
-function updateArrayItem(list, index, key, value) {
-  const next = [...list]
-  next[index] = { ...next[index], [key]: value }
-  return next
-}
 
 function BannerCarouselEditor({ content, onChange, errors }) {
   const slides = content.slides ?? []
@@ -148,6 +49,7 @@ function BannerCarouselEditor({ content, onChange, errors }) {
         <DynamicItem key={i} title={`Banner ${i + 1}`} onRemove={() => removeSlide(i)}>
           <ImageField
             label="Imagen"
+            hint="2400×1000 px aprox. (relación 2.4:1) · JPG · máx. 5 MB, ideal menos de 1 MB. Se recorta a pantalla completa: evita texto o rostros cerca de los bordes."
             value={slide.image}
             onChange={(value) => updateSlide(i, 'image', value)}
             error={fieldError(errors, `content.slides.${i}.image`)}
@@ -160,6 +62,7 @@ function BannerCarouselEditor({ content, onChange, errors }) {
                 onChange={(e) => updateSlide(i, 'title', e.target.value)}
                 className={inputClass}
               />
+              <CharHint value={slide.title} recommended={45} max={60} />
             </Field>
             <Field label="Subtítulo" error={fieldError(errors, `content.slides.${i}.subtitle`)}>
               <input
@@ -168,6 +71,7 @@ function BannerCarouselEditor({ content, onChange, errors }) {
                 onChange={(e) => updateSlide(i, 'subtitle', e.target.value)}
                 className={inputClass}
               />
+              <CharHint value={slide.subtitle} recommended={90} max={120} />
             </Field>
             <Field label="Enlace del botón" error={fieldError(errors, `content.slides.${i}.link_url`)}>
               <input
@@ -178,13 +82,18 @@ function BannerCarouselEditor({ content, onChange, errors }) {
                 className={inputClass}
               />
             </Field>
-            <Field label="Texto del botón" error={fieldError(errors, `content.slides.${i}.link_label`)}>
+            <Field
+              label="Texto del botón"
+              hint="2-4 palabras, ej. 'Cotiza ahora'"
+              error={fieldError(errors, `content.slides.${i}.link_label`)}
+            >
               <input
                 type="text"
                 value={slide.link_label ?? ''}
                 onChange={(e) => updateSlide(i, 'link_label', e.target.value)}
                 className={inputClass}
               />
+              <CharHint value={slide.link_label} recommended={20} max={25} />
             </Field>
           </div>
         </DynamicItem>
@@ -218,11 +127,13 @@ function ClientsShowcaseEditor({ content, onChange, errors }) {
           onChange={(e) => onChange({ ...content, title: e.target.value })}
           className={inputClass}
         />
+        <CharHint value={content.title} recommended={50} max={70} />
       </Field>
       {logos.map((logo, i) => (
         <DynamicItem key={i} title={`Cliente ${i + 1}`} onRemove={() => removeLogo(i)}>
           <ImageField
             label="Logo"
+            hint="800×500 px (relación 16:10) · PNG con fondo transparente · máx. 5 MB, ideal menos de 300 KB. Se muestra en escala de grises hasta que el usuario pasa el mouse encima."
             value={logo.image}
             onChange={(value) => updateLogo(i, 'image', value)}
             error={fieldError(errors, `content.logos.${i}.image`)}
@@ -235,6 +146,7 @@ function ClientsShowcaseEditor({ content, onChange, errors }) {
                 onChange={(e) => updateLogo(i, 'name', e.target.value)}
                 className={inputClass}
               />
+              <CharHint value={logo.name} recommended={30} max={40} />
             </Field>
             <Field label="Enlace" error={fieldError(errors, `content.logos.${i}.url`)}>
               <input
@@ -281,6 +193,7 @@ function SavingsSimulatorEditor({ content, onChange, errors }) {
             onChange={(e) => onChange({ ...content, title: e.target.value })}
             className={inputClass}
           />
+          <CharHint value={content.title} recommended={50} max={70} />
         </Field>
         <Field label="Introducción" error={fieldError(errors, 'content.intro')}>
           <input
@@ -289,6 +202,7 @@ function SavingsSimulatorEditor({ content, onChange, errors }) {
             onChange={(e) => onChange({ ...content, intro: e.target.value })}
             className={inputClass}
           />
+          <CharHint value={content.intro} recommended={120} max={160} />
         </Field>
       </div>
       {fuelPrices.map((fuel, i) => (
@@ -399,6 +313,7 @@ function ContactInfoEditor({ content, onChange, errors }) {
             onChange={(e) => onChange({ ...content, additional_info: e.target.value })}
             className={inputClass}
           />
+          <CharHint value={content.additional_info} recommended={150} max={280} />
         </Field>
       </div>
     </div>
@@ -466,7 +381,11 @@ function WhatsappButtonEditor({ content, onChange, errors }) {
           className={inputClass}
         />
       </Field>
-      <Field label="Mensaje prellenado" error={fieldError(errors, 'content.prefilled_message')}>
+      <Field
+        label="Mensaje prellenado"
+        hint="Aparece ya escrito en WhatsApp al abrir el chat, ej. 'Hola, quiero información sobre gas natural'"
+        error={fieldError(errors, 'content.prefilled_message')}
+      >
         <input
           type="text"
           value={content.prefilled_message ?? ''}
@@ -489,8 +408,9 @@ function LeadCaptureFormEditor({ content, onChange, errors }) {
             onChange={(e) => onChange({ ...content, title: e.target.value })}
             className={inputClass}
           />
+          <CharHint value={content.title} recommended={40} max={60} />
         </Field>
-        <Field label="Texto del botón" error={fieldError(errors, 'content.submit_label')}>
+        <Field label="Texto del botón" hint="2-4 palabras" error={fieldError(errors, 'content.submit_label')}>
           <input
             type="text"
             value={content.submit_label ?? ''}
@@ -506,6 +426,7 @@ function LeadCaptureFormEditor({ content, onChange, errors }) {
           onChange={(e) => onChange({ ...content, intro: e.target.value })}
           className={inputClass}
         />
+        <CharHint value={content.intro} recommended={120} max={160} />
       </Field>
       {Array.isArray(content.fields) && (
         <p className="text-xs text-white/40">

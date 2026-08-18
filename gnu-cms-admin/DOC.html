@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GNU Landing Page – Guía de Contenido</title>
+    <style>
+        /* ─── Reset & Base ─── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f5f7fa;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+            padding: 40px 20px;
+            line-height: 1.6;
+            color: #1e293b;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            padding: 50px 55px;
+        }
+
+        /* ─── Typography ─── */
+        h1 {
+            font-size: 2.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #0b1a33;
+            margin-bottom: 0.15em;
+        }
+
+        h1 small {
+            display: block;
+            font-size: 1rem;
+            font-weight: 400;
+            color: #475569;
+            margin-top: 4px;
+        }
+
+        .subhead {
+            color: #475569;
+            font-size: 1.05rem;
+            border-bottom: 2px solid #e9edf4;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #0b1a33;
+            margin: 2em 0 0.6em 0;
+            padding-bottom: 6px;
+            border-bottom: 3px solid #dce3ed;
+        }
+
+        h2:first-of-type {
+            margin-top: 0.2em;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 1.8em 0 0.4em 0;
+        }
+
+        h4 {
+            font-weight: 600;
+            color: #1e293b;
+            margin: 1.2em 0 0.2em 0;
+        }
+
+        p {
+            margin-bottom: 0.8em;
+        }
+
+        a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+
+        /* ─── Warning / Note boxes ─── */
+        .warning-box {
+            background: #fef9e7;
+            border-left: 6px solid #e67e22;
+            padding: 18px 24px;
+            border-radius: 10px;
+            margin: 1.2em 0;
+            color: #5d4a1a;
+        }
+
+        .warning-box strong {
+            color: #b85c00;
+        }
+
+        .note-box {
+            background: #f0f4ff;
+            border-left: 6px solid #3b82f6;
+            padding: 14px 22px;
+            border-radius: 10px;
+            margin: 1em 0;
+            color: #1e3a5f;
+        }
+
+        .danger-box {
+            background: #fef2f2;
+            border-left: 6px solid #dc2626;
+            padding: 16px 22px;
+            border-radius: 10px;
+            margin: 1.2em 0;
+        }
+
+        .danger-box strong {
+            color: #b91c1c;
+        }
+
+        /* ─── Tables ─── */
+        .table-wrap {
+            overflow-x: auto;
+            margin: 1.2em 0 1.8em 0;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            min-width: 600px;
+        }
+
+        thead {
+            background: #f1f5f9;
+        }
+
+        th {
+            text-align: left;
+            padding: 14px 18px;
+            font-weight: 600;
+            color: #0b1a33;
+            border-bottom: 2px solid #d1d9e6;
+        }
+
+        td {
+            padding: 12px 18px;
+            border-bottom: 1px solid #e9edf4;
+            vertical-align: top;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: #fafcff;
+        }
+
+        /* ─── Lists ─── */
+        ul,
+        ol {
+            padding-left: 1.6rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.3rem;
+        }
+
+        /* ─── Special inline tags ─── */
+        .badge {
+            display: inline-block;
+            background: #e9edf4;
+            padding: 0 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .code {
+            font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
+            background: #f1f5f9;
+            padding: 0.1rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #0b1a33;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px solid #e9edf4;
+            margin: 2.5rem 0;
+        }
+
+        /* ─── Responsive ─── */
+        @media (max-width: 768px) {
+            .container {
+                padding: 24px 18px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.35rem;
+            }
+
+            .subhead {
+                flex-direction: column;
+                gap: 4px;
+            }
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 30px 35px;
+                border-radius: 0;
+            }
+            .table-wrap {
+                border-color: #ccc;
+            }
+            thead {
+                background: #eee;
+            }
+            td,
+            th {
+                border-color: #ccc;
+            }
+            .warning-box,
+            .note-box,
+            .danger-box {
+                break-inside: avoid;
+            }
+        }
+
+        /* ─── Table summaries (green accent) ─── */
+        .table-summary thead {
+            background: #e6f0fa;
+        }
+
+        .table-summary th {
+            color: #0b2b4a;
+        }
+
+        .table-summary td:first-child {
+            font-weight: 500;
+        }
+
+        .table-summary tfoot td {
+            background: #f8fafc;
+            font-size: 0.9rem;
+            padding: 12px 18px;
+            border-top: 2px solid #d1d9e6;
+        }
+
+        .footer-meta {
+            margin-top: 3rem;
+            padding-top: 1.8rem;
+            border-top: 2px solid #e9edf4;
+            color: #64748b;
+            font-size: 0.95rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+
+        .pendiente-item {
+            background: #f8fafc;
+            padding: 0.6rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <!-- ======================== HEADER ======================== -->
+        <h1>
+            GNU Landing Page
+            <small>Panel de Administración – Guía de Contenido</small>
+        </h1>
+
+        <div class="subhead">
+            <span><strong>Sitio:</strong> landing-gnu (gnugas.mx)</span>
+            <span><strong>Fecha:</strong> 2026-08-15</span>
+        </div>
+
+        <!-- ======================== PROPÓSITO ======================== -->
+        <h2>Propósito de este documento</h2>
+        <p>Esta guía indica, para cada sección editable del sitio, qué campos se deben llenar en el panel de administración, el tamaño y formato recomendado de las imágenes, y la longitud de texto recomendada para que el diseño no se rompa.</p>
+
+        <!-- ======================== IMPORTANTE ======================== -->
+        <h2>⚠️ Importante – Límites reales del sistema</h2>
+
+        <div class="danger-box">
+            <p><strong>🔴 LEE ESTO ANTES DE CONTINUAR</strong></p>
+            <ul>
+                <li>El servidor (CMS externo) <strong>RECHAZA</strong> archivos de imagen mayores a <strong>5 MB</strong>. Este límite se aplica en el servidor, no hay aviso previo en el panel.</li>
+                <li>El panel de administración <strong>NO valida</strong> el tamaño ni las dimensiones de la imagen antes de subirla, y <strong>NO valida</strong> la longitud de los textos. Si un texto es demasiado largo o una imagen tiene una relación de aspecto distinta a la recomendada, el sistema lo va a "dejar guardar" igual, pero el diseño del sitio se verá mal.</li>
+                <li>Todas las imágenes se muestran "tal cual" se suben (recortadas por CSS), <strong>no hay compresión ni redimensionado automático</strong>. Subir una imagen enorme hace que la página cargue más lento. Usa siempre el tamaño recomendado.</li>
+            </ul>
+        </div>
+
+        <!-- ======================== FORMATOS DE IMAGEN ======================== -->
+        <h2>Formatos de imagen aceptados</h2>
+
+        <ul>
+            <li><strong>Fotografías</strong> (banners, portadas, fondos) → <span class="badge">JPG</span> (.jpg/.jpeg)</li>
+            <li><strong>Logos e iconos con transparencia</strong> → <span class="badge">PNG</span> (.png)</li>
+            <li><strong>Evitar:</strong> HEIC, TIFF, BMP, RAW (no se muestran bien en navegadores)</li>
+            <li><strong>WebP</strong> es aceptable si el archivo lo permite, pero si hay duda usar JPG/PNG</li>
+            <li><strong>Peso máximo por archivo:</strong> 5 MB (límite duro del servidor)<br>
+                <strong>Recomendado para buen rendimiento:</strong> menor a <strong>500 KB – 1 MB</strong> por imagen (usar TinyPNG o Squoosh antes de subir)
+            </li>
+        </ul>
+
+        <hr>
+
+        <!-- ======================== SECCIÓN 1 ======================== -->
+        <h2>1. Página de inicio (Landing Page)</h2>
+
+        <!-- 1.1 -->
+        <h3>1.1 Carrusel de banners <span class="badge">banner_carousel</span></h3>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Campo</th><th>Recomendación</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Imagen</strong></td>
+                        <td>2400 × 1000 px (relación 2.4:1), JPG, &lt; 1 MB.<br>
+                            <span style="color:#475569;font-size:0.9rem;">El centro es lo más importante; evita texto o rostros cerca de los bordes.</span>
+                        </td>
+                    </tr>
+                    <tr><td><strong>Título</strong></td><td>30–45 caracteres (1 línea), máx. 60 caracteres</td></tr>
+                    <tr><td><strong>Subtítulo</strong></td><td>60–90 caracteres, máx. 120 caracteres</td></tr>
+                    <tr><td><strong>Enlace del botón</strong></td><td>URL completa o ruta interna (ej. <span class="code">/contacto</span>)</td></tr>
+                    <tr><td><strong>Texto del botón</strong></td><td>2–4 palabras, máx. 25 caracteres (ej. "Cotiza ahora")</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 1.2 -->
+        <h3>1.2 Simulador de ahorro <span class="badge">savings_simulator</span></h3>
+
+        <ul>
+            <li><strong>Título:</strong> 30–50 caracteres</li>
+            <li><strong>Introducción:</strong> 80–150 caracteres (1–2 líneas)</li>
+            <li>Por cada combustible/fila:
+                <ul>
+                    <li><span class="code">slug</span> – identificador interno (ej. <span class="code">gas_lp</span>)</li>
+                    <li><strong>Nombre visible:</strong> 10–20 caracteres (ej. "Gas LP")</li>
+                    <li><strong>Precio por unidad:</strong> número decimal (ej. 24.50)</li>
+                    <li><strong>Unidad:</strong> texto corto (ej. "litro", "kg")</li>
+                    <li><strong>Factor de equivalencia:</strong> número decimal</li>
+                </ul>
+            </li>
+        </ul>
+        <div class="note-box">📌 Esta sección no usa imágenes.</div>
+
+        <!-- 1.3 -->
+        <h3>1.3 Clientes <span class="badge">clients_showcase</span></h3>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Campo</th><th>Recomendación</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Título</strong></td><td>30–50 caracteres</td></tr>
+                    <tr>
+                        <td><strong>Logo</strong></td>
+                        <td>800 × 500 px (16:10), PNG con fondo transparente, &lt; 300 KB.<br>
+                            <span style="color:#475569;font-size:0.9rem;">Se muestra en escala de grises hasta el hover.</span>
+                        </td>
+                    </tr>
+                    <tr><td><strong>Nombre</strong></td><td>3–30 caracteres</td></tr>
+                    <tr><td><strong>Enlace</strong></td><td>URL del sitio del cliente (opcional)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 1.4 -->
+        <h3>1.4 Formulario de contacto <span class="badge">lead_capture_form</span></h3>
+
+        <ul>
+            <li><strong>Título:</strong> 20–40 caracteres</li>
+            <li><strong>Introducción:</strong> 60–120 caracteres</li>
+            <li><strong>Texto del botón:</strong> 2–4 palabras (ej. "Enviar mensaje")</li>
+            <li><strong>Campos del formulario:</strong> Bloqueado / solo informativo, no modificar.</li>
+        </ul>
+
+        <!-- 1.5 -->
+        <h3>1.5 Datos de contacto, Redes sociales, Botón de WhatsApp</h3>
+
+        <div class="warning-box">
+            <strong>⚠️ ADVERTENCIA IMPORTANTE</strong><br>
+            Estas 3 secciones existen en el panel, pero <strong>HOY NO TIENEN NINGÚN EFECTO</strong> en el sitio público.
+            El pie de página y el botón flotante de WhatsApp están fijos en el código.
+            Para cambiarlos, se debe editar el archivo <span class="code">Layout.astro</span> directamente por un desarrollador.
+        </div>
+
+        <!-- 1.6 -->
+        <h3>1.6 Mapa de estaciones <span class="badge">stations_map</span></h3>
+
+        <div class="warning-box">
+            <strong>⚠️ ADVERTENCIA IMPORTANTE</strong><br>
+            El mapa al final de la página de inicio <strong>NO tiene formulario</strong> en el panel.
+            No hay forma de editarlo desde la interfaz; requiere edición directa por un desarrollador.
+            El botón "Agregar estación" en la página de Contacto <strong>TAMPOCO guarda datos reales</strong>.
+        </div>
+
+        <hr>
+
+        <!-- ======================== SECCIÓN 2 ======================== -->
+        <h2>2. Páginas interiores</h2>
+
+        <!-- 2.1 -->
+        <h3>2.1 Encabezado de página <span class="badge">page_hero</span></h3>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Campo</th><th>Recomendación</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Título</strong></td><td>20–40 caracteres</td></tr>
+                    <tr><td><strong>Subtítulo</strong></td><td>40–90 caracteres</td></tr>
+                    <tr>
+                        <td><strong>Imagen</strong></td>
+                        <td>2400 × 900 px (relación 2.6:1), JPG, &lt; 1 MB.<br>
+                            <span style="color:#475569;font-size:0.9rem;">Se muestra oscurecida al 50% detrás del texto; preferir imágenes con tonos medios/oscuros.</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 2.2 -->
+        <h3>2.2 Cuadrícula de características <span class="badge">feature_grid</span></h3>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Campo</th><th>Recomendación</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Título de sección</strong></td><td>30–50 caracteres</td></tr>
+                    <tr><td><strong>Icono</strong></td><td>96 × 96 px (1:1), PNG con fondo transparente, &lt; 50 KB</td></tr>
+                    <tr><td><strong>Título de tarjeta</strong></td><td>15–30 caracteres</td></tr>
+                    <tr><td><strong>Texto de tarjeta</strong></td><td>60–140 caracteres (2–3 líneas cortas)</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 2.3 -->
+        <h3>2.3 Texto enriquecido <span class="badge">rich_text</span></h3>
+
+        <ul>
+            <li><strong>Título:</strong> 20–50 caracteres</li>
+            <li><strong>Contenido:</strong> HTML, 300–1500 caracteres recomendados. Usar solo texto plano y <span class="code">&lt;p&gt;</span> para párrafos. Evitar HTML copiado de Word/Google Docs.</li>
+            <li><strong>Video</strong> (opcional): URL de YouTube o Vimeo (se muestra en 16:9 automáticamente).</li>
+        </ul>
+
+        <!-- 2.4 -->
+        <h3>2.4 Clientes <span class="badge">clients_showcase</span></h3>
+        <p>Mismo formato que la sección 1.3 (800 × 500 px, 16:10, PNG con transparencia).</p>
+
+        <hr>
+
+        <!-- ======================== SECCIÓN 3 ======================== -->
+        <h2>3. Blog</h2>
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Campo</th><th>Recomendación</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Slug</strong></td>
+                        <td>Minúsculas, sin espacios ni acentos, palabras separadas por guiones<br>
+                            <span style="color:#475569;font-size:0.9rem;">ej. <span class="code">beneficios-del-gas-lp</span></span>
+                        </td>
+                    </tr>
+                    <tr><td><strong>Título</strong></td><td>40–70 caracteres</td></tr>
+                    <tr><td><strong>Extracto</strong></td><td>100–160 caracteres</td></tr>
+                    <tr><td><strong>Contenido</strong></td><td>HTML, 800–2500 palabras recomendadas</td></tr>
+                    <tr>
+                        <td><strong>Imagen de portada</strong></td>
+                        <td>1344 × 756 px (16:9), JPG, &lt; 800 KB</td>
+                    </tr>
+                    <tr><td><strong>Fecha de publicación</strong></td><td>Selector de fecha y hora</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <hr>
+
+        <!-- ======================== TABLA RESUMEN IMÁGENES ======================== -->
+        <h2>📊 Tabla resumen rápida de imágenes</h2>
+
+        <div class="table-wrap">
+            <table class="table-summary">
+                <thead>
+                    <tr>
+                        <th>Elemento</th>
+                        <th>Tamaño recomendado</th>
+                        <th>Relación</th>
+                        <th>Formato</th>
+                        <th>Peso máx.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Banner del carrusel (inicio)</td><td>2400 × 1000 px</td><td>2.4:1</td><td>JPG</td><td>1 MB</td></tr>
+                    <tr><td>Encabezado página interior</td><td>2400 × 900 px</td><td>2.6:1</td><td>JPG</td><td>1 MB</td></tr>
+                    <tr><td>Logo de cliente</td><td>800 × 500 px</td><td>16:10</td><td>PNG*</td><td>300 KB</td></tr>
+                    <tr><td>Icono de característica</td><td>96 × 96 px</td><td>1:1</td><td>PNG*</td><td>50 KB</td></tr>
+                    <tr><td>Portada de artículo de blog</td><td>1344 × 756 px</td><td>16:9</td><td>JPG</td><td>800 KB</td></tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="5">
+                            * PNG con fondo transparente cuando aplique (logos e iconos).<br>
+                            <strong>Límite absoluto del servidor para cualquier imagen: 5 MB</strong> (rechazo automático si se excede).
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- ======================== TABLA RESUMEN TEXTOS ======================== -->
+        <h2>📊 Tabla resumen rápida de textos</h2>
+
+        <div class="table-wrap">
+            <table class="table-summary">
+                <thead>
+                    <tr>
+                        <th>Campo</th>
+                        <th>Longitud recomendada</th>
+                        <th>Máximo sugerido</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td>Título de banner (hero)</td><td>30–45 caracteres</td><td>60</td></tr>
+                    <tr><td>Subtítulo de banner (hero)</td><td>60–90 caracteres</td><td>120</td></tr>
+                    <tr><td>Texto de botón (CTA)</td><td>2–4 palabras</td><td>25 caracteres</td></tr>
+                    <tr><td>Título de encabezado de página interior</td><td>20–40 caracteres</td><td>55</td></tr>
+                    <tr><td>Subtítulo de encabezado interior</td><td>40–90 caracteres</td><td>110</td></tr>
+                    <tr><td>Título de sección (general)</td><td>30–50 caracteres</td><td>60</td></tr>
+                    <tr><td>Título de tarjeta (feature)</td><td>15–30 caracteres</td><td>40</td></tr>
+                    <tr><td>Texto de tarjeta (feature)</td><td>60–140 caracteres</td><td>180</td></tr>
+                    <tr><td>Nombre de cliente / logo</td><td>3–30 caracteres</td><td>40</td></tr>
+                    <tr><td>Título de artículo de blog</td><td>40–70 caracteres</td><td>90</td></tr>
+                    <tr><td>Extracto de blog</td><td>100–160 caracteres</td><td>180</td></tr>
+                    <tr><td>Contenido de texto enriquecido</td><td>300–1500 caracteres</td><td>Sin límite duro</td></tr>
+                    <tr><td>Contenido de blog</td><td>800–2500 palabras</td><td>Sin límite duro</td></tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3">
+                            <strong>NOTA:</strong> Ninguno de estos límites es forzado por el sistema.
+                            Son recomendaciones de diseño para que el texto no se vea cortado, apretado o desbordado en pantalla.
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <hr>
+
+        <!-- ======================== PENDIENTES TÉCNICOS ======================== -->
+        <h2>🛠️ Pendientes técnicos detectados</h2>
+        <p style="color:#475569;margin-bottom:0.8rem;">(para reportar a desarrollo, no para el editor)</p>
+
+        <div class="pendiente-item">1. Los campos "Datos de contacto", "Redes sociales" y "Botón de WhatsApp" del panel no están conectados al sitio (contenido fijo en el código).</div>
+        <div class="pendiente-item">2. La sección "Mapa de estaciones" (<span class="code">stations_map</span>) no tiene formulario en el panel; solo se puede editar por un desarrollador directamente.</div>
+        <div class="pendiente-item">3. El botón "Agregar estación" en la página de Contacto del panel no guarda información real (función pendiente/incompleta).</div>
+        <div class="pendiente-item">4. El panel no valida tamaño de archivo, formato ni dimensiones de imagen antes de subir, ni longitud de textos – toda la validación depende de seguir esta guía manualmente.</div>
+
+        <!-- ======================== FOOTER ======================== -->
+        <div class="footer-meta">
+            <span>📄 GNU Landing Page – Guía de Contenido v1.0</span>
+            <span>🔒 Confidencial – uso interno</span>
+        </div>
+
+    </div>
+    <!-- /.container -->
+
+</body>
+</html>

@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { fetchData } from "../functions/fetch";
 
 interface Props {
   title?: string;
@@ -19,6 +20,63 @@ const navLinks = [
   { href: "/blog", label: "Blog" },
   { href: "/contacto", label: "Contacto" },
 ];
+
+// Footer contact info, social links and the WhatsApp button are all editable
+// from the CMS admin (home page → Datos de contacto / Redes sociales / Botón
+// de WhatsApp). This layout wraps every page, so it fetches them here rather
+// than relying on each page to pass them down.
+type PageSection = { type: string; content: Record<string, any> };
+type PageResponse = { status: string; data: { sections: PageSection[] } };
+
+const layoutPageResponse: PageResponse | undefined = await fetchData("pages/inicio");
+const layoutSections = layoutPageResponse?.data?.sections ?? [];
+const getLayoutSection = (type: string) => layoutSections.find((section) => section.type === type)?.content;
+
+const contactInfo = getLayoutSection("contact_info") as
+  | { address?: string; phone?: string; email?: string; schedule?: string; additional_info?: string }
+  | undefined;
+const socialIcons = getLayoutSection("social_icons") as
+  | { networks?: { network: string; url: string }[] }
+  | undefined;
+const whatsappButton = getLayoutSection("whatsapp_button") as
+  | { phone?: string; prefilled_message?: string }
+  | undefined;
+
+const footerEmail = contactInfo?.email ?? "contacto@gnugas.mx";
+const footerPhone = contactInfo?.phone ?? "800 555 0192";
+const footerSchedule = contactInfo?.schedule ?? "Lun–Vie, 9:00–18:00";
+const footerAddress = contactInfo?.address;
+const footerAdditionalInfo = contactInfo?.additional_info;
+
+const SOCIAL_ICON_MARKUP: Record<string, string> = {
+  facebook:
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1V8c0-.9.25-1.5 1.55-1.5H17V3.6C16.6 3.55 15.5 3.4 14.2 3.4c-2.7 0-4.5 1.65-4.5 4.65v2.85H7v3.1h2.7V21h3.8z"/></svg>',
+  instagram:
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>',
+  linkedin:
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 8.5H3.56V20h3.38V8.5zM5.25 3.5a1.96 1.96 0 1 0 0 3.92 1.96 1.96 0 0 0 0-3.92zM20.44 20h-3.37v-6.05c0-1.44-.03-3.3-2.02-3.3-2.02 0-2.33 1.58-2.33 3.2V20H9.35V8.5h3.24v1.57h.05c.45-.86 1.56-1.77 3.21-1.77 3.43 0 4.06 2.26 4.06 5.19V20z"/></svg>',
+  youtube:
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2s-.2-1.5-.85-2.15c-.8-.85-1.7-.85-2.1-.9C15.8 4 12 4 12 4h0s-3.8 0-6.65.15c-.4.05-1.3.05-2.1.9C2.6 5.7 2.4 7.2 2.4 7.2S2.2 9 2.2 10.7v1.6c0 1.7.2 3.5.2 3.5s.2 1.5.85 2.15c.8.85 1.85.82 2.3.91C7.2 19 12 19 12 19s3.8 0 6.65-.15c.4-.05 1.3-.05 2.1-.9.65-.65.85-2.15.85-2.15s.2-1.8.2-3.5v-1.6c0-1.7-.2-3.5-.2-3.5zM10 14.6V8.9l5.2 2.85z"/></svg>',
+  twitter:
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 3H21l-6.4 7.3L22 21h-5.9l-4.6-6-5.3 6H3l6.8-7.8L2.4 3h6l4.2 5.5L18.9 3zM17.9 19.3h1.6L8.2 4.6H6.5l11.4 14.7z"/></svg>',
+  tiktok:
+    '<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M14.5 3h2.7c.2 1.5 1 2.8 2.3 3.6.9.6 2 .9 3 .9v2.8c-1.5 0-3-.4-4.3-1.2v6.6c0 3.4-2.8 6.1-6.1 6.1S6 18.1 6 14.8c0-3.2 2.5-5.8 5.6-6.1v2.9c-1.5.3-2.7 1.6-2.7 3.2 0 1.8 1.4 3.2 3.2 3.2s3.2-1.4 3.2-3.2V3z"/></svg>',
+};
+
+const fallbackNetworks = [
+  { network: "facebook", url: "#" },
+  { network: "instagram", url: "#" },
+  { network: "linkedin", url: "#" },
+  { network: "youtube", url: "#" },
+];
+const socialNetworks = (socialIcons?.networks?.length ? socialIcons.networks : fallbackNetworks).filter(
+  (item) => SOCIAL_ICON_MARKUP[item.network]
+);
+
+const whatsappDigits = (whatsappButton?.phone || "525555550192").replace(/\D/g, "");
+const whatsappHref = `https://wa.me/${whatsappDigits}${
+  whatsappButton?.prefilled_message ? `?text=${encodeURIComponent(whatsappButton.prefilled_message)}` : ""
+}`;
 ---
 
 <!doctype html>
@@ -84,18 +142,11 @@ const navLinks = [
               Energía limpia y ahorro real para hogares, negocios y flotillas vehiculares en todo México.
             </p>
             <div class="social-row">
-              <a class="social-icon" href="#" aria-label="Facebook">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1V8c0-.9.25-1.5 1.55-1.5H17V3.6C16.6 3.55 15.5 3.4 14.2 3.4c-2.7 0-4.5 1.65-4.5 4.65v2.85H7v3.1h2.7V21h3.8z"/></svg>
-              </a>
-              <a class="social-icon" href="#" aria-label="Instagram">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>
-              </a>
-              <a class="social-icon" href="#" aria-label="LinkedIn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 8.5H3.56V20h3.38V8.5zM5.25 3.5a1.96 1.96 0 1 0 0 3.92 1.96 1.96 0 0 0 0-3.92zM20.44 20h-3.37v-6.05c0-1.44-.03-3.3-2.02-3.3-2.02 0-2.33 1.58-2.33 3.2V20H9.35V8.5h3.24v1.57h.05c.45-.86 1.56-1.77 3.21-1.77 3.43 0 4.06 2.26 4.06 5.19V20z"/></svg>
-              </a>
-              <a class="social-icon" href="#" aria-label="YouTube">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2s-.2-1.5-.85-2.15c-.8-.85-1.7-.85-2.1-.9C15.8 4 12 4 12 4h0s-3.8 0-6.65.15c-.4.05-1.3.05-2.1.9C2.6 5.7 2.4 7.2 2.4 7.2S2.2 9 2.2 10.7v1.6c0 1.7.2 3.5.2 3.5s.2 1.5.85 2.15c.8.85 1.85.82 2.3.91C7.2 19 12 19 12 19s3.8 0 6.65-.15c.4-.05 1.3-.05 2.1-.9.65-.65.85-2.15.85-2.15s.2-1.8.2-3.5v-1.6c0-1.7-.2-3.5-.2-3.5zM10 14.6V8.9l5.2 2.85z"/></svg>
-              </a>
+              {socialNetworks.map((item) => (
+                <a class="social-icon" href={item.url || "#"} target="_blank" rel="noopener noreferrer" aria-label={item.network}>
+                  <Fragment set:html={SOCIAL_ICON_MARKUP[item.network]} />
+                </a>
+              ))}
             </div>
           </div>
           <div>
@@ -112,9 +163,11 @@ const navLinks = [
           </div>
           <div>
             <p class="footer-heading">Contacto</p>
-            <p class="footer-link">contacto@gnugas.mx</p>
-            <p class="footer-link">800 555 0192</p>
-            <p class="footer-link">Lun–Vie, 9:00–18:00</p>
+            {footerAddress && <p class="footer-link">{footerAddress}</p>}
+            <p class="footer-link">{footerEmail}</p>
+            <p class="footer-link">{footerPhone}</p>
+            <p class="footer-link">{footerSchedule}</p>
+            {footerAdditionalInfo && <p class="footer-link">{footerAdditionalInfo}</p>}
           </div>
         </div>
         <div class="footer-bottom">
@@ -126,7 +179,7 @@ const navLinks = [
 
     <a
       class="whatsapp-fab"
-      href="https://wa.me/525555550192"
+      href={whatsappHref}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Escríbenos por WhatsApp"

@@ -1,0 +1,244 @@
+==============================================================================
+ GUIA DE CONTENIDO PARA EL PANEL DE ADMINISTRACION (gnu-cms-admin)
+ Sitio: landing-gnu (gnugas.mx)
+ Fecha de elaboracion: 2026-08-15
+==============================================================================
+
+PROPOSITO DE ESTE DOCUMENTO
+------------------------------------------------------------------------------
+Esta guia indica, para cada seccion editable del sitio, que campos se deben
+llenar en el panel de administracion, el tamano y formato recomendado de las
+imagenes, y la longitud de texto recomendada para que el diseno no se rompa.
+
+IMPORTANTE - LIMITES REALES DEL SISTEMA (leer antes de continuar):
+  * El servidor (CMS externo) RECHAZA archivos de imagen mayores a 5 MB.
+    Este limite se aplica en el servidor, no hay aviso previo en el panel.
+  * El panel de administracion NO valida el tamano ni las dimensiones de
+    la imagen antes de subirla, y NO valida la longitud de los textos.
+    Es decir: si un texto es demasiado largo o una imagen tiene una relacion
+    de aspecto distinta a la recomendada, el sistema lo va a "dejar guardar"
+    igual, pero el diseno del sitio se vera mal (texto cortado, imagen
+    estirada o descuadrada, etc). Por eso es indispensable seguir esta guia
+    aunque el sistema no obligue a hacerlo.
+  * Todas las imagenes se muestran "tal cual" se suben (recortadas por CSS),
+    no hay compresion ni redimensionado automatico. Subir una imagen enorme
+    (por ejemplo 6000x4000 px) hace que la pagina cargue mas lento aunque se
+    vea del mismo tamano en pantalla. Usa siempre el tamano recomendado.
+
+FORMATOS DE IMAGEN ACEPTADOS
+------------------------------------------------------------------------------
+El campo de carga acepta cualquier archivo de imagen (input "accept=image/*").
+Formatos recomendados segun el tipo de imagen:
+  * Fotografias (banners, portadas, fondos)  -> JPG (.jpg/.jpeg)
+  * Logos e iconos con transparencia          -> PNG (.png)
+  * Evitar: HEIC, TIFF, BMP, RAW (no se muestran bien en navegadores/algunos
+    pueden no renderizar en el sitio).
+  * WebP es aceptable si el archivo lo permite, pero si hay duda usar JPG/PNG.
+  * Peso maximo por archivo: 5 MB (limite duro del servidor).
+    Recomendado para buen rendimiento: menor a 500 KB - 1 MB por imagen
+    (usar un compresor de imagenes como TinyPNG o Squoosh antes de subir).
+
+==============================================================================
+SECCION 1: PAGINA DE INICIO (Landing Page)
+Ruta admin: Seleccionar sitio > Landing Page
+Ruta sitio: -pendiente de redactar-/
+==============================================================================
+
+--- 1.1 Carrusel de banners (banner_carousel) --------------------------------
+Por cada slide/diapositiva:
+  Campo "Imagen":
+    - Tamano recomendado: 2400 x 1000 px (relacion aprox. 2.4:1)
+    - Formato: JPG
+    - Peso: menor a 1 MB (maximo absoluto 5 MB)
+    - Nota: la imagen se recorta a pantalla completa (object-fit: cover), el
+      centro de la imagen es lo mas importante; evita poner texto o rostros
+      cerca de los bordes izquierdo/derecho porque se pueden recortar en
+      pantallas angostas.
+  Campo "Titulo":
+    - Longitud recomendada: 30-45 caracteres (1 linea corta e impactante)
+    - Maximo recomendado: 60 caracteres (el contenedor tiene ancho maximo de
+      ~544 px; textos mas largos se veran en varias lineas o apretados)
+  Campo "Subtitulo":
+    - Longitud recomendada: 60-90 caracteres
+    - Maximo recomendado: 120 caracteres (contenedor ~480 px de ancho)
+  Campo "Enlace del boton" (link_url):
+    - URL completa (ej. https://gnugas.mx/contacto) o ruta interna (/contacto)
+  Campo "Texto del boton" (link_label):
+    - Longitud recomendada: 2-4 palabras (ej. "Cotiza ahora", "Conoce mas")
+    - Maximo recomendado: 25 caracteres
+
+--- 1.2 Simulador de ahorro (savings_simulator) -------------------------------
+  Campo "Titulo": 30-50 caracteres
+  Campo "Introduccion": 80-150 caracteres (1-2 lineas)
+  Por cada combustible/fila:
+    - Slug (identificador interno, sin espacios ni acentos, ej. "gas_lp")
+    - Nombre visible (label): 10-20 caracteres (ej. "Gas LP", "Gasolina Magna")
+    - Precio por unidad: numero, usar punto decimal (ej. 24.50)
+    - Unidad: texto corto (ej. "litro", "kg")
+    - Factor de equivalencia: numero decimal
+  Nota: esta seccion no usa imagenes, es una calculadora que corre en el
+  navegador con los datos que se capturan aqui.
+
+--- 1.3 Clientes (clients_showcase) ------------------------------------------
+  Campo "Titulo de la seccion": 30-50 caracteres
+  Por cada logo de cliente:
+    Campo "Logo":
+      - Tamano recomendado: 800 x 500 px (relacion de aspecto 16:10)
+      - Formato: PNG con fondo transparente (se muestra en escala de grises
+        hasta que el usuario pasa el mouse encima, por eso funciona mejor
+        sin fondo blanco/de color)
+      - Peso: menor a 300 KB
+    Campo "Nombre": nombre del cliente/empresa, 3-30 caracteres
+    Campo "Enlace" (opcional): URL del sitio del cliente
+
+--- 1.4 Formulario de contacto (lead_capture_form) ---------------------------
+  Campo "Titulo": 20-40 caracteres
+  Campo "Introduccion": 60-120 caracteres
+  Campo "Texto del boton": 2-4 palabras (ej. "Enviar mensaje")
+  Campo "Campos del formulario": bloqueado/solo informativo, no modificar.
+
+--- 1.5 Datos de contacto, Redes sociales, Boton de WhatsApp -----------------
+  *** ADVERTENCIA IMPORTANTE ***
+  Estas 3 secciones existen en el panel de administracion, pero HOY NO TIENEN
+  NINGUN EFECTO en el sitio publico. El pie de pagina (telefono, correo,
+  horario, iconos de redes sociales) y el boton flotante de WhatsApp estan
+  fijos en el codigo del sitio y no leen lo que se captura aqui.
+  Si necesitas cambiar el telefono de WhatsApp, correo, horario o redes
+  sociales que se ven en el sitio, hay que pedirle a un desarrollador que
+  edite el archivo Layout.astro directamente. Llenar estos campos en el
+  panel por ahora no actualiza nada visible.
+
+--- 1.6 Mapa de estaciones (stations_map) -------------------------------------
+  *** ADVERTENCIA IMPORTANTE ***
+  El mapa que aparece al final de la pagina de inicio (stations_map) NO tiene
+  un formulario en el panel de administracion todavia. No hay forma de
+  editarlo desde la interfaz; requiere edicion directa por un desarrollador.
+  El boton "Agregar estacion" que aparece en la pagina de Contacto del panel
+  TAMPOCO guarda datos reales (es una funcion de prueba/pendiente); llenar
+  ese formulario no crea una estacion nueva en el sitio.
+
+==============================================================================
+SECCION 2: PAGINAS INTERIORES (Nuestros servicios, Sobre nosotros y sus
+sub-paginas, Desarrollo sostenible y sus sub-paginas, Contacto)
+==============================================================================
+Estas paginas se arman combinando "bloques" reutilizables. Un desarrollador
+decide cuales bloques tiene cada pagina; tu solo llenas el contenido de cada
+bloque que ya exista.
+
+--- 2.1 Encabezado de pagina (page_hero) --------------------------------------
+Aparece como el banner superior de cada pagina interior.
+  Campo "Titulo": 20-40 caracteres (obligatorio en la practica, aunque el
+    sistema no lo bloquee si se deja vacio)
+  Campo "Subtitulo": 40-90 caracteres
+  Campo "Imagen":
+    - Tamano recomendado: 2400 x 900 px (relacion aprox. 2.6:1)
+    - Formato: JPG
+    - Peso: menor a 1 MB
+    - Nota: la imagen se muestra oscurecida/con opacidad al 50% detras del
+      texto, por lo que fotos muy claras (fondos blancos) pierden contraste;
+      preferir imagenes con tonos medios/oscuros o suficiente contraste.
+
+--- 2.2 Cuadricula de caracteristicas (feature_grid) --------------------------
+Usado para listar servicios, valores, beneficios, etc. en tarjetas.
+  Campo "Titulo de la seccion": 30-50 caracteres
+  Por cada tarjeta:
+    Campo "Icono":
+      - Tamano recomendado: 96 x 96 px (cuadrado 1:1)
+      - Formato: PNG con fondo transparente (es un icono/glifo simple, no
+        una fotografia; se muestra muy pequeno, a 24x24 px en pantalla)
+      - Peso: menor a 50 KB
+    Campo "Titulo": 15-30 caracteres
+    Campo "Texto": 60-140 caracteres (2-3 lineas cortas; evitar parrafos
+      largos, el diseno es de tarjeta compacta)
+
+--- 2.3 Texto enriquecido (rich_text) ------------------------------------------
+Bloque de texto libre en formato HTML, usado para contenido extenso (historia
+de la empresa, certificaciones, iniciativas, etc.)
+  Campo "Titulo": 20-50 caracteres
+  Campo "Contenido": HTML "tal cual" (se guarda y se muestra exactamente como
+    se escribe, sin filtro de seguridad). Recomendaciones:
+    - Longitud recomendada: 300-1500 caracteres (aprox. 1-4 parrafos); el
+      contenedor de texto tiene un ancho maximo de ~736 px, textos muy largos
+      generan mucho scroll pero no rompen el diseno.
+    - Si no se sabe HTML, usar solo texto plano y saltos de linea simples
+      (<p>parrafo</p>); evitar pegar HTML complejo copiado de Word/Google Docs
+      porque puede traer estilos no deseados.
+  Campo "Video" (opcional): URL de YouTube o Vimeo. Se muestra en un marco de
+    relacion 16:9 automaticamente, no requiere imagen.
+
+--- 2.4 Clientes (clients_showcase) --------------------------------------------
+Igual que en la seccion 1.3 (mismo formato de logo 800x500 px, 16:10, PNG).
+
+==============================================================================
+SECCION 3: BLOG
+Ruta admin: Blog (listado y creacion/edicion de articulos)
+Ruta sitio: gnugas.mx/blog y gnugas.mx/blog/<slug>
+==============================================================================
+  Campo "Slug": se genera automaticamente al crear; solo se ve/edita en modo
+    edicion. Si se edita a mano: usar minusculas, sin espacios ni acentos,
+    palabras separadas por guiones (ej. "beneficios-del-gas-lp").
+  Campo "Titulo": 40-70 caracteres (obligatorio)
+  Campo "Extracto": 100-160 caracteres (se usa como descripcion corta en la
+    lista de articulos y ayuda al SEO)
+  Campo "Contenido": HTML, sin limite tecnico; recomendado 800-2500 palabras
+    para un articulo de blog tipico. Igual que en rich_text, evitar pegar
+    HTML con estilos de Word.
+  Campo "Imagen de portada" (cover_image):
+    - Tamano recomendado: 1344 x 756 px (relacion 16:9)
+    - Formato: JPG
+    - Peso: menor a 800 KB
+    - Se usa en dos lugares: como miniatura en la lista (recortada a 16:9
+      aprox.) y como imagen grande en el detalle del articulo (ancho maximo
+      ~672 px). Una sola imagen de 1344x756 sirve bien para ambos usos.
+  Campo "Fecha de publicacion": selector de fecha y hora.
+
+==============================================================================
+TABLA RESUMEN RAPIDA DE IMAGENES
+==============================================================================
+Elemento                      | Tamano recomendado | Relacion | Formato | Peso max
+-------------------------------|---------------------|----------|---------|----------
+Banner del carrusel (inicio)   | 2400 x 1000 px      | 2.4:1    | JPG     | 1 MB
+Encabezado pagina interior     | 2400 x 900 px       | 2.6:1    | JPG     | 1 MB
+Logo de cliente                | 800 x 500 px        | 16:10    | PNG*    | 300 KB
+Icono de caracteristica        | 96 x 96 px          | 1:1      | PNG*    | 50 KB
+Portada de articulo de blog    | 1344 x 756 px       | 16:9     | JPG     | 800 KB
+* PNG con fondo transparente cuando aplique (logos e iconos).
+Limite absoluto del servidor para cualquier imagen: 5 MB (rechazo automatico
+si se excede).
+
+==============================================================================
+TABLA RESUMEN RAPIDA DE TEXTOS
+==============================================================================
+Campo                                  | Longitud recomendada | Maximo sugerido
+-----------------------------------------|------------------------|------------------
+Titulo de banner (hero)                 | 30-45 caracteres        | 60
+Subtitulo de banner (hero)              | 60-90 caracteres        | 120
+Texto de boton (CTA)                    | 2-4 palabras            | 25 caracteres
+Titulo de encabezado de pagina interior | 20-40 caracteres        | 55
+Subtitulo de encabezado interior        | 40-90 caracteres        | 110
+Titulo de seccion (general)             | 30-50 caracteres        | 60
+Titulo de tarjeta (feature)             | 15-30 caracteres        | 40
+Texto de tarjeta (feature)              | 60-140 caracteres       | 180
+Nombre de cliente/logo                  | 3-30 caracteres         | 40
+Titulo de articulo de blog              | 40-70 caracteres        | 90
+Extracto de blog                        | 100-160 caracteres      | 180
+Contenido de texto enriquecido          | 300-1500 caracteres     | sin limite duro
+Contenido de blog                       | 800-2500 palabras       | sin limite duro
+
+NOTA FINAL: Ninguno de estos limites de texto es forzado por el sistema (ni
+el panel ni el servidor validan la longitud). Son recomendaciones de diseno
+para que el texto no se vea cortado, apretado o desbordado en pantalla.
+
+==============================================================================
+PENDIENTES TECNICOS DETECTADOS (para reportar a desarrollo, no para el editor)
+==============================================================================
+1. Los campos "Datos de contacto", "Redes sociales" y "Boton de WhatsApp" del
+   panel no estan conectados al sitio (contenido fijo en el codigo).
+2. La seccion "Mapa de estaciones" (stations_map) no tiene formulario en el
+   panel; solo se puede editar por un desarrollador directamente.
+3. El boton "Agregar estacion" en la pagina de Contacto del panel no guarda
+   informacion real (funcion pendiente/incompleta).
+4. El panel no valida tamano de archivo, formato ni dimensiones de imagen
+   antes de subir, ni longitud de textos - toda la validacion depende de
+   seguir esta guia manualmente.
+==============================================================================
