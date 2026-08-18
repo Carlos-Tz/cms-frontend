@@ -143,6 +143,3 @@ A minimal alternative to nginx on a VPS is any static file server (`npx serve di
 - **No shared logic in `.astro` files**: keep reusable, non-UI functions (API clients, formatters, etc.) in `.ts` files under `src/functions/`. Astro's compiler scopes top-level `const`/`let` in a component's frontmatter differently from `export function` in the same frontmatter, which can cause a plain constant to be `undefined` inside an exported function at runtime.
 - **Media URLs**: CMS-relative media paths (anything not already `http(s)://`) are resolved through `mediaUrl()` against the CMS's own origin, under `/storage/<path>` — don't hardcode the CMS host elsewhere.
 
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
