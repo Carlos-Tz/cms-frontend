@@ -41,7 +41,7 @@ const heroTitle = pageHero?.title ?? "Blog";
 const heroSubtitle = pageHero?.subtitle ?? "Noticias y artículos sobre el gas natural.";
 ---
 
-<Layout title={`${heroTitle} — GNU Gas Natural`} description={heroSubtitle}>
+<Layout title={heroTitle} description={heroSubtitle}>
   <main>
     <PageHero title={heroTitle} subtitle={heroSubtitle} image={pageHero?.image} />
 

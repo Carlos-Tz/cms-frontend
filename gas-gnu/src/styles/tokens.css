@@ -1,0 +1,66 @@
+:root {
+  /* Fonts — swap the family names to rebrand; keep a system-ui fallback */
+  --font-display: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Type scale — clamp(min, preferred, max) so headings stay fluid across viewports.
+     --text-h1 drives every page's main heading (hero, page hero, blog post title). */
+  --text-h1: clamp(2rem, 5vw, 3rem);
+  --text-h2: clamp(1.75rem, 3vw, 2.5rem);
+  --text-h3: 1.125rem;
+  --text-body: 1.0625rem;
+  --text-small: 0.875rem;
+  --heading-font-weight: 700;
+  --heading-letter-spacing: -0.01em;
+
+  /* Backgrounds — white canvas, alternating with a light-blue tinted tile */
+  --color-bg: #ffffff;
+  --color-bg-alt: #f2f7fd;
+  --color-ink: #0b2b5c;
+  --color-ink-2: #123a73;
+  --color-ink-3: #163f80;
+
+  /* Brand (from GNU GNV site map) */
+  --color-primary: #1657c4;
+  --color-primary-alt: #0d3a85;
+  --color-primary-light: #bcd8f7;
+  --color-accent: #4fa3e3;
+  --color-primary-tint: #e8f1fb;
+  --color-primary-soft: rgba(22, 87, 196, 0.08);
+
+  /* Status */
+  --color-status-active: #22a06b;
+  --color-status-error: #e0483f;
+
+  /* Text on light backgrounds */
+  --color-text: #12213f;
+  --color-text-60: rgba(18, 33, 63, 0.64);
+  --color-text-40: rgba(18, 33, 63, 0.44);
+
+  /* Text on dark backgrounds */
+  --color-text-on-dark: #ffffff;
+  --color-text-on-dark-70: rgba(255, 255, 255, 0.72);
+  --color-text-on-dark-45: rgba(255, 255, 255, 0.45);
+
+  /* Borders / surfaces */
+  --color-border: rgba(11, 43, 92, 0.12);
+  --color-border-hover: rgba(11, 43, 92, 0.28);
+  --color-border-on-dark: rgba(255, 255, 255, 0.14);
+  --color-surface-on-dark: rgba(255, 255, 255, 0.06);
+  --color-surface: #ffffff;
+
+  /* Radius — pill for actions, lg for utility cards */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-float: 0 20px 45px -18px rgba(11, 43, 92, 0.35);
+  --shadow-cta: 0 10px 30px -8px rgba(13, 58, 133, 0.45);
+  --shadow-card: 0 4px 20px -6px rgba(11, 43, 92, 0.12);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}

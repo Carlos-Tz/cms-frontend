@@ -1,0 +1,37 @@
+---
+import type { MenuItem } from "../../types/menu";
+
+interface Props {
+  item: MenuItem;
+}
+
+const { item } = Astro.props;
+const hasChildren = item.children?.length > 0;
+---
+
+{hasChildren ? (
+  <div class="nav-item">
+    <button class="nav-link nav-link--toggle" aria-expanded="false" aria-haspopup="true">
+      {item.title}
+      <svg class="nav-caret" width="10" height="6" viewBox="0 0 10 6" aria-hidden="true">
+        <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </button>
+    <div class="nav-dropdown">
+      {item.children.map((child) => (
+        <div class="nav-dropdown__group">
+          <a class="nav-dropdown__link nav-dropdown__link--parent" href={child.path}>{child.title}</a>
+          {child.children?.length > 0 && (
+            <div class="nav-dropdown__sublist">
+              {child.children.map((grandchild) => (
+                <a class="nav-dropdown__link nav-dropdown__link--sub" href={grandchild.path}>{grandchild.title}</a>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+) : (
+  <a class="nav-link" href={item.path}>{item.title}</a>
+)}

@@ -1,0 +1,47 @@
+---
+import PageHero from "./sections/PageHero.astro";
+import RichText from "./sections/RichText.astro";
+import FeatureGrid from "./sections/FeatureGrid.astro";
+import LeadCaptureForm from "./sections/LeadCaptureForm.astro";
+import StationsMap from "./sections/StationsMap.astro";
+import LocationsList from "./sections/LocationsList.astro";
+import ClientsShowcase from "./sections/ClientsShowcase.astro";
+
+interface Section {
+  type: string;
+  content: Record<string, any>;
+}
+
+interface Props {
+  sections: Section[];
+}
+
+const { sections } = Astro.props;
+---
+
+{sections.map((section) => {
+  switch (section.type) {
+    case "page_hero":
+      return <PageHero {...(section.content as any)} />;
+    case "rich_text":
+      return <RichText {...(section.content as any)} />;
+    case "feature_grid":
+      return <FeatureGrid {...(section.content as any)} />;
+    case "lead_capture_form":
+      return (
+        <section class="section">
+          <div class="container" style="max-width: 34rem;">
+            <LeadCaptureForm {...(section.content as any)} />
+          </div>
+        </section>
+      );
+    case "stations_map":
+      return <StationsMap {...(section.content as any)} />;
+    case "locations_list":
+      return <LocationsList {...(section.content as any)} />;
+    case "clients_showcase":
+      return <ClientsShowcase {...(section.content as any)} />;
+    default:
+      return null;
+  }
+})}

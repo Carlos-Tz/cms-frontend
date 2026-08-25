@@ -1,16 +1,27 @@
 ---
 import "../styles/global.css";
 import { fetchData } from "../functions/fetch";
+import { seo } from "../config/seo";
 
 interface Props {
+  // Page-specific title, WITHOUT the site name — Layout appends
+  // "{titleSeparator} {siteName}" automatically. Omit to fall back to
+  // `seo.defaultTitle` (used as-is, already includes the site name).
   title?: string;
   description?: string;
+  // Absolute or root-relative URL to a social preview image (og:image / twitter:image).
+  image?: string | null;
+  // Set true on pages that shouldn't be indexed (e.g. a "not found" state).
+  noindex?: boolean;
 }
 
-const {
-  title = "GNU Gas Natural — Energía limpia para tu hogar, negocio y flotilla",
-  description = "GNU Gas Natural: soluciones de Gas Natural Comprimido, Domiciliario y Vehicular. Simula tu ahorro y encuentra tu estación más cercana.",
-} = Astro.props;
+const { title, description, image, noindex = false } = Astro.props;
+
+const pageTitle = title ? `${title} ${seo.titleSeparator} ${seo.siteName}` : seo.defaultTitle;
+const pageDescription = description ?? seo.defaultDescription;
+const socialImage = image ?? seo.defaultImage;
+const canonicalUrl = new URL(Astro.url.pathname, seo.siteUrl).toString();
+const socialImageUrl = socialImage ? new URL(socialImage, seo.siteUrl).toString() : null;
 
 const navLinks = [
   { href: "/", label: "Inicio" },
@@ -87,8 +98,26 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width" />
     <meta name="generator" content={Astro.generator} />
-    <meta name="description" content={description} />
-    <title>{title}</title>
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={seo.siteName} />
+    <meta property="og:locale" content={seo.locale} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    {socialImageUrl && <meta property="og:image" content={socialImageUrl} />}
+
+    <meta name="twitter:card" content={seo.twitterCard} />
+    {seo.twitterHandle && <meta name="twitter:site" content={seo.twitterHandle} />}
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={pageDescription} />
+    {socialImageUrl && <meta name="twitter:image" content={socialImageUrl} />}
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

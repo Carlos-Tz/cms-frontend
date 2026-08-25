@@ -15,7 +15,7 @@ const page = pageResponse?.data;
 const sections = page?.sections ?? [];
 ---
 
-<Layout title={page ? `${page.title} — GNU Gas Natural` : "Nuestra historia — GNU Gas Natural"}>
+<Layout title={page?.title ?? "Nuestra historia"}>
   <main>
     {!page && <PageHero title="Nuestra historia" subtitle="Contenido en preparación." />}
     <SectionRenderer sections={sections} />

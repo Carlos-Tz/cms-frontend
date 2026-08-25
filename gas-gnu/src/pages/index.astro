@@ -1,996 +1,380 @@
 ---
-import { Image } from "astro:assets";
-import "../styles/global.css";
-import placeholder from "../assets/images/noimg.jpg";
+import Layout from "../layouts/Layout.astro";
+import FeatureGrid from "../components/sections/FeatureGrid.astro";
+import LeadCaptureForm from "../components/sections/LeadCaptureForm.astro";
+import RewardsProgram from "../components/sections/RewardsProgram.astro";
+import Testimonials from "../components/sections/Testimonials.astro";
+import LocationsList from "../components/sections/LocationsList.astro";
+import BlogTeaser from "../components/sections/BlogTeaser.astro";
+import ClientsShowcase from "../components/sections/ClientsShowcase.astro";
+import StationsMap from "../components/sections/StationsMap.astro";
+import noImg from "../assets/images/noimg.jpg";
+import { fetchData, mediaUrl } from "../functions/fetch";
 
-const nav = [
-  { href: "#inicio", label: "Inicio" },
-  { href: "#servicios", label: "Nuestros Servicios" },
-  { href: "#ubicaciones", label: "Ubicaciones" },
-  { href: "#contacto", label: "Contacto" },
-  { href: "#blog", label: "Blog" },
+type Slide = {
+  image: string;
+  title: string | null;
+  subtitle: string | null;
+  link_url: string | null;
+  link_label: string | null;
+};
+
+type FeatureItem = { icon: string | null; title: string; text: string };
+type Testimonial = { quote: string; name: string; role: string };
+type Location = { title: string; text: string };
+type BlogPost = { tag: string; title: string; url?: string | null; cover_image?: string | null };
+type FuelPrice = {
+  fuel: string;
+  label: string;
+  price_per_unit: number;
+  unit: string;
+  equivalence_factor: number;
+};
+type ClientLogo = { name: string; image: string };
+
+type PageSection = { type: string; content: Record<string, any> };
+type PageResponse = {
+  status: string;
+  data: { slug: string; path: string; title: string; sections: PageSection[] };
+  meta: Record<string, any>;
+};
+
+const pageResponse: PageResponse | undefined = await fetchData("pages/inicio");
+const sections = pageResponse?.data?.sections ?? [];
+const getSection = (type: string) => sections.find((section) => section.type === type)?.content;
+
+const bannerCarousel = getSection("banner_carousel") as { slides: Slide[] } | undefined;
+const savingsSimulator = getSection("savings_simulator") as
+  | { title: string; intro: string; fuel_prices?: FuelPrice[] }
+  | undefined;
+// The CMS reuses the generic "feature_grid" type for the rewards panel's
+// content (title/items), not a distinct "rewards_program" type — so this
+// feeds the rewards section below, not the Servicios grid.
+const featureGrid = getSection("feature_grid") as { title: string; items: FeatureItem[] } | undefined;
+const rewardsProgram = getSection("rewards_program") as
+  | { title: string; intro: string; benefits: string[]; cta_label: string; cta_url: string; image: string }
+  | undefined;
+const testimonials = getSection("testimonials") as { title: string; items: Testimonial[] } | undefined;
+const locationsList = getSection("locations_list") as
+  | { title: string; intro: string; locations: Location[]; center?: string; zoom?: string | number }
+  | undefined;
+const stationsMap = getSection("stations_map") as
+  | { title?: string | null; center?: string | null; zoom?: string | number | null }
+  | undefined;
+const blogTeaser = getSection("blog_teaser") as { title: string; posts: BlogPost[] } | undefined;
+const leadCaptureForm = getSection("lead_capture_form") as
+  | { title: string; intro: string; submit_label: string; fields: string[] }
+  | undefined;
+const clientsShowcase = getSection("clients_showcase") as { title?: string | null; logos: ClientLogo[] } | undefined;
+
+const fallbackSlides: Slide[] = [
+  {
+    image: noImg.src,
+    title: "Ahorra hasta un 60% en combustible con GNV",
+    subtitle: "Convierte tu auto, camioneta o flotilla a gas natural vehicular.",
+    link_url: "/#simulador",
+    link_label: "Simula tu ahorro",
+  },
+  { image: noImg.src, title: "Instalación con 20% de descuento este mes", subtitle: "Promoción vigente", link_url: null, link_label: null },
+  { image: noImg.src, title: "Financiamiento a 12 meses sin intereses", subtitle: "Flotillas empresariales", link_url: null, link_label: null },
+];
+const slides: Slide[] = bannerCarousel?.slides?.length
+  ? bannerCarousel.slides.map((slide) => ({ ...slide, image: mediaUrl(slide.image) }))
+  : fallbackSlides;
+
+// "Hasta un 60%" is the headline savings claim across the hero and the
+// simulator's fallback rate — keep both in sync if this default changes.
+const FALLBACK_SAVINGS_RATE = 0.6;
+const GNV_FUEL_KEY = "gas-natural";
+
+type FuelOption = { fuel: string; label: string; rate: number };
+
+// equivalence_factor normalizes each fuel's native unit (m³, litro, …) to a
+// comparable cost basis; GNV's own factor is always 1 (the reference unit).
+const effectiveCost = (price: FuelPrice) => price.price_per_unit * price.equivalence_factor;
+
+const gnvPrice = savingsSimulator?.fuel_prices?.find((price) => price.fuel === GNV_FUEL_KEY);
+const fuelOptions: FuelOption[] = gnvPrice
+  ? savingsSimulator!.fuel_prices!
+      .filter((price) => price.fuel !== GNV_FUEL_KEY && price.price_per_unit > 0)
+      .map((price) => ({
+        fuel: price.fuel,
+        label: price.label,
+        rate: 1 - effectiveCost(gnvPrice) / effectiveCost(price),
+      }))
+  : [];
+
+const fallbackFuelOptions: FuelOption[] = [{ fuel: "gasolina", label: "Gasolina", rate: FALLBACK_SAVINGS_RATE }];
+const savingsFuelOptions = fuelOptions.length ? fuelOptions : fallbackFuelOptions;
+const savingsRatesByFuel = Object.fromEntries(savingsFuelOptions.map((option) => [option.fuel, option.rate]));
+
+const fallbackFeatures: FeatureItem[] = [
+  { icon: null, title: "Instala tu equipo de GNV", text: "Conversión certificada para que tu auto ruede con gas natural vehicular desde la primera semana." },
+  { icon: null, title: "Cotiza tu equipo", text: "Recibe una cotización a tu medida según marca, modelo y tipo de motor." },
+  { icon: null, title: "Financiamiento", text: "Planes a meses sin intereses para que tu conversión se pague sola con el ahorro mensual." },
+  { icon: null, title: "Flotillas empresariales", text: "Soluciones a escala para transporte de carga, taxis y flotillas corporativas." },
+  { icon: null, title: "Estaciones móviles", text: "Unidades de carga móvil para llevar el GNV donde tu operación lo necesite." },
+];
+// Servicios has no dedicated CMS section of its own yet (the CMS's one
+// feature_grid instance is the rewards panel's content, below), so it
+// always renders its curated fallback copy for now.
+const featureItems = fallbackFeatures;
+
+const fallbackBenefits = [
+  "Acumula puntos por cada carga en estaciones GNU.",
+  "Canjea por mantenimiento, verificaciones y accesorios.",
+  "Descuentos exclusivos para clientes frecuentes y flotillas.",
 ];
 
-const servicios = [
-  {
-    title: "Instala tu equipo de GNV",
-    desc: "Conversión certificada para que tu auto ruede con gas natural vehicular desde la primera semana.",
-    icon: "🔧",
-  },
-  {
-    title: "Cotiza tu equipo",
-    desc: "Recibe una cotización a tu medida según marca, modelo y tipo de motor.",
-    icon: "📝",
-  },
-  {
-    title: "Financiamiento",
-    desc: "Planes a meses sin intereses para que tu conversión se pague sola con el ahorro mensual.",
-    icon: "💳",
-  },
-  {
-    title: "Flotillas empresariales",
-    desc: "Soluciones a escala para transporte de carga, taxis y flotillas corporativas.",
-    icon: "🚚",
-  },
-  {
-    title: "Estaciones móviles",
-    desc: "Unidades de carga móvil para llevar el GNV donde tu operación lo necesite.",
-    icon: "🛠️",
-  },
+const fallbackTestimonials: Testimonial[] = [
+  { quote: "Desde que convertí mi flotilla a GNV bajé más del 40% en gasto de combustible mensual.", name: "Ricardo Peña", role: "Flotilla de taxis, Morelia" },
+  { quote: "La instalación fue rápida y el soporte post-venta siempre responde el mismo día.", name: "Lupita Camacho", role: "Transporte de carga, Uruapan" },
+  { quote: "El simulador de ahorro me convenció antes de pisar el taller. Los números no mienten.", name: "Juan Osorio", role: "Cliente particular" },
 ];
+const testimonialItems = testimonials?.items?.length ? testimonials.items : fallbackTestimonials;
 
-const ubicaciones = [
-  { title: "Estaciones Morelia", desc: "3 puntos de carga activos las 24 horas." },
-  { title: "Estación Uruapan", desc: "Carga rápida y área de espera techada." },
-  { title: "Agenda tu verificación", desc: "Reserva tu cita de verificación anual en línea." },
-  { title: "Talleres", desc: "Red de talleres certificados para mantenimiento de tu equipo." },
+const fallbackLocations: Location[] = [
+  { title: "Estaciones Morelia", text: "3 puntos de carga activos las 24 horas." },
+  { title: "Estación Uruapan", text: "Carga rápida y área de espera techada." },
+  { title: "Agenda tu verificación", text: "Reserva tu cita de verificación anual en línea." },
+  { title: "Talleres", text: "Red de talleres certificados para mantenimiento de tu equipo." },
 ];
+const locations = locationsList?.locations?.length ? locationsList.locations : fallbackLocations;
 
-const testimoniales = [
-  {
-    quote: "Desde que convertí mi flotilla a GNV bajé más del 40% en gasto de combustible mensual.",
-    name: "Ricardo Peña",
-    role: "Flotilla de taxis, Morelia",
-  },
-  {
-    quote: "La instalación fue rápida y el soporte post-venta siempre responde el mismo día.",
-    name: "Lupita Camacho",
-    role: "Transporte de carga, Uruapan",
-  },
-  {
-    quote: "El simulador de ahorro me convenció antes de pisar el taller. Los números no mienten.",
-    name: "Juan Osorio",
-    role: "Cliente particular",
-  },
-];
-
-const blog = [
+const fallbackPosts: BlogPost[] = [
   { tag: "Verificación", title: "Verificación anual: qué necesitas y cuándo renovarla" },
   { tag: "Sostenibilidad", title: "Transporte sostenible: el rol del GNV en las ciudades" },
   { tag: "Seguridad", title: "Seguridad del GNV: mitos y realidades" },
   { tag: "Comparativa", title: "GN vs. otros combustibles: ahorro y emisiones" },
 ];
+const blogPosts = blogTeaser?.posts?.length ? blogTeaser.posts : fallbackPosts;
 ---
 
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="generator" content={Astro.generator} />
-    <meta
-      name="description"
-      content="GNU Gas Natural Vehicular: convierte tu auto o flotilla a GNV, encuentra estaciones cerca de ti y calcula tu ahorro."
-    />
-    <title>GNU · Gas Natural Vehicular</title>
-  </head>
-  <body>
-    <header class="site-header">
-      <div class="container site-header__inner">
-        <a href="#inicio" class="logo">
-          <span class="logo__mark">GNU</span>
-          <span class="logo__text">Gas Natural Vehicular</span>
-        </a>
-
-        <nav class="nav" aria-label="Principal">
-          {nav.map((item) => (
-            <a href={item.href}>{item.label}</a>
-          ))}
-        </nav>
-
-        <div class="site-header__actions">
-          <a href="#contacto" class="btn-secondary btn-secondary--compact">Agenda tu verificación</a>
-          <a href="#servicios" class="btn-primary btn-primary--compact">Cotiza tu equipo</a>
-        </div>
-
-        <button class="nav-toggle" id="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
-          <span></span><span></span><span></span>
-        </button>
-      </div>
-      <nav class="nav-mobile" id="nav-mobile" aria-label="Principal móvil">
-        {nav.map((item) => (
-          <a href={item.href}>{item.label}</a>
+<Layout>
+  <main id="inicio">
+    <!-- <div>{JSON.stringify(pageResponse)}</div> -->
+    <!-- Hero: full-bleed carousel driven by the CMS -->
+    <section class="hero" id="banner-carousel">
+      <div class="hero__track">
+        {slides.map((slide, index) => (
+          <div class={"hero-slide" + (index === 0 ? " is-active" : "")}>
+            <img class="hero-slide__img" src={slide.image} alt="" />
+            <div class="hero-slide__scrim" aria-hidden="true" />
+            <div class="container hero-slide__content">
+              {slide.title && (
+                index === 0 ? (
+                  <h1 class="hero-slide__title">{slide.title}</h1>
+                ) : (
+                  <p class="hero-slide__title">{slide.title}</p>
+                )
+              )}
+              {slide.subtitle && <p class="hero-slide__subtitle">{slide.subtitle}</p>}
+              {slide.link_url && slide.link_label && (
+                <a class="btn-primary hero-slide__cta" href={slide.link_url}>{slide.link_label}</a>
+              )}
+            </div>
+          </div>
         ))}
-        <a href="#contacto" class="btn-primary">Cotiza tu equipo</a>
-      </nav>
-    </header>
+      </div>
+      <div class="hero__dots" role="tablist" aria-label="Banners"></div>
+    </section>
 
-    <main>
-      <!-- HERO / INICIO -->
-      <section id="inicio" class="hero">
-        <div class="container hero__inner">
-          <div class="hero__copy">
-            <span class="eyebrow">GNU · Gas Natural Vehicular</span>
-            <h1 class="hero__title">
-              Ahorra hasta un <span class="gradient-text">60% en combustible</span> con gas natural vehicular
-            </h1>
-            <p class="hero__sub">
-              Convierte tu auto, camioneta o flotilla a GNV: instalación certificada, red de estaciones en
-              crecimiento y financiamiento a tu medida.
-            </p>
-            <div class="hero__cta">
-              <a href="#simulador" class="btn-primary">Simula tu ahorro</a>
-              <a href="#servicios" class="btn-secondary">Cotiza tu equipo</a>
-            </div>
-            <div class="hero__stats">
-              <div>
-                <strong>+5,000</strong>
-                <span>equipos instalados</span>
-              </div>
-              <div>
-                <strong>60%</strong>
-                <span>ahorro promedio</span>
-              </div>
-              <div>
-                <strong>24/7</strong>
-                <span>estaciones activas</span>
-              </div>
-            </div>
-          </div>
-          <div class="hero__media">
-            <Image src={placeholder} alt="Vehículo convertido a gas natural vehicular" width={640} height={400} />
-          </div>
-        </div>
-      </section>
+    <div class="hero-stats">
+      <div class="container hero-stats__inner">
+        <div class="hero-stats__item"><strong>+5,000</strong><span>equipos instalados</span></div>
+        <div class="hero-stats__item"><strong>60%</strong><span>ahorro promedio</span></div>
+        <div class="hero-stats__item"><strong>24/7</strong><span>estaciones activas</span></div>
+      </div>
+    </div>
 
-      <!-- CARRUSEL DE BANNERS -->
-      <section class="banners">
-        <div class="container">
-          <div class="banners__track">
-            <article class="banner-card">
-              <Image src={placeholder} alt="Promoción de instalación" width={420} height={220} />
-              <div class="banner-card__body">
-                <span class="eyebrow">Promoción</span>
-                <h3>Instalación con 20% de descuento este mes</h3>
-              </div>
-            </article>
-            <article class="banner-card">
-              <Image src={placeholder} alt="Financiamiento a flotillas" width={420} height={220} />
-              <div class="banner-card__body">
-                <span class="eyebrow">Flotillas</span>
-                <h3>Financiamiento a 12 meses sin intereses</h3>
-              </div>
-            </article>
-            <article class="banner-card">
-              <Image src={placeholder} alt="Nueva estación" width={420} height={220} />
-              <div class="banner-card__body">
-                <span class="eyebrow">Novedad</span>
-                <h3>Nueva estación de carga en Uruapan</h3>
-              </div>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <!-- SIMULADOR DE AHORRO -->
-      <section id="simulador" class="simulador">
-        <div class="container simulador__inner">
-          <div class="simulador__copy">
-            <span class="eyebrow">Simulador de ahorro</span>
-            <h2 class="section-heading">Descubre cuánto te ahorras al cambiar a GNV</h2>
-            <p class="section-sub">
-              Ingresa tus kilómetros recorridos y tu gasto actual de gasolina para ver una proyección de tu
-              ahorro mensual y anual con gas natural vehicular.
-            </p>
-            <a href="#contacto" class="btn-secondary">Habla con un asesor</a>
-          </div>
-          <form class="card simulador__card" aria-label="Simulador de ahorro">
-            <div class="field">
-              <label for="km">Kilómetros recorridos al mes</label>
-              <input type="number" id="km" name="km" placeholder="Ej. 2,500" />
+    <!-- Simulador de ahorro -->
+    <section class="simulator-band" id="simulador">
+      <div class="container simulator">
+        <div>
+          <span class="eyebrow eyebrow--on-dark">Simulador de ahorro</span>
+          <h2 class="simulator__heading">
+            {savingsSimulator?.title ?? "Descubre cuánto te ahorras al cambiar a GNV"}
+          </h2>
+          <p class="simulator__lead">
+            {savingsSimulator?.intro ??
+              "Ingresa tu gasto mensual actual en gasolina y descubre tu ahorro estimado al cambiarte a gas natural vehicular."}
+          </p>
+          <form id="savings-form" style="margin-top: 1.5rem;">
+            <div class="field field--on-dark">
+              <label for="fuel-type">Combustible que usas actualmente</label>
+              <select id="fuel-type" name="fuel-type">
+                {savingsFuelOptions.map((option) => (
+                  <option value={option.fuel}>{option.label}</option>
+                ))}
+              </select>
             </div>
-            <div class="field">
-              <label for="gasto">Gasto mensual actual en gasolina</label>
-              <input type="text" id="gasto" name="gasto" placeholder="Ej. $3,000 MXN" />
+            <div class="field field--on-dark">
+              <label for="monthly-spend">Gasto mensual actual (MXN)</label>
+              <input type="number" id="monthly-spend" name="monthly-spend" min="0" placeholder="Ej. 3000" required />
             </div>
-            <button type="submit" class="btn-primary simulador__submit">Calcular mi ahorro</button>
-            <div class="simulador__result">
-              <span class="hint">Ahorro estimado</span>
-              <strong>$1,800 MXN / mes</strong>
-            </div>
+            <button type="submit" class="btn-primary">Calcular mi ahorro</button>
           </form>
         </div>
-      </section>
-
-      <!-- NUESTROS SERVICIOS -->
-      <section id="servicios" class="servicios">
-        <div class="container">
-          <div class="section-head">
-            <span class="eyebrow">Nuestros servicios</span>
-            <h2 class="section-heading">Todo lo que necesitas para moverte con GNV</h2>
-            <p class="section-sub">Desde la instalación hasta el financiamiento, acompañamos todo tu proceso de conversión.</p>
-          </div>
-          <div class="grid grid--auto">
-            {servicios.map((s) => (
-              <div class="card servicio-card">
-                <span class="servicio-card__icon">{s.icon}</span>
-                <h3>{s.title}</h3>
-                <p>{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <!-- PROGRAMA DE RECOMPENSAS -->
-      <section class="recompensas">
-        <div class="container recompensas__inner">
-          <div class="recompensas__media">
-            <Image src={placeholder} alt="Programa de recompensas GNU" width={560} height={380} />
-          </div>
-          <div class="recompensas__copy">
-            <span class="eyebrow">Programa de recompensas</span>
-            <h2 class="section-heading">Gana beneficios cada vez que cargas con nosotros</h2>
-            <ul class="check-list">
-              <li>Acumula puntos por cada carga en estaciones GNU.</li>
-              <li>Canjea por mantenimiento, verificaciones y accesorios.</li>
-              <li>Descuentos exclusivos para clientes frecuentes y flotillas.</li>
-            </ul>
-            <a href="#contacto" class="btn-primary">Quiero inscribirme</a>
-          </div>
-        </div>
-      </section>
-
-      <!-- TESTIMONIALES -->
-      <section class="testimoniales">
-        <div class="container">
-          <div class="section-head">
-            <span class="eyebrow">Testimoniales</span>
-            <h2 class="section-heading">Clientes que ya ahorran con GNV</h2>
-          </div>
-          <div class="grid grid--auto">
-            {testimoniales.map((t) => (
-              <div class="card testimonial-card">
-                <p class="testimonial-card__quote">“{t.quote}”</p>
-                <div class="testimonial-card__author">
-                  <strong>{t.name}</strong>
-                  <span>{t.role}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <!-- UBICACIONES / MAPA DE ESTACIONES -->
-      <section id="ubicaciones" class="ubicaciones">
-        <div class="container ubicaciones__inner">
-          <div class="ubicaciones__copy">
-            <span class="eyebrow">Ubicaciones</span>
-            <h2 class="section-heading">Encuentra tu estación más cercana</h2>
-            <p class="section-sub">Red de estaciones y talleres certificados en crecimiento constante.</p>
-            <div class="grid grid--auto ubicaciones__list">
-              {ubicaciones.map((u) => (
-                <div class="card card--tight">
-                  <h3>{u.title}</h3>
-                  <p>{u.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div class="ubicaciones__media">
-            <Image src={placeholder} alt="Mapa de estaciones GNU" width={560} height={460} />
-          </div>
-        </div>
-      </section>
-
-      <!-- BLOG -->
-      <section id="blog" class="blog">
-        <div class="container">
-          <div class="section-head">
-            <span class="eyebrow">Blog</span>
-            <h2 class="section-heading">Aprende más sobre el GNV</h2>
-          </div>
-          <div class="grid grid--auto">
-            {blog.map((post) => (
-              <article class="card blog-card">
-                <Image src={placeholder} alt={post.title} width={360} height={200} />
-                <div class="blog-card__body">
-                  <span class="eyebrow">{post.tag}</span>
-                  <h3>{post.title}</h3>
-                  <a href="#" class="blog-card__link">Leer más →</a>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <!-- CONTACTO -->
-      <section id="contacto" class="contacto">
-        <div class="container contacto__inner">
-          <div>
-            <span class="eyebrow eyebrow--on-dark">Contacto</span>
-            <h2 class="section-heading contacto__title">Hablemos de tu conversión a GNV</h2>
-            <p class="contacto__sub">
-              Escríbenos para recibir tu cotización, agendar una verificación o resolver dudas sobre
-              facturación.
-            </p>
-            <div class="contacto__info">
-              <div>
-                <strong>Facturación</strong>
-                <span>facturacion@gnu-gnv.mx</span>
-              </div>
-              <div>
-                <strong>Mapa de estaciones</strong>
-                <a href="#ubicaciones">Ver todas las estaciones →</a>
-              </div>
-            </div>
-          </div>
-          <form class="card contacto__card" aria-label="Formulario de contacto">
-            <div class="field">
-              <label for="nombre">Nombre</label>
-              <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" />
-            </div>
-            <div class="field">
-              <label for="telefono">Teléfono</label>
-              <input type="tel" id="telefono" name="telefono" placeholder="Tu teléfono" />
-            </div>
-            <div class="field">
-              <label for="mensaje">Mensaje</label>
-              <textarea id="mensaje" name="mensaje" rows="3" placeholder="Cuéntanos qué necesitas"></textarea>
-            </div>
-            <button type="submit" class="btn-primary contacto__submit">Enviar mensaje</button>
-          </form>
-        </div>
-      </section>
-    </main>
-
-    <footer class="site-footer">
-      <div class="container site-footer__inner">
-        <div class="site-footer__brand">
-          <span class="logo__mark logo__mark--footer">GNU</span>
-          <p>Gas Natural Vehicular — energía más limpia y económica para tu movilidad.</p>
-          <div class="social-icons" aria-label="Redes sociales">
-            <a href="#" aria-label="Facebook">f</a>
-            <a href="#" aria-label="Instagram">ig</a>
-            <a href="#" aria-label="X">x</a>
-          </div>
-        </div>
-        <div class="site-footer__cols">
-          <div>
-            <h4>Sitio</h4>
-            {nav.map((item) => (
-              <a href={item.href}>{item.label}</a>
-            ))}
-          </div>
-          <div>
-            <h4>Servicios</h4>
-            <a href="#servicios">Instala tu equipo</a>
-            <a href="#servicios">Financiamiento</a>
-            <a href="#servicios">Flotillas empresariales</a>
-          </div>
-          <div>
-            <h4>Contacto</h4>
-            <a href="mailto:hola@gnu-gnv.mx">hola@gnu-gnv.mx</a>
-            <a href="#contacto">Agenda tu verificación</a>
-          </div>
+        <div class="simulator__result">
+          <p class="simulator__result-value" id="savings-value">$0 MXN</p>
+          <p class="simulator__result-label">Ahorro mensual estimado</p>
+          <p class="simulator__result-label" id="savings-annual" style="margin-top: 0.75rem;">
+            Ahorro anual estimado: $0 MXN
+          </p>
         </div>
       </div>
-      <div class="container site-footer__bottom">
-        <span>© {new Date().getFullYear()} GNU Gas Natural Vehicular. Todos los derechos reservados.</span>
+    </section>
+
+    <!-- Nuestros Servicios -->
+    <FeatureGrid id="servicios" title="Todo lo que necesitas para moverte con GNV" items={featureItems} />
+
+    <!-- Nuestros clientes -->
+    {clientsShowcase?.logos?.length ? (
+      <ClientsShowcase title={clientsShowcase.title} logos={clientsShowcase.logos} />
+    ) : null}
+
+    <!-- Programa de recompensas -->
+    {featureGrid?.items?.length ? (
+      <FeatureGrid id="recompensas" title={featureGrid.title} items={featureGrid.items} />
+    ) : (
+      <RewardsProgram
+        title={rewardsProgram?.title}
+        intro={rewardsProgram?.intro}
+        benefits={rewardsProgram?.benefits?.length ? rewardsProgram.benefits : fallbackBenefits}
+        cta_label={rewardsProgram?.cta_label ?? "Quiero inscribirme"}
+        cta_url={rewardsProgram?.cta_url ?? "/#contacto"}
+        image={rewardsProgram?.image}
+      />
+    )}
+
+    <!-- Testimoniales -->
+    <Testimonials title={testimonials?.title} items={testimonialItems} />
+
+    <!-- Ubicaciones -->
+    {stationsMap ? (
+      <StationsMap id="ubicaciones" title={stationsMap.title} center={stationsMap.center} zoom={stationsMap.zoom} />
+    ) : (
+      <LocationsList
+        title={locationsList?.title}
+        intro={locationsList?.intro}
+        locations={locations}
+        center={locationsList?.center}
+        zoom={locationsList?.zoom}
+      />
+    )}
+
+    <!-- Blog -->
+    <BlogTeaser title={blogTeaser?.title} posts={blogPosts} />
+
+    <!-- Contacto -->
+    <section class="section" id="contacto">
+      <div class="container contacto-grid">
+        <div>
+          <span class="eyebrow">Contacto</span>
+          <h2 class="section-title">Hablemos de tu conversión a GNV</h2>
+          <p class="section-subtitle">
+            Escríbenos para recibir tu cotización, agendar una verificación o resolver dudas sobre facturación.
+          </p>
+        </div>
+        <LeadCaptureForm
+          formId="home-lead-form"
+          title={leadCaptureForm?.title ?? "Cotiza sin compromiso"}
+          intro={leadCaptureForm?.intro}
+          submit_label={leadCaptureForm?.submit_label ?? "Enviar mensaje"}
+          fields={leadCaptureForm?.fields}
+        />
       </div>
-    </footer>
-
-    <a
-      class="whatsapp-fab"
-      href="https://wa.me/5210000000000"
-      target="_blank"
-      rel="noreferrer"
-      aria-label="Contacto directo por WhatsApp"
-    >
-      <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor" aria-hidden="true">
-        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.33 4.95L2 22l5.29-1.39a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.87 9.87 0 0 0 12.04 2m0 1.8a8.1 8.1 0 0 1 8.1 8.11c0 4.47-3.63 8.1-8.1 8.1a8 8 0 0 1-4.09-1.12l-.29-.17-3.14.82.84-3.06-.19-.31a8.02 8.02 0 0 1-1.23-4.26 8.1 8.1 0 0 1 8.1-8.11m-4.53 4.6c-.19 0-.5.07-.76.36-.26.28-1 .98-1 2.4 0 1.4 1.03 2.76 1.17 2.95.14.19 2 3.17 4.93 4.32 2.44.96 2.94.77 3.47.72.53-.05 1.7-.7 1.94-1.37.24-.68.24-1.26.17-1.38-.07-.12-.26-.19-.55-.33-.28-.14-1.7-.84-1.96-.93-.26-.1-.46-.14-.65.14-.19.28-.74.93-.91 1.12-.17.19-.33.21-.62.07-.28-.14-1.2-.44-2.29-1.42-.85-.75-1.42-1.68-1.59-1.96-.17-.28-.02-.43.13-.57.13-.13.28-.33.42-.5.14-.16.19-.28.28-.47.09-.19.05-.35-.02-.5-.07-.14-.65-1.58-.9-2.16-.23-.56-.47-.48-.65-.49z" />
-      </svg>
-    </a>
-
-    <script>
-      const toggle = document.getElementById("nav-toggle");
-      const mobileNav = document.getElementById("nav-mobile");
-
-      toggle?.addEventListener("click", () => {
-        const isOpen = mobileNav?.classList.toggle("is-open");
-        toggle.setAttribute("aria-expanded", String(Boolean(isOpen)));
-      });
-
-      mobileNav?.querySelectorAll("a").forEach((link) => {
-        link.addEventListener("click", () => {
-          mobileNav.classList.remove("is-open");
-          toggle?.setAttribute("aria-expanded", "false");
-        });
-      });
-    </script>
-  </body>
-</html>
+    </section>
+  </main>
+</Layout>
 
 <style>
-  /* HEADER */
-  .site-header {
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--color-border);
-  }
-  .site-header__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1.5rem;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-  }
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    text-decoration: none;
-    color: var(--color-text);
-  }
-  .logo__mark {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: var(--radius-full);
-    background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-    color: var(--color-on-dark);
-    font-weight: 800;
-    font-size: 0.8rem;
-  }
-  .logo__text {
-    font-weight: 700;
-    font-size: 0.95rem;
-    letter-spacing: -0.01em;
-  }
-  .nav {
-    display: flex;
-    align-items: center;
-    gap: 1.75rem;
-    font-size: 0.9rem;
-    font-weight: 600;
-  }
-  .nav a {
-    text-decoration: none;
-    color: var(--color-text-60);
-    transition: color 0.15s ease;
-  }
-  .nav a:hover {
-    color: var(--color-primary);
-  }
-  .site-header__actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .btn-primary--compact,
-  .btn-secondary--compact {
-    padding: 0.6rem 1.15rem;
-    font-size: 0.8rem;
-  }
-  .nav-toggle {
-    display: none;
-    flex-direction: column;
-    justify-content: center;
-    gap: 5px;
-    width: 2.25rem;
-    height: 2.25rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: none;
-    cursor: pointer;
-  }
-  .nav-toggle span {
-    display: block;
-    height: 2px;
-    background: var(--color-text);
-    border-radius: 1px;
-  }
-  .nav-mobile {
-    display: none;
-    flex-direction: column;
-    gap: 0.25rem;
-    padding: 0 1.5rem 1.25rem;
-  }
-  .nav-mobile a {
-    padding: 0.6rem 0;
-    text-decoration: none;
-    color: var(--color-text);
-    font-weight: 600;
-    border-bottom: 1px solid var(--color-border);
-  }
-  .nav-mobile.is-open {
-    display: flex;
-  }
-
-  @media (max-width: 900px) {
-    .nav,
-    .site-header__actions {
-      display: none;
-    }
-    .nav-toggle {
-      display: flex;
-    }
-  }
-
-  /* HERO */
-  .hero {
-    padding-top: 4rem;
-    background: radial-gradient(120% 100% at 100% 0%, var(--color-primary-tint) 0%, var(--color-bg) 55%);
-  }
-  .hero__inner {
+  .contacto-grid {
     display: grid;
-    grid-template-columns: 1.1fr 1fr;
     gap: 3rem;
-    align-items: center;
-  }
-  .hero__title {
-    font-size: 2.75rem;
-    line-height: 1.1;
-    margin-top: 1rem;
-  }
-  .hero__sub {
-    margin-top: 1.25rem;
-    font-size: 1.05rem;
-    color: var(--color-text-60);
-    max-width: 34rem;
-  }
-  .hero__cta {
-    display: flex;
-    gap: 1rem;
-    margin-top: 2rem;
-    flex-wrap: wrap;
-  }
-  .hero__stats {
-    display: flex;
-    gap: 2.5rem;
-    margin-top: 3rem;
-    flex-wrap: wrap;
-  }
-  .hero__stats div {
-    display: flex;
-    flex-direction: column;
-  }
-  .hero__stats strong {
-    font-size: 1.5rem;
-    color: var(--color-primary-alt);
-  }
-  .hero__stats span {
-    font-size: 0.8rem;
-    color: var(--color-text-40);
-  }
-  .hero__media {
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow-card);
-  }
-  .hero__media :global(img) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
   }
 
-  @media (max-width: 900px) {
-    .hero__inner {
-      grid-template-columns: 1fr;
-    }
-    .hero__title {
-      font-size: 2.1rem;
-    }
-  }
-
-  /* BANNERS / CARRUSEL */
-  .banners {
-    padding-top: 0;
-    padding-bottom: 2.5rem;
-  }
-  .banners__track {
-    display: flex;
-    gap: 1.5rem;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    padding-bottom: 0.5rem;
-  }
-  .banner-card {
-    flex: 0 0 min(320px, 85vw);
-    scroll-snap-align: start;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    border: 1px solid var(--color-border);
-    box-shadow: var(--shadow-card);
-    background: var(--color-surface);
-  }
-  .banner-card :global(img) {
-    width: 100%;
-    height: 160px;
-    object-fit: cover;
-  }
-  .banner-card__body {
-    padding: 1rem 1.25rem 1.35rem;
-  }
-  .banner-card__body h3 {
-    margin-top: 0.5rem;
-    font-size: 1rem;
-  }
-
-  /* SIMULADOR */
-  .simulador {
-    background: var(--color-bg-alt);
-  }
-  .simulador__inner {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    align-items: center;
-  }
-  .check-list {
-    list-style: none;
-    padding: 0;
-    margin: 1.5rem 0 2rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .check-list li {
-    padding-left: 1.75rem;
-    position: relative;
-    color: var(--color-text-60);
-  }
-  .check-list li::before {
-    content: "✓";
-    position: absolute;
-    left: 0;
-    top: 0;
-    color: var(--color-primary);
-    font-weight: 700;
-  }
-  .simulador__card {
-    display: flex;
-    flex-direction: column;
-    gap: 1.1rem;
-  }
-  .simulador__submit {
-    justify-content: center;
-    width: 100%;
-  }
-  .simulador__result {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-radius: var(--radius-md);
-    background: var(--color-primary-soft);
-    padding: 0.85rem 1rem;
-  }
-  .simulador__result .hint {
-    font-size: 0.8rem;
-    color: var(--color-text-60);
-  }
-  .simulador__result strong {
-    color: var(--color-primary-alt);
-    font-size: 1.1rem;
-  }
-
-  @media (max-width: 900px) {
-    .simulador__inner {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* FIELDS (shared: simulador + contacto) */
-  .field label {
-    display: block;
-    margin-bottom: 0.3rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--color-text-60);
-  }
-  .field input,
-  .field textarea {
-    width: 100%;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--color-border);
-    background: var(--color-bg);
-    padding: 0.65rem 0.85rem;
-    font-size: 0.9rem;
-    color: var(--color-text);
-    font-family: inherit;
-  }
-  .field input::placeholder,
-  .field textarea::placeholder {
-    color: var(--color-text-40);
-  }
-  .field input:focus,
-  .field textarea:focus {
-    outline: none;
-    border-color: var(--color-primary);
-  }
-
-  /* SECTION HEAD */
-  .section-head {
-    max-width: 40rem;
-    margin-bottom: 2.5rem;
-  }
-
-  /* SERVICIOS */
-  .servicio-card {
-    display: flex;
-    flex-direction: column;
-    gap: 0.6rem;
-  }
-  .servicio-card__icon {
-    font-size: 1.75rem;
-  }
-  .servicio-card p {
-    margin: 0;
-    color: var(--color-text-60);
-    font-size: 0.9rem;
-  }
-
-  /* RECOMPENSAS */
-  .recompensas {
-    background: var(--color-bg-alt);
-  }
-  .recompensas__inner {
-    display: grid;
-    grid-template-columns: 1fr 1.1fr;
-    gap: 3rem;
-    align-items: center;
-  }
-  .recompensas__media {
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow-card);
-  }
-  @media (max-width: 900px) {
-    .recompensas__inner {
-      grid-template-columns: 1fr;
-    }
-    .recompensas__media {
-      order: -1;
-    }
-  }
-
-  /* TESTIMONIALES */
-  .testimonial-card {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    justify-content: space-between;
-  }
-  .testimonial-card__quote {
-    margin: 0;
-    color: var(--color-text-60);
-    font-style: italic;
-  }
-  .testimonial-card__author {
-    display: flex;
-    flex-direction: column;
-    font-size: 0.85rem;
-  }
-  .testimonial-card__author span {
-    color: var(--color-text-40);
-  }
-
-  /* UBICACIONES */
-  .ubicaciones__inner {
-    display: grid;
-    grid-template-columns: 1.15fr 1fr;
-    gap: 3rem;
-    align-items: start;
-  }
-  .ubicaciones__list {
-    margin-top: 2rem;
-  }
-  .ubicaciones__list h3 {
-    font-size: 1rem;
-  }
-  .ubicaciones__list p {
-    margin: 0.4rem 0 0;
-    font-size: 0.85rem;
-    color: var(--color-text-60);
-  }
-  .ubicaciones__media {
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    box-shadow: var(--shadow-card);
-    position: sticky;
-    top: 6rem;
-  }
-  @media (max-width: 900px) {
-    .ubicaciones__inner {
-      grid-template-columns: 1fr;
-    }
-    .ubicaciones__media {
-      position: static;
-    }
-  }
-
-  /* BLOG */
-  .blog-card {
-    padding: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  .blog-card__body {
-    padding: 1.1rem 1.25rem 1.4rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  .blog-card__body h3 {
-    font-size: 1rem;
-  }
-  .blog-card__link {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--color-primary);
-    text-decoration: none;
-  }
-
-  /* CONTACTO */
-  .contacto {
-    background: linear-gradient(160deg, var(--color-bg-dark), var(--color-primary-alt));
-    color: var(--color-on-dark);
-  }
-  .contacto__inner {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    align-items: start;
-  }
-  .contacto__title {
-    color: var(--color-on-dark);
-  }
-  .contacto__sub {
-    margin-top: 1rem;
-    color: var(--color-on-dark-70);
-    max-width: 30rem;
-  }
-  .contacto__info {
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    margin-top: 2.5rem;
-  }
-  .contacto__info strong {
-    display: block;
-    font-size: 0.85rem;
-    color: var(--color-on-dark-70);
-  }
-  .contacto__info span,
-  .contacto__info a {
-    color: var(--color-on-dark);
-    text-decoration: none;
-    font-weight: 600;
-  }
-  .contacto__card {
-    display: flex;
-    flex-direction: column;
-    gap: 1.1rem;
-    background: var(--color-on-dark);
-  }
-  .contacto__submit {
-    justify-content: center;
-    width: 100%;
-  }
-  @media (max-width: 900px) {
-    .contacto__inner {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  /* FOOTER */
-  .site-footer {
-    background: var(--color-bg-dark);
-    color: var(--color-on-dark-70);
-    padding-top: 3.5rem;
-  }
-  .site-footer__inner {
-    display: grid;
-    grid-template-columns: 1.2fr 2fr;
-    gap: 3rem;
-    padding-bottom: 2.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  }
-  .site-footer__brand p {
-    margin: 1rem 0 1.25rem;
-    font-size: 0.9rem;
-    max-width: 22rem;
-  }
-  .logo__mark--footer {
-    margin-bottom: 0.5rem;
-  }
-  .social-icons {
-    display: flex;
-    gap: 0.6rem;
-  }
-  .social-icons a {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.1rem;
-    height: 2.1rem;
-    border-radius: var(--radius-full);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    color: var(--color-on-dark);
-    text-decoration: none;
-    font-size: 0.75rem;
-    font-weight: 700;
-  }
-  .site-footer__cols {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-  }
-  .site-footer__cols h4 {
-    color: var(--color-on-dark);
-    font-size: 0.85rem;
-    margin-bottom: 1rem;
-  }
-  .site-footer__cols a {
-    display: block;
-    text-decoration: none;
-    font-size: 0.85rem;
-    color: var(--color-on-dark-70);
-    margin-bottom: 0.65rem;
-  }
-  .site-footer__bottom {
-    padding: 1.5rem;
-    font-size: 0.8rem;
-    text-align: center;
-  }
-  @media (max-width: 700px) {
-    .site-footer__inner {
-      grid-template-columns: 1fr;
-    }
-    .site-footer__cols {
+  @media (min-width: 860px) {
+    .contacto-grid {
       grid-template-columns: 1fr 1fr;
+      align-items: start;
     }
-  }
-
-  /* WHATSAPP FAB */
-  .whatsapp-fab {
-    position: fixed;
-    right: 1.5rem;
-    bottom: 1.5rem;
-    z-index: 60;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: var(--radius-full);
-    background: #25d366;
-    color: #ffffff;
-    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.35);
-    text-decoration: none;
-    transition: transform 0.15s ease;
-  }
-  .whatsapp-fab:hover {
-    transform: scale(1.06);
   }
 </style>
+
+<script>
+  const track = document.querySelector<HTMLElement>(".hero__track");
+  const slides = Array.from(document.querySelectorAll<HTMLElement>(".hero-slide"));
+  const dotsContainer = document.querySelector<HTMLElement>(".hero__dots");
+
+  if (track && slides.length && dotsContainer) {
+    slides.forEach((_, index) => {
+      const dot = document.createElement("button");
+      dot.className = "hero__dot" + (index === 0 ? " is-active" : "");
+      dot.setAttribute("aria-label", `Ir al banner ${index + 1}`);
+      dot.addEventListener("click", () => showSlide(index));
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = Array.from(dotsContainer.querySelectorAll<HTMLButtonElement>(".hero__dot"));
+    let current = 0;
+
+    function showSlide(index: number) {
+      slides[current].classList.remove("is-active");
+      dots[current].classList.remove("is-active");
+      current = index;
+      slides[current].classList.add("is-active");
+      dots[current].classList.add("is-active");
+    }
+
+    setInterval(() => {
+      showSlide((current + 1) % slides.length);
+    }, 5000);
+  }
+</script>
+
+<script is:inline define:vars={{ savingsRatesByFuel }}>
+  const savingsForm = document.querySelector("#savings-form");
+  const fuelSelect = document.querySelector("#fuel-type");
+  const savingsValue = document.querySelector("#savings-value");
+  const savingsAnnual = document.querySelector("#savings-annual");
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let currentMonthly = 0;
+
+  function animateCount(el, from, to, duration, format) {
+    if (!el) return;
+    if (prefersReducedMotion || from === to) {
+      el.textContent = format(to);
+      return;
+    }
+    const start = performance.now();
+    function tick(now) {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = format(Math.round(from + (to - from) * eased));
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  savingsForm?.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const input = document.querySelector("#monthly-spend");
+    const spend = Number(input?.value ?? 0);
+    if (!Number.isFinite(spend) || spend <= 0) return;
+
+    const savingsRate = savingsRatesByFuel[fuelSelect?.value] ?? 0;
+
+    const monthlySavings = Math.round(spend * savingsRate);
+    const annualSavings = monthlySavings * 12;
+
+    if (savingsValue) {
+      animateCount(savingsValue, currentMonthly, monthlySavings, 650, (v) => `$${v.toLocaleString("es-MX")} MXN`);
+      currentMonthly = monthlySavings;
+      savingsValue.classList.remove("is-updated");
+      void savingsValue.offsetWidth;
+      savingsValue.classList.add("is-updated");
+    }
+    if (savingsAnnual) savingsAnnual.textContent = `Ahorro anual estimado: $${annualSavings.toLocaleString("es-MX")} MXN`;
+  });
+</script>

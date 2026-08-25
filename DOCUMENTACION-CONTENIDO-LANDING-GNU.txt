@@ -2,6 +2,8 @@
  GUIA DE CONTENIDO PARA EL PANEL DE ADMINISTRACION (gnu-cms-admin)
  Sitio: landing-gnu (gnugas.mx)
  Fecha de elaboracion: 2026-08-15
+ Ultima actualizacion: 2026-08-18 (seccion 1.5, 1.6 y nueva SECCION 4
+   revisadas contra el codigo actual; ver tambien "PENDIENTES TECNICOS")
 ==============================================================================
 
 PROPOSITO DE ESTE DOCUMENTO
@@ -98,24 +100,41 @@ Por cada slide/diapositiva:
   Campo "Campos del formulario": bloqueado/solo informativo, no modificar.
 
 --- 1.5 Datos de contacto, Redes sociales, Boton de WhatsApp -----------------
-  *** ADVERTENCIA IMPORTANTE ***
-  Estas 3 secciones existen en el panel de administracion, pero HOY NO TIENEN
-  NINGUN EFECTO en el sitio publico. El pie de pagina (telefono, correo,
-  horario, iconos de redes sociales) y el boton flotante de WhatsApp estan
-  fijos en el codigo del sitio y no leen lo que se captura aqui.
-  Si necesitas cambiar el telefono de WhatsApp, correo, horario o redes
-  sociales que se ven en el sitio, hay que pedirle a un desarrollador que
-  edite el archivo Layout.astro directamente. Llenar estos campos en el
-  panel por ahora no actualiza nada visible.
+  ACTUALIZACION (2026-08-18): estas 3 secciones YA estan conectadas al sitio
+  publico (se editan en el panel > Landing Page > pagina "inicio"). Lo que
+  se guarda aqui SI se refleja en el pie de pagina y en el boton flotante de
+  WhatsApp del sitio, tras el siguiente build/despliegue del sitio.
+  *** IMPORTANTE - valores de respaldo (mock) mientras no se llenen ***
+  Si estos campos se dejan vacios, el sitio NO se queda en blanco: muestra
+  datos de relleno fijos en el codigo, que YA estan publicados hoy en el
+  sitio en vivo y deben reemplazarse por los datos reales cuanto antes:
+    - Correo: contacto@gnugas.mx (de relleno)
+    - Telefono: 800 555 0192 (de relleno)
+    - Horario: "Lun-Vie, 9:00-18:00" (de relleno)
+    - Redes sociales: si no se captura ninguna red, el pie de pagina muestra
+      iconos de Facebook / Instagram / LinkedIn / YouTube que enlazan a "#"
+      (no van a ningun lado)
+    - Boton de WhatsApp: si no se captura telefono, usa un numero de relleno
+      (525555550192) que no es una linea real de la empresa
+  Llenar estos 3 formularios con los datos reales de la empresa es lo mas
+  urgente para que el sitio deje de mostrar informacion de contacto falsa.
 
 --- 1.6 Mapa de estaciones (stations_map) -------------------------------------
-  *** ADVERTENCIA IMPORTANTE ***
-  El mapa que aparece al final de la pagina de inicio (stations_map) NO tiene
-  un formulario en el panel de administracion todavia. No hay forma de
-  editarlo desde la interfaz; requiere edicion directa por un desarrollador.
-  El boton "Agregar estacion" que aparece en la pagina de Contacto del panel
-  TAMPOCO guarda datos reales (es una funcion de prueba/pendiente); llenar
-  ese formulario no crea una estacion nueva en el sitio.
+  ACTUALIZACION (2026-08-18): esta seccion YA tiene formulario en el panel
+  (se edita junto con las demas secciones de la pagina "Contacto", con un
+  selector de ubicacion en mapa tipo Leaflet para fijar el punto central y
+  el zoom). El mapa se muestra tanto en Contacto como al final de la pagina
+  de Inicio.
+  Campo "Titulo": 20-40 caracteres (ej. "Donde encontrarnos")
+  Campo "Ubicacion" (center): se fija con el selector de mapa, no se escribe
+    a mano.
+  Campo "Zoom": nivel de acercamiento del mapa (12 es un buen punto de
+    partida para una ciudad).
+  *** IMPORTANTE ***
+  Mientras no se guarde una ubicacion, el sitio muestra el texto de relleno
+  "Mapa no disponible" en vez de un mapa. Este bloque muestra UN solo punto/
+  mapa (la ubicacion de la empresa o una sola estacion destacada), no una
+  lista de multiples estaciones con varios marcadores.
 
 ==============================================================================
 SECCION 2: PAGINAS INTERIORES (Nuestros servicios, Sobre nosotros y sus
@@ -193,6 +212,96 @@ Ruta sitio: gnugas.mx/blog y gnugas.mx/blog/<slug>
   Campo "Fecha de publicacion": selector de fecha y hora.
 
 ==============================================================================
+SECCION 4: DATOS GENERALES DEL SITIO QUE HOY ESTAN FIJOS EN EL CODIGO
+(no se editan desde el panel de administracion; se necesita pedirle a un
+desarrollador que los cambie, o darle el contenido final para dejarlos fijos
+correctamente)
+==============================================================================
+Todo lo de esta seccion aplica a TODO el sitio (no es una pagina en
+especifico) y hoy no tiene ningun campo en el panel de administracion.
+Es contenido "de relleno"/provisional que quedo fijo en el codigo mientras
+se construia el sitio, y que debe confirmarse o reemplazarse con el dato
+definitivo antes de considerar el sitio terminado.
+
+--- 4.1 Favicon (icono de la pestana del navegador) ---------------------------
+  El icono que aparece en la pestana del navegador y al guardar el sitio en
+  favoritos NO se sube desde el panel; son 2 archivos fijos en el proyecto
+  (favicon.svg y favicon.ico) con un icono generico/de ejemplo.
+  Se necesita: el logo/isotipo final de GNU Gas Natural en dos formatos:
+    - favicon.svg (vectorial, preferido, se ve nitido en cualquier tamano)
+    - favicon.ico (formato clasico, respaldo para navegadores viejos)
+  Una vez que se entregue el archivo final, un desarrollador lo reemplaza;
+  no requiere cambios de codigo, solo sustituir el archivo.
+
+--- 4.2 Nombre del sitio / titulo de las pestanas del navegador ---------------
+  El nombre "GNU Gas Natural" que aparece en:
+    - El logo de texto del encabezado y del pie de pagina
+    - El titulo de la pestana del navegador de TODAS las paginas (se arma
+      como "Nombre de la pagina — GNU Gas Natural")
+    - El titulo y descripcion que se usan cuando alguien comparte el sitio
+      en redes sociales o lo encuentra en Google (si una pagina no define
+      su propio titulo/descripcion)
+  esta fijo en el codigo, no en el panel. Confirmar que "GNU Gas Natural" es
+  el nombre comercial definitivo (y no, por ejemplo, "GNU" o el nombre legal
+  de la empresa) antes de darlo por terminado; si cambia, requiere edicion
+  de codigo en varios archivos, no es un solo campo.
+
+--- 4.3 Menu de navegacion (encabezado y pie de pagina) -----------------------
+  Los enlaces del menu superior (Inicio, Nuestros Servicios, Sobre Nosotros,
+  Desarrollo Sostenible, Blog, Contacto) y su repeticion en el pie de pagina
+  son una lista fija en el codigo. Agregar, quitar o renombrar una opcion de
+  menu requiere que un desarrollador edite el archivo, no se hace desde el
+  panel.
+
+--- 4.4 Textos fijos del pie de pagina -----------------------------------------
+  Ademas de los datos de contacto (ver 1.5), el pie de pagina tiene texto
+  fijo en el codigo que no se edita desde el panel:
+    - Frase debajo del logo: "Energia limpia y ahorro real para hogares,
+      negocios y flotillas vehiculares en todo Mexico."
+    - Lista "Servicios": Gas Natural Comprimido (GNC), Gas Natural
+      Domiciliario (GND), Gas Natural Vehicular (GNV) — las 3 apuntan a la
+      misma pagina (/nuestros-servicios), no a paginas especificas por tipo
+      de gas.
+    - "Aviso de privacidad · Terminos y condiciones": HOY es solo texto, NO
+      son enlaces reales (no llevan a ninguna pagina). Si la empresa tiene
+      (o necesita redactar) un aviso de privacidad y terminos y condiciones,
+      hay que crear esas paginas y convertir este texto en enlaces.
+    - Ano de derechos reservados ("© 2025 GNU Gas Natural"): esta escrito a
+      mano, no se actualiza solo cada ano nuevo. Hay que recordar pedirle a
+      un desarrollador que lo actualice (o cambiarlo por un calculo
+      automatico del ano actual) para que no se quede desactualizado.
+
+--- 4.5 Imagen "sin foto" (placeholder generico) -------------------------------
+  Cuando falta una imagen en el CMS (una diapositiva del carrusel sin
+  imagen, un logo de cliente sin logo, una portada de blog sin imagen), el
+  sitio no deja el espacio vacio: muestra una imagen generica de relleno
+  ("sin imagen"/gris). Esto es normal y esperado, pero es una senal de que
+  falta subir la imagen real en esa seccion — revisar peridicamente que no
+  haya imagenes de relleno visibles en el sitio en vivo.
+
+--- 4.6 Otros valores de relleno (mock) detectados en el codigo ---------------
+  - Carrusel de banners (inicio): si la seccion "banner_carousel" no tiene
+    ninguna diapositiva capturada en el panel, el sitio muestra 3
+    diapositivas de ejemplo fijas en el codigo ("Hasta 40% menos que la
+    gasolina", "+120 estaciones en todo Mexico", "Menor huella de carbono
+    desde hoy") con la imagen generica de 4.5. Sirven de respaldo para que
+    la pagina nunca se vea vacia, pero son contenido de muestra, no datos
+    reales de la empresa.
+  - Clientes (clients_showcase): si no hay ningun logo capturado, se muestra
+    un logo de ejemplo llamado "Cliente de ejemplo". Igual que el punto
+    anterior, es solo para que la seccion no se vea vacia.
+  - Simulador de ahorro: si el CMS no entrega precios de combustible validos,
+    la calculadora usa una tasa de ahorro fija de 35% en vez de calcularla
+    con los precios reales capturados en el panel (ver seccion 1.2). Revisar
+    que la seccion "savings_simulator" siempre tenga precios capturados y
+    actualizados para que el numero que ve el visitante sea real.
+
+Recomendacion general: pedir a un desarrollador una revision del sitio en
+vivo para confirmar cuales de estos valores de relleno siguen visibles hoy
+(especialmente 4.1, 4.2 y los datos de contacto de la seccion 1.5), y
+priorizar reemplazarlos por contenido/archivos definitivos.
+
+==============================================================================
 TABLA RESUMEN RAPIDA DE IMAGENES
 ==============================================================================
 Elemento                      | Tamano recomendado | Relacion | Formato | Peso max
@@ -232,13 +341,37 @@ para que el texto no se vea cortado, apretado o desbordado en pantalla.
 ==============================================================================
 PENDIENTES TECNICOS DETECTADOS (para reportar a desarrollo, no para el editor)
 ==============================================================================
-1. Los campos "Datos de contacto", "Redes sociales" y "Boton de WhatsApp" del
-   panel no estan conectados al sitio (contenido fijo en el codigo).
-2. La seccion "Mapa de estaciones" (stations_map) no tiene formulario en el
-   panel; solo se puede editar por un desarrollador directamente.
-3. El boton "Agregar estacion" en la pagina de Contacto del panel no guarda
-   informacion real (funcion pendiente/incompleta).
+RESUELTOS (dejados aqui como historial, confirmados el 2026-08-18):
+1. [RESUELTO] "Datos de contacto", "Redes sociales" y "Boton de WhatsApp" ya
+   estan conectados al sitio publico (ver seccion 1.5 actualizada).
+2. [RESUELTO] "Mapa de estaciones" (stations_map) ya tiene formulario en el
+   panel, con selector de ubicacion tipo Leaflet (ver seccion 1.6
+   actualizada).
+3. [OBSOLETO] El boton independiente "Agregar estacion" ya no existe como
+   tal; la ubicacion se captura directamente en el formulario de la seccion
+   stations_map (punto 2).
+
+PENDIENTES ACTUALES:
 4. El panel no valida tamano de archivo, formato ni dimensiones de imagen
    antes de subir, ni longitud de textos - toda la validacion depende de
    seguir esta guia manualmente.
+5. Favicon fijo en el codigo con un icono generico/de ejemplo; falta que nos
+   entreguen el logo/isotipo final en .svg y .ico (ver seccion 4.1).
+6. Nombre del sitio "GNU Gas Natural" y el sufijo de titulo de cada pagina
+   estan fijos en el codigo, sin campo en el panel; confirmar si es el
+   nombre comercial definitivo (ver seccion 4.2).
+7. Menu de navegacion (encabezado/pie de pagina) es una lista fija en el
+   codigo, no editable desde el panel (ver seccion 4.3).
+8. Pie de pagina: la frase bajo el logo, la lista "Servicios", los enlaces
+   "Aviso de privacidad · Terminos y condiciones" (hoy son solo texto, no
+   enlazan a ninguna pagina) y el ano de copyright estan fijos en el codigo
+   (ver seccion 4.4). Falta decidir si se crean las paginas legales y se
+   automatiza el ano.
+9. Varias secciones muestran contenido de relleno/mock fijo en el codigo
+   cuando el campo del CMS esta vacio: banner del carrusel (3 diapositivas
+   de ejemplo), logo de cliente de ejemplo, tasa fija de 35% en el
+   simulador de ahorro si faltan precios validos, e imagen generica "sin
+   foto" en cualquier campo de imagen vacio (ver seccion 4.5 y 4.6). No es
+   un bug, pero hay que confirmar que ya no quede ninguno visible en el
+   sitio en vivo.
 ==============================================================================

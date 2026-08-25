@@ -1,0 +1,36 @@
+---
+import { mediaUrl } from "../../functions/fetch";
+
+interface Props {
+  title?: string | null;
+  intro?: string | null;
+  benefits: string[];
+  cta_label?: string | null;
+  cta_url?: string | null;
+  image?: string | null;
+}
+
+const { title, intro, benefits, cta_label, cta_url, image } = Astro.props;
+const rewardsImage = image ? mediaUrl(image) : null;
+---
+
+<section class="section rewards">
+  <div class="container rewards__inner">
+    {rewardsImage && (
+      <div class="rewards__media">
+        <img src={rewardsImage} alt="" width="560" height="380" />
+      </div>
+    )}
+    <div>
+      <span class="eyebrow">Programa de recompensas</span>
+      <h2 class="section-title">{title ?? "Gana beneficios cada vez que cargas con nosotros"}</h2>
+      {intro && <p class="card__text" style="margin-top: 0.875rem;">{intro}</p>}
+      <ul class="check-list">
+        {benefits.map((benefit) => <li>{benefit}</li>)}
+      </ul>
+      {cta_url && cta_label && (
+        <a href={cta_url} class="btn-primary">{cta_label}</a>
+      )}
+    </div>
+  </div>
+</section>

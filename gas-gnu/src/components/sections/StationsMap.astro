@@ -1,0 +1,28 @@
+---
+interface Props {
+  title?: string | null;
+  center?: string | null;
+  zoom?: string | number | null;
+  id?: string;
+}
+
+const { title, center, zoom = "12", id } = Astro.props;
+const embedSrc = center ? `https://www.google.com/maps?q=${encodeURIComponent(center)}&z=${zoom}&output=embed` : null;
+---
+
+<section class="section section--alt" id={id}>
+  <div class="container">
+    {title && (
+      <div class="section-head section-head--center">
+        <h2 class="section-title">{title}</h2>
+      </div>
+    )}
+    <div class="stations-map">
+      {embedSrc ? (
+        <iframe class="stations-map__frame" src={embedSrc} loading="lazy" title={title ?? "Mapa"}></iframe>
+      ) : (
+        <div class="stations-map__placeholder">Mapa no disponible</div>
+      )}
+    </div>
+  </div>
+</section>

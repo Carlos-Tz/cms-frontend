@@ -21,7 +21,7 @@ const children = [
 ];
 ---
 
-<Layout title={page ? `${page.title} — GNU Gas Natural` : "Desarrollo Sostenible — GNU Gas Natural"}>
+<Layout title={page?.title ?? "Desarrollo Sostenible"}>
   <main>
     {!page && (
       <section class="page-hero">

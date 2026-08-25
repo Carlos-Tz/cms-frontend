@@ -8,7 +8,6 @@ import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { fetchData, updateSection } from '../functions/fetch'
 import {
   inputClass,
-  buttonSecondaryClass,
   fieldError,
   Field,
   CharHint,
@@ -33,14 +32,6 @@ const SECTION_LABELS = {
   rich_text: 'Texto enriquecido',
   clients_showcase: 'Clientes',
   stations_map: 'Mapa de estaciones',
-}
-
-const DEFAULT_CONTENT = {
-  page_hero: { title: '', subtitle: '', image: null },
-  feature_grid: { title: '', items: [] },
-  rich_text: { title: null, body: '', video_url: null },
-  clients_showcase: { title: '', logos: [] },
-  stations_map: { title: '', center: '', zoom: '12' },
 }
 
 function parseCenter(center) {
@@ -264,6 +255,7 @@ function StationsMapPicker({ latitude, longitude, onPick }) {
     return () => {
       map.remove()
       mapRef.current = null
+      markerRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -423,75 +415,7 @@ function SectionCard({ section, onUpdated }) {
   )
 }
 
-function CreateSectionForm({ onCreated }) {
-  const [id, setId] = useState('')
-  const [type, setType] = useState(Object.keys(SECTION_LABELS)[0])
-  const [creating, setCreating] = useState(false)
-  const [status, setStatus] = useState({ message: '', error: false })
-
-  async function handleCreate(event) {
-    event.preventDefault()
-    if (!id) return
-
-    setCreating(true)
-    setStatus({ message: '', error: false })
-
-    const res = await updateSection(id, DEFAULT_CONTENT[type] ?? {})
-
-    setCreating(false)
-
-    if (res?.status === 'success') {
-      onCreated(res.data)
-      setId('')
-      setStatus({ message: res.meta?.message ?? 'Sección creada correctamente', error: false })
-    } else {
-      setStatus({ message: res?.meta?.message ?? res?.message ?? 'No se pudo crear la sección.', error: true })
-    }
-  }
-
-  return (
-    <form
-      onSubmit={handleCreate}
-      className="flex flex-wrap items-end gap-3 rounded-2xl border border-dashed border-white/15 bg-white/5 p-4"
-    >
-      <div className="w-28">
-        <Field label="ID" hint="Id reservado.">
-          <input
-            type="number"
-            min="1"
-            required
-            value={id}
-            onChange={(e) => setId(e.target.value)}
-            className={inputClass}
-          />
-        </Field>
-      </div>
-      <div className="w-56">
-        <Field label="Tipo">
-          <select value={type} onChange={(e) => setType(e.target.value)} className={inputClass}>
-            {Object.keys(SECTION_LABELS).map((key) => (
-              <option key={key} value={key}>
-                {SECTION_LABELS[key]}
-              </option>
-            ))}
-          </select>
-        </Field>
-      </div>
-      <button
-        type="submit"
-        disabled={creating}
-        className="rounded-full bg-gradient-to-r from-[#863bff] to-[#47bfff] px-5 py-2 text-sm font-semibold text-white shadow-lg shadow-[#863bff]/30 transition hover:brightness-110 disabled:opacity-60"
-      >
-        {creating ? 'Creando…' : '+ Crear sección'}
-      </button>
-      {status.message && (
-        <span className={`text-sm ${status.error ? 'text-rose-400' : 'text-emerald-300'}`}>{status.message}</span>
-      )}
-    </form>
-  )
-}
-
-// Headless: the section cards + create-form, without page chrome (header/back link).
+// Headless: the section cards, without page chrome (header/back link).
 // Lets a host page (e.g. the Contacto admin page) embed section editing inline
 // alongside its own content instead of duplicating a "Back" link and title.
 export function SectionsFields({ site = 'gnu', page, onTotalChange }) {
@@ -535,17 +459,6 @@ export function SectionsFields({ site = 'gnu', page, onTotalChange }) {
     setSections((prev) => prev.map((s) => (s.id === updatedSection.id ? updatedSection : s)))
   }
 
-  function handleCreated(newSection) {
-    setSections((prev) => {
-      if (prev.some((s) => s.id === newSection.id)) {
-        return prev.map((s) => (s.id === newSection.id ? newSection : s))
-      }
-      const next = [...prev, newSection].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
-      onTotalChange?.(next.length)
-      return next
-    })
-  }
-
   if (loading) return <p className="text-sm text-white/60">Cargando secciones…</p>
   if (error) return <p className="text-sm text-rose-400">{error}</p>
 
@@ -555,7 +468,6 @@ export function SectionsFields({ site = 'gnu', page, onTotalChange }) {
       {sections.map((section) => (
         <SectionCard key={section.id} section={section} onUpdated={handleUpdated} />
       ))}
-      <CreateSectionForm onCreated={handleCreated} />
     </div>
   )
 }

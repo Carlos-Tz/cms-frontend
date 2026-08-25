@@ -1,0 +1,44 @@
+---
+interface Location {
+  title: string;
+  text: string;
+}
+
+interface Props {
+  title?: string | null;
+  intro?: string | null;
+  locations: Location[];
+  center?: string | null;
+  zoom?: string | number | null;
+}
+
+const { title, intro, locations, center, zoom = "12" } = Astro.props;
+const embedSrc = center ? `https://www.google.com/maps?q=${encodeURIComponent(center)}&z=${zoom}&output=embed` : null;
+---
+
+<section class="section" id="ubicaciones">
+  <div class="container locations">
+    <div>
+      <span class="eyebrow">Ubicaciones</span>
+      <h2 class="section-title">{title ?? "Encuentra tu estación más cercana"}</h2>
+      <p class="section-subtitle">
+        {intro ?? "Red de estaciones y talleres certificados en crecimiento constante."}
+      </p>
+      <div class="grid grid--4 locations__list">
+        {locations.map((location) => (
+          <div class="card card--tight">
+            <h3>{location.title}</h3>
+            <p>{location.text}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+    <div class="locations__map stations-map">
+      {embedSrc ? (
+        <iframe class="stations-map__frame" src={embedSrc} loading="lazy" title={title ?? "Mapa de estaciones"}></iframe>
+      ) : (
+        <div class="stations-map__placeholder">Mapa no disponible</div>
+      )}
+    </div>
+  </div>
+</section>

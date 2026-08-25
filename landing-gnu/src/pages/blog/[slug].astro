@@ -41,8 +41,10 @@ const formatDate = (value: string) =>
 ---
 
 <Layout
-  title={post ? `${post.title} — GNU Gas Natural` : "Publicación no encontrada — GNU Gas Natural"}
+  title={post?.title ?? "Publicación no encontrada"}
   description={post?.excerpt}
+  image={post?.cover_image ? mediaUrl(post.cover_image) : undefined}
+  noindex={!post}
 >
   <main>
     {post ? (

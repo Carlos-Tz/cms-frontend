@@ -21,6 +21,11 @@ import GnuCertificaciones from './pages/gnu/sobre-nosotros/certificaciones'
 import GnuNuestraHistoria from './pages/gnu/sobre-nosotros/nuestra-historia'
 import GnuSelectPage from './pages/gnu/select-page'
 import GasNaturalSelectPage from './pages/gas-natural/select-page'
+import GasNaturalInicio from './pages/gas-natural/inicio'
+import GasNaturalNuestrosServicios from './pages/gas-natural/nuestros-servicios'
+import GasNaturalUbicaciones from './pages/gas-natural/ubicaciones'
+import GasNaturalContacto from './pages/gas-natural/contacto'
+import GasNaturalBlog from './pages/gas-natural/blog'
 
 const FEATURES = [
   {
@@ -138,6 +143,11 @@ export default function App() {
       <Route path="/gnu/sobre-nosotros/certificaciones" element={<GnuCertificaciones />} />
       <Route path="/gnu/sobre-nosotros/nuestra-historia" element={<GnuNuestraHistoria />} />
       <Route path="/gas-natural/select-page" element={<GasNaturalSelectPage />} />
+      <Route path="/gas-natural/inicio" element={<GasNaturalInicio />} />
+      <Route path="/gas-natural/nuestros-servicios" element={<GasNaturalNuestrosServicios />} />
+      <Route path="/gas-natural/ubicaciones" element={<GasNaturalUbicaciones />} />
+      <Route path="/gas-natural/contacto" element={<GasNaturalContacto />} />
+      <Route path="/gas-natural/blog" element={<GasNaturalBlog />} />
       <Route path="/gnu/editable-sections" element={<EditableSections />} />
     </Routes>
   )

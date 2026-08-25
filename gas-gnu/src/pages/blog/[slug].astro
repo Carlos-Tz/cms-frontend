@@ -1,0 +1,68 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import noImg from "../../assets/images/noimg.jpg";
+import { fetchData, mediaUrl } from "../../functions/fetch";
+
+type BlogListResponse = {
+  status: string;
+  data: Array<{ slug: string }>;
+  meta: { last_page: number };
+};
+
+export async function getStaticPaths() {
+  const firstPage: BlogListResponse | undefined = await fetchData("blog?page=1");
+  const lastPage = firstPage?.meta?.last_page ?? 1;
+  const slugs = new Set((firstPage?.data ?? []).map((post) => post.slug));
+
+  for (let page = 2; page <= lastPage; page++) {
+    const nextPage: BlogListResponse | undefined = await fetchData(`blog?page=${page}`);
+    (nextPage?.data ?? []).forEach((post) => slugs.add(post.slug));
+  }
+
+  return Array.from(slugs).map((slug) => ({ params: { slug } }));
+}
+
+type BlogPost = {
+  slug: string;
+  title: string;
+  excerpt: string;
+  cover_image: string | null;
+  published_at: string;
+  body: string;
+};
+type BlogPostResponse = { status: string; data: BlogPost; meta: Record<string, any> };
+
+const { slug } = Astro.params;
+const postResponse: BlogPostResponse | undefined = await fetchData(`blog/${slug}`);
+const post = postResponse?.data;
+
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+---
+
+<Layout
+  title={post?.title ?? "Publicación no encontrada"}
+  description={post?.excerpt}
+  image={post?.cover_image ? mediaUrl(post.cover_image) : undefined}
+  noindex={!post}
+>
+  <main>
+    {post ? (
+      <article class="section">
+        <div class="container blog-post">
+          <a class="blog-post__back" href="/blog">← Volver al blog</a>
+          <p class="blog-card__tag">{formatDate(post.published_at)}</p>
+          <h1 class="blog-post__title">{post.title}</h1>
+          <img class="blog-post__cover" src={post.cover_image ? mediaUrl(post.cover_image) : noImg.src} alt="" />
+          <div class="blog-post__body prose" set:html={post.body} />
+        </div>
+      </article>
+    ) : (
+      <div class="section container" style="text-align:center;">
+        <h1 class="section-title">Publicación no encontrada</h1>
+        <p class="section-subtitle">Es posible que esta publicación haya sido movida o eliminada.</p>
+        <a class="btn-primary" href="/blog" style="margin-top: 1.5rem; display: inline-flex;">Volver al blog</a>
+      </div>
+    )}
+  </main>
+</Layout>

@@ -1,7 +1,17 @@
 :root {
-  /* Fonts */
+  /* Fonts — swap the family names to rebrand; keep a system-ui fallback */
   --font-display: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Type scale — clamp(min, preferred, max) so headings stay fluid across viewports.
+     --text-h1 drives every page's main heading (PageHero, hero slides, blog post title). */
+  --text-h1: clamp(2rem, 5vw, 3rem);
+  --text-h2: clamp(1.75rem, 3vw, 2.5rem);
+  --text-h3: 1.125rem;
+  --text-body: 1.0625rem;
+  --text-small: 0.875rem;
+  --heading-font-weight: 800;
+  --heading-letter-spacing: -0.02em;
 
   /* Backgrounds — true near-black canvas, alternating with a neutral parchment tile */
   --color-bg: #ffffff;
@@ -11,7 +21,7 @@
   --color-ink-3: #1c1c1e;
 
   /* Brand — deep blue for light-surface text/links, one bright accent for every action/signal */
-  --color-primary: #0066cc;
+  --color-primary: #34d698;
   --color-primary-alt: #004c99;
   --color-primary-light: #8ec3f5;
   --color-accent: #2997ff;
