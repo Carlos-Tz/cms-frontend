@@ -1,13 +1,15 @@
 ---
 import { BASE_URL } from "../../functions/fetch";
 
-type ContactFieldType = "text" | "email" | "tel" | "textarea";
+type ContactFieldType = "text" | "email" | "tel" | "number" | "textarea";
 
 const contactFieldMeta: Record<string, { label: string; type: ContactFieldType; placeholder: string }> = {
   name: { label: "Nombre completo", type: "text", placeholder: "Tu nombre" },
   email: { label: "Correo electrónico", type: "email", placeholder: "tucorreo@ejemplo.com" },
   phone: { label: "Teléfono", type: "tel", placeholder: "Ej. 55 1234 5678" },
   message: { label: "Mensaje", type: "textarea", placeholder: "Cuéntanos qué necesitas" },
+  vehicle_description: { label: "Descripción del vehículo", type: "text", placeholder: "Marca, modelo y año" },
+  fleet_size: { label: "Número de unidades", type: "number", placeholder: "Ej. 10" },
 };
 
 interface Props {

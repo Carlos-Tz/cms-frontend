@@ -1,0 +1,23 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import SectionRenderer from "../../../components/SectionRenderer.astro";
+import PageHero from "../../../components/sections/PageHero.astro";
+import { fetchData } from "../../../functions/fetch";
+
+type PageResponse = {
+  status: string;
+  data: { slug: string; path: string; title: string; sections: Array<{ type: string; content: Record<string, any> }> };
+  meta: Record<string, any>;
+};
+
+const pageResponse: PageResponse | undefined = await fetchData("pages/instala-tu-equipo-de-gnv");
+const page = pageResponse?.data;
+const sections = page?.sections ?? [];
+---
+
+<Layout title={page?.title ?? "Instala tu equipo de GNV"}>
+  <main>
+    {!page && <PageHero title="Instala tu equipo de GNV" subtitle="Conversión certificada para tu vehículo." />}
+    <SectionRenderer sections={sections} />
+  </main>
+</Layout>

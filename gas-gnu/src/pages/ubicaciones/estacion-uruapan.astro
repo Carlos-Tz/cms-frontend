@@ -10,14 +10,14 @@ type PageResponse = {
   meta: Record<string, any>;
 };
 
-const pageResponse: PageResponse | undefined = await fetchData("pages/ubicaciones");
+const pageResponse: PageResponse | undefined = await fetchData("pages/estacion-uruapan");
 const page = pageResponse?.data;
 const sections = page?.sections ?? [];
 ---
 
-<Layout title={page?.title ?? "Ubicaciones"}>
+<Layout title={page?.title ?? "Estación Uruapan"}>
   <main>
-    {!page && <PageHero title="Ubicaciones" subtitle="Encuentra tu estación de GNV más cercana." />}
+    {!page && <PageHero title="Estación Uruapan" />}
     <SectionRenderer sections={sections} />
   </main>
 </Layout>

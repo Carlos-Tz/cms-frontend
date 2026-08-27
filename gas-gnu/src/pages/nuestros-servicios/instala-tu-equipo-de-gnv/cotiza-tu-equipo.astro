@@ -1,0 +1,23 @@
+---
+import Layout from "../../../layouts/Layout.astro";
+import SectionRenderer from "../../../components/SectionRenderer.astro";
+import PageHero from "../../../components/sections/PageHero.astro";
+import { fetchData } from "../../../functions/fetch";
+
+type PageResponse = {
+  status: string;
+  data: { slug: string; path: string; title: string; sections: Array<{ type: string; content: Record<string, any> }> };
+  meta: Record<string, any>;
+};
+
+const pageResponse: PageResponse | undefined = await fetchData("pages/cotiza-tu-equipo");
+const page = pageResponse?.data;
+const sections = page?.sections ?? [];
+---
+
+<Layout title={page?.title ?? "Cotiza tu equipo"}>
+  <main>
+    {!page && <PageHero title="Cotiza tu equipo" />}
+    <SectionRenderer sections={sections} />
+  </main>
+</Layout>
