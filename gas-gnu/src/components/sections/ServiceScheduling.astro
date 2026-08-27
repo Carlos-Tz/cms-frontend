@@ -1,0 +1,223 @@
+---
+import { fetchData, BASE_URL } from "../../functions/fetch";
+
+interface Props {
+  title?: string | null;
+  intro?: string | null;
+  success_message?: string | null;
+}
+
+const { title, intro, success_message } = Astro.props;
+
+type PublicStation = {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  phone: string;
+  schedule: string;
+};
+type StationsResponse = { status: string; data: PublicStation[]; meta: Record<string, any> };
+
+// The public "stations" endpoint doesn't expose the numeric station id that
+// appointments/availability and POST appointments require, so it's mapped
+// here by name until the CMS exposes it directly.
+const STATION_IDS: Record<string, number> = {
+  "Estación Morelia": 3,
+  "Estación Uruapan": 4,
+};
+
+const stationsResponse: StationsResponse | undefined = await fetchData("stations");
+const stations = (stationsResponse?.data ?? [])
+  .filter((station) => station.name in STATION_IDS)
+  .map((station) => ({ ...station, id: STATION_IDS[station.name] }));
+
+const todayIso = new Date().toISOString().slice(0, 10);
+const fallbackSuccessMessage = "Tu cita quedó registrada. Te esperamos.";
+---
+
+<section class="section" id="agenda">
+  <div class="container" style="max-width: 40rem;">
+    <div class="section-head section-head--center">
+      <h2 class="section-title">{title ?? "Agenda tu verificación"}</h2>
+      {intro && <p class="section-subtitle">{intro}</p>}
+    </div>
+
+    {stations.length ? (
+      <div class="card scheduler" data-success-message={success_message ?? fallbackSuccessMessage}>
+        <form id="scheduler-lookup-form" class="scheduler__lookup">
+          <div class="field">
+            <label for="scheduler-station">Estación</label>
+            <select id="scheduler-station" required>
+              {stations.map((station) => (
+                <option value={station.id}>{station.name}</option>
+              ))}
+            </select>
+          </div>
+          <div class="field">
+            <label for="scheduler-date">Fecha</label>
+            <input type="date" id="scheduler-date" min={todayIso} required />
+          </div>
+          <button type="submit" class="btn-secondary">Ver horarios</button>
+        </form>
+
+        <div id="scheduler-slots" class="scheduler__slots" role="status" aria-live="polite"></div>
+
+        <form id="scheduler-booking-form" class="scheduler__booking" hidden>
+          <input type="hidden" id="scheduler-selected-station" />
+          <input type="hidden" id="scheduler-selected-date" />
+          <input type="hidden" id="scheduler-selected-slot" />
+          <p class="scheduler__selected-slot" id="scheduler-selected-label"></p>
+          <div class="field">
+            <label for="scheduler-name">Nombre completo</label>
+            <input type="text" id="scheduler-name" placeholder="Tu nombre" required />
+          </div>
+          <div class="field">
+            <label for="scheduler-email">Correo electrónico</label>
+            <input type="email" id="scheduler-email" placeholder="tucorreo@ejemplo.com" required />
+          </div>
+          <div class="field">
+            <label for="scheduler-phone">Teléfono</label>
+            <input type="tel" id="scheduler-phone" placeholder="Ej. 55 1234 5678" required />
+          </div>
+          <div class="field">
+            <label for="scheduler-plate">Placa</label>
+            <input type="text" id="scheduler-plate" placeholder="Ej. ABC-12-34" required />
+          </div>
+          <div class="field">
+            <label for="scheduler-vehicle">Descripción del vehículo</label>
+            <input type="text" id="scheduler-vehicle" placeholder="Marca, modelo y año" required />
+          </div>
+          <button type="submit" class="btn-primary">Confirmar cita</button>
+          <p class="lead-form__status" id="scheduler-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    ) : (
+      <p class="section-subtitle" style="text-align:center;">
+        Agenda no disponible por el momento. Contáctanos directamente para programar tu verificación.
+      </p>
+    )}
+  </div>
+</section>
+
+<script define:vars={{ apiBase: BASE_URL }} is:inline>
+  const lookupForm = document.getElementById("scheduler-lookup-form");
+  const slotsContainer = document.getElementById("scheduler-slots");
+  const bookingForm = document.getElementById("scheduler-booking-form");
+  const stationSelect = document.getElementById("scheduler-station");
+  const dateInput = document.getElementById("scheduler-date");
+  const selectedStationInput = document.getElementById("scheduler-selected-station");
+  const selectedDateInput = document.getElementById("scheduler-selected-date");
+  const selectedSlotInput = document.getElementById("scheduler-selected-slot");
+  const selectedLabel = document.getElementById("scheduler-selected-label");
+  const statusEl = document.getElementById("scheduler-status");
+  const successMessage = document.querySelector(".scheduler")?.dataset.successMessage || "Tu cita quedó registrada.";
+
+  function stationName(id) {
+    const option = Array.from(stationSelect?.options ?? []).find((opt) => opt.value === String(id));
+    return option?.textContent ?? "";
+  }
+
+  function resetBooking() {
+    bookingForm?.setAttribute("hidden", "");
+    if (statusEl) {
+      statusEl.textContent = "";
+      statusEl.className = "lead-form__status";
+    }
+  }
+
+  lookupForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    resetBooking();
+    if (!slotsContainer) return;
+    slotsContainer.textContent = "Buscando horarios...";
+
+    const station = stationSelect?.value;
+    const date = dateInput?.value;
+    if (!station || !date) return;
+
+    try {
+      const response = await fetch(`${apiBase}appointments/availability?station=${station}&date=${date}`);
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok || result?.status !== "success") {
+        slotsContainer.textContent = result?.meta?.message || result?.message || "No pudimos consultar los horarios.";
+        return;
+      }
+
+      const slots = result?.data?.slots ?? [];
+      if (!slots.length) {
+        slotsContainer.textContent = "No hay horarios disponibles para ese día. Intenta con otra fecha.";
+        return;
+      }
+
+      slotsContainer.innerHTML = "";
+      slots.forEach(({ slot, available }) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "scheduler__slot" + (available ? "" : " is-unavailable");
+        button.textContent = slot;
+        button.disabled = !available;
+        button.addEventListener("click", () => {
+          slotsContainer.querySelectorAll(".scheduler__slot").forEach((el) => el.classList.remove("is-selected"));
+          button.classList.add("is-selected");
+          if (selectedStationInput) selectedStationInput.value = station;
+          if (selectedDateInput) selectedDateInput.value = date;
+          if (selectedSlotInput) selectedSlotInput.value = slot;
+          if (selectedLabel) selectedLabel.textContent = `${stationName(station)} · ${date} · ${slot}`;
+          resetBooking();
+          bookingForm?.removeAttribute("hidden");
+        });
+        slotsContainer.appendChild(button);
+      });
+    } catch (error) {
+      slotsContainer.textContent = "No pudimos consultar los horarios. Intenta de nuevo.";
+    }
+  });
+
+  bookingForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submitButton = bookingForm.querySelector('button[type="submit"]');
+    if (submitButton) submitButton.disabled = true;
+    if (statusEl) {
+      statusEl.textContent = "Enviando...";
+      statusEl.className = "lead-form__status";
+    }
+
+    const payload = {
+      station_id: Number(selectedStationInput?.value),
+      date: selectedDateInput?.value,
+      slot: selectedSlotInput?.value,
+      name: document.getElementById("scheduler-name")?.value,
+      email: document.getElementById("scheduler-email")?.value,
+      phone: document.getElementById("scheduler-phone")?.value,
+      vehicle_plate: document.getElementById("scheduler-plate")?.value,
+      vehicle_description: document.getElementById("scheduler-vehicle")?.value,
+    };
+
+    try {
+      const response = await fetch(`${apiBase}appointments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        const firstError = result?.errors ? Object.values(result.errors)[0]?.[0] : null;
+        throw new Error(firstError || result?.message || "request failed");
+      }
+
+      bookingForm.reset();
+      bookingForm.setAttribute("hidden", "");
+      if (slotsContainer) slotsContainer.textContent = result?.meta?.message || successMessage;
+    } catch (error) {
+      if (statusEl) {
+        statusEl.textContent = error instanceof Error ? error.message : "No pudimos registrar tu cita. Intenta de nuevo.";
+        statusEl.className = "lead-form__status lead-form__status--error";
+      }
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
+  });
+</script>

@@ -6,6 +6,7 @@ import LeadCaptureForm from "./sections/LeadCaptureForm.astro";
 import StationsMap from "./sections/StationsMap.astro";
 import LocationsList from "./sections/LocationsList.astro";
 import ClientsShowcase from "./sections/ClientsShowcase.astro";
+import ServiceScheduling from "./sections/ServiceScheduling.astro";
 
 interface Section {
   type: string;
@@ -41,6 +42,8 @@ const { sections } = Astro.props;
       return <LocationsList {...(section.content as any)} />;
     case "clients_showcase":
       return <ClientsShowcase {...(section.content as any)} />;
+    case "service_scheduling":
+      return <ServiceScheduling {...(section.content as any)} />;
     default:
       return null;
   }

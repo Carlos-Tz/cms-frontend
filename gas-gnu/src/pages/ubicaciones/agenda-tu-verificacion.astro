@@ -1,0 +1,23 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SectionRenderer from "../../components/SectionRenderer.astro";
+import PageHero from "../../components/sections/PageHero.astro";
+import { fetchData } from "../../functions/fetch";
+
+type PageResponse = {
+  status: string;
+  data: { slug: string; path: string; title: string; sections: Array<{ type: string; content: Record<string, any> }> };
+  meta: Record<string, any>;
+};
+
+const pageResponse: PageResponse | undefined = await fetchData("pages/agenda-tu-verificacion");
+const page = pageResponse?.data;
+const sections = page?.sections ?? [];
+---
+
+<Layout title={page?.title ?? "Agenda tu verificación"}>
+  <main>
+    {!page && <PageHero title="Agenda tu verificación" subtitle="Elige estación, día y horario." />}
+    <SectionRenderer sections={sections} />
+  </main>
+</Layout>

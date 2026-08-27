@@ -993,6 +993,77 @@ button {
   color: var(--color-primary);
 }
 
+/* Service scheduling widget */
+.scheduler {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.scheduler__lookup {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .scheduler__lookup {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+  }
+
+  .scheduler__lookup .field {
+    margin-bottom: 0;
+  }
+}
+
+.scheduler__slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-60);
+}
+
+.scheduler__slot {
+  padding: 0.6rem 1.1rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.scheduler__slot:hover:not(:disabled) {
+  border-color: var(--color-primary);
+}
+
+.scheduler__slot.is-selected {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-text-on-dark);
+}
+
+.scheduler__slot.is-unavailable {
+  opacity: 0.45;
+  text-decoration: line-through;
+  cursor: not-allowed;
+}
+
+.scheduler__booking {
+  border-top: 1px solid var(--color-border);
+  padding-top: 1.5rem;
+}
+
+.scheduler__selected-slot {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+}
+
 .pagination {
   margin-top: 3.5rem;
   display: flex;
