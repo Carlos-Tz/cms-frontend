@@ -1,20 +1,20 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import Hero from "../components/Hero.astro";
-import Simulador from "../components/Simulador.astro";
-import Clientes from "../components/Clientes.astro";
-import Servicios from "../components/Servicios.astro";
-import SobreNosotros from "../components/SobreNosotros.astro";
-import Contacto from "../components/Contacto.astro";
-import Ubicaciones from "../components/Ubicaciones.astro";
+import PageSections from "../components/PageSections.astro";
+import { fetchData } from "../functions/fetch";
+
+type PageResponse = {
+  status: string;
+  data: { slug: string; path: string; title: string; sections: { type: string; content: Record<string, any> }[] };
+  meta: Record<string, any>;
+};
+
+// Site "traninn-logistic", page "inicio" — see gnu-cms-admin for the editor.
+// Every section on this page comes from the CMS; nothing is hardcoded here.
+const pageResponse: PageResponse | undefined = await fetchData("pages/inicio");
+const sections = pageResponse?.data?.sections ?? [];
 ---
 
 <Layout>
-	<Hero />
-	<Simulador />
-	<Clientes />
-	<Servicios />
-	<SobreNosotros />
-	<Contacto />
-	<Ubicaciones />
+  <PageSections sections={sections} />
 </Layout>

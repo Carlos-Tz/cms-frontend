@@ -1,0 +1,55 @@
+---
+// Content shape matches the CMS's "page_hero" section: the banner at the top
+// of an interior page (title, optional subtitle, optional background image).
+interface Props {
+	title: string;
+	subtitle?: string | null;
+	image?: string | null;
+}
+
+const { title, subtitle, image } = Astro.props;
+---
+
+<section class:list={["page-hero", { "page-hero--image": !!image }]}>
+	{image && <img src={image} alt="" class="page-hero-img" />}
+	<div class="container page-hero-content">
+		<h1 class="page-hero-title">{title}</h1>
+		{subtitle && <p class="page-hero-subtitle">{subtitle}</p>}
+	</div>
+</section>
+
+<style>
+	.page-hero {
+		position: relative;
+		background: var(--color-dark);
+		color: var(--color-text-on-dark);
+		padding: 5rem 0;
+		overflow: hidden;
+	}
+
+	.page-hero-img {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		opacity: 0.35;
+	}
+
+	.page-hero-content {
+		position: relative;
+		max-width: 46rem;
+	}
+
+	.page-hero-title {
+		font-size: clamp(2rem, 4vw, 2.75rem);
+		line-height: 1.15;
+	}
+
+	.page-hero-subtitle {
+		margin-top: 1rem;
+		max-width: 34rem;
+		font-size: 1.05rem;
+		color: var(--color-text-on-dark-60);
+	}
+</style>

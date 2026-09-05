@@ -1,0 +1,114 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import PageHero from "../../components/PageHero.astro";
+import { mediaUrl } from "../../functions/fetch";
+import { fetchBlogPosts, formatPublishedAt } from "../../functions/blog";
+
+// The blog is not part of the CMS menu, so it has no "pages/…" entry: the
+// listing comes straight from the blog endpoint.
+const posts = await fetchBlogPosts();
+---
+
+<Layout title="Blog">
+  <PageHero title="Blog" />
+
+  <section class="section blog-list-section">
+    <div class="container">
+      {posts.length ? (
+        <div class="blog-grid">
+          {posts.map((post) => {
+            const published = formatPublishedAt(post.published_at);
+            return (
+              <article class="card blog-card">
+                <a class="blog-card-link" href={`/blog/${post.slug}`}>
+                  {post.cover_image && (
+                    <div class="blog-card-image">
+                      <img src={mediaUrl(post.cover_image)} alt="" loading="lazy" />
+                    </div>
+                  )}
+                  <div class="blog-card-body">
+                    {published && (
+                      <time class="blog-card-date" datetime={post.published_at}>{published}</time>
+                    )}
+                    <h2 class="blog-card-title">{post.title}</h2>
+                    {post.excerpt && <p class="blog-card-excerpt">{post.excerpt}</p>}
+                    <span class="blog-card-more">Leer más →</span>
+                  </div>
+                </a>
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <p class="blog-empty">Aún no hay entradas publicadas.</p>
+      )}
+    </div>
+  </section>
+</Layout>
+
+<style>
+  .blog-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .blog-card {
+    display: flex;
+  }
+  .blog-card-link {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .blog-card-image {
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+  }
+  .blog-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+  .blog-card-link:hover .blog-card-image img {
+    transform: scale(1.04);
+  }
+
+  .blog-card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .blog-card-date {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-gray);
+  }
+
+  .blog-card-title {
+    font-size: 1.2rem;
+  }
+
+  .blog-card-excerpt {
+    color: var(--color-text-60);
+    font-size: 0.95rem;
+    line-height: 1.65;
+  }
+
+  .blog-card-more {
+    margin-top: 0.35rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-red);
+  }
+
+  .blog-empty {
+    color: var(--color-text-60);
+  }
+</style>

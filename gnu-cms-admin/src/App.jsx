@@ -23,9 +23,34 @@ import GnuSelectPage from './pages/gnu/select-page'
 import GasNaturalSelectPage from './pages/gas-natural/select-page'
 import GasNaturalInicio from './pages/gas-natural/inicio'
 import GasNaturalNuestrosServicios from './pages/gas-natural/nuestros-servicios'
+import GasNaturalInstalaTuEquipoDeGnv from './pages/gas-natural/nuestros-servicios/instala-tu-equipo-de-gnv'
+import GasNaturalCotizaTuEquipo from './pages/gas-natural/nuestros-servicios/cotiza-tu-equipo'
+import GasNaturalFinanciamiento from './pages/gas-natural/nuestros-servicios/financiamiento'
+import GasNaturalFlotillasEmpresariales from './pages/gas-natural/nuestros-servicios/flotillas-empresariales'
+import GasNaturalEstacionesMoviles from './pages/gas-natural/nuestros-servicios/estaciones-moviles'
 import GasNaturalUbicaciones from './pages/gas-natural/ubicaciones'
+import GasNaturalUbicacionesPortada from './pages/gas-natural/ubicaciones/portada'
+import GasNaturalEstacionesMorelia from './pages/gas-natural/ubicaciones/estaciones-morelia'
+import GasNaturalEstacionUruapan from './pages/gas-natural/ubicaciones/estacion-uruapan'
+import GasNaturalAgendaTuVerificacion from './pages/gas-natural/ubicaciones/agenda-tu-verificacion'
+import GasNaturalTalleres from './pages/gas-natural/ubicaciones/talleres'
 import GasNaturalContacto from './pages/gas-natural/contacto'
 import GasNaturalBlog from './pages/gas-natural/blog'
+import TraininSelectPage from './pages/trainin/select-page'
+import TraininInicio from './pages/trainin/inicio'
+import TraininNuestrosServicios from './pages/trainin/nuestros-servicios'
+import TraininNuestrosServiciosPortada from './pages/trainin/nuestros-servicios/portada'
+import TraininTransporteDeGnc from './pages/trainin/nuestros-servicios/transporte-de-gnc'
+import TraininLogistica from './pages/trainin/nuestros-servicios/logistica'
+import TraininCargaPesada from './pages/trainin/nuestros-servicios/carga-pesada'
+import TraininSobreNosotros from './pages/trainin/sobre-nosotros'
+import TraininSobreNosotrosPortada from './pages/trainin/sobre-nosotros/portada'
+import TraininQueHacemos from './pages/trainin/sobre-nosotros/que-hacemos'
+import TraininPropositoEmpresarial from './pages/trainin/sobre-nosotros/proposito-empresarial'
+import TraininNuestraHistoria from './pages/trainin/sobre-nosotros/nuestra-historia'
+import TraininUbicaciones from './pages/trainin/ubicaciones'
+import TraininContacto from './pages/trainin/contacto'
+import TraininBlog from './pages/trainin/blog'
 
 const FEATURES = [
   {
@@ -145,10 +170,44 @@ export default function App() {
       <Route path="/gas-natural/select-page" element={<GasNaturalSelectPage />} />
       <Route path="/gas-natural/inicio" element={<GasNaturalInicio />} />
       <Route path="/gas-natural/nuestros-servicios" element={<GasNaturalNuestrosServicios />} />
+      <Route
+        path="/gas-natural/nuestros-servicios/instala-tu-equipo-de-gnv"
+        element={<GasNaturalInstalaTuEquipoDeGnv />}
+      />
+      <Route path="/gas-natural/nuestros-servicios/cotiza-tu-equipo" element={<GasNaturalCotizaTuEquipo />} />
+      <Route path="/gas-natural/nuestros-servicios/financiamiento" element={<GasNaturalFinanciamiento />} />
+      <Route
+        path="/gas-natural/nuestros-servicios/flotillas-empresariales"
+        element={<GasNaturalFlotillasEmpresariales />}
+      />
+      <Route path="/gas-natural/nuestros-servicios/estaciones-moviles" element={<GasNaturalEstacionesMoviles />} />
       <Route path="/gas-natural/ubicaciones" element={<GasNaturalUbicaciones />} />
+      <Route path="/gas-natural/ubicaciones/portada" element={<GasNaturalUbicacionesPortada />} />
+      <Route path="/gas-natural/ubicaciones/estaciones-morelia" element={<GasNaturalEstacionesMorelia />} />
+      <Route path="/gas-natural/ubicaciones/estacion-uruapan" element={<GasNaturalEstacionUruapan />} />
+      <Route
+        path="/gas-natural/ubicaciones/agenda-tu-verificacion"
+        element={<GasNaturalAgendaTuVerificacion />}
+      />
+      <Route path="/gas-natural/ubicaciones/talleres" element={<GasNaturalTalleres />} />
       <Route path="/gas-natural/contacto" element={<GasNaturalContacto />} />
       <Route path="/gas-natural/blog" element={<GasNaturalBlog />} />
       <Route path="/gnu/editable-sections" element={<EditableSections />} />
+      <Route path="/trainin/select-page" element={<TraininSelectPage />} />
+      <Route path="/trainin/inicio" element={<TraininInicio />} />
+      <Route path="/trainin/nuestros-servicios" element={<TraininNuestrosServicios />} />
+      <Route path="/trainin/nuestros-servicios/portada" element={<TraininNuestrosServiciosPortada />} />
+      <Route path="/trainin/nuestros-servicios/transporte-de-gnc" element={<TraininTransporteDeGnc />} />
+      <Route path="/trainin/nuestros-servicios/logistica" element={<TraininLogistica />} />
+      <Route path="/trainin/nuestros-servicios/carga-pesada" element={<TraininCargaPesada />} />
+      <Route path="/trainin/sobre-nosotros" element={<TraininSobreNosotros />} />
+      <Route path="/trainin/sobre-nosotros/portada" element={<TraininSobreNosotrosPortada />} />
+      <Route path="/trainin/sobre-nosotros/que-hacemos" element={<TraininQueHacemos />} />
+      <Route path="/trainin/sobre-nosotros/proposito-empresarial" element={<TraininPropositoEmpresarial />} />
+      <Route path="/trainin/sobre-nosotros/nuestra-historia" element={<TraininNuestraHistoria />} />
+      <Route path="/trainin/ubicaciones" element={<TraininUbicaciones />} />
+      <Route path="/trainin/contacto" element={<TraininContacto />} />
+      <Route path="/trainin/blog" element={<TraininBlog />} />
     </Routes>
   )
 }

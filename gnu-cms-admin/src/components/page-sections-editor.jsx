@@ -32,7 +32,17 @@ const SECTION_LABELS = {
   rich_text: 'Texto enriquecido',
   clients_showcase: 'Clientes',
   stations_map: 'Mapa de estaciones',
+  lead_capture_form: 'Formulario de contacto',
+  service_scheduling: 'Agenda de verificación',
+  banner_carousel: 'Carrusel de banners',
+  savings_simulator: 'Simulador de ahorro',
+  contact_info: 'Datos de contacto',
+  social_icons: 'Redes sociales',
+  whatsapp_button: 'Botón de WhatsApp',
+  image_gallery: 'Galería de imágenes',
 }
+
+const NETWORK_OPTIONS = ['facebook', 'instagram', 'twitter', 'linkedin', 'youtube', 'tiktok']
 
 function parseCenter(center) {
   const match = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/.exec(center ?? '')
@@ -110,7 +120,10 @@ function ClientsShowcaseEditor({ content, onChange, errors }) {
   }
 
   function addLogo() {
-    onChange({ ...content, logos: [...logos, { image: '', name: '', url: '' }] })
+    onChange({
+      ...content,
+      logos: [...logos, { image: '', name: '', url: '', description: null, quote: null, quote_author: null }],
+    })
   }
 
   function removeLogo(i) {
@@ -157,6 +170,32 @@ function ClientsShowcaseEditor({ content, onChange, errors }) {
               />
             </Field>
           </div>
+          <Field label="Descripción" error={fieldError(errors, `content.logos.${i}.description`)}>
+            <input
+              type="text"
+              value={logo.description ?? ''}
+              onChange={(e) => updateLogo(i, 'description', e.target.value || null)}
+              className={inputClass}
+            />
+            <CharHint value={logo.description} recommended={100} max={160} />
+          </Field>
+          <Field label="Cita / testimonio" error={fieldError(errors, `content.logos.${i}.quote`)}>
+            <textarea
+              rows={2}
+              value={logo.quote ?? ''}
+              onChange={(e) => updateLogo(i, 'quote', e.target.value || null)}
+              className={inputClass}
+            />
+            <CharHint value={logo.quote} recommended={120} max={200} />
+          </Field>
+          <Field label="Autor de la cita" error={fieldError(errors, `content.logos.${i}.quote_author`)}>
+            <input
+              type="text"
+              value={logo.quote_author ?? ''}
+              onChange={(e) => updateLogo(i, 'quote_author', e.target.value || null)}
+              className={inputClass}
+            />
+          </Field>
         </DynamicItem>
       ))}
       <AddButton onClick={addLogo}>+ Agregar cliente</AddButton>
@@ -342,12 +381,476 @@ function StationsMapEditor({ content, onChange, errors }) {
   )
 }
 
+function LeadCaptureFormEditor({ content, onChange, errors }) {
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Título" error={fieldError(errors, 'content.title')}>
+          <input
+            type="text"
+            value={content.title ?? ''}
+            onChange={(e) => onChange({ ...content, title: e.target.value })}
+            className={inputClass}
+          />
+          <CharHint value={content.title} recommended={40} max={60} />
+        </Field>
+        <Field label="Texto del botón" hint="2-4 palabras" error={fieldError(errors, 'content.submit_label')}>
+          <input
+            type="text"
+            value={content.submit_label ?? ''}
+            onChange={(e) => onChange({ ...content, submit_label: e.target.value })}
+            className={inputClass}
+          />
+        </Field>
+      </div>
+      <Field label="Introducción" error={fieldError(errors, 'content.intro')}>
+        <input
+          type="text"
+          value={content.intro ?? ''}
+          onChange={(e) => onChange({ ...content, intro: e.target.value })}
+          className={inputClass}
+        />
+        <CharHint value={content.intro} recommended={120} max={160} />
+      </Field>
+      {Array.isArray(content.fields) && (
+        <p className="text-xs text-white/40">
+          Campos del formulario (bloqueado): {content.fields.join(', ')}
+        </p>
+      )}
+    </div>
+  )
+}
+
+function ServiceSchedulingEditor({ content, onChange, errors }) {
+  return (
+    <div className="space-y-4">
+      <Field label="Título" required error={fieldError(errors, 'content.title')}>
+        <input
+          type="text"
+          value={content.title ?? ''}
+          onChange={(e) => onChange({ ...content, title: e.target.value })}
+          className={inputClass}
+        />
+        <CharHint value={content.title} recommended={40} max={60} />
+      </Field>
+      <Field label="Introducción" error={fieldError(errors, 'content.intro')}>
+        <input
+          type="text"
+          value={content.intro ?? ''}
+          onChange={(e) => onChange({ ...content, intro: e.target.value || null })}
+          className={inputClass}
+        />
+        <CharHint value={content.intro} recommended={120} max={160} />
+      </Field>
+      <Field
+        label="Mensaje de confirmación"
+        required
+        hint="Se muestra al visitante después de reservar su cita."
+        error={fieldError(errors, 'content.success_message')}
+      >
+        <input
+          type="text"
+          value={content.success_message ?? ''}
+          onChange={(e) => onChange({ ...content, success_message: e.target.value })}
+          className={inputClass}
+        />
+        <CharHint value={content.success_message} recommended={70} max={100} />
+      </Field>
+      <p className="text-xs text-white/40">
+        Los horarios disponibles (10:00-12:00, 12:00-14:00, 14:00-16:00, lunes a sábado) son fijos y se editan en el código, no aquí.
+      </p>
+    </div>
+  )
+}
+
+function BannerCarouselEditor({ content, onChange, errors }) {
+  const slides = content.slides ?? []
+
+  function updateSlide(i, key, value) {
+    onChange({ ...content, slides: updateArrayItem(slides, i, key, value) })
+  }
+
+  function addSlide() {
+    onChange({
+      ...content,
+      slides: [...slides, { image: '', title: '', subtitle: '', link_url: '', link_label: '' }],
+    })
+  }
+
+  function removeSlide(i) {
+    onChange({ ...content, slides: slides.filter((_, idx) => idx !== i) })
+  }
+
+  return (
+    <div className="space-y-4">
+      {slides.map((slide, i) => (
+        <DynamicItem key={i} title={`Banner ${i + 1}`} onRemove={() => removeSlide(i)}>
+          <ImageField
+            label="Imagen"
+            hint="2400×1000 px aprox. (relación 2.4:1) · JPG · máx. 5 MB, ideal menos de 1 MB. Se recorta a pantalla completa: evita texto o rostros cerca de los bordes."
+            value={slide.image}
+            onChange={(value) => updateSlide(i, 'image', value)}
+            error={fieldError(errors, `content.slides.${i}.image`)}
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Título" error={fieldError(errors, `content.slides.${i}.title`)}>
+              <input
+                type="text"
+                value={slide.title ?? ''}
+                onChange={(e) => updateSlide(i, 'title', e.target.value)}
+                className={inputClass}
+              />
+              <CharHint value={slide.title} recommended={45} max={60} />
+            </Field>
+            <Field label="Subtítulo" error={fieldError(errors, `content.slides.${i}.subtitle`)}>
+              <input
+                type="text"
+                value={slide.subtitle ?? ''}
+                onChange={(e) => updateSlide(i, 'subtitle', e.target.value)}
+                className={inputClass}
+              />
+              <CharHint value={slide.subtitle} recommended={90} max={120} />
+            </Field>
+            <Field label="Enlace del botón" error={fieldError(errors, `content.slides.${i}.link_url`)}>
+              <input
+                type="text"
+                placeholder="https://…"
+                value={slide.link_url ?? ''}
+                onChange={(e) => updateSlide(i, 'link_url', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+            <Field
+              label="Texto del botón"
+              hint="2-4 palabras, ej. 'Cotiza ahora'"
+              error={fieldError(errors, `content.slides.${i}.link_label`)}
+            >
+              <input
+                type="text"
+                value={slide.link_label ?? ''}
+                onChange={(e) => updateSlide(i, 'link_label', e.target.value)}
+                className={inputClass}
+              />
+              <CharHint value={slide.link_label} recommended={20} max={25} />
+            </Field>
+          </div>
+        </DynamicItem>
+      ))}
+      <AddButton onClick={addSlide}>+ Agregar banner</AddButton>
+    </div>
+  )
+}
+
+function SavingsSimulatorEditor({ content, onChange, errors }) {
+  const fuelPrices = content.fuel_prices ?? []
+
+  function updateFuel(i, key, value) {
+    onChange({ ...content, fuel_prices: updateArrayItem(fuelPrices, i, key, value) })
+  }
+
+  function addFuel() {
+    onChange({
+      ...content,
+      fuel_prices: [...fuelPrices, { fuel: '', label: '', price_per_unit: '', unit: '', equivalence_factor: '' }],
+    })
+  }
+
+  function removeFuel(i) {
+    onChange({ ...content, fuel_prices: fuelPrices.filter((_, idx) => idx !== i) })
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Título" required error={fieldError(errors, 'content.title')}>
+          <input
+            type="text"
+            value={content.title ?? ''}
+            onChange={(e) => onChange({ ...content, title: e.target.value })}
+            className={inputClass}
+          />
+          <CharHint value={content.title} recommended={50} max={70} />
+        </Field>
+        <Field label="Introducción" error={fieldError(errors, 'content.intro')}>
+          <input
+            type="text"
+            value={content.intro ?? ''}
+            onChange={(e) => onChange({ ...content, intro: e.target.value })}
+            className={inputClass}
+          />
+          <CharHint value={content.intro} recommended={120} max={160} />
+        </Field>
+      </div>
+      {fuelPrices.map((fuel, i) => (
+        <DynamicItem
+          key={i}
+          title={fuel.fuel === 'gas-natural' ? 'Gas natural (base del comparativo)' : `Combustible ${i + 1}`}
+          onRemove={() => removeFuel(i)}
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Slug" required hint="Identificador, ej. gas-natural" error={fieldError(errors, `content.fuel_prices.${i}.fuel`)}>
+              <input
+                type="text"
+                value={fuel.fuel ?? ''}
+                onChange={(e) => updateFuel(i, 'fuel', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Nombre visible" required error={fieldError(errors, `content.fuel_prices.${i}.label`)}>
+              <input
+                type="text"
+                value={fuel.label ?? ''}
+                onChange={(e) => updateFuel(i, 'label', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Precio por unidad" required error={fieldError(errors, `content.fuel_prices.${i}.price_per_unit`)}>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={fuel.price_per_unit ?? ''}
+                onChange={(e) => updateFuel(i, 'price_per_unit', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Unidad" required error={fieldError(errors, `content.fuel_prices.${i}.unit`)}>
+              <input
+                type="text"
+                placeholder="litro, m³…"
+                value={fuel.unit ?? ''}
+                onChange={(e) => updateFuel(i, 'unit', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+            <Field
+              label="Factor de equivalencia"
+              required
+              hint={fuel.fuel === 'gas-natural' ? 'Siempre 1 para gas natural' : 'm³ de gas natural equivalentes a 1 unidad'}
+              error={fieldError(errors, `content.fuel_prices.${i}.equivalence_factor`)}
+            >
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={fuel.equivalence_factor ?? ''}
+                onChange={(e) => updateFuel(i, 'equivalence_factor', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+          </div>
+        </DynamicItem>
+      ))}
+      <AddButton onClick={addFuel}>+ Agregar combustible</AddButton>
+    </div>
+  )
+}
+
+function ContactInfoEditor({ content, onChange, errors }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label="Dirección" required error={fieldError(errors, 'content.address')}>
+        <input
+          type="text"
+          value={content.address ?? ''}
+          onChange={(e) => onChange({ ...content, address: e.target.value })}
+          className={inputClass}
+        />
+      </Field>
+      <Field label="Teléfono" required error={fieldError(errors, 'content.phone')}>
+        <input
+          type="tel"
+          value={content.phone ?? ''}
+          onChange={(e) => onChange({ ...content, phone: e.target.value })}
+          className={inputClass}
+        />
+      </Field>
+      <Field label="Correo" required error={fieldError(errors, 'content.email')}>
+        <input
+          type="email"
+          value={content.email ?? ''}
+          onChange={(e) => onChange({ ...content, email: e.target.value })}
+          className={inputClass}
+        />
+      </Field>
+      <Field label="Horario" error={fieldError(errors, 'content.schedule')}>
+        <input
+          type="text"
+          value={content.schedule ?? ''}
+          onChange={(e) => onChange({ ...content, schedule: e.target.value })}
+          className={inputClass}
+        />
+      </Field>
+      <div className="sm:col-span-2">
+        <Field label="Información adicional" error={fieldError(errors, 'content.additional_info')}>
+          <textarea
+            rows={2}
+            value={content.additional_info ?? ''}
+            onChange={(e) => onChange({ ...content, additional_info: e.target.value })}
+            className={inputClass}
+          />
+          <CharHint value={content.additional_info} recommended={150} max={280} />
+        </Field>
+      </div>
+    </div>
+  )
+}
+
+function SocialIconsEditor({ content, onChange, errors }) {
+  const networks = content.networks ?? []
+
+  function updateNetwork(i, key, value) {
+    onChange({ ...content, networks: updateArrayItem(networks, i, key, value) })
+  }
+
+  function addNetwork() {
+    onChange({ ...content, networks: [...networks, { network: NETWORK_OPTIONS[0], url: '' }] })
+  }
+
+  function removeNetwork(i) {
+    onChange({ ...content, networks: networks.filter((_, idx) => idx !== i) })
+  }
+
+  return (
+    <div className="space-y-4">
+      {networks.map((item, i) => (
+        <DynamicItem key={i} title={`Red ${i + 1}`} onRemove={() => removeNetwork(i)}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Red social" error={fieldError(errors, `content.networks.${i}.network`)}>
+              <select
+                value={item.network ?? NETWORK_OPTIONS[0]}
+                onChange={(e) => updateNetwork(i, 'network', e.target.value)}
+                className={inputClass}
+              >
+                {NETWORK_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Enlace" required error={fieldError(errors, `content.networks.${i}.url`)}>
+              <input
+                type="text"
+                placeholder="https://…"
+                value={item.url ?? ''}
+                onChange={(e) => updateNetwork(i, 'url', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+          </div>
+        </DynamicItem>
+      ))}
+      <AddButton onClick={addNetwork}>+ Agregar red social</AddButton>
+    </div>
+  )
+}
+
+function WhatsappButtonEditor({ content, onChange, errors }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <Field label="Teléfono" required hint="Con código de país, ej. 528100000000" error={fieldError(errors, 'content.phone')}>
+        <input
+          type="tel"
+          value={content.phone ?? ''}
+          onChange={(e) => onChange({ ...content, phone: e.target.value })}
+          className={inputClass}
+        />
+      </Field>
+      <Field
+        label="Mensaje prellenado"
+        hint="Aparece ya escrito en WhatsApp al abrir el chat, ej. 'Hola, quiero información sobre gas natural'"
+        error={fieldError(errors, 'content.prefilled_message')}
+      >
+        <input
+          type="text"
+          value={content.prefilled_message ?? ''}
+          onChange={(e) => onChange({ ...content, prefilled_message: e.target.value })}
+          className={inputClass}
+        />
+      </Field>
+    </div>
+  )
+}
+
+function ImageGalleryEditor({ content, onChange, errors }) {
+  const images = content.images ?? []
+
+  function updateImage(i, key, value) {
+    onChange({ ...content, images: updateArrayItem(images, i, key, value) })
+  }
+
+  function addImage() {
+    onChange({ ...content, images: [...images, { image: '', caption: null, alt: null }] })
+  }
+
+  function removeImage(i) {
+    onChange({ ...content, images: images.filter((_, idx) => idx !== i) })
+  }
+
+  return (
+    <div className="space-y-4">
+      <Field label="Título de la sección" error={fieldError(errors, 'content.title')}>
+        <input
+          type="text"
+          value={content.title ?? ''}
+          onChange={(e) => onChange({ ...content, title: e.target.value })}
+          className={inputClass}
+        />
+        <CharHint value={content.title} recommended={50} max={70} />
+      </Field>
+      {images.map((img, i) => (
+        <DynamicItem key={i} title={`Imagen ${i + 1}`} onRemove={() => removeImage(i)}>
+          <ImageField
+            label="Imagen"
+            hint="1200×800 px aprox. · JPG · máx. 5 MB, ideal menos de 800 KB."
+            value={img.image}
+            onChange={(value) => updateImage(i, 'image', value)}
+            error={fieldError(errors, `content.images.${i}.image`)}
+          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Descripción (caption)" error={fieldError(errors, `content.images.${i}.caption`)}>
+              <input
+                type="text"
+                value={img.caption ?? ''}
+                onChange={(e) => updateImage(i, 'caption', e.target.value || null)}
+                className={inputClass}
+              />
+            </Field>
+            <Field
+              label="Texto alternativo (alt)"
+              hint="Para accesibilidad y SEO"
+              error={fieldError(errors, `content.images.${i}.alt`)}
+            >
+              <input
+                type="text"
+                value={img.alt ?? ''}
+                onChange={(e) => updateImage(i, 'alt', e.target.value || null)}
+                className={inputClass}
+              />
+            </Field>
+          </div>
+        </DynamicItem>
+      ))}
+      <AddButton onClick={addImage}>+ Agregar imagen</AddButton>
+    </div>
+  )
+}
+
 const SECTION_EDITORS = {
   page_hero: PageHeroEditor,
   feature_grid: FeatureGridEditor,
   rich_text: RichTextEditor,
   clients_showcase: ClientsShowcaseEditor,
   stations_map: StationsMapEditor,
+  lead_capture_form: LeadCaptureFormEditor,
+  service_scheduling: ServiceSchedulingEditor,
+  banner_carousel: BannerCarouselEditor,
+  savings_simulator: SavingsSimulatorEditor,
+  contact_info: ContactInfoEditor,
+  social_icons: SocialIconsEditor,
+  whatsapp_button: WhatsappButtonEditor,
+  image_gallery: ImageGalleryEditor,
 }
 
 function SectionCard({ section, onUpdated }) {
@@ -418,7 +921,17 @@ function SectionCard({ section, onUpdated }) {
 // Headless: the section cards, without page chrome (header/back link).
 // Lets a host page (e.g. the Contacto admin page) embed section editing inline
 // alongside its own content instead of duplicating a "Back" link and title.
-export function SectionsFields({ site = 'gnu', page, onTotalChange }) {
+//
+// `pageId`/`includeGlobals`: some sites' `GET /api/admin/sections?site&page=`
+// ignores the `page` filter server-side and returns every section for the
+// whole site instead (confirmed for traninn-logistic: identical payload for
+// page=inicio and page=ubicaciones). Each section still carries the correct
+// numeric `page_id` though, so when a caller passes `pageId` we filter to it
+// client-side. `includeGlobals` additionally keeps `page_id: null` sections
+// (site-wide content like contact_info/social_icons/whatsapp_button) — pass
+// it only from the one page meant to surface them, same convention as
+// gnu/editable-sections for its landing page.
+export function SectionsFields({ site = 'gnu', page, pageId, includeGlobals = false, onTotalChange }) {
   const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -438,8 +951,12 @@ export function SectionsFields({ site = 'gnu', page, onTotalChange }) {
       if (cancelled) return
 
       if (res?.status === 'success') {
-        setSections(res.data)
-        onTotalChange?.(res.meta?.total ?? res.data.length)
+        const data =
+          pageId == null
+            ? res.data
+            : res.data.filter((s) => s.page_id === pageId || (includeGlobals && s.page_id == null))
+        setSections(data)
+        onTotalChange?.(data.length)
       } else {
         setError('No se pudieron cargar las secciones.')
       }
@@ -453,7 +970,7 @@ export function SectionsFields({ site = 'gnu', page, onTotalChange }) {
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [site, page])
+  }, [site, page, pageId, includeGlobals])
 
   function handleUpdated(updatedSection) {
     setSections((prev) => prev.map((s) => (s.id === updatedSection.id ? updatedSection : s)))
@@ -472,7 +989,7 @@ export function SectionsFields({ site = 'gnu', page, onTotalChange }) {
   )
 }
 
-export default function PageSectionsEditor({ site = 'gnu', page, title, backTo }) {
+export default function PageSectionsEditor({ site = 'gnu', page, pageId, includeGlobals, title, backTo }) {
   const [total, setTotal] = useState(0)
 
   return (
@@ -490,7 +1007,13 @@ export default function PageSectionsEditor({ site = 'gnu', page, title, backTo }
           </p>
         </header>
 
-        <SectionsFields site={site} page={page} onTotalChange={setTotal} />
+        <SectionsFields
+          site={site}
+          page={page}
+          pageId={pageId}
+          includeGlobals={includeGlobals}
+          onTotalChange={setTotal}
+        />
       </div>
     </main>
   )

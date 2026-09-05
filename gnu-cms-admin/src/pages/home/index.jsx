@@ -5,9 +5,9 @@ import { logout } from '../../functions/fetch'
 
 const PAGES = [
   { title: 'Página web GNU', subtitle: 'Updated 2 hours ago', status: 'active', site: 'gnu' },
-  { title: 'Gas natural vehicular', subtitle: 'Updated yesterday', status: 'draft', site: 'gas-natural' },
-  { title: 'Trainnin logistic', subtitle: 'Awaiting review', status: 'pending', site: 'trainin' },
-  { title: 'Tectuus', subtitle: 'Broken link detected', status: 'error', site: 'tectuus' },
+  { title: 'Gas natural vehicular', subtitle: 'Updated yesterday', status: 'active', site: 'gas-natural' },
+  { title: 'Trainnin logistic', subtitle: 'Awaiting review', status: 'draft', site: 'trainin' },
+  { title: 'Tectuus', subtitle: 'Broken link detected', status: 'pending', site: 'tectuus' },
 ]
 
 export default function Home() {

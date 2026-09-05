@@ -1,0 +1,63 @@
+---
+// Content shape matches the CMS's "image_gallery" section: an optional title
+// plus a list of images, each with an optional caption and alt text.
+interface GalleryImage {
+	image: string;
+	caption?: string | null;
+	alt?: string | null;
+}
+
+interface Props {
+	title?: string | null;
+	images: GalleryImage[];
+}
+
+const { title, images } = Astro.props;
+---
+
+<section class="section image-gallery-section">
+	<div class="container">
+		{title && (
+			<div class="section-head">
+				<h2 class="section-title">{title}</h2>
+			</div>
+		)}
+
+		<div class="gallery-grid">
+			{images.map((item) => (
+				<figure class="gallery-item">
+					<img src={item.image} alt={item.alt ?? item.caption ?? ""} loading="lazy" />
+					{item.caption && <figcaption class="gallery-caption">{item.caption}</figcaption>}
+				</figure>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.gallery-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.gallery-item {
+		margin: 0;
+		border-radius: var(--radius-lg);
+		overflow: hidden;
+		background: var(--color-bg-alt);
+	}
+
+	.gallery-item img {
+		width: 100%;
+		aspect-ratio: 4 / 3;
+		object-fit: cover;
+		display: block;
+	}
+
+	.gallery-caption {
+		padding: 0.85rem 1rem;
+		font-size: 0.9rem;
+		color: var(--color-text-60);
+	}
+</style>

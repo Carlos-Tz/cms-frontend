@@ -1,0 +1,20 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import PageSections from "../../components/PageSections.astro";
+import { fetchData } from "../../functions/fetch";
+
+type PageResponse = {
+  status: string;
+  data: { slug: string; path: string; title: string; sections: { type: string; content: Record<string, any> }[] };
+  meta: Record<string, any>;
+};
+
+// Site "traninn-logistic", page "logistica" (CMS path /nuestros-servicios/logistica).
+const pageResponse: PageResponse | undefined = await fetchData("pages/logistica");
+const page = pageResponse?.data;
+const sections = page?.sections ?? [];
+---
+
+<Layout title={page?.title}>
+  <PageSections sections={sections} />
+</Layout>

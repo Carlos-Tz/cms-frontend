@@ -1,0 +1,200 @@
+---
+// Content shape matches the CMS's "stations_map" section: the section supplies
+// only the map framing (title, "lat,lng" center and zoom); the pins themselves
+// come from the site-wide "stations" endpoint.
+import { fetchData } from "../functions/fetch";
+
+interface Props {
+	title?: string | null;
+	center?: string | null;
+	zoom?: string | number | null;
+}
+
+type Station = {
+	name: string;
+	address: string | null;
+	latitude: number;
+	longitude: number;
+	phone: string | null;
+	schedule: string | null;
+};
+type StationsResponse = { status: string; data: Station[] };
+
+const { title, center, zoom } = Astro.props;
+
+const stationsResponse: StationsResponse | undefined = await fetchData("stations");
+const stations = (stationsResponse?.data ?? []).filter(
+	(station) => Number.isFinite(Number(station.latitude)) && Number.isFinite(Number(station.longitude))
+);
+
+// "19.7028,-101.1920" → [lat, lng]; falls back to the first station.
+const parsedCenter = (center ?? "")
+	.split(",")
+	.map((part) => Number(part.trim()))
+	.filter((part) => Number.isFinite(part));
+const mapCenter =
+	parsedCenter.length === 2
+		? parsedCenter
+		: stations.length
+			? [Number(stations[0].latitude), Number(stations[0].longitude)]
+			: null;
+const mapZoom = Number(zoom) || 11;
+
+const markers = stations.map((station) => ({
+	name: station.name,
+	address: station.address,
+	phone: station.phone,
+	schedule: station.schedule,
+	lat: Number(station.latitude),
+	lng: Number(station.longitude),
+}));
+---
+
+<section id="ubicaciones" class="section stations-map-section">
+	<div class="container">
+		{title && (
+			<div class="section-head">
+				<h2 class="section-title">{title}</h2>
+			</div>
+		)}
+
+		<div class="stations-grid">
+			<div class="stations-list">
+				{stations.map((station) => (
+					<article class="station-item">
+						<span class="station-dot"></span>
+						<div>
+							<h3 class="station-name">{station.name}</h3>
+							{station.address && <p class="station-line">{station.address}</p>}
+							{station.schedule && <p class="station-line">{station.schedule}</p>}
+							{station.phone && (
+								<p class="station-line">
+									<a href={`tel:${station.phone.replace(/[^\d+]/g, "")}`}>{station.phone}</a>
+								</p>
+							)}
+						</div>
+					</article>
+				))}
+			</div>
+
+			{mapCenter && <div class="stations-map" data-stations-map role="application" aria-label={title ?? "Mapa de ubicaciones"}></div>}
+		</div>
+	</div>
+</section>
+
+{
+	mapCenter && (
+		<>
+			<link
+				rel="stylesheet"
+				href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+				integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
+				crossorigin="anonymous"
+			/>
+			<script
+				src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+				integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
+				crossorigin="anonymous"
+				defer
+			/>
+			<script define:vars={{ mapCenter, mapZoom, markers }} is:inline defer>
+				function initStationsMap() {
+					const el = document.querySelector("[data-stations-map]");
+					if (!el || !window.L || el.dataset.ready) return;
+					el.dataset.ready = "true";
+
+					const map = window.L.map(el).setView(mapCenter, mapZoom);
+					window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+						maxZoom: 19,
+						attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+					}).addTo(map);
+
+					const bounds = [];
+					for (const marker of markers) {
+						const popup = [
+							`<strong>${marker.name}</strong>`,
+							marker.address,
+							marker.schedule,
+							marker.phone,
+						]
+							.filter(Boolean)
+							.join("<br />");
+						window.L.marker([marker.lat, marker.lng]).addTo(map).bindPopup(popup);
+						bounds.push([marker.lat, marker.lng]);
+					}
+
+					if (bounds.length > 1) map.fitBounds(bounds, { padding: [40, 40] });
+				}
+
+				if (document.readyState === "loading") {
+					document.addEventListener("DOMContentLoaded", initStationsMap);
+				} else {
+					initStationsMap();
+				}
+				window.addEventListener("load", initStationsMap);
+			</script>
+		</>
+	)
+}
+
+<style>
+	.stations-grid {
+		display: grid;
+		grid-template-columns: 1fr 1.2fr;
+		gap: 3rem;
+		align-items: start;
+	}
+
+	.stations-list {
+		display: flex;
+		flex-direction: column;
+		gap: 1.75rem;
+	}
+
+	.station-item {
+		display: flex;
+		gap: 0.9rem;
+	}
+
+	.station-dot {
+		flex-shrink: 0;
+		margin-top: 0.35rem;
+		width: 0.65rem;
+		height: 0.65rem;
+		border-radius: var(--radius-full);
+		background: var(--color-red);
+	}
+
+	.station-name {
+		font-size: 1.05rem;
+	}
+
+	.station-line {
+		margin-top: 0.25rem;
+		font-size: 0.92rem;
+		color: var(--color-text-60);
+		line-height: 1.6;
+	}
+	.station-line a:hover {
+		color: var(--color-red);
+	}
+
+	.stations-map {
+		height: 26rem;
+		border-radius: var(--radius-lg);
+		border: 1px solid var(--color-border);
+		overflow: hidden;
+		background: var(--color-bg-alt);
+		z-index: 0;
+	}
+
+	@media (max-width: 860px) {
+		.stations-grid {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+		}
+		.stations-map {
+			height: 20rem;
+		}
+	}
+</style>

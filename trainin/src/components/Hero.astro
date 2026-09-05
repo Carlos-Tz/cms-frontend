@@ -1,48 +1,50 @@
 ---
-import noimg from "../../assets/images/noimg.jpg";
+// Slide shape matches the CMS's generic "banner_carousel" section, shared
+// with landing-gnu and gas-gnu's Slide type (image/title/subtitle/link_url/link_label).
+interface Slide {
+	image: string;
+	title: string;
+	subtitle?: string | null;
+	link_url?: string | null;
+	link_label?: string | null;
+}
 
-const slides = [
-	{
-		eyebrow: "Transporte de GNC",
-		title: "Movemos gas natural vehicular con seguridad y puntualidad",
-		text: "Flota especializada y rutas monitoreadas para abastecer tu operación sin interrupciones.",
-	},
-	{
-		eyebrow: "Logística",
-		title: "Logística integral pensada para tu cadena de suministro",
-		text: "Planeación, trazabilidad y soporte en cada tramo del recorrido.",
-	},
-	{
-		eyebrow: "Carga pesada",
-		title: "Carga pesada con la capacidad que tu proyecto necesita",
-		text: "Equipos y unidades certificadas para cargas de alto tonelaje.",
-	},
-];
+interface Props {
+	slides: Slide[];
+	id?: string;
+	// A banner that is not the page's opening section (an interior page already
+	// led by a page_hero) renders shorter, so two full-bleed bands don't stack.
+	compact?: boolean;
+}
+
+const { slides, id, compact = false } = Astro.props;
 ---
 
-<section id="inicio" class="hero">
+<section id={id} class:list={["hero", { "hero--compact": compact }]}>
 	<div class="hero-carousel" data-carousel>
 		{slides.map((slide, i) => (
 			<article class="hero-slide" data-slide aria-hidden={i === 0 ? "false" : "true"}>
-				<img src={noimg.src} alt="" class="hero-slide-img" />
+				<img src={slide.image} alt="" class="hero-slide-img" />
 				<div class="hero-slide-overlay"></div>
 				<div class="container hero-slide-content">
-					<span class="eyebrow eyebrow--on-dark">{slide.eyebrow}</span>
 					<h1 class="hero-title">{slide.title}</h1>
-					<p class="hero-text">{slide.text}</p>
-					<div class="hero-actions">
-						<a class="btn-primary" href="#contacto">Solicitar cotización</a>
-						<a class="btn-secondary btn-secondary--on-dark" href="#servicios">Ver servicios</a>
-					</div>
+					{slide.subtitle && <p class="hero-text">{slide.subtitle}</p>}
+					{slide.link_url && slide.link_label && (
+						<div class="hero-actions">
+							<a class="btn-primary" href={slide.link_url}>{slide.link_label}</a>
+						</div>
+					)}
 				</div>
 			</article>
 		))}
 
-		<div class="hero-dots" data-dots>
-			{slides.map((_, i) => (
-				<button class="hero-dot" data-dot data-index={i} aria-label={`Ir al banner ${i + 1}`}></button>
-			))}
-		</div>
+		{slides.length > 1 && (
+			<div class="hero-dots" data-dots>
+				{slides.map((_, i) => (
+					<button class="hero-dot" data-dot data-index={i} aria-label={`Ir al banner ${i + 1}`}></button>
+				))}
+			</div>
+		)}
 	</div>
 </section>
 
@@ -56,6 +58,18 @@ const slides = [
 		position: relative;
 		height: min(38rem, 82vh);
 		overflow: hidden;
+	}
+	/* Inset inside the page background instead of running edge to edge, so it
+	   reads as its own block rather than continuing the band above it. */
+	.hero--compact {
+		background: transparent;
+		padding: 3.5rem 1.5rem;
+	}
+	.hero--compact .hero-carousel {
+		height: min(22rem, 45vh);
+		max-width: var(--container-max);
+		margin: 0 auto;
+		border-radius: var(--radius-lg);
 	}
 
 	.hero-slide {
@@ -104,6 +118,15 @@ const slides = [
 	.hero-title {
 		font-size: clamp(2rem, 4vw, 3rem);
 		line-height: 1.1;
+	}
+	.hero--compact .hero-slide-content {
+		padding-inline: 2.5rem;
+	}
+	.hero--compact .hero-title {
+		font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+	}
+	.hero--compact .hero-text {
+		font-size: 0.98rem;
 	}
 
 	.hero-text {

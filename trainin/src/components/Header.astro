@@ -1,30 +1,101 @@
 ---
-const navLinks = [
-	{ href: "#inicio", label: "Inicio" },
-	{ href: "#servicios", label: "Nuestros servicios" },
-	{ href: "#nosotros", label: "Sobre nosotros" },
-	{ href: "#contacto", label: "Contacto" },
-	{ href: "#ubicaciones", label: "Ubicaciones" },
+interface Social {
+	label: string;
+	href: string;
+	path: string;
+}
+
+export interface MenuItem {
+	slug: string;
+	path: string;
+	title: string;
+	children?: MenuItem[];
+}
+
+interface Props {
+	menu?: MenuItem[];
+	socials?: Social[];
+	whatsappUrl?: string;
+}
+
+// Used only if the CMS menu endpoint is unreachable.
+const fallbackMenu: MenuItem[] = [
+	{ slug: "inicio", path: "/", title: "Inicio", children: [] },
+	{ slug: "nuestros-servicios", path: "/nuestros-servicios", title: "Nuestros servicios", children: [] },
+	{ slug: "sobre-nosotros", path: "/sobre-nosotros", title: "Sobre nosotros", children: [] },
+	{ slug: "ubicaciones", path: "/ubicaciones", title: "Ubicaciones", children: [] },
 ];
 
-const socials = [
-	{ label: "Facebook", href: "#", path: "M13.5 9H15V6.5h-1.75C11.6 6.5 10.5 7.6 10.5 9.25V11H9v2.5h1.5V19h2.5v-5.5H15l.5-2.5h-2v-1.25c0-.4.1-.75.5-.75Z" },
-	{ label: "Instagram", href: "#", path: "M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Zm0 6.27a2.47 2.47 0 1 1 0-4.94 2.47 2.47 0 0 1 0 4.94ZM16.2 5H7.8A2.8 2.8 0 0 0 5 7.8v8.4A2.8 2.8 0 0 0 7.8 19h8.4a2.8 2.8 0 0 0 2.8-2.8V7.8A2.8 2.8 0 0 0 16.2 5Zm1.5 11.2c0 .83-.67 1.5-1.5 1.5H7.8c-.83 0-1.5-.67-1.5-1.5V7.8c0-.83.67-1.5 1.5-1.5h8.4c.83 0 1.5.67 1.5 1.5v8.4ZM16.4 7.6a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8Z" },
-	{ label: "LinkedIn", href: "#", path: "M6.94 8.5H4.56V19h2.38V8.5ZM5.75 4.9a1.38 1.38 0 1 0 0 2.76 1.38 1.38 0 0 0 0-2.76ZM19.44 19h-2.38v-5.37c0-1.28-.46-2.15-1.6-2.15-.87 0-1.39.59-1.62 1.15-.08.2-.1.49-.1.77V19H11.4s.03-9.44 0-10.5h2.34v1.49c.31-.48 .87-1.16 2.12-1.16 1.55 0 2.71 1.01 2.71 3.18V19Z" },
+const fallbackSocials: Social[] = [
+	{ label: "facebook", href: "#", path: "M13.5 9H15V6.5h-1.75C11.6 6.5 10.5 7.6 10.5 9.25V11H9v2.5h1.5V19h2.5v-5.5H15l.5-2.5h-2v-1.25c0-.4.1-.75.5-.75Z" },
+	{ label: "instagram", href: "#", path: "M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Zm0 6.27a2.47 2.47 0 1 1 0-4.94 2.47 2.47 0 0 1 0 4.94ZM16.2 5H7.8A2.8 2.8 0 0 0 5 7.8v8.4A2.8 2.8 0 0 0 7.8 19h8.4a2.8 2.8 0 0 0 2.8-2.8V7.8A2.8 2.8 0 0 0 16.2 5Zm1.5 11.2c0 .83-.67 1.5-1.5 1.5H7.8c-.83 0-1.5-.67-1.5-1.5V7.8c0-.83.67-1.5 1.5-1.5h8.4c.83 0 1.5.67 1.5 1.5v8.4ZM16.4 7.6a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8Z" },
+	{ label: "linkedin", href: "#", path: "M6.94 8.5H4.56V19h2.38V8.5ZM5.75 4.9a1.38 1.38 0 1 0 0 2.76 1.38 1.38 0 0 0 0-2.76ZM19.44 19h-2.38v-5.37c0-1.28-.46-2.15-1.6-2.15-.87 0-1.39.59-1.62 1.15-.08.2-.1.49-.1.77V19H11.4s.03-9.44 0-10.5h2.34v1.49c.31-.48 .87-1.16 2.12-1.16 1.55 0 2.71 1.01 2.71 3.18V19Z" },
 ];
+
+const { menu, socials = fallbackSocials, whatsappUrl = "https://wa.me/000000000000" } = Astro.props;
+
+// The CMS menu endpoint does not list the blog, so it is appended alongside it.
+const blogItem: MenuItem = { slug: "blog", path: "/blog", title: "Blog", children: [] };
+const navItems = [...(menu?.length ? menu : fallbackMenu), blogItem];
+
+const normalize = (path: string) => (path !== "/" && path.endsWith("/") ? path.slice(0, -1) : path);
+const currentPath = normalize(Astro.url.pathname);
+const isCurrent = (path: string) => normalize(path) === currentPath;
+// A section stays highlighted while the visitor is on one of its sub-pages
+// (a blog entry, a service detail), not only on its own path.
+const isUnder = (path: string) => path !== "/" && currentPath.startsWith(`${normalize(path)}/`);
+const isActive = (item: MenuItem): boolean =>
+	isCurrent(item.path) || isUnder(item.path) || (item.children ?? []).some(isActive);
 ---
 
 <header class="site-header">
 	<div class="container header-row">
-		<a href="#inicio" class="logo" aria-label="Traninn Logistic — Inicio">
+		<a href="/" class="logo" aria-label="Traninn Logistic — Inicio">
 			<span class="logo-part logo-part--red">TRAN</span><span class="logo-part logo-part--dark">INN</span>
 			<span class="logo-part logo-part--gray">LOGISTIC</span>
 		</a>
 
 		<nav class="nav" aria-label="Navegación principal">
-			{navLinks.map((link) => (
-				<a href={link.href}>{link.label}</a>
-			))}
+			<ul class="nav-list">
+				{navItems.map((item) => (
+					<li class:list={["nav-item", { "has-children": !!item.children?.length }]}>
+						<a
+							href={item.path}
+							class:list={["nav-link", { active: isActive(item) }]}
+							aria-current={isCurrent(item.path) ? "page" : undefined}
+							aria-haspopup={item.children?.length ? "true" : undefined}
+						>
+							{item.title}
+							{item.children?.length ? (
+								<svg class="nav-caret" viewBox="0 0 24 24" width="12" height="12" aria-hidden="true">
+									<path
+										d="M6 9l6 6 6-6"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"></path>
+								</svg>
+							) : null}
+						</a>
+						{item.children?.length ? (
+							<ul class="submenu">
+								{item.children.map((child) => (
+									<li>
+										<a
+											href={child.path}
+											class:list={["submenu-link", { active: isCurrent(child.path) }]}
+											aria-current={isCurrent(child.path) ? "page" : undefined}
+										>
+											{child.title}
+										</a>
+									</li>
+								))}
+							</ul>
+						) : null}
+					</li>
+				))}
+			</ul>
 		</nav>
 
 		<div class="header-actions">
@@ -35,7 +106,7 @@ const socials = [
 					</a>
 				))}
 			</div>
-			<a class="btn-primary header-cta" href="https://wa.me/000000000000" target="_blank" rel="noopener noreferrer">
+			<a class="btn-primary header-cta" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
 				Escríbenos
 			</a>
 		</div>
@@ -71,17 +142,81 @@ const socials = [
 	.logo-part--gray { color: var(--color-gray); margin-left: 0.3rem; }
 
 	.nav {
-		display: flex;
-		gap: 1.75rem;
 		font-size: 0.9rem;
 		font-weight: 600;
 		color: var(--color-text-60);
 	}
-	.nav a {
+
+	.nav-list {
+		display: flex;
+		align-items: center;
+		gap: 1.75rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.nav-item {
+		position: relative;
+	}
+
+	.nav-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.4rem 0;
+		white-space: nowrap;
 		transition: color 0.15s ease;
 	}
-	.nav a:hover {
+	.nav-link:hover,
+	.nav-link.active {
 		color: var(--color-red);
+	}
+
+	.nav-caret {
+		transition: transform 0.15s ease;
+	}
+	.nav-item.has-children:hover .nav-caret,
+	.nav-item.has-children:focus-within .nav-caret {
+		transform: rotate(180deg);
+	}
+
+	.submenu {
+		position: absolute;
+		top: 100%;
+		left: 0;
+		min-width: 14rem;
+		margin: 0;
+		padding: 0.4rem 0;
+		list-style: none;
+		background: #fff;
+		border: 1px solid var(--color-border);
+		border-radius: 0.6rem;
+		box-shadow: 0 12px 28px rgb(0 0 0 / 0.09);
+		opacity: 0;
+		visibility: hidden;
+		transform: translateY(0.35rem);
+		transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+	}
+	.nav-item.has-children:hover .submenu,
+	.nav-item.has-children:focus-within .submenu {
+		opacity: 1;
+		visibility: visible;
+		transform: translateY(0);
+	}
+
+	.submenu-link {
+		display: block;
+		padding: 0.5rem 1rem;
+		font-weight: 500;
+		white-space: nowrap;
+		color: var(--color-text-60);
+		transition: color 0.15s ease, background 0.15s ease;
+	}
+	.submenu-link:hover,
+	.submenu-link.active {
+		color: var(--color-red);
+		background: #f6f6f7;
 	}
 
 	.header-actions {

@@ -143,6 +143,30 @@ export async function deleteBlogPost(id) {
     }
 }
 
+export async function deleteAppointment(id) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/appointments/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json',
+            },
+        })
+
+        if (response.status === 204) {
+            return { status: 'success' }
+        }
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error deleting appointment:', error)
+        return { status: 'error', meta: { message: 'No se pudo cancelar la cita' } }
+    }
+}
+
 export async function uploadMedia(file) {
     const tenantDomain = useSessionStore.getState().tenantDomain
     const accessToken = useSessionStore.getState().accessToken

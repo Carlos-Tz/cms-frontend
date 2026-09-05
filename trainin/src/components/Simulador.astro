@@ -1,44 +1,70 @@
 ---
+// Content shape matches the CMS's "savings_simulator" section (shared with
+// landing-gnu/gas-gnu): a list of fuel prices compared against gas natural.
+interface FuelPrice {
+	fuel: string;
+	label: string;
+	price_per_unit: number;
+	unit: string;
+	equivalence_factor: number;
+}
+
+interface Props {
+	title?: string | null;
+	intro?: string | null;
+	fuelPrices: FuelPrice[];
+}
+
+const GNC_FUEL_KEY = "gas-natural";
+
+const { title, intro, fuelPrices } = Astro.props;
+
+// equivalence_factor normalizes each fuel's native unit (m³, litro, …) to a
+// comparable cost basis; GNC's own factor is always 1 (the reference unit).
+const effectiveCost = (price: FuelPrice) => price.price_per_unit * price.equivalence_factor;
+
+const gncPrice = fuelPrices.find((price) => price.fuel === GNC_FUEL_KEY);
+const comparableFuels = fuelPrices.filter((price) => price.fuel !== GNC_FUEL_KEY && price.price_per_unit > 0);
+
+const fuelOptions = gncPrice
+	? comparableFuels.map((price) => ({
+			fuel: price.fuel,
+			label: price.label,
+			rate: 1 - effectiveCost(gncPrice) / effectiveCost(price),
+		}))
+	: [];
+const savingsRatesByFuel = Object.fromEntries(fuelOptions.map((option) => [option.fuel, option.rate]));
 ---
 
 <section id="simulador" class="section simulador">
 	<div class="container simulador-grid">
 		<div class="section-head simulador-copy">
-			<span class="eyebrow">Simulador de ahorro</span>
-			<h2 class="section-title">Calcula cuánto ahorras al migrar a <span class="accent">GNC</span></h2>
-			<p class="simulador-text">
-				Compara tu gasto actual en diésel o gasolina contra el costo equivalente en gas natural
-				vehicular y descubre el ahorro mensual estimado para tu flota.
-			</p>
+			{title && <h2 class="section-title">{title}</h2>}
+			{intro && <p class="simulador-text">{intro}</p>}
 		</div>
 
 		<form class="card simulador-card" data-simulador>
 			<div class="field">
-				<label for="consumo">Consumo mensual (litros)</label>
-				<input id="consumo" name="consumo" type="number" min="0" step="1" value="1000" required />
+				<label for="fuel-actual">Combustible que usas actualmente</label>
+				<select id="fuel-actual" name="fuelActual">
+					{fuelOptions.map((option) => (
+						<option value={option.fuel}>{option.label}</option>
+					))}
+				</select>
 			</div>
 			<div class="field">
-				<label for="precio-actual">Precio actual por litro (MXN)</label>
-				<input id="precio-actual" name="precioActual" type="number" min="0" step="0.1" value="24.5" required />
-			</div>
-			<div class="field">
-				<label for="precio-gnc">Precio equivalente GNC por litro (MXN)</label>
-				<input id="precio-gnc" name="precioGnc" type="number" min="0" step="0.1" value="14.9" required />
-				<span class="hint">Precio de referencia; se ajusta según convenio y volumen.</span>
+				<label for="gasto-mensual">Gasto mensual actual (MXN)</label>
+				<input id="gasto-mensual" name="gastoMensual" type="number" min="0" step="1" placeholder="Ej. 30000" required />
 			</div>
 
 			<div class="simulador-result">
 				<div class="simulador-result-item">
-					<span class="simulador-result-label">Gasto actual</span>
-					<span class="simulador-result-value" data-result="gastoActual">$0</span>
-				</div>
-				<div class="simulador-result-item">
-					<span class="simulador-result-label">Gasto con GNC</span>
-					<span class="simulador-result-value" data-result="gastoGnc">$0</span>
+					<span class="simulador-result-label">Ahorro mensual estimado</span>
+					<span class="simulador-result-value simulador-result-value--highlight" data-result="ahorroMensual">$0 MXN</span>
 				</div>
 				<div class="simulador-result-item simulador-result-item--highlight">
-					<span class="simulador-result-label">Ahorro mensual estimado</span>
-					<span class="simulador-result-value simulador-result-value--highlight" data-result="ahorro">$0</span>
+					<span class="simulador-result-label">Ahorro anual estimado</span>
+					<span class="simulador-result-value" data-result="ahorroAnual">$0 MXN</span>
 				</div>
 			</div>
 		</form>
@@ -78,7 +104,8 @@
 		font-weight: 600;
 		color: var(--color-text-60);
 	}
-	.field input {
+	.field input,
+	.field select {
 		width: 100%;
 		border-radius: var(--radius-md);
 		border: 1px solid var(--color-border);
@@ -86,16 +113,12 @@
 		padding: 0.65rem 0.85rem;
 		font-size: 0.95rem;
 		color: var(--color-text);
+		font-family: inherit;
 	}
-	.field input:focus {
+	.field input:focus,
+	.field select:focus {
 		outline: none;
 		border-color: var(--color-red);
-	}
-	.field .hint {
-		display: block;
-		margin-top: 0.3rem;
-		font-size: 0.75rem;
-		color: var(--color-text-40);
 	}
 
 	.simulador-result {
@@ -136,37 +159,32 @@
 	}
 </style>
 
-<script>
-	function formatCurrency(value: number) {
-		return value.toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
+<script define:vars={{ savingsRatesByFuel }} is:inline>
+	function formatCurrency(value) {
+		return `$${Math.round(value).toLocaleString("es-MX")} MXN`;
 	}
 
-	function initSimulador(form: HTMLFormElement) {
-		const consumo = form.querySelector<HTMLInputElement>("#consumo")!;
-		const precioActual = form.querySelector<HTMLInputElement>("#precio-actual")!;
-		const precioGnc = form.querySelector<HTMLInputElement>("#precio-gnc")!;
-		const gastoActualEl = form.querySelector<HTMLElement>('[data-result="gastoActual"]')!;
-		const gastoGncEl = form.querySelector<HTMLElement>('[data-result="gastoGnc"]')!;
-		const ahorroEl = form.querySelector<HTMLElement>('[data-result="ahorro"]')!;
+	function initSimulador(form) {
+		const fuelSelect = form.querySelector("#fuel-actual");
+		const gastoMensual = form.querySelector("#gasto-mensual");
+		const ahorroMensualEl = form.querySelector('[data-result="ahorroMensual"]');
+		const ahorroAnualEl = form.querySelector('[data-result="ahorroAnual"]');
 
 		function recalc() {
-			const litros = Number(consumo.value) || 0;
-			const actual = Number(precioActual.value) || 0;
-			const gnc = Number(precioGnc.value) || 0;
+			const spend = Number(gastoMensual.value) || 0;
+			const rate = savingsRatesByFuel[fuelSelect.value] ?? 0;
 
-			const gastoActual = litros * actual;
-			const gastoGnc = litros * gnc;
-			const ahorro = Math.max(gastoActual - gastoGnc, 0);
+			const ahorroMensual = Math.max(spend * rate, 0);
+			const ahorroAnual = ahorroMensual * 12;
 
-			gastoActualEl.textContent = formatCurrency(gastoActual);
-			gastoGncEl.textContent = formatCurrency(gastoGnc);
-			ahorroEl.textContent = formatCurrency(ahorro);
+			ahorroMensualEl.textContent = formatCurrency(ahorroMensual);
+			ahorroAnualEl.textContent = formatCurrency(ahorroAnual);
 		}
 
-		[consumo, precioActual, precioGnc].forEach((input) => input.addEventListener("input", recalc));
+		[fuelSelect, gastoMensual].forEach((input) => input.addEventListener("input", recalc));
 		form.addEventListener("submit", (event) => event.preventDefault());
 		recalc();
 	}
 
-	document.querySelectorAll<HTMLFormElement>("[data-simulador]").forEach(initSimulador);
+	document.querySelectorAll("[data-simulador]").forEach(initSimulador);
 </script>

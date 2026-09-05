@@ -1,0 +1,126 @@
+---
+// Renders a CMS page's "sections" array: each section's `type` picks a
+// component, and sections render in the order the API returns them. Unknown
+// types are skipped, so a new CMS section type never breaks a page.
+import Hero from "./Hero.astro";
+import PageHero from "./PageHero.astro";
+import Simulador from "./Simulador.astro";
+import RichText from "./RichText.astro";
+import FeatureGrid from "./FeatureGrid.astro";
+import ImageGallery from "./ImageGallery.astro";
+import StationsMap from "./StationsMap.astro";
+import Clientes from "./Clientes.astro";
+import Contacto from "./Contacto.astro";
+import { mediaUrl } from "../functions/fetch";
+
+type Slide = {
+	image: string;
+	title: string;
+	subtitle: string | null;
+	link_url: string | null;
+	link_label: string | null;
+};
+type FuelPrice = {
+	fuel: string;
+	label: string;
+	price_per_unit: number;
+	unit: string;
+	equivalence_factor: number;
+};
+type Logo = {
+	name: string;
+	image: string;
+	url: string | null;
+	description?: string | null;
+	quote?: string | null;
+	quote_author?: string | null;
+};
+type GalleryImage = { image: string; caption: string | null; alt: string | null };
+type FeatureItem = { icon: string | null; title: string; text: string | null };
+
+type BannerCarousel = { slides?: Slide[] };
+type PageHeroContent = { title?: string | null; subtitle?: string | null; image?: string | null };
+type SavingsSimulator = { title?: string; intro?: string; fuel_prices?: FuelPrice[] };
+type RichTextContent = { title: string | null; body: string; video_url: string | null };
+type FeatureGridContent = { title?: string | null; items?: FeatureItem[] };
+type ImageGalleryContent = { title?: string | null; images?: GalleryImage[] };
+type StationsMapContent = { title?: string | null; center?: string | null; zoom?: string | number | null };
+type ClientsShowcase = { title?: string | null; logos?: Logo[] };
+type LeadCaptureForm = { title?: string; intro?: string; submit_label?: string; fields?: string[] };
+
+export type PageSection = { type: string; content: Record<string, any> };
+
+interface Props {
+	sections: PageSection[];
+}
+
+const { sections } = Astro.props;
+---
+
+{
+	sections.map((section, index) => {
+		switch (section.type) {
+			case "banner_carousel": {
+				const { slides = [] } = section.content as BannerCarousel;
+				return slides.length ? (
+					<Hero
+						slides={slides.map((slide) => ({ ...slide, image: mediaUrl(slide.image) }))}
+						compact={index > 0}
+					/>
+				) : null;
+			}
+
+			case "page_hero": {
+				const { title, subtitle, image } = section.content as PageHeroContent;
+				return title ? <PageHero title={title} subtitle={subtitle} image={image ? mediaUrl(image) : null} /> : null;
+			}
+
+			case "savings_simulator": {
+				const { title, intro, fuel_prices = [] } = section.content as SavingsSimulator;
+				return <Simulador title={title} intro={intro} fuelPrices={fuel_prices} />;
+			}
+
+			case "rich_text": {
+				const { title, body, video_url } = section.content as RichTextContent;
+				return <RichText title={title} body={body ?? ""} videoUrl={video_url} />;
+			}
+
+			case "feature_grid": {
+				const { title, items = [] } = section.content as FeatureGridContent;
+				return items.length ? (
+					<FeatureGrid
+						title={title}
+						items={items.map((item) => ({ ...item, icon: item.icon ? mediaUrl(item.icon) : null }))}
+					/>
+				) : null;
+			}
+
+			case "image_gallery": {
+				const { title, images = [] } = section.content as ImageGalleryContent;
+				return images.length ? (
+					<ImageGallery title={title} images={images.map((item) => ({ ...item, image: mediaUrl(item.image) }))} />
+				) : null;
+			}
+
+			case "stations_map": {
+				const { title, center, zoom } = section.content as StationsMapContent;
+				return <StationsMap title={title} center={center} zoom={zoom} />;
+			}
+
+			case "clients_showcase": {
+				const { title, logos = [] } = section.content as ClientsShowcase;
+				return logos.length ? (
+					<Clientes title={title} logos={logos.map((logo) => ({ ...logo, image: mediaUrl(logo.image) }))} />
+				) : null;
+			}
+
+			case "lead_capture_form": {
+				const { title, intro, submit_label, fields = [] } = section.content as LeadCaptureForm;
+				return <Contacto title={title} intro={intro} submitLabel={submit_label} fields={fields} />;
+			}
+
+			default:
+				return null;
+		}
+	})
+}

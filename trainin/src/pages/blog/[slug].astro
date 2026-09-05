@@ -1,0 +1,111 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { fetchData, mediaUrl } from "../../functions/fetch";
+import { fetchBlogPosts, formatPublishedAt, type BlogEntry } from "../../functions/blog";
+
+type BlogEntryResponse = { status: string; data: BlogEntry; meta: Record<string, any> };
+
+// One route per published post; each entry's body comes from
+// blog/{slug}, which the listing endpoint does not include.
+export async function getStaticPaths() {
+  const posts = await fetchBlogPosts();
+
+  const entries = await Promise.all(
+    posts.map(async (post) => {
+      const response: BlogEntryResponse | undefined = await fetchData(`blog/${post.slug}`);
+      return { params: { slug: post.slug }, props: { entry: response?.data ?? { ...post, body: "" } } };
+    })
+  );
+
+  return entries;
+}
+
+const { entry } = Astro.props as { entry: BlogEntry };
+const published = formatPublishedAt(entry.published_at);
+---
+
+<Layout title={entry.title} description={entry.excerpt ?? undefined}>
+  <article class="blog-entry">
+    <header class="blog-entry-header">
+      <div class="container blog-entry-header-inner">
+        {published && <time class="blog-entry-date" datetime={entry.published_at}>{published}</time>}
+        <h1 class="blog-entry-title">{entry.title}</h1>
+        {entry.excerpt && <p class="blog-entry-excerpt">{entry.excerpt}</p>}
+      </div>
+    </header>
+
+    {entry.cover_image && (
+      <div class="container">
+        <img class="blog-entry-cover" src={mediaUrl(entry.cover_image)} alt="" />
+      </div>
+    )}
+
+    <div class="section blog-entry-body">
+      <div class="container">
+        <div class="prose blog-prose" set:html={entry.body} />
+        <a class="blog-entry-back" href="/blog">← Volver al blog</a>
+      </div>
+    </div>
+  </article>
+</Layout>
+
+<style>
+  .blog-entry-header {
+    background: var(--color-dark);
+    color: var(--color-text-on-dark);
+    padding: 4rem 0 5rem;
+  }
+
+  .blog-entry-header-inner {
+    max-width: 48rem;
+  }
+
+  .blog-entry-date {
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text-on-dark-60);
+  }
+
+  .blog-entry-title {
+    margin-top: 0.75rem;
+    font-size: clamp(2rem, 4vw, 2.6rem);
+    line-height: 1.15;
+  }
+
+  .blog-entry-excerpt {
+    margin-top: 1rem;
+    color: var(--color-text-on-dark-60);
+    font-size: 1.05rem;
+  }
+
+  .blog-entry-cover {
+    display: block;
+    width: 100%;
+    max-width: 56rem;
+    margin: -3rem auto 0;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+  }
+
+  .blog-entry-body .container {
+    max-width: 48rem;
+  }
+
+  /* The CMS body ships its own <h1>, so keep it below the page title's size. */
+  .blog-prose :global(h1) {
+    font-size: 1.6rem;
+    margin-top: 1.5rem;
+    color: var(--color-dark);
+  }
+
+  .blog-entry-back {
+    display: inline-block;
+    margin-top: 2.5rem;
+    font-weight: 700;
+    color: var(--color-red);
+  }
+</style>

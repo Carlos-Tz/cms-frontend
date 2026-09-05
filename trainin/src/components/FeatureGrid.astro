@@ -1,0 +1,77 @@
+---
+// Content shape matches the CMS's "feature_grid" section: an optional title
+// plus a list of items, each with an optional icon (a media path or URL).
+interface FeatureItem {
+	icon?: string | null;
+	title: string;
+	text?: string | null;
+}
+
+interface Props {
+	title?: string | null;
+	items: FeatureItem[];
+}
+
+const { title, items } = Astro.props;
+---
+
+<section class="section section--alt feature-grid-section">
+	<div class="container">
+		{title && (
+			<div class="section-head">
+				<h2 class="section-title">{title}</h2>
+			</div>
+		)}
+
+		<div class="feature-grid">
+			{items.map((item) => (
+				<article class="card feature-card">
+					{item.icon && <img class="feature-icon" src={item.icon} alt="" />}
+					<h3 class="feature-title">{item.title}</h3>
+					{item.text && <p class="feature-text">{item.text}</p>}
+				</article>
+			))}
+		</div>
+	</div>
+</section>
+
+<style>
+	.feature-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+		gap: 1.5rem;
+	}
+
+	.feature-card {
+		padding: 1.75rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+
+	.feature-icon {
+		width: 2.5rem;
+		height: 2.5rem;
+		object-fit: contain;
+	}
+
+	.feature-title {
+		font-size: 1.15rem;
+	}
+	.feature-title::before {
+		content: "";
+		display: inline-block;
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: var(--radius-full);
+		background: var(--color-red);
+		margin-right: 0.55rem;
+		vertical-align: middle;
+	}
+
+	.feature-text {
+		color: var(--color-text-60);
+		font-size: 0.95rem;
+		line-height: 1.65;
+	}
+</style>

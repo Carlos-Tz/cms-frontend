@@ -1,0 +1,146 @@
+---
+// Content shape matches the CMS's generic "rich_text" section (shared with
+// gas-gnu's RichText.astro): a title, an HTML body, and an optional video.
+// Used on any page, so it carries no page-specific copy or id.
+interface Props {
+	title?: string | null;
+	body: string;
+	videoUrl?: string | null;
+	image?: string | null;
+	id?: string;
+}
+
+const { title, body, videoUrl, image, id } = Astro.props;
+
+function toEmbedUrl(url: string) {
+	try {
+		const parsed = new URL(url);
+		const host = parsed.hostname.replace(/^www\./, "");
+
+		if (host === "youtube.com" || host === "m.youtube.com") {
+			if (parsed.pathname === "/watch") {
+				const videoId = parsed.searchParams.get("v");
+				if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+			}
+			if (parsed.pathname.startsWith("/embed/")) return url;
+			if (parsed.pathname.startsWith("/shorts/")) {
+				return `https://www.youtube.com/embed/${parsed.pathname.split("/")[2]}`;
+			}
+		}
+
+		if (host === "youtu.be") {
+			return `https://www.youtube.com/embed/${parsed.pathname.slice(1)}`;
+		}
+
+		if (host === "vimeo.com") {
+			return `https://player.vimeo.com/video/${parsed.pathname.slice(1)}`;
+		}
+
+		if (host === "player.vimeo.com") return url;
+
+		return url;
+	} catch {
+		return url;
+	}
+}
+
+const embedUrl = videoUrl ? toEmbedUrl(videoUrl) : null;
+---
+
+<section id={id} class="section rich-text">
+	<div class:list={["container", "rich-text-grid", { "rich-text-grid--single": !image }]}>
+		{image && (
+			<div class="rich-text-image">
+				<img src={image} alt={title ?? ""} />
+			</div>
+		)}
+
+		<div class="rich-text-content">
+			{title && (
+				<div class="section-head">
+					<h2 class="section-title">{title}</h2>
+				</div>
+			)}
+
+			<div class="prose" set:html={body} />
+
+			{embedUrl && (
+				<div class="rich-text-video">
+					<iframe src={embedUrl} title={title ?? "Video"} loading="lazy" allowfullscreen></iframe>
+				</div>
+			)}
+		</div>
+	</div>
+</section>
+
+<style>
+	.rich-text-grid {
+		display: grid;
+		grid-template-columns: 0.9fr 1.1fr;
+		gap: 3rem;
+		align-items: center;
+	}
+	/* Without an image the body would otherwise sit in a half-width column. */
+	.rich-text-grid--single {
+		grid-template-columns: 1fr;
+		max-width: 48rem;
+	}
+
+	.rich-text-image {
+		border-radius: var(--radius-lg);
+		overflow: hidden;
+		aspect-ratio: 4 / 5;
+	}
+	.rich-text-image img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.rich-text-content .section-head {
+		margin-bottom: 1.5rem;
+	}
+
+	@media (max-width: 860px) {
+		.rich-text-grid {
+			grid-template-columns: 1fr;
+			gap: 2rem;
+		}
+	}
+</style>
+
+<style is:global>
+	/* Shared prose styles for CMS-authored HTML ("rich_text" sections) */
+	.prose {
+		font-size: 1rem;
+		line-height: 1.7;
+		color: var(--color-text-60);
+	}
+	.prose :is(h2, h3) {
+		margin-top: 1.5rem;
+		color: var(--color-dark);
+	}
+	.prose p + p {
+		margin-top: 1rem;
+	}
+	.prose a {
+		color: var(--color-red);
+		text-decoration: underline;
+	}
+
+	.rich-text-video {
+		margin-top: 1.5rem;
+		position: relative;
+		aspect-ratio: 16 / 9;
+		border-radius: var(--radius-lg);
+		overflow: hidden;
+		background: var(--color-dark);
+	}
+	.rich-text-video iframe {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		border: none;
+	}
+</style>

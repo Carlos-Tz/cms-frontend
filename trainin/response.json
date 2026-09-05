@@ -1,0 +1,92 @@
+{
+  "status": "success",
+  "data": {
+    "slug": "inicio",
+    "path": "/",
+    "title": "Inicio",
+    "sections": [
+      {
+        "type": "banner_carousel",
+        "content": {
+          "slides": [
+            {
+              "image": "media/placeholder-banner-traninn.jpg",
+              "title": "Transporte de gas natural comprimido",
+              "subtitle": "Logística y carga pesada para tu operación.",
+              "link_url": null,
+              "link_label": null
+            }
+          ]
+        }
+      },
+      {
+        "type": "savings_simulator",
+        "content": {
+          "title": "Simulador de ahorro",
+          "intro": "Compara el costo de tu combustible actual contra el gas natural.",
+          "fuel_prices": [
+            {
+              "fuel": "gas-natural",
+              "label": "Gas natural comprimido",
+              "price_per_unit": 12.8,
+              "unit": "m³",
+              "equivalence_factor": 1
+            },
+            {
+              "fuel": "diesel",
+              "label": "Diésel",
+              "price_per_unit": 26.4,
+              "unit": "litro",
+              "equivalence_factor": 0.95
+            },
+            {
+              "fuel": "gasolina",
+              "label": "Gasolina",
+              "price_per_unit": 24.9,
+              "unit": "litro",
+              "equivalence_factor": 0.84
+            }
+          ]
+        }
+      },
+      {
+        "type": "rich_text",
+        "content": {
+          "title": null,
+          "body": "<p>Contenido pendiente de redactar.</p>",
+          "video_url": null
+        }
+      },
+      {
+        "type": "clients_showcase",
+        "content": {
+          "title": "Nuestros clientes",
+          "logos": [
+            {
+              "image": "media/placeholder-logo.png",
+              "name": "Cliente de ejemplo",
+              "url": null
+            }
+          ]
+        }
+      },
+      {
+        "type": "lead_capture_form",
+        "content": {
+          "title": "Contacto",
+          "intro": "Déjanos tus datos y un asesor se comunicará contigo.",
+          "submit_label": "Enviar",
+          "fields": [
+            "name",
+            "email",
+            "phone",
+            "message"
+          ]
+        }
+      }
+    ]
+  },
+  "meta": {
+    "site": "traninn-logistic"
+  }
+}

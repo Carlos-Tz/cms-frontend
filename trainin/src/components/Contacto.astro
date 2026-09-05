@@ -1,48 +1,64 @@
 ---
+import { BASE_URL } from "../functions/fetch";
+
+// Field list matches the CMS's generic "lead_capture_form" section (shared
+// with gas-gnu's LeadCaptureForm.astro): a set of field keys the admin picks,
+// each rendered from this local metadata dictionary.
+type ContactFieldType = "text" | "email" | "tel" | "textarea";
+
+const contactFieldMeta: Record<string, { label: string; type: ContactFieldType; placeholder: string; required?: boolean }> = {
+	name: { label: "Nombre", type: "text", placeholder: "Tu nombre", required: true },
+	email: { label: "Correo electrónico", type: "email", placeholder: "tucorreo@ejemplo.com", required: true },
+	phone: { label: "Teléfono", type: "tel", placeholder: "10 dígitos" },
+	company: { label: "Empresa", type: "text", placeholder: "Nombre de tu empresa" },
+	message: { label: "Mensaje", type: "textarea", placeholder: "Cuéntanos brevemente qué necesitas" },
+};
+
+interface Props {
+	title?: string | null;
+	intro?: string | null;
+	submitLabel?: string | null;
+	fields: string[];
+	whatsappUrl?: string | null;
+	formId?: string;
+}
+
+const { title, intro, submitLabel, fields, whatsappUrl, formId = "contacto-lead-form" } = Astro.props;
 ---
 
 <section id="contacto" class="section section--dark contacto">
 	<div class="container contacto-grid">
 		<div class="section-head contacto-copy">
-			<span class="eyebrow eyebrow--on-dark">Contacto</span>
-			<h2 class="section-title">Cuéntanos qué necesitas transportar</h2>
-			<p class="contacto-text">
-				Completa el formulario y un asesor de Traninn Logistic te contactará para cotizar tu
-				servicio de transporte de GNC, logística o carga pesada.
-			</p>
+			{title && <h2 class="section-title">{title}</h2>}
+			{intro && <p class="contacto-text">{intro}</p>}
 
-			<a class="btn-primary contacto-whatsapp" href="https://wa.me/000000000000" target="_blank" rel="noopener noreferrer">
-				Escribir por WhatsApp
-			</a>
+			{whatsappUrl && (
+				<a class="btn-primary contacto-whatsapp" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+					Escribir por WhatsApp
+				</a>
+			)}
 		</div>
 
-		<form class="card contacto-form" data-lead-form>
-			<div class="field">
-				<label for="nombre">Nombre</label>
-				<input id="nombre" name="nombre" type="text" placeholder="Tu nombre" required />
-			</div>
-			<div class="field">
-				<label for="empresa">Empresa</label>
-				<input id="empresa" name="empresa" type="text" placeholder="Nombre de tu empresa" />
-			</div>
-			<div class="field">
-				<label for="telefono">Teléfono</label>
-				<input id="telefono" name="telefono" type="tel" placeholder="10 dígitos" required />
-			</div>
-			<div class="field">
-				<label for="servicio">Servicio de interés</label>
-				<select id="servicio" name="servicio">
-					<option>Transporte de GNC</option>
-					<option>Logística</option>
-					<option>Carga pesada</option>
-				</select>
-			</div>
-			<div class="field">
-				<label for="mensaje">Mensaje</label>
-				<textarea id="mensaje" name="mensaje" rows="3" placeholder="Cuéntanos brevemente qué necesitas"></textarea>
-			</div>
-			<button type="submit" class="btn-primary contacto-submit">Solicitar contacto</button>
-			<p class="contacto-status" data-lead-status role="status"></p>
+		<form class="card contacto-form" id={formId} data-lead-form>
+			{fields.map((field) => {
+				const meta = contactFieldMeta[field] ?? {
+					label: field.charAt(0).toUpperCase() + field.slice(1),
+					type: "text" as ContactFieldType,
+					placeholder: "",
+				};
+				return (
+					<div class="field">
+						<label for={`${formId}-${field}`}>{meta.label}</label>
+						{meta.type === "textarea" ? (
+							<textarea id={`${formId}-${field}`} name={field} rows="3" placeholder={meta.placeholder} required={meta.required} />
+						) : (
+							<input type={meta.type} id={`${formId}-${field}`} name={field} placeholder={meta.placeholder} required={meta.required} />
+						)}
+					</div>
+				);
+			})}
+			<button type="submit" class="btn-primary contacto-submit">{submitLabel}</button>
+			<p class="contacto-status" data-lead-status role="status" aria-live="polite"></p>
 		</form>
 	</div>
 </section>
@@ -124,15 +140,36 @@
 	}
 </style>
 
-<script>
-	function initLeadForm(form: HTMLFormElement) {
-		const status = form.querySelector<HTMLElement>("[data-lead-status]")!;
-		form.addEventListener("submit", (event) => {
-			event.preventDefault();
-			status.textContent = "¡Gracias! Un asesor de Traninn Logistic te contactará muy pronto.";
-			form.reset();
-		});
-	}
+<script define:vars={{ apiBase: BASE_URL, leadFormId: formId }} is:inline>
+	const form = document.getElementById(leadFormId);
+	const status = form ? form.querySelector("[data-lead-status]") : null;
 
-	document.querySelectorAll<HTMLFormElement>("[data-lead-form]").forEach(initLeadForm);
+	form?.addEventListener("submit", async (event) => {
+		event.preventDefault();
+		const submitButton = form.querySelector('button[type="submit"]');
+		const data = Object.fromEntries(new FormData(form).entries());
+
+		if (submitButton) submitButton.disabled = true;
+		if (status) status.textContent = "Enviando...";
+
+		try {
+			const response = await fetch(apiBase + "leads", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Accept: "application/json",
+				},
+				body: JSON.stringify(data),
+			});
+			const result = await response.json().catch(() => null);
+			if (!response.ok) throw new Error("request failed");
+
+			form.reset();
+			if (status) status.textContent = result?.meta?.message || "¡Gracias! Un asesor de Traninn Logistic te contactará muy pronto.";
+		} catch (error) {
+			if (status) status.textContent = "No pudimos enviar tu mensaje. Intenta de nuevo.";
+		} finally {
+			if (submitButton) submitButton.disabled = false;
+		}
+	});
 </script>
