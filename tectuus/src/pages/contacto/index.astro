@@ -1,0 +1,31 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SectionRenderer from "../../components/SectionRenderer.astro";
+import PageHero from "../../components/sections/PageHero.astro";
+import LeadCaptureForm from "../../components/sections/LeadCaptureForm.astro";
+import { fetchData } from "../../functions/fetch";
+import type { PageResponse } from "../../types/page";
+
+const pageResponse: PageResponse | undefined = await fetchData("pages/contacto");
+const page = pageResponse?.data;
+const sections = page?.sections ?? [];
+---
+
+<Layout title={page?.title ?? "Contacto"}>
+  {!page && (
+    <>
+      <PageHero title="Contacto" subtitle="Estamos para ayudarte." />
+      <section class="section" id="contacto">
+        <div class="container" style="max-width: 34rem;">
+          <LeadCaptureForm
+            formId="contacto-lead-form"
+            title="Escríbenos"
+            intro="Déjanos tus datos y un asesor se comunicará contigo."
+            submit_label="Enviar"
+          />
+        </div>
+      </section>
+    </>
+  )}
+  <SectionRenderer sections={sections} />
+</Layout>

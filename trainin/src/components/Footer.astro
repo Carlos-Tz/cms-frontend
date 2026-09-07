@@ -1,4 +1,6 @@
 ---
+import type { ContactInfo } from "../types/globals";
+
 interface Social {
 	label: string;
 	href: string;
@@ -8,6 +10,8 @@ interface Social {
 interface Props {
 	socials?: Social[];
 	whatsappUrl?: string;
+	// Site-wide contact details from the CMS `globals` endpoint.
+	contact?: ContactInfo | null;
 }
 
 const fallbackSocials: Social[] = [
@@ -16,7 +20,7 @@ const fallbackSocials: Social[] = [
 	{ label: "linkedin", href: "#", path: "M6.94 8.5H4.56V19h2.38V8.5ZM5.75 4.9a1.38 1.38 0 1 0 0 2.76 1.38 1.38 0 0 0 0-2.76ZM19.44 19h-2.38v-5.37c0-1.28-.46-2.15-1.6-2.15-.87 0-1.39.59-1.62 1.15-.08.2-.1.49-.1.77V19H11.4s.03-9.44 0-10.5h2.34v1.49c.31-.48 .87-1.16 2.12-1.16 1.55 0 2.71 1.01 2.71 3.18V19Z" },
 ];
 
-const { socials = fallbackSocials, whatsappUrl = "https://wa.me/000000000000" } = Astro.props;
+const { socials = fallbackSocials, whatsappUrl = "https://wa.me/000000000000", contact } = Astro.props;
 
 const columnas = [
 	{
@@ -71,7 +75,11 @@ const year = new Date().getFullYear();
 		<div class="footer-col">
 			<h3 class="footer-col-title">Contacto</h3>
 			<ul>
-				<li><a href="#contacto">Captación de leads</a></li>
+				{contact?.address && <li class="footer-contact-text">{contact.address}</li>}
+				{contact?.email && <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>}
+				{contact?.phone && <li><a href={`tel:${contact.phone.replace(/\s/g, "")}`}>{contact.phone}</a></li>}
+				{contact?.schedule && <li class="footer-contact-text">{contact.schedule}</li>}
+				{contact?.additional_info && <li class="footer-contact-text">{contact.additional_info}</li>}
 				<li><a href={whatsappUrl} target="_blank" rel="noopener noreferrer">WhatsApp directo</a></li>
 			</ul>
 		</div>
@@ -151,6 +159,10 @@ const year = new Date().getFullYear();
 	}
 	.footer-col a:hover {
 		color: #fff;
+	}
+	/* Contact details that aren't links (address, schedule) */
+	.footer-contact-text {
+		color: var(--color-text-on-dark-60);
 	}
 
 	.footer-bottom {

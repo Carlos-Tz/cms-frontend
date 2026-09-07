@@ -1,0 +1,105 @@
+---
+import { BASE_URL } from "../../functions/fetch";
+
+type ContactFieldType = "text" | "email" | "tel" | "number" | "textarea";
+
+const contactFieldMeta: Record<string, { label: string; type: ContactFieldType; placeholder: string }> = {
+  name: { label: "Nombre completo", type: "text", placeholder: "Tu nombre" },
+  company: { label: "Empresa", type: "text", placeholder: "Nombre de tu empresa" },
+  email: { label: "Correo electrónico", type: "email", placeholder: "tu@empresa.com" },
+  phone: { label: "Teléfono", type: "tel", placeholder: "Ej. 55 1234 5678" },
+  message: { label: "Mensaje", type: "textarea", placeholder: "Cuéntanos sobre tu proyecto" },
+  product: { label: "Producto de interés", type: "text", placeholder: "EDRM, compresoras, valvulería…" },
+};
+
+interface Props {
+  title?: string | null;
+  intro?: string | null;
+  submit_label?: string | null;
+  fields?: string[];
+  formId?: string;
+}
+
+const {
+  title = "Escríbenos",
+  intro,
+  submit_label = "Enviar",
+  fields = ["name", "email", "phone", "message"],
+  formId = "lead-form",
+} = Astro.props;
+---
+
+<div class="card">
+  <p class="card__title" style="margin-bottom: 1rem;">{title}</p>
+  {intro && <p class="card__text" style="margin-bottom: 1rem;">{intro}</p>}
+  <form id={formId}>
+    {fields.map((field) => {
+      const meta = contactFieldMeta[field] ?? {
+        label: field.charAt(0).toUpperCase() + field.slice(1),
+        type: "text" as ContactFieldType,
+        placeholder: "",
+      };
+      return (
+        <div class="field">
+          <label for={`${formId}-${field}`}>{meta.label}</label>
+          {meta.type === "textarea" ? (
+            <textarea id={`${formId}-${field}`} name={field} rows="4" placeholder={meta.placeholder} />
+          ) : (
+            <input
+              type={meta.type}
+              id={`${formId}-${field}`}
+              name={field}
+              placeholder={meta.placeholder}
+              required={field !== "phone" && field !== "company"}
+            />
+          )}
+        </div>
+      );
+    })}
+    <button type="submit" class="btn-primary lead-form__submit">{submit_label}</button>
+    <p class="lead-form__status" data-lead-form-status role="status" aria-live="polite"></p>
+  </form>
+</div>
+
+<script define:vars={{ apiBase: BASE_URL, leadFormId: formId }} is:inline>
+  const form = document.getElementById(leadFormId);
+  const status = form ? form.querySelector("[data-lead-form-status]") : null;
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submitButton = form.querySelector('button[type="submit"]');
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    if (submitButton) submitButton.disabled = true;
+    if (status) {
+      status.textContent = "Enviando...";
+      status.className = "lead-form__status";
+    }
+
+    try {
+      const response = await fetch(apiBase + "leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) throw new Error("request failed");
+
+      form.reset();
+      if (status) {
+        status.textContent = result?.meta?.message || "Gracias por contactarnos.";
+        status.className = "lead-form__status lead-form__status--success";
+      }
+    } catch (error) {
+      if (status) {
+        status.textContent = "No pudimos enviar tu mensaje. Intenta de nuevo.";
+        status.className = "lead-form__status lead-form__status--error";
+      }
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
+  });
+</script>

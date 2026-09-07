@@ -5,6 +5,7 @@ import { seo } from "../config/seo";
 import NavItem from "../components/nav/NavItem.astro";
 import NavItemMobile from "../components/nav/NavItemMobile.astro";
 import type { MenuItem, MenuResponse } from "../types/menu";
+import type { GlobalsResponse } from "../types/globals";
 
 interface Props {
   // Page-specific title, WITHOUT the site name — Layout appends
@@ -41,24 +42,15 @@ const menuItems: MenuItem[] = menuResponse?.data?.length ? menuResponse.data : f
 
 // Footer contact info, social links and the WhatsApp button are all editable
 // from the CMS admin (Landing Page → Datos de contacto / Redes sociales /
-// Botón de WhatsApp). This layout wraps every page, so it fetches them here
-// rather than relying on each page to pass them down.
-type PageSection = { type: string; content: Record<string, any> };
-type PageResponse = { status: string; data: { sections: PageSection[] } };
+// Botón de WhatsApp) and shared by every page, so they come from the
+// site-wide `globals` endpoint. This layout wraps every page, so it fetches
+// them here rather than relying on each page to pass them down.
+const globalsResponse: GlobalsResponse | undefined = await fetchData("globals");
+const globals = globalsResponse?.data;
 
-const layoutPageResponse: PageResponse | undefined = await fetchData("pages/inicio");
-const layoutSections = layoutPageResponse?.data?.sections ?? [];
-const getLayoutSection = (type: string) => layoutSections.find((section) => section.type === type)?.content;
-
-const contactInfo = getLayoutSection("contact_info") as
-  | { address?: string; phone?: string; email?: string; schedule?: string; additional_info?: string }
-  | undefined;
-const socialIcons = getLayoutSection("social_icons") as
-  | { networks?: { network: string; url: string }[] }
-  | undefined;
-const whatsappButton = getLayoutSection("whatsapp_button") as
-  | { phone?: string; prefilled_message?: string }
-  | undefined;
+const contactInfo = globals?.contact_info;
+const socialIcons = globals?.social_icons;
+const whatsappButton = globals?.whatsapp_button;
 
 const footerEmail = contactInfo?.email ?? "hola@gnu-gnv.mx";
 const footerPhone = contactInfo?.phone;

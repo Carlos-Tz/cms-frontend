@@ -1,0 +1,21 @@
+---
+import { mediaUrl } from "../../functions/fetch";
+
+interface Props {
+  title: string;
+  subtitle?: string | null;
+  image?: string | null;
+}
+
+const { title, subtitle, image } = Astro.props;
+const heroImage = image ? mediaUrl(image) : null;
+---
+
+<section class="page-hero">
+  {heroImage && <img class="page-hero__img" src={heroImage} alt="" />}
+  <div class="page-hero__scrim" aria-hidden="true"></div>
+  <div class="container page-hero__content">
+    <h1 class="page-hero__title">{title}</h1>
+    {subtitle && <p class="page-hero__subtitle">{subtitle}</p>}
+  </div>
+</section>

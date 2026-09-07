@@ -1,0 +1,288 @@
+---
+import "../styles/global.css";
+import { fetchData } from "../functions/fetch";
+import { seo } from "../config/seo";
+import NavItem from "../components/nav/NavItem.astro";
+import NavItemMobile from "../components/nav/NavItemMobile.astro";
+import type { MenuItem, MenuResponse } from "../types/menu";
+import type { GlobalsResponse } from "../types/globals";
+
+interface Props {
+  // Page-specific title, WITHOUT the site name — Layout appends
+  // "{titleSeparator} {siteName}" automatically. Omit to fall back to
+  // `seo.defaultTitle` (used as-is, already includes the site name).
+  title?: string;
+  description?: string;
+  // Absolute or root-relative URL to a social preview image (og:image / twitter:image).
+  image?: string | null;
+  // Set true on pages that shouldn't be indexed (e.g. a "not found" state).
+  noindex?: boolean;
+}
+
+const { title, description, image, noindex = false } = Astro.props;
+
+const pageTitle = title ? `${title} ${seo.titleSeparator} ${seo.siteName}` : seo.defaultTitle;
+const pageDescription = description ?? seo.defaultDescription;
+const socialImage = image ?? seo.defaultImage;
+const canonicalUrl = new URL(Astro.url.pathname, seo.siteUrl).toString();
+const socialImageUrl = socialImage ? new URL(socialImage, seo.siteUrl).toString() : null;
+
+// Nav menu is CMS-driven (Landing Page → Menú). Falls back to the site's four
+// top-level pages if the menu endpoint is unreachable.
+const fallbackMenu: MenuItem[] = [
+  { slug: "inicio", path: "/", title: "Inicio", children: [] },
+  { slug: "sobre-nosotros", path: "/sobre-nosotros", title: "Sobre nosotros", children: [] },
+  { slug: "productos", path: "/productos", title: "Productos", children: [] },
+  { slug: "contacto", path: "/contacto", title: "Contacto", children: [] },
+];
+
+const menuResponse: MenuResponse | undefined = await fetchData("menu");
+const menuItems: MenuItem[] = menuResponse?.data?.length ? menuResponse.data : fallbackMenu;
+
+// Footer contact info, social links and the WhatsApp button are all editable
+// from the CMS admin (Landing Page → Datos de contacto / Redes sociales /
+// Botón de WhatsApp) and shared by every page, so they come from the
+// site-wide `globals` endpoint. This layout wraps every page, so it fetches
+// them here rather than relying on each page to pass them down.
+const globalsResponse: GlobalsResponse | undefined = await fetchData("globals");
+const globals = globalsResponse?.data;
+
+const contactInfo = globals?.contact_info;
+const socialIcons = globals?.social_icons;
+const whatsappButton = globals?.whatsapp_button;
+
+const footerEmail = contactInfo?.email ?? "contacto@tectuus.com";
+const footerPhone = contactInfo?.phone;
+const footerSchedule = contactInfo?.schedule;
+const footerAddress = contactInfo?.address;
+const footerAdditionalInfo = contactInfo?.additional_info;
+
+const SOCIAL_ICON_MARKUP: Record<string, string> = {
+  facebook:
+    '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M13.5 21v-7.9h2.65l.4-3.08h-3.05V8.05c0-.89.25-1.5 1.52-1.5h1.63V3.84C15.94 3.76 15.06 3.7 14.03 3.7c-2.24 0-3.78 1.37-3.78 3.87v2.16H7.6v3.08h2.65V21h3.25Z"/></svg>',
+  instagram:
+    '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg>',
+  linkedin:
+    '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6.94 5a1.94 1.94 0 1 1-3.88 0 1.94 1.94 0 0 1 3.88 0ZM3.4 8.75h3.5V21H3.4V8.75Zm6.2 0h3.36v1.68h.05c.47-.87 1.6-1.8 3.3-1.8 3.53 0 4.18 2.24 4.18 5.16V21H16.9v-6.13c0-1.46-.03-3.35-2.05-3.35-2.05 0-2.37 1.58-2.37 3.24V21H9.6V8.75Z"/></svg>',
+  youtube:
+    '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M21.6 7.2s-.2-1.5-.85-2.15c-.8-.85-1.7-.85-2.1-.9C15.8 4 12 4 12 4h0s-3.8 0-6.65.15c-.4.05-1.3.05-2.1.9C2.6 5.7 2.4 7.2 2.4 7.2S2.2 9 2.2 10.7v1.6c0 1.7.2 3.5.2 3.5s.2 1.5.85 2.15c.8.85 1.85.82 2.3.91C7.2 19 12 19 12 19s3.8 0 6.65-.15c.4-.05 1.3-.05 2.1-.9.65-.65.85-2.15.85-2.15s.2-1.8.2-3.5v-1.6c0-1.7-.2-3.5-.2-3.5zM10 14.6V8.9l5.2 2.85z"/></svg>',
+  twitter:
+    '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M18.9 3H21l-6.4 7.3L22 21h-5.9l-4.6-6-5.3 6H3l6.8-7.8L2.4 3h6l4.2 5.5L18.9 3zM17.9 19.3h1.6L8.2 4.6H6.5l11.4 14.7z"/></svg>',
+};
+
+const fallbackNetworks = [
+  { network: "facebook", url: "#" },
+  { network: "instagram", url: "#" },
+  { network: "linkedin", url: "#" },
+];
+const socialNetworks = (socialIcons?.networks?.length ? socialIcons.networks : fallbackNetworks).filter(
+  (item) => SOCIAL_ICON_MARKUP[item.network]
+);
+
+const whatsappDigits = (whatsappButton?.phone || "5215500000000").replace(/\D/g, "");
+const whatsappHref = `https://wa.me/${whatsappDigits}${
+  whatsappButton?.prefilled_message ? `?text=${encodeURIComponent(whatsappButton.prefilled_message)}` : ""
+}`;
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="generator" content={Astro.generator} />
+
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={seo.siteName} />
+    <meta property="og:locale" content={seo.locale} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    {socialImageUrl && <meta property="og:image" content={socialImageUrl} />}
+
+    <meta name="twitter:card" content={seo.twitterCard} />
+    {seo.twitterHandle && <meta name="twitter:site" content={seo.twitterHandle} />}
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={pageDescription} />
+    {socialImageUrl && <meta name="twitter:image" content={socialImageUrl} />}
+  </head>
+  <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <header class="site-header">
+      <div class="container site-header__inner">
+        <a href="/" class="brand">
+          <span class="brand__mark" aria-hidden="true">
+            <img src="/favicon.svg" alt="" width="22" height="22" />
+          </span>
+          TECTUUS
+        </a>
+
+        <nav class="nav" aria-label="Principal">
+          {menuItems.map((item) => (
+            <NavItem item={item} />
+          ))}
+        </nav>
+
+        <div class="header-actions">
+          <div class="social-row" style="margin-top: 0;" aria-label="Redes sociales">
+            {socialNetworks.map((item) => (
+              <a class="social-icon" href={item.url || "#"} target="_blank" rel="noopener noreferrer" aria-label={item.network}>
+                <Fragment set:html={SOCIAL_ICON_MARKUP[item.network]} />
+              </a>
+            ))}
+          </div>
+          <a class="btn-primary btn-primary--compact" href="/contacto">Escríbenos</a>
+        </div>
+
+        <button class="nav-toggle" id="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+      <nav class="nav-mobile" id="nav-mobile" aria-label="Principal móvil">
+        {menuItems.map((item) => (
+          <NavItemMobile item={item} />
+        ))}
+        <a href="/contacto" class="btn-primary">Escríbenos</a>
+      </nav>
+    </header>
+
+    <main id="contenido">
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-grid">
+          <div>
+            <a href="/" class="brand brand--on-dark">
+              <span class="brand__mark" aria-hidden="true">
+                <img src="/favicon.svg" alt="" width="22" height="22" />
+              </span>
+              TECTUUS
+            </a>
+            <p class="footer-tagline">
+              Ingeniería y equipo industrial para gas natural: EDRM, compresoras y valvulería.
+            </p>
+            <div class="social-row">
+              {socialNetworks.map((item) => (
+                <a
+                  class="social-icon social-icon--on-dark"
+                  href={item.url || "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={item.network}
+                >
+                  <Fragment set:html={SOCIAL_ICON_MARKUP[item.network]} />
+                </a>
+              ))}
+            </div>
+          </div>
+          <div>
+            <p class="footer-heading">Navegación</p>
+            {menuItems.map((item) => (
+              <a class="footer-link" href={item.path}>{item.title}</a>
+            ))}
+          </div>
+          <div>
+            <p class="footer-heading">Contacto</p>
+            {footerAddress && <p class="footer-link">{footerAddress}</p>}
+            <a class="footer-link" href={`mailto:${footerEmail}`}>{footerEmail}</a>
+            {footerPhone && <a class="footer-link" href={`tel:${footerPhone.replace(/\s/g, "")}`}>{footerPhone}</a>}
+            {footerSchedule && <p class="footer-link">{footerSchedule}</p>}
+            {footerAdditionalInfo && <p class="footer-link">{footerAdditionalInfo}</p>}
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <span>GNU Gas Natural {new Date().getFullYear()} · Tectuus. Todos los derechos reservados.</span>
+          <span>Aviso de privacidad · Términos y condiciones</span>
+        </div>
+      </div>
+    </footer>
+
+    <a
+      class="whatsapp-fab"
+      href={whatsappHref}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="Escríbenos por WhatsApp"
+    >
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.33 4.95L2 22l5.28-1.39a9.9 9.9 0 0 0 4.76 1.21h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.8 14.03c-.24.68-1.4 1.33-1.94 1.4-.5.08-1.12.11-1.8-.11-.42-.13-.96-.31-1.65-.6-2.9-1.25-4.8-4.16-4.94-4.35-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.12 1.02-2.41.27-.29.58-.36.78-.36.19 0 .39 0 .56.01.18.01.42-.07.65.5.24.58.82 2 .89 2.15.07.14.12.31.02.5-.1.19-.15.31-.29.48-.14.17-.3.37-.43.5-.14.14-.29.29-.13.57.17.29.75 1.24 1.6 2 1.11.99 2.05 1.3 2.33 1.44.29.14.46.12.63-.07.17-.19.71-.83.9-1.11.19-.29.38-.24.63-.14.26.1 1.63.77 1.91.91.29.14.48.21.55.33.07.12.07.68-.17 1.36Z"/></svg>
+    </a>
+
+    <script>
+      const toggle = document.getElementById("nav-toggle");
+      const mobileNav = document.getElementById("nav-mobile");
+
+      toggle?.addEventListener("click", () => {
+        const isOpen = mobileNav?.classList.toggle("is-open");
+        toggle.setAttribute("aria-expanded", String(Boolean(isOpen)));
+      });
+
+      mobileNav?.querySelectorAll("a").forEach((link) => {
+        link.addEventListener("click", () => {
+          mobileNav.classList.remove("is-open");
+          toggle?.setAttribute("aria-expanded", "false");
+        });
+      });
+
+      const navItems = Array.from(document.querySelectorAll<HTMLElement>(".nav-item"));
+
+      function closeNavItem(item: HTMLElement) {
+        item.classList.remove("is-open");
+        item.querySelector<HTMLButtonElement>(".nav-link--toggle")?.setAttribute("aria-expanded", "false");
+      }
+
+      navItems.forEach((item) => {
+        const dropdownToggle = item.querySelector<HTMLButtonElement>(".nav-link--toggle");
+        dropdownToggle?.addEventListener("click", () => {
+          const isOpen = item.classList.contains("is-open");
+          navItems.forEach(closeNavItem);
+          if (!isOpen) {
+            item.classList.add("is-open");
+            dropdownToggle.setAttribute("aria-expanded", "true");
+          }
+        });
+      });
+
+      document.addEventListener("click", (event) => {
+        if (!(event.target instanceof Node)) return;
+        navItems.forEach((item) => {
+          if (!item.contains(event.target as Node)) closeNavItem(item);
+        });
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") navItems.forEach(closeNavItem);
+      });
+
+      const revealTargets = document.querySelectorAll(".section-head, .card, .gallery-item");
+
+      if ("IntersectionObserver" in window && revealTargets.length) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("is-visible");
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+        );
+
+        revealTargets.forEach((el) => {
+          el.classList.add("reveal");
+          observer.observe(el);
+        });
+      }
+    </script>
+  </body>
+</html>

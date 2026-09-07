@@ -1,0 +1,44 @@
+---
+import { mediaUrl } from "../../functions/fetch";
+
+interface FeatureItem {
+  icon: string | null;
+  title: string;
+  text: string | null;
+}
+
+interface Props {
+  title?: string | null;
+  items: FeatureItem[];
+  id?: string;
+}
+
+const { title, items, id } = Astro.props;
+---
+
+<section class="section section--alt" id={id}>
+  <div class="container">
+    {title && (
+      <div class="section-head section-head--center">
+        <h2 class="section-title">{title}</h2>
+      </div>
+    )}
+    <div class="grid grid--3">
+      {items.map((item) => (
+        <div class="card">
+          <div class="card__icon" aria-hidden="true">
+            {item.icon ? (
+              <img class="card__icon-img" src={mediaUrl(item.icon)} alt="" />
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 20h18M5 20V9l7-5 7 5v11M9 20v-5h6v5" />
+              </svg>
+            )}
+          </div>
+          <p class="card__title">{item.title}</p>
+          {item.text && <p class="card__text">{item.text}</p>}
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

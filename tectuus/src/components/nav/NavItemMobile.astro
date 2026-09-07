@@ -1,0 +1,34 @@
+---
+import type { MenuItem } from "../../types/menu";
+
+interface Props {
+  item: MenuItem;
+}
+
+const { item } = Astro.props;
+const hasChildren = item.children?.length > 0;
+---
+
+{hasChildren ? (
+  <details class="nav-mobile__item">
+    <summary>{item.title}</summary>
+    <div class="nav-mobile__sublist">
+      {item.children.map((child) =>
+        child.children?.length > 0 ? (
+          <details class="nav-mobile__item nav-mobile__item--nested">
+            <summary>{child.title}</summary>
+            <div class="nav-mobile__sublist">
+              {child.children.map((grandchild) => (
+                <a href={grandchild.path}>{grandchild.title}</a>
+              ))}
+            </div>
+          </details>
+        ) : (
+          <a href={child.path}>{child.title}</a>
+        )
+      )}
+    </div>
+  </details>
+) : (
+  <a href={item.path}>{item.title}</a>
+)}

@@ -4,6 +4,7 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import WhatsAppButton from "../components/WhatsAppButton.astro";
 import { fetchData } from "../functions/fetch";
+import type { GlobalsResponse } from "../types/globals";
 
 interface Props {
 	title?: string;
@@ -15,29 +16,23 @@ const {
 	description = "Traninn Logistic: transporte de gas natural vehicular (GNC), logística y carga pesada con cobertura nacional.",
 } = Astro.props;
 
-// WhatsApp number and social links are CMS-driven (site "traninn-logistic",
-// page "inicio"). This layout wraps every page, so it fetches them here
-// rather than relying on each page to pass them down — same approach as
-// gas-gnu's Layout.astro.
-type PageSection = { type: string; content: Record<string, any> };
-type PageResponse = { status: string; data: { sections: PageSection[] } };
-
 type MenuItem = { slug: string; path: string; title: string; children?: MenuItem[] };
 type MenuResponse = { status: string; data: MenuItem[] };
 
 const menuResponse: MenuResponse | undefined = await fetchData("menu");
 const menuItems = menuResponse?.data ?? [];
 
-const layoutPageResponse: PageResponse | undefined = await fetchData("pages/inicio");
-const layoutSections = layoutPageResponse?.data?.sections ?? [];
-const getLayoutSection = (type: string) => layoutSections.find((section) => section.type === type)?.content;
+// Contact details, social links and the WhatsApp number are edited once in the
+// CMS admin (Datos de contacto / Redes sociales / Botón de WhatsApp) and shared
+// by every page, so they come from the site-wide `globals` endpoint. This
+// layout wraps every page, so it fetches them here rather than relying on each
+// page to pass them down — same approach as gas-gnu's Layout.astro.
+const globalsResponse: GlobalsResponse | undefined = await fetchData("globals");
+const globals = globalsResponse?.data;
 
-const socialIcons = getLayoutSection("social_icons") as
-	| { networks?: { network: string; url: string }[] }
-	| undefined;
-const whatsappButton = getLayoutSection("whatsapp_button") as
-	| { phone?: string; prefilled_message?: string }
-	| undefined;
+const contactInfo = globals?.contact_info;
+const socialIcons = globals?.social_icons;
+const whatsappButton = globals?.whatsapp_button;
 
 const SOCIAL_ICON_PATHS: Record<string, string> = {
 	facebook: "M13.5 9H15V6.5h-1.75C11.6 6.5 10.5 7.6 10.5 9.25V11H9v2.5h1.5V19h2.5v-5.5H15l.5-2.5h-2v-1.25c0-.4.1-.75.5-.75Z",
@@ -77,7 +72,7 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
 		<main>
 			<slot />
 		</main>
-		<Footer socials={socialLinks} whatsappUrl={whatsappHref} />
+		<Footer socials={socialLinks} whatsappUrl={whatsappHref} contact={contactInfo} />
 		<WhatsAppButton href={whatsappHref} />
 	</body>
 </html>

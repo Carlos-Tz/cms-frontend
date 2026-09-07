@@ -1,0 +1,151 @@
+---
+// CMS "banner_carousel" section. Each slide carries its own image, copy and
+// optional CTA; a single-slide banner drops the arrows and dots (see
+// `.hero--single` in global.css).
+import { mediaUrl } from "../../functions/fetch";
+import noImg from "../../assets/images/noimg.jpg";
+
+interface Slide {
+  image: string;
+  title: string | null;
+  subtitle: string | null;
+  link_url: string | null;
+  link_label: string | null;
+}
+
+interface Props {
+  slides: Slide[];
+  eyebrow?: string | null;
+  // The first banner on a page carries the <h1>; any later one renders its
+  // title as plain copy so a page keeps exactly one top-level heading.
+  primary?: boolean;
+}
+
+const { slides, eyebrow = "Ingeniería en gas natural", primary = true } = Astro.props;
+
+const resolved = slides.map((slide) => ({
+  ...slide,
+  image: slide.image ? mediaUrl(slide.image) : noImg.src,
+}));
+---
+
+<section class={"hero" + (resolved.length < 2 ? " hero--single" : "")} id="inicio" data-carousel>
+  <div class="hero__track">
+    {resolved.map((slide, index) => (
+      <article class={"hero-slide" + (index === 0 ? " is-active" : "")} data-slide aria-hidden={index === 0 ? "false" : "true"}>
+        <div class="hero-slide__media">
+          <img class="hero-slide__img" src={slide.image} alt="" loading={index === 0 ? "eager" : "lazy"} />
+        </div>
+        <div class="hero-slide__copy">
+          {eyebrow && <span class="eyebrow eyebrow--on-dark">{eyebrow}</span>}
+          {slide.title &&
+            (primary && index === 0 ? (
+              <h1 class="hero-slide__title">{slide.title}</h1>
+            ) : (
+              <p class="hero-slide__title">{slide.title}</p>
+            ))}
+          {slide.subtitle && <p class="hero-slide__subtitle">{slide.subtitle}</p>}
+          <div class="hero-slide__actions">
+            {slide.link_url && slide.link_label ? (
+              <a class="btn-primary" href={slide.link_url}>{slide.link_label}</a>
+            ) : (
+              <a class="btn-primary" href="/productos">Conoce nuestros productos</a>
+            )}
+            <a class="btn-secondary btn-secondary--on-dark" href="/contacto">Contáctanos</a>
+          </div>
+        </div>
+      </article>
+    ))}
+  </div>
+
+  {resolved.length > 1 && (
+    <>
+      <button type="button" class="hero__arrow hero__arrow--prev" data-prev aria-label="Diapositiva anterior">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+      </button>
+      <button type="button" class="hero__arrow hero__arrow--next" data-next aria-label="Siguiente diapositiva">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+      </button>
+
+      <div class="hero__dots" role="tablist" aria-label="Seleccionar diapositiva">
+        {resolved.map((_, index) => (
+          <button
+            type="button"
+            class={"hero__dot" + (index === 0 ? " is-active" : "")}
+            data-dot
+            role="tab"
+            aria-label={`Ir a la diapositiva ${index + 1}`}
+            aria-selected={index === 0 ? "true" : "false"}
+          ></button>
+        ))}
+      </div>
+    </>
+  )}
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-carousel]").forEach((root) => {
+    const slides = Array.from(root.querySelectorAll<HTMLElement>("[data-slide]"));
+    if (slides.length < 2) return;
+
+    const dots = Array.from(root.querySelectorAll<HTMLElement>("[data-dot]"));
+    const prevBtn = root.querySelector("[data-prev]");
+    const nextBtn = root.querySelector("[data-next]");
+    const AUTOPLAY_MS = 6000;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let index = 0;
+    let timer = 0;
+
+    function show(nextIndex: number) {
+      index = (nextIndex + slides.length) % slides.length;
+      slides.forEach((slide, n) => {
+        const active = n === index;
+        slide.classList.toggle("is-active", active);
+        slide.toggleAttribute("inert", !active);
+        slide.setAttribute("aria-hidden", active ? "false" : "true");
+      });
+      dots.forEach((dot, n) => {
+        const active = n === index;
+        dot.classList.toggle("is-active", active);
+        dot.setAttribute("aria-selected", active ? "true" : "false");
+      });
+    }
+
+    const next = () => show(index + 1);
+    const prev = () => show(index - 1);
+
+    function stop() {
+      window.clearInterval(timer);
+    }
+
+    function play() {
+      stop();
+      if (!reduceMotion) timer = window.setInterval(next, AUTOPLAY_MS);
+    }
+
+    nextBtn?.addEventListener("click", () => { next(); play(); });
+    prevBtn?.addEventListener("click", () => { prev(); play(); });
+    dots.forEach((dot, n) => dot.addEventListener("click", () => { show(n); play(); }));
+
+    root.addEventListener("mouseenter", stop);
+    root.addEventListener("mouseleave", play);
+    root.addEventListener("focusin", stop);
+    root.addEventListener("focusout", play);
+
+    let touchStartX = 0;
+    root.addEventListener("touchstart", (event) => {
+      touchStartX = (event as TouchEvent).changedTouches[0].clientX;
+    }, { passive: true });
+    root.addEventListener("touchend", (event) => {
+      const dx = (event as TouchEvent).changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 40) {
+        if (dx < 0) next();
+        else prev();
+        play();
+      }
+    }, { passive: true });
+
+    show(0);
+    play();
+  });
+</script>

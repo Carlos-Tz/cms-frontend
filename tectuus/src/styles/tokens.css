@@ -1,0 +1,73 @@
+:root {
+  /* Fonts — swap the family names to rebrand; keep a system-ui fallback */
+  --font-display: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Type scale — clamp(min, preferred, max) so headings stay fluid across viewports.
+     --text-h1 drives every page's main heading (hero slide, page hero). */
+  --text-h1: clamp(2rem, 4vw, 3rem);
+  --text-h2: clamp(1.5rem, 2.4vw, 2rem);
+  --text-h3: 1.125rem;
+  --text-body: 1.0625rem;
+  --text-small: 0.875rem;
+  --heading-font-weight: 700;
+  --heading-letter-spacing: -0.01em;
+
+  /* Backgrounds — white canvas alternating with a warm muted tile */
+  --color-bg: #ffffff;
+  --color-bg-alt: #f4f2f0;
+
+  /* Brand — from the Tectuus sitemap board */
+  --color-primary: #163a64; /* navy */
+  --color-primary-alt: #0e2946; /* navy dark */
+  --color-primary-light: #3ec6ef; /* cyan */
+  --color-accent: #2fa84c; /* green */
+  --color-accent-alt: #227d3a; /* green dark */
+  --color-primary-tint: #bdeeff; /* cyan tint, for accents on dark */
+  --color-primary-soft: rgba(22, 58, 100, 0.06);
+
+  /* Deep ink surfaces (hero, page hero) */
+  --color-ink: #163a64;
+  --color-ink-2: #0e2946;
+
+  /* Neutral brand tones (footer) */
+  --color-taupe: #6b665e;
+  --color-taupe-dark: #55514a;
+
+  /* Status */
+  --color-status-active: #2fa84c;
+  --color-status-error: #e0483f;
+
+  /* Text on light backgrounds */
+  --color-text: #16202c;
+  --color-text-60: rgba(22, 32, 44, 0.64);
+  --color-text-40: rgba(22, 32, 44, 0.42);
+
+  /* Text on dark backgrounds */
+  --color-text-on-dark: #ffffff;
+  --color-text-on-dark-70: rgba(255, 255, 255, 0.68);
+  --color-text-on-dark-45: rgba(255, 255, 255, 0.45);
+
+  /* Borders / surfaces */
+  --color-border: rgba(22, 58, 100, 0.14);
+  --color-border-hover: rgba(22, 58, 100, 0.3);
+  --color-border-on-dark: rgba(255, 255, 255, 0.16);
+  --color-surface: #ffffff;
+  --color-surface-muted: rgba(22, 58, 100, 0.04);
+  --color-surface-on-dark: rgba(255, 255, 255, 0.06);
+
+  /* Radius — pill for actions, lg for cards */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 999px;
+
+  /* Shadows */
+  --shadow-cta: 0 10px 30px -8px rgba(22, 58, 100, 0.35);
+  --shadow-card: 0 4px 24px -8px rgba(22, 58, 100, 0.12);
+  --shadow-float: 0 20px 45px -18px rgba(22, 58, 100, 0.35);
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}

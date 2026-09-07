@@ -1,0 +1,46 @@
+---
+import { mediaUrl } from "../../functions/fetch";
+import noImg from "../../assets/images/noimg.jpg";
+
+interface ClientLogo {
+  name: string;
+  image: string;
+  url?: string | null;
+}
+
+interface Props {
+  title?: string | null;
+  logos: ClientLogo[];
+}
+
+const { title, logos } = Astro.props;
+---
+
+<section class="section section--alt" id="clientes">
+  <div class="container">
+    <div class="section-head section-head--center">
+      <h2 class="section-title">{title ?? "Nuestros clientes"}</h2>
+    </div>
+    <div class="clients-grid">
+      {logos.map((logo) => {
+        const logoImg = (
+          <img
+            class="clients-grid__logo"
+            src={logo.image ? mediaUrl(logo.image) : noImg.src}
+            alt={logo.name}
+            loading="lazy"
+          />
+        );
+        return (
+          <div class="clients-grid__item">
+            {logo.url ? (
+              <a href={logo.url} target="_blank" rel="noopener noreferrer">{logoImg}</a>
+            ) : (
+              logoImg
+            )}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</section>
