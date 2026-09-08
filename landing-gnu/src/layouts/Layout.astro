@@ -211,27 +211,54 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
     </a>
 
     <script>
-      const revealTargets = document.querySelectorAll(
-        ".section-head, .card, .blog-card, .logo-card, .simulator"
+      const revealTargets = Array.from(
+        document.querySelectorAll(
+          ".section-head, .card, .logo-card, .simulator, .prose, .testimonial-card, .stations-map, .stations-list__item"
+        )
       );
 
-      if ("IntersectionObserver" in window && revealTargets.length) {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add("is-visible");
-                observer.unobserve(entry.target);
-              }
-            });
-          },
-          { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
-        );
+      if (revealTargets.length) {
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
 
+        // Anything already inside the viewport at load (a short page, or a
+        // scroll position the browser restored on refresh) would have the
+        // IntersectionObserver below report it as "intersecting" the instant
+        // observe() runs. A CSS *transition* only animates if the browser gets
+        // to paint the "before" state first — this early in the page's
+        // lifecycle that's never guaranteed, so it can jump straight to the
+        // end state with nothing visible in between. A keyframe *animation*
+        // doesn't have that requirement (it always plays from its own 0%
+        // keyframe once applied), so already-visible elements get one of
+        // those instead of the scroll-triggered transition.
+        const alreadyVisible: Element[] = [];
+        const belowFold: Element[] = [];
         revealTargets.forEach((el) => {
-          el.classList.add("reveal");
-          observer.observe(el);
+          const rect = el.getBoundingClientRect();
+          (rect.top < viewportHeight && rect.bottom > 0 ? alreadyVisible : belowFold).push(el);
         });
+
+        alreadyVisible.forEach((el) => el.classList.add("reveal-instant"));
+
+        if (belowFold.length && "IntersectionObserver" in window) {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("is-visible");
+                  observer.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+          );
+
+          belowFold.forEach((el) => {
+            el.classList.add("reveal");
+            observer.observe(el);
+          });
+        } else {
+          belowFold.forEach((el) => el.classList.add("reveal", "is-visible"));
+        }
       }
     </script>
   </body>

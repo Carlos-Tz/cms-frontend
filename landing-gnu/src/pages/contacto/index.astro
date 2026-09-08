@@ -16,7 +16,7 @@ const sections = page?.sections ?? [];
 ---
 
 <Layout title={page?.title ?? "Contacto"}>
-  <main>
+  <main id="pagina-contacto">
     {!page && <PageHero title="Contacto" subtitle="Estamos para ayudarte." />}
     <SectionRenderer sections={sections} />
   </main>

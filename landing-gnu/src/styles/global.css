@@ -66,11 +66,15 @@ button {
   text-align-last: left;
 }
 
-/* Scroll reveal (progressive enhancement — JS adds .reveal, no-JS content stays visible) */
-.reveal {
+/* Scroll reveal (progressive enhancement — JS adds .reveal, no-JS content stays visible).
+   Selector doubled (.reveal.reveal) to out-specificity components like .card/.blog-card/
+   .logo-card that declare their own `transition` shorthand for hover — otherwise, at equal
+   specificity, whichever rule comes later in the file wins the ENTIRE shorthand and silently
+   drops the opacity transition. */
+.reveal.reveal {
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+  transform: translateY(64px);
+  transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out);
 }
 
 .reveal.is-visible {
@@ -84,6 +88,41 @@ button {
     transform: none !important;
     transition: none !important;
   }
+}
+
+/* Reveal, but for elements already inside the viewport at load — see the
+   comment in Layout.astro's script for why this needs to be a keyframe
+   `animation` rather than the `.reveal` transition above. */
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(64px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal-instant {
+  animation: reveal-in 0.9s var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-instant {
+    animation: none;
+  }
+}
+
+/* Contact page — the form takes noticeably longer to ease in than the
+   site-wide reveal default. Covers both reveal paths: .reveal (scrolled into
+   view) and .reveal-instant (already in view at load). */
+#pagina-contacto .card.reveal {
+  transition-duration: 2.4s;
+}
+
+#pagina-contacto .card.reveal-instant {
+  animation-duration: 2.4s;
 }
 
 /* Layout */
@@ -383,15 +422,15 @@ button {
   }
 }
 
-/* Slow, subtle Ken-Burns-style zoom; scale never dips below 1 so object-fit:
-   cover never reveals an edge. 0%/100% match for a seamless loop. */
+/* Slow Ken-Burns-style zoom; scale never dips below 1 so object-fit: cover
+   never reveals an edge. 0%/100% match for a seamless loop. */
 @keyframes hero-slide-img-zoom {
   0%,
   100% {
     transform: scale(1.05);
   }
   50% {
-    transform: scale(1.15);
+    transform: scale(1.25);
   }
 }
 
@@ -650,18 +689,25 @@ button {
   background: var(--color-bg);
 }
 
+/* Colorful and zoomed in by default; `--logo-zoom` is scrubbed by scroll
+   position (see #clientes script) down to 1 ("zero zoom") as the section
+   scrolls into place. The custom property lives on the section so every
+   logo image inherits the same value. */
 .logo-card__img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: grayscale(1) opacity(0.72);
-  transform: scale(1.01);
-  transition: filter 0.4s ease, transform 0.5s var(--ease-out);
+  transform: scale(var(--logo-zoom, 1.18));
 }
 
 .logo-card:hover .logo-card__img {
-  filter: grayscale(0) opacity(1);
-  transform: scale(1.06);
+  transform: scale(calc(var(--logo-zoom, 1.18) + 0.05));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-card__img {
+    transform: none;
+  }
 }
 
 .logo-card__name {
@@ -875,7 +921,30 @@ button {
   color: var(--color-status-error);
 }
 
-/* Blog */
+/* Blog — cards bounce in from the bottom on page load (staggered per-card via
+   an inline animation-delay, see blog/index.astro), rather than waiting for
+   the shared scroll-reveal observer. */
+@keyframes blog-card-bounce-in {
+  0% {
+    opacity: 0;
+    transform: translateY(90px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-18px);
+  }
+  70% {
+    transform: translateY(9px);
+  }
+  85% {
+    transform: translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .blog-card {
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
@@ -884,6 +953,13 @@ button {
   display: flex;
   flex-direction: column;
   transition: border-color 0.2s ease, transform 0.2s ease;
+  animation: blog-card-bounce-in 1s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-card {
+    animation: none;
+  }
 }
 
 .blog-card:hover {
