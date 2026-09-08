@@ -13,11 +13,34 @@ type PageResponse = {
 const pageResponse: PageResponse | undefined = await fetchData("pages/nuestros-servicios");
 const page = pageResponse?.data;
 const sections = page?.sections ?? [];
+
+const children = [
+  { slug: "gnc", label: "GNC" },
+  { slug: "gnd", label: "GND" },
+  { slug: "gnv", label: "GNV" },
+];
 ---
 
 <Layout title={page?.title ?? "Nuestros Servicios"}>
   <main>
     {!page && <PageHero title="Nuestros Servicios" subtitle="Soluciones de gas natural para tu operación." />}
     <SectionRenderer sections={sections} />
+
+    <section class="section">
+      <div class="container">
+        <div class="section-head section-head--center">
+          <span class="eyebrow">Conoce más</span>
+          <h2 class="section-title">Explora Nuestros Servicios</h2>
+        </div>
+        <div class="grid grid--3">
+          {children.map((child) => (
+            <a class="card" href={`/nuestros-servicios/${child.slug}`}>
+              <p class="card__title">{child.label}</p>
+              <span class="blog-card__link">Ver más →</span>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
   </main>
 </Layout>

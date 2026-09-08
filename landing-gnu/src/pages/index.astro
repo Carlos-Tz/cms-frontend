@@ -2,8 +2,12 @@
 import Layout from "../layouts/Layout.astro";
 import LeadCaptureForm from "../components/sections/LeadCaptureForm.astro";
 import StationsMap from "../components/sections/StationsMap.astro";
+import RichText from "../components/sections/RichText.astro";
+import SavingsSimulator from "../components/sections/SavingsSimulator.astro";
+import Testimonials from "../components/sections/Testimonials.astro";
 import noImg from "../assets/images/noimg.jpg";
 import { fetchData, mediaUrl } from "../functions/fetch";
+import type { GlobalsResponse } from "../types/globals";
 
 type Slide = {
   image: string;
@@ -44,9 +48,15 @@ const stationsMap = contactoSections.find((section) => section.type === "station
   | { title: string; center: string; zoom?: string | number }
   | undefined;
 
+const globalsResponse: GlobalsResponse | undefined = await fetchData("globals");
+const testimonials = globalsResponse?.data?.testimonials;
+
 const bannerCarousel = getSection("banner_carousel") as { slides: Slide[] } | undefined;
 const savingsSimulator = getSection("savings_simulator") as
   | { title: string; intro: string; fuel_prices: FuelPrice[] }
+  | undefined;
+const richText = getSection("rich_text") as
+  | { title: string | null; body: string; video_url: string | null }
   | undefined;
 const clientsShowcase = getSection("clients_showcase") as
   | { title: string; logos: Logo[] }
@@ -63,10 +73,6 @@ const fallbackSlides: Slide[] = [
 const slides: Slide[] = bannerCarousel?.slides?.length
   ? bannerCarousel.slides.map((slide) => ({ ...slide, image: mediaUrl(slide.image) }))
   : fallbackSlides;
-
-const fuelPrices = savingsSimulator?.fuel_prices ?? [];
-const gasNaturalPrice = fuelPrices.find((fuel) => fuel.fuel === "gas-natural");
-const comparableFuels = fuelPrices.filter((fuel) => fuel.fuel !== "gas-natural");
 
 const fallbackLogos: Logo[] = [{ image: noImg.src, name: "Cliente de ejemplo", url: null }];
 const logos: Logo[] = clientsShowcase?.logos?.length
@@ -107,42 +113,14 @@ const marqueeLogos = useLogoMarquee ? [...logos, ...logos] : logos;
     </section>
 
     <!-- Simulador de ahorro -->
-    <section class="simulator-band" id="simulador">
-      <div class="container simulator">
-          <div>
-            <span class="eyebrow eyebrow--on-dark">Simulador de ahorro</span>
-            <h2 class="simulator__heading">
-              {savingsSimulator?.title ?? "Calcula cuánto puedes ahorrar con gas natural"}
-            </h2>
-            <p class="simulator__lead">
-              {savingsSimulator?.intro ??
-                "Ingresa tu gasto mensual actual en gasolina o diésel y descubre tu ahorro estimado al cambiarte a GNU Gas Natural."}
-            </p>
-            <form id="savings-form" style="margin-top: 1.5rem;">
-              <div class="field field--on-dark">
-                <label for="current-fuel">Combustible actual</label>
-                <select id="current-fuel" name="current-fuel">
-                  {comparableFuels.map((fuel) => (
-                    <option value={fuel.fuel}>{fuel.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div class="field field--on-dark">
-                <label for="monthly-spend">Gasto mensual actual (MXN)</label>
-                <input type="number" id="monthly-spend" name="monthly-spend" min="0" placeholder="Ej. 4500" required />
-              </div>
-              <button type="submit" class="btn-primary">Calcular ahorro</button>
-            </form>
-          </div>
-          <div class="simulator__result">
-            <p class="simulator__result-value" id="savings-value">$0 MXN</p>
-            <p class="simulator__result-label">Ahorro mensual estimado</p>
-            <p class="simulator__result-label" id="savings-annual" style="margin-top: 0.75rem;">
-              Ahorro anual estimado: $0 MXN
-            </p>
-          </div>
-      </div>
-    </section>
+    <SavingsSimulator
+      title={savingsSimulator?.title}
+      intro={savingsSimulator?.intro}
+      fuel_prices={savingsSimulator?.fuel_prices}
+    />
+
+    <!-- Contenido editorial / video de la portada -->
+    {richText && <RichText title={richText.title} body={richText.body} video_url={richText.video_url} />}
 
     <!-- Nuestros Clientes -->
     <section class="section">
@@ -198,6 +176,9 @@ const marqueeLogos = useLogoMarquee ? [...logos, ...logos] : logos;
         )}
       </div>
     </section>
+
+    <!-- Testimonios -->
+    <Testimonials title={testimonials?.title} items={testimonials?.items} />
 
     <!-- Contacto -->
     <section class="section" id="contacto">
@@ -255,60 +236,4 @@ const marqueeLogos = useLogoMarquee ? [...logos, ...logos] : logos;
     }, 5000);
   }
 
-</script>
-
-<script is:inline define:vars={{ comparableFuels, gasNaturalPrice }}>
-  const savingsForm = document.querySelector("#savings-form");
-  const savingsValue = document.querySelector("#savings-value");
-  const savingsAnnual = document.querySelector("#savings-annual");
-  const fuelSelect = document.querySelector("#current-fuel");
-  const FALLBACK_SAVINGS_RATE = 0.35;
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let currentMonthly = 0;
-
-  function animateCount(el, from, to, duration, format) {
-    if (!el) return;
-    if (prefersReducedMotion || from === to) {
-      el.textContent = format(to);
-      return;
-    }
-    const start = performance.now();
-    function tick(now) {
-      const progress = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      el.textContent = format(Math.round(from + (to - from) * eased));
-      if (progress < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  }
-
-  savingsForm?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const input = document.querySelector("#monthly-spend");
-    const spend = Number(input?.value ?? 0);
-    if (!Number.isFinite(spend) || spend <= 0) return;
-
-    const selectedFuel = comparableFuels.find((fuel) => fuel.fuel === fuelSelect?.value);
-    let monthlySavings;
-
-    if (selectedFuel && gasNaturalPrice) {
-      const unitsConsumed = spend / selectedFuel.price_per_unit;
-      const gasNaturalUnitsNeeded = unitsConsumed * selectedFuel.equivalence_factor;
-      const gasNaturalCost = gasNaturalUnitsNeeded * gasNaturalPrice.price_per_unit;
-      monthlySavings = Math.max(0, Math.round(spend - gasNaturalCost));
-    } else {
-      monthlySavings = Math.round(spend * FALLBACK_SAVINGS_RATE);
-    }
-
-    const annualSavings = monthlySavings * 12;
-
-    if (savingsValue) {
-      animateCount(savingsValue, currentMonthly, monthlySavings, 650, (v) => `$${v.toLocaleString("es-MX")} MXN`);
-      currentMonthly = monthlySavings;
-      savingsValue.classList.remove("is-updated");
-      void savingsValue.offsetWidth;
-      savingsValue.classList.add("is-updated");
-    }
-    if (savingsAnnual) savingsAnnual.textContent = `Ahorro anual estimado: $${annualSavings.toLocaleString("es-MX")} MXN`;
-  });
 </script>

@@ -1,11 +1,16 @@
 ---
 import { mediaUrl } from "../../functions/fetch";
-import noImg from "../../assets/images/noimg.jpg";
 
 interface ClientLogo {
   name: string;
   image: string;
   url?: string | null;
+  // The CMS carries a blurb and a testimonial per client. They're optional,
+  // so this section renders in two modes: client plates with the quote when
+  // any client has one, and the compact logo mesh when none do.
+  description?: string | null;
+  quote?: string | null;
+  quote_author?: string | null;
 }
 
 interface Props {
@@ -14,33 +19,119 @@ interface Props {
 }
 
 const { title, logos } = Astro.props;
+
+const hasTestimonials = logos.some((logo) => logo.quote?.trim() || logo.description?.trim());
+
+// Keeps two or three clients from sprawling across the full 72rem container.
+const gridStyle = `--client-count: ${Math.min(logos.length, 3)}`;
 ---
 
 <section class="section section--alt" id="clientes">
   <div class="container">
-    <div class="section-head section-head--center">
+    <div class="section-head">
       <h2 class="section-title">{title ?? "Nuestros clientes"}</h2>
     </div>
-    <div class="clients-grid">
-      {logos.map((logo) => {
-        const logoImg = (
-          <img
-            class="clients-grid__logo"
-            src={logo.image ? mediaUrl(logo.image) : noImg.src}
-            alt={logo.name}
-            loading="lazy"
-          />
-        );
-        return (
-          <div class="clients-grid__item">
-            {logo.url ? (
-              <a href={logo.url} target="_blank" rel="noopener noreferrer">{logoImg}</a>
-            ) : (
-              logoImg
-            )}
-          </div>
-        );
-      })}
-    </div>
+
+    {hasTestimonials ? (
+      <div class="clients-wall" style={gridStyle}>
+        {logos.map((logo) => {
+          const quote = logo.quote?.trim();
+          const blurb = logo.description?.trim();
+          const mark = (
+            <>
+              <img
+                class="client-card__logo"
+                data-client-logo
+                data-fallback="1"
+                src={mediaUrl(logo.image)}
+                alt={logo.name}
+                loading="lazy"
+              />
+              <span class="client-card__name" hidden>{logo.name}</span>
+            </>
+          );
+
+          return (
+            <figure class="client-card">
+              <div class="client-card__mark">
+                {logo.url ? (
+                  <a
+                    class="client-card__link"
+                    href={logo.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={logo.name}
+                  >
+                    {mark}
+                  </a>
+                ) : (
+                  mark
+                )}
+              </div>
+
+              {quote ? (
+                <blockquote class="client-card__quote">{quote}</blockquote>
+              ) : (
+                blurb && <p class="client-card__blurb">{blurb}</p>
+              )}
+
+              {quote && (
+                <figcaption class="client-card__author">{logo.quote_author?.trim() || logo.name}</figcaption>
+              )}
+            </figure>
+          );
+        })}
+      </div>
+    ) : (
+      <div class="clients-grid" style={gridStyle}>
+        {logos.map((logo) => {
+          // A logo whose file is missing falls back to the client's name, not
+          // to the blank plate: an ink rectangle among logos reads as broken,
+          // a name reads as a client. `data-fallback` opts this image out of
+          // the layout-wide plate swap so the name can take over instead.
+          const logoImg = (
+            <img
+              class="clients-grid__logo"
+              data-client-logo
+              data-fallback="1"
+              src={mediaUrl(logo.image)}
+              alt={logo.name}
+              loading="lazy"
+            />
+          );
+          return (
+            <div class="clients-grid__item">
+              {logo.url ? (
+                <a class="clients-grid__link" href={logo.url} target="_blank" rel="noopener noreferrer">
+                  {logoImg}
+                </a>
+              ) : (
+                logoImg
+              )}
+              <span class="clients-grid__name" hidden>{logo.name}</span>
+            </div>
+          );
+        })}
+      </div>
+    )}
   </div>
 </section>
+
+<script>
+  document.querySelectorAll<HTMLImageElement>("[data-client-logo]").forEach((img) => {
+    function showName() {
+      img.hidden = true;
+      const link = img.closest(".clients-grid__link, .client-card__link");
+      if (link instanceof HTMLElement) link.hidden = true;
+      img
+        .closest(".clients-grid__item, .client-card")
+        ?.querySelector(".clients-grid__name, .client-card__name")
+        ?.removeAttribute("hidden");
+    }
+
+    // An image can already have failed before this script runs, so check the
+    // finished ones as well as listening for later failures.
+    if (img.complete && img.naturalWidth === 0) showName();
+    else img.addEventListener("error", showName);
+  });
+</script>

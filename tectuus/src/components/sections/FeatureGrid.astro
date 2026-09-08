@@ -16,16 +16,18 @@ interface Props {
 const { title, items, id } = Astro.props;
 ---
 
-<section class="section section--alt" id={id}>
+{/* The capability grid is the page's ink band: it breaks up the paper scroll
+    and puts the product lines on the same ground as the banner. */}
+<section class="section section--ink" id={id}>
   <div class="container">
     {title && (
-      <div class="section-head section-head--center">
+      <div class="section-head">
         <h2 class="section-title">{title}</h2>
       </div>
     )}
     <div class="grid grid--3">
       {items.map((item) => (
-        <div class="card">
+        <div class="card card--on-ink">
           <div class="card__icon" aria-hidden="true">
             {item.icon ? (
               <img class="card__icon-img" src={mediaUrl(item.icon)} alt="" />

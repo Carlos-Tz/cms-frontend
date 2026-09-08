@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" preserveAspectRatio="xMidYMid slice">
+  <!-- Stand-in for a CMS image that is missing or was never uploaded: a blank
+       technical plate in the site's own language (ink, isometric grid paper,
+       cyan registration brackets) rather than a grey "no image" placard. -->
+  <defs>
+    <pattern id="iso-a" width="46" height="46" patternUnits="userSpaceOnUse" patternTransform="rotate(30)">
+      <line x1="0" y1="0" x2="0" y2="46" stroke="#3ec6ef" stroke-opacity="0.15" stroke-width="1" />
+    </pattern>
+    <pattern id="iso-b" width="46" height="46" patternUnits="userSpaceOnUse" patternTransform="rotate(150)">
+      <line x1="0" y1="0" x2="0" y2="46" stroke="#3ec6ef" stroke-opacity="0.15" stroke-width="1" />
+    </pattern>
+  </defs>
+
+  <rect width="800" height="600" fill="#0a1e35" />
+  <rect width="800" height="600" fill="url(#iso-a)" />
+  <rect width="800" height="600" fill="url(#iso-b)" />
+
+  <g fill="none" stroke="#3ec6ef" stroke-opacity="0.5" stroke-width="2">
+    <path d="M340 285 V255 H370" />
+    <path d="M430 255 H460 V285" />
+    <path d="M460 315 V345 H430" />
+    <path d="M370 345 H340 V315" />
+  </g>
+</svg>

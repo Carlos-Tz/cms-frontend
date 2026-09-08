@@ -16,5 +16,5 @@ const sections = pageResponse?.data?.sections ?? [];
 ---
 
 <Layout>
-  <PageSections sections={sections} />
+  <PageSections sections={sections} slug={pageResponse?.data?.slug} />
 </Layout>

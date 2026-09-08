@@ -18,6 +18,6 @@ const sections = page?.sections ?? [];
 <Layout title={page?.title ?? "Instala tu equipo de GNV"}>
   <main>
     {!page && <PageHero title="Instala tu equipo de GNV" subtitle="Conversión certificada para tu vehículo." />}
-    <SectionRenderer sections={sections} />
+    <SectionRenderer sections={sections} pageSlug={page?.slug} />
   </main>
 </Layout>

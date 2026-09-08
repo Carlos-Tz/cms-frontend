@@ -1,0 +1,114 @@
+---
+interface FuelPrice {
+  fuel: string;
+  label: string;
+  price_per_unit: number;
+  unit: string;
+  equivalence_factor: number;
+}
+
+interface Props {
+  title?: string | null;
+  intro?: string | null;
+  fuel_prices?: FuelPrice[];
+}
+
+const { title, intro, fuel_prices = [] } = Astro.props;
+
+const gasNaturalPrice = fuel_prices.find((fuel) => fuel.fuel === "gas-natural");
+const comparableFuels = fuel_prices.filter((fuel) => fuel.fuel !== "gas-natural");
+---
+
+{comparableFuels.length > 0 && (
+  <section class="simulator-band" id="simulador">
+    <div class="container simulator">
+      <div>
+        <span class="eyebrow eyebrow--on-dark">Simulador de ahorro</span>
+        <h2 class="simulator__heading">{title ?? "Calcula cuánto puedes ahorrar con gas natural"}</h2>
+        <p class="simulator__lead">
+          {intro ?? "Ingresa tu gasto mensual actual en gasolina o diésel y descubre tu ahorro estimado al cambiarte a GNU Gas Natural."}
+        </p>
+        <form class="savings-simulator-form" style="margin-top: 1.5rem;">
+          <div class="field field--on-dark">
+            <label for="current-fuel">Combustible actual</label>
+            <select class="savings-simulator-fuel" id="current-fuel" name="current-fuel">
+              {comparableFuels.map((fuel) => (
+                <option value={fuel.fuel}>{fuel.label}</option>
+              ))}
+            </select>
+          </div>
+          <div class="field field--on-dark">
+            <label for="monthly-spend">Gasto mensual actual (MXN)</label>
+            <input type="number" class="savings-simulator-spend" id="monthly-spend" name="monthly-spend" min="0" placeholder="Ej. 4500" required />
+          </div>
+          <button type="submit" class="btn-primary">Calcular ahorro</button>
+        </form>
+      </div>
+      <div class="simulator__result">
+        <p class="simulator__result-value savings-simulator-value">$0 MXN</p>
+        <p class="simulator__result-label">Ahorro mensual estimado</p>
+        <p class="simulator__result-label savings-simulator-annual" style="margin-top: 0.75rem;">
+          Ahorro anual estimado: $0 MXN
+        </p>
+      </div>
+    </div>
+  </section>
+)}
+
+<script is:inline define:vars={{ comparableFuels, gasNaturalPrice }}>
+  document.querySelectorAll(".savings-simulator-form").forEach((form) => {
+    const section = form.closest(".simulator-band");
+    const valueEl = section?.querySelector(".savings-simulator-value");
+    const annualEl = section?.querySelector(".savings-simulator-annual");
+    const fuelSelect = form.querySelector(".savings-simulator-fuel");
+    const FALLBACK_SAVINGS_RATE = 0.35;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let currentMonthly = 0;
+
+    function animateCount(el, from, to, duration, format) {
+      if (!el) return;
+      if (prefersReducedMotion || from === to) {
+        el.textContent = format(to);
+        return;
+      }
+      const start = performance.now();
+      function tick(now) {
+        const progress = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = format(Math.round(from + (to - from) * eased));
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = form.querySelector(".savings-simulator-spend");
+      const spend = Number(input?.value ?? 0);
+      if (!Number.isFinite(spend) || spend <= 0) return;
+
+      const selectedFuel = comparableFuels.find((fuel) => fuel.fuel === fuelSelect?.value);
+      let monthlySavings;
+
+      if (selectedFuel && gasNaturalPrice) {
+        const unitsConsumed = spend / selectedFuel.price_per_unit;
+        const gasNaturalUnitsNeeded = unitsConsumed * selectedFuel.equivalence_factor;
+        const gasNaturalCost = gasNaturalUnitsNeeded * gasNaturalPrice.price_per_unit;
+        monthlySavings = Math.max(0, Math.round(spend - gasNaturalCost));
+      } else {
+        monthlySavings = Math.round(spend * FALLBACK_SAVINGS_RATE);
+      }
+
+      const annualSavings = monthlySavings * 12;
+
+      if (valueEl) {
+        animateCount(valueEl, currentMonthly, monthlySavings, 650, (v) => `$${v.toLocaleString("es-MX")} MXN`);
+        currentMonthly = monthlySavings;
+        valueEl.classList.remove("is-updated");
+        void valueEl.offsetWidth;
+        valueEl.classList.add("is-updated");
+      }
+      if (annualEl) annualEl.textContent = `Ahorro anual estimado: $${annualSavings.toLocaleString("es-MX")} MXN`;
+    });
+  });
+</script>

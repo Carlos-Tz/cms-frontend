@@ -1159,6 +1159,9 @@ button {
   font-size: 1.0625rem;
   line-height: 1.75;
   color: var(--color-text-60);
+  text-align: justify;
+  text-align-last: left;
+  hyphens: auto;
 }
 
 .prose :is(h2, h3) {

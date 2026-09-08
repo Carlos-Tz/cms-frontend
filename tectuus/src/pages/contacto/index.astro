@@ -16,9 +16,10 @@ const sections = page?.sections ?? [];
     <>
       <PageHero title="Contacto" subtitle="Estamos para ayudarte." />
       <section class="section" id="contacto">
-        <div class="container" style="max-width: 34rem;">
+        <div class="container container--narrow">
           <LeadCaptureForm
             formId="contacto-lead-form"
+            source="contacto"
             title="Escríbenos"
             intro="Déjanos tus datos y un asesor se comunicará contigo."
             submit_label="Enviar"
@@ -27,5 +28,5 @@ const sections = page?.sections ?? [];
       </section>
     </>
   )}
-  <SectionRenderer sections={sections} />
+  <SectionRenderer sections={sections} pageSlug={page?.slug ?? "contacto"} />
 </Layout>

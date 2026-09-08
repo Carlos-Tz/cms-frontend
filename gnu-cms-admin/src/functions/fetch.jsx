@@ -143,6 +143,142 @@ export async function deleteBlogPost(id) {
     }
 }
 
+export async function createProductCategory(payload) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/product-categories`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        })
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error creating product category:', error)
+        return { status: 'error', meta: { message: 'No se pudo crear la categoría' } }
+    }
+}
+
+export async function updateProductCategory(id, payload) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/product-categories/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        })
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error updating product category:', error)
+        return { status: 'error', meta: { message: 'No se pudo actualizar la categoría' } }
+    }
+}
+
+export async function deleteProductCategory(id) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/product-categories/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json',
+            },
+        })
+
+        if (response.status === 204) {
+            return { status: 'success' }
+        }
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error deleting product category:', error)
+        return { status: 'error', meta: { message: 'No se pudo eliminar la categoría' } }
+    }
+}
+
+export async function createProduct(payload) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/products`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        })
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error creating product:', error)
+        return { status: 'error', meta: { message: 'No se pudo crear el producto' } }
+    }
+}
+
+export async function updateProduct(id, payload) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/products/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        })
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error updating product:', error)
+        return { status: 'error', meta: { message: 'No se pudo actualizar el producto' } }
+    }
+}
+
+export async function deleteProduct(id) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/products/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json',
+            },
+        })
+
+        if (response.status === 204) {
+            return { status: 'success' }
+        }
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error deleting product:', error)
+        return { status: 'error', meta: { message: 'No se pudo eliminar el producto' } }
+    }
+}
+
 export async function deleteAppointment(id) {
     const tenantDomain = useSessionStore.getState().tenantDomain
     const accessToken = useSessionStore.getState().accessToken

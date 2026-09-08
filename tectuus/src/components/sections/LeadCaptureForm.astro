@@ -12,12 +12,20 @@ const contactFieldMeta: Record<string, { label: string; type: ContactFieldType; 
   product: { label: "Producto de interés", type: "text", placeholder: "EDRM, compresoras, valvulería…" },
 };
 
+// Columns of `leads`. Anything the CMS declares beyond these goes in `details`,
+// which the API validates against the section's own `fields[]`.
+const CORE_FIELDS = ["name", "email", "phone", "message"];
+
 interface Props {
   title?: string | null;
   intro?: string | null;
   submit_label?: string | null;
   fields?: string[];
   formId?: string;
+  // Slug of the page this form lives on. The API stores it as `leads.source`,
+  // which is what separates the homepage form from the /contacto one in the
+  // admin inbox — it must match a published page of the site or the POST 422s.
+  source?: string | null;
 }
 
 const {
@@ -26,6 +34,7 @@ const {
   submit_label = "Enviar",
   fields = ["name", "email", "phone", "message"],
   formId = "lead-form",
+  source = null,
 } = Astro.props;
 ---
 
@@ -61,14 +70,28 @@ const {
   </form>
 </div>
 
-<script define:vars={{ apiBase: BASE_URL, leadFormId: formId }} is:inline>
+<script
+  define:vars={{ apiBase: BASE_URL, leadFormId: formId, leadSource: source, coreFields: CORE_FIELDS }}
+  is:inline
+>
   const form = document.getElementById(leadFormId);
   const status = form ? form.querySelector("[data-lead-form-status]") : null;
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submitButton = form.querySelector('button[type="submit"]');
-    const data = Object.fromEntries(new FormData(form).entries());
+    const entries = Object.fromEntries(new FormData(form).entries());
+
+    // Core keys are columns of `leads`; anything else the CMS declared in
+    // `fields[]` has to travel inside `details`.
+    const payload = leadSource ? { source: leadSource } : {};
+    const details = {};
+
+    for (const [key, value] of Object.entries(entries)) {
+      if (coreFields.includes(key)) payload[key] = value;
+      else details[key] = value;
+    }
+    if (Object.keys(details).length) payload.details = details;
 
     if (submitButton) submitButton.disabled = true;
     if (status) {
@@ -83,10 +106,19 @@ const {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       const result = await response.json().catch(() => null);
-      if (!response.ok) throw new Error("request failed");
+
+      if (!response.ok) {
+        // 429 is the route's throttle:10,1; 422 carries per-field messages.
+        const firstError = result?.errors ? Object.values(result.errors)[0]?.[0] : null;
+        throw new Error(
+          response.status === 429
+            ? "Recibimos demasiados envíos. Espera un momento e intenta de nuevo."
+            : firstError || result?.message || "No pudimos enviar tu mensaje. Intenta de nuevo."
+        );
+      }
 
       form.reset();
       if (status) {
@@ -95,7 +127,7 @@ const {
       }
     } catch (error) {
       if (status) {
-        status.textContent = "No pudimos enviar tu mensaje. Intenta de nuevo.";
+        status.textContent = error?.message || "No pudimos enviar tu mensaje. Intenta de nuevo.";
         status.className = "lead-form__status lead-form__status--error";
       }
     } finally {

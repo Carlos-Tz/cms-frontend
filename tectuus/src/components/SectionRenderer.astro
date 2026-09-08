@@ -13,9 +13,12 @@ import type { PageSection } from "../types/page";
 
 interface Props {
   sections: PageSection[];
+  // Slug of the page being rendered. Forwarded to any lead form as its
+  // `source`, so the admin inbox can tell which page produced a lead.
+  pageSlug?: string | null;
 }
 
-const { sections } = Astro.props;
+const { sections, pageSlug = null } = Astro.props;
 ---
 
 {sections.map((section, index) => {
@@ -67,11 +70,17 @@ const { sections } = Astro.props;
         submit_label?: string | null;
         fields?: string[];
       };
+      // The closing contact band goes on ink, so the page settles into the
+      // same ground it opened on. A form that opens a page (right under a
+      // page hero, which is already ink) stays on paper instead.
+      const onInk = index > 1;
+
       return (
-        <section class="section" id="contacto">
-          <div class="container" style="max-width: 34rem;">
+        <section class:list={["section", { "section--ink": onInk }]} id="contacto">
+          <div class="container container--narrow">
             <LeadCaptureForm
               formId={`lead-form-${index}`}
+              source={pageSlug}
               title={title ?? undefined}
               intro={intro}
               submit_label={submit_label ?? undefined}

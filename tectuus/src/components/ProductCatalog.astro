@@ -1,0 +1,183 @@
+---
+// Full catalog rendered at build time, filtered in the browser. The static
+// build can't read `?category=`/`?q=` server-side, so every product ships in
+// the HTML and the script below hides what doesn't match — which also keeps
+// the URL shareable (`/productos?category=edrm`), the form the Productos
+// submenu links to.
+import { formatPrice } from "../functions/catalog";
+import { mediaUrl, FALLBACK_IMAGE } from "../functions/fetch";
+import type { ProductCategory, ProductListItem } from "../types/catalog";
+
+interface Props {
+  categories: ProductCategory[];
+  products: ProductListItem[];
+}
+
+const { categories, products } = Astro.props;
+
+// Every category gets a chip, including the ones with no products yet: they're
+// the client's product lines and the Productos submenu links to all of them,
+// so selecting an empty one has to show an honest empty state rather than
+// silently snapping back to "Todos".
+
+// Folded once here so the browser filter compares plain ASCII: the CMS search
+// is a bare LIKE, so "medicion" never matches "medición" server-side.
+const fold = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+---
+
+<section class="section" id="catalogo" data-catalog>
+  <div class="container">
+    {products.length === 0 ? (
+      <div class="catalog-empty">
+        <p class="card__title">Catálogo en preparación</p>
+        <p class="card__text">
+          Estamos cargando nuestros productos. Escríbenos y te compartimos la ficha técnica que necesitas.
+        </p>
+        <a class="btn-primary" href="/contacto" style="margin-top: 1.25rem;">Solicitar información</a>
+      </div>
+    ) : (
+      <>
+        <div class="catalog-bar">
+          <div class="catalog-chips" role="group" aria-label="Filtrar por categoría">
+            <button type="button" class="catalog-chip is-active" data-catalog-category="" aria-pressed="true">Todos</button>
+            {categories.map((category) => (
+              <button type="button" class="catalog-chip" data-catalog-category={category.slug} aria-pressed="false">
+                {category.name}
+              </button>
+            ))}
+          </div>
+
+          <div class="catalog-search">
+            <label class="sr-only" for="catalog-search">Buscar producto</label>
+            <input
+              type="search"
+              id="catalog-search"
+              placeholder="Buscar producto…"
+              autocomplete="off"
+              data-catalog-search
+            />
+          </div>
+        </div>
+
+        <p class="catalog-count" data-catalog-count aria-live="polite"></p>
+
+        <div class="grid grid--3 catalog-grid">
+          {products.map((product) => (
+            <a
+              class="card product-card"
+              href={`/productos/${product.slug}`}
+              data-product
+              data-category={product.category?.slug ?? ""}
+              data-haystack={fold(`${product.name} ${product.category?.name ?? ""}`)}
+            >
+              <div class="product-card__media">
+                <img
+                  src={product.image ? mediaUrl(product.image) : FALLBACK_IMAGE}
+                  alt={product.name}
+                  loading="lazy"
+                  width="480"
+                  height="360"
+                />
+              </div>
+              {product.category?.name && <p class="card__subtitle">{product.category.name}</p>}
+              <p class="card__title product-card__title">{product.name}</p>
+              <div class="product-card__foot">
+                <span class="product-card__price">{formatPrice(product.price)}</span>
+                <span class="product-card__cta">Ver detalle</span>
+              </div>
+            </a>
+          ))}
+        </div>
+
+        <p class="catalog-empty-filter" data-catalog-empty hidden>
+          No encontramos productos con esos criterios. Prueba con otra categoría o
+          <a href="/contacto">escríbenos</a>.
+        </p>
+      </>
+    )}
+  </div>
+</section>
+
+<script>
+  const root = document.querySelector<HTMLElement>("[data-catalog]");
+
+  if (root) {
+    const searchInput = root.querySelector<HTMLInputElement>("[data-catalog-search]");
+    const chips = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-catalog-category]"));
+    const cards = Array.from(root.querySelectorAll<HTMLElement>("[data-product]"));
+    const emptyMessage = root.querySelector<HTMLElement>("[data-catalog-empty]");
+    const counter = root.querySelector<HTMLElement>("[data-catalog-count]");
+
+    const fold = (value: string) =>
+      value
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+
+    const params = new URLSearchParams(window.location.search);
+    // Deep links come from the Productos submenu and from shared URLs.
+    let category = params.get("category") ?? "";
+    let query = params.get("q") ?? "";
+
+    if (!chips.some((chip) => chip.dataset.catalogCategory === category)) category = "";
+    if (searchInput) searchInput.value = query;
+
+    function render() {
+      const needle = fold(query);
+      let visible = 0;
+
+      cards.forEach((card) => {
+        const matchesCategory = !category || card.dataset.category === category;
+        const matchesQuery = !needle || (card.dataset.haystack ?? "").includes(needle);
+        const isMatch = matchesCategory && matchesQuery;
+
+        card.hidden = !isMatch;
+        if (isMatch) visible += 1;
+      });
+
+      chips.forEach((chip) => {
+        const isCurrent = (chip.dataset.catalogCategory ?? "") === category;
+        chip.classList.toggle("is-active", isCurrent);
+        chip.setAttribute("aria-pressed", String(isCurrent));
+      });
+
+      if (emptyMessage) emptyMessage.hidden = visible > 0;
+      if (counter) {
+        counter.textContent =
+          visible === cards.length
+            ? `${cards.length} ${cards.length === 1 ? "producto" : "productos"}`
+            : `${visible} de ${cards.length} productos`;
+      }
+    }
+
+    function syncUrl() {
+      const next = new URLSearchParams(window.location.search);
+      category ? next.set("category", category) : next.delete("category");
+      query ? next.set("q", query) : next.delete("q");
+
+      const search = next.toString();
+      window.history.replaceState({}, "", search ? `?${search}${window.location.hash}` : window.location.pathname);
+    }
+
+    chips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        category = chip.dataset.catalogCategory ?? "";
+        render();
+        syncUrl();
+      });
+    });
+
+    searchInput?.addEventListener("input", () => {
+      query = searchInput.value;
+      render();
+      syncUrl();
+    });
+
+    render();
+  }
+</script>

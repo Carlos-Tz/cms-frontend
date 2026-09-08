@@ -1,8 +1,7 @@
 ---
 // CMS "image_gallery" section: an optional title plus a list of images, each
 // with an optional caption and alt text.
-import { mediaUrl } from "../../functions/fetch";
-import noImg from "../../assets/images/noimg.jpg";
+import { mediaUrl, FALLBACK_IMAGE } from "../../functions/fetch";
 
 interface GalleryImage {
   image: string;
@@ -30,7 +29,7 @@ const { title, images } = Astro.props;
       {images.map((item) => (
         <figure class="gallery-item">
           <img
-            src={item.image ? mediaUrl(item.image) : noImg.src}
+            src={item.image ? mediaUrl(item.image) : FALLBACK_IMAGE}
             alt={item.alt ?? item.caption ?? ""}
             loading="lazy"
           />

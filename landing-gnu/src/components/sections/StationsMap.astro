@@ -1,4 +1,21 @@
 ---
+import { fetchData } from "../../functions/fetch";
+
+interface Station {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  phone?: string | null;
+  schedule?: string | null;
+}
+
+interface StationsResponse {
+  status: string;
+  data: Station[];
+  meta: Record<string, any>;
+}
+
 interface Props {
   title?: string | null;
   center?: string | null;
@@ -7,6 +24,11 @@ interface Props {
 
 const { title, center, zoom = "12" } = Astro.props;
 const embedSrc = center ? `https://www.google.com/maps?q=${encodeURIComponent(center)}&z=${zoom}&output=embed` : null;
+
+// The section's own content only carries the map's layout (center/zoom); the
+// actual pins come from the `stations` table via the public API.
+const stationsResponse: StationsResponse | undefined = await fetchData("stations");
+const stations = stationsResponse?.data ?? [];
 ---
 
 <section class="section section--alt">
@@ -16,11 +38,33 @@ const embedSrc = center ? `https://www.google.com/maps?q=${encodeURIComponent(ce
         <h2 class="section-title">{title}</h2>
       </div>
     )}
-    <div class="stations-map">
-      {embedSrc ? (
-        <iframe class="stations-map__frame" src={embedSrc} loading="lazy" title={title ?? "Mapa"}></iframe>
-      ) : (
-        <div class="stations-map__placeholder">Mapa no disponible</div>
+    <div class={"stations-layout" + (stations.length ? "" : " stations-layout--map-only")}>
+      <div class="stations-map">
+        {embedSrc ? (
+          <iframe class="stations-map__frame" src={embedSrc} loading="lazy" title={title ?? "Mapa"}></iframe>
+        ) : (
+          <div class="stations-map__placeholder">Mapa no disponible</div>
+        )}
+      </div>
+      {stations.length > 0 && (
+        <ul class="stations-list">
+          {stations.map((station) => (
+            <li class="stations-list__item">
+              <p class="stations-list__name">{station.name}</p>
+              <p class="stations-list__address">{station.address}</p>
+              {station.schedule && <p class="stations-list__meta">{station.schedule}</p>}
+              {station.phone && <p class="stations-list__meta">{station.phone}</p>}
+              <a
+                class="stations-list__link"
+                href={`https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Cómo llegar →
+              </a>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   </div>

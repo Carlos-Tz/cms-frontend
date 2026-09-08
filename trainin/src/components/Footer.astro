@@ -7,7 +7,16 @@ interface Social {
 	path: string;
 }
 
+export interface MenuItem {
+	slug: string;
+	path: string;
+	title: string;
+	children?: MenuItem[];
+}
+
 interface Props {
+	// Same CMS menu the header renders, so the columns cannot drift from it.
+	menu?: MenuItem[];
 	socials?: Social[];
 	whatsappUrl?: string;
 	// Site-wide contact details from the CMS `globals` endpoint.
@@ -20,26 +29,20 @@ const fallbackSocials: Social[] = [
 	{ label: "linkedin", href: "#", path: "M6.94 8.5H4.56V19h2.38V8.5ZM5.75 4.9a1.38 1.38 0 1 0 0 2.76 1.38 1.38 0 0 0 0-2.76ZM19.44 19h-2.38v-5.37c0-1.28-.46-2.15-1.6-2.15-.87 0-1.39.59-1.62 1.15-.08.2-.1.49-.1.77V19H11.4s.03-9.44 0-10.5h2.34v1.49c.31-.48 .87-1.16 2.12-1.16 1.55 0 2.71 1.01 2.71 3.18V19Z" },
 ];
 
-const { socials = fallbackSocials, whatsappUrl = "https://wa.me/000000000000", contact } = Astro.props;
+const { menu, socials = fallbackSocials, whatsappUrl = "https://wa.me/000000000000", contact } = Astro.props;
 
-const columnas = [
-	{
-		title: "Servicios",
+// One column per menu entry that has sub-pages; its own path heads the list so
+// the parent page stays reachable. Entries without children (Inicio,
+// Ubicaciones, Contacto) already sit in the header and are not repeated.
+const columnas = (menu ?? [])
+	.filter((item) => item.children?.length)
+	.map((item) => ({
+		title: item.title,
 		links: [
-			{ label: "Transporte de GNC", href: "#servicios" },
-			{ label: "Logística", href: "#servicios" },
-			{ label: "Carga pesada", href: "#servicios" },
+			{ label: `Ver ${item.title.toLowerCase()}`, href: item.path },
+			...(item.children ?? []).map((child) => ({ label: child.title, href: child.path })),
 		],
-	},
-	{
-		title: "Empresa",
-		links: [
-			{ label: "Sobre nosotros", href: "#nosotros" },
-			{ label: "Nuestros clientes", href: "#clientes" },
-			{ label: "Ubicaciones", href: "#ubicaciones" },
-		],
-	},
-];
+	}));
 
 const year = new Date().getFullYear();
 ---

@@ -1,0 +1,339 @@
+api/admin/pages
+{
+  "status": "success",
+  "data": [
+    {
+      "id": 43,
+      "site_id": 4,
+      "parent_id": null,
+      "slug": "inicio",
+      "path": "/",
+      "title": "Inicio",
+      "position": 1,
+      "is_published": true,
+      "sections_count": 4
+    },
+    {
+      "id": 44,
+      "site_id": 4,
+      "parent_id": null,
+      "slug": "sobre-nosotros",
+      "path": "/sobre-nosotros",
+      "title": "Sobre nosotros",
+      "position": 2,
+      "is_published": true,
+      "sections_count": 3
+    },
+    {
+      "id": 45,
+      "site_id": 4,
+      "parent_id": null,
+      "slug": "productos",
+      "path": "/productos",
+      "title": "Productos",
+      "position": 3,
+      "is_published": true,
+      "sections_count": 1
+    },
+    {
+      "id": 46,
+      "site_id": 4,
+      "parent_id": null,
+      "slug": "contacto",
+      "path": "/contacto",
+      "title": "Contacto",
+      "position": 4,
+      "is_published": true,
+      "sections_count": 2
+    }
+  ],
+  "meta": {
+    "total": 4
+  }
+}
+
+
+PAGE_ID: 43
+/api/admin/pages/<<PAGE_ID>>
+{
+  "status": "success",
+  "data": {
+    "id": 43,
+    "site_id": 4,
+    "parent_id": null,
+    "slug": "inicio",
+    "path": "/",
+    "title": "Inicio",
+    "position": 1,
+    "is_published": true,
+    "sections": [
+      {
+        "id": 131,
+        "type": "banner_carousel",
+        "position": 1,
+        "content": {
+          "slides": [
+            {
+              "image": "media/placeholder-banner-tectuus.jpg",
+              "title": "Equipo industrial para gas natural",
+              "subtitle": "EDRM, compresoras y valvulería.",
+              "link_url": null,
+              "link_label": null
+            }
+          ]
+        }
+      },
+      {
+        "id": 132,
+        "type": "rich_text",
+        "position": 2,
+        "content": {
+          "title": null,
+          "body": "<p>Contenido pendiente de redactar.</p>",
+          "video_url": null
+        }
+      },
+      {
+        "id": 133,
+        "type": "clients_showcase",
+        "position": 3,
+        "content": {
+          "title": "Nuestros clientes",
+          "logos": [
+            {
+              "image": "media/placeholder-logo.png",
+              "name": "Cliente de ejemplo",
+              "url": null
+            }
+          ]
+        }
+      },
+      {
+        "id": 134,
+        "type": "lead_capture_form",
+        "position": 4,
+        "content": {
+          "title": "Contacto",
+          "intro": "Déjanos tus datos y un asesor se comunicará contigo.",
+          "submit_label": "Enviar",
+          "fields": [
+            "name",
+            "email",
+            "phone",
+            "message"
+          ]
+        }
+      }
+    ]
+  },
+  "meta": []
+}
+
+
+PAGE_ID: 44
+{
+  "status": "success",
+  "data": {
+    "id": 44,
+    "site_id": 4,
+    "parent_id": null,
+    "slug": "sobre-nosotros",
+    "path": "/sobre-nosotros",
+    "title": "Sobre nosotros",
+    "position": 2,
+    "is_published": true,
+    "sections": [
+      {
+        "id": 135,
+        "type": "page_hero",
+        "position": 1,
+        "content": {
+          "title": "¿Quiénes somos?",
+          "subtitle": "Historia, misión, visión y valores.",
+          "image": null
+        }
+      },
+      {
+        "id": 136,
+        "type": "rich_text",
+        "position": 2,
+        "content": {
+          "title": null,
+          "body": "<p>Contenido pendiente de redactar.</p>",
+          "video_url": null
+        }
+      },
+      {
+        "id": 137,
+        "type": "image_gallery",
+        "position": 3,
+        "content": {
+          "title": "Nuestra empresa",
+          "images": [
+            {
+              "image": "media/placeholder-foto-1.jpg",
+              "caption": null,
+              "alt": null
+            },
+            {
+              "image": "media/placeholder-foto-2.jpg",
+              "caption": null,
+              "alt": null
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "meta": []
+}
+
+
+api/admin/pages/45
+{
+  "status": "success",
+  "data": {
+    "id": 45,
+    "site_id": 4,
+    "parent_id": null,
+    "slug": "productos",
+    "path": "/productos",
+    "title": "Productos",
+    "position": 3,
+    "is_published": true,
+    "sections": [
+      {
+        "id": 138,
+        "type": "page_hero",
+        "position": 1,
+        "content": {
+          "title": "Productos",
+          "subtitle": "Equipo industrial para gas natural.",
+          "image": null
+        }
+      }
+    ]
+  },
+  "meta": []
+}
+
+
+
+api/admin/pages/46
+{
+  "status": "success",
+  "data": {
+    "id": 46,
+    "site_id": 4,
+    "parent_id": null,
+    "slug": "contacto",
+    "path": "/contacto",
+    "title": "Contacto",
+    "position": 4,
+    "is_published": true,
+    "sections": [
+      {
+        "id": 139,
+        "type": "page_hero",
+        "position": 1,
+        "content": {
+          "title": "Contacto",
+          "subtitle": "Estamos para ayudarte.",
+          "image": null
+        }
+      },
+      {
+        "id": 140,
+        "type": "lead_capture_form",
+        "position": 2,
+        "content": {
+          "title": "Escríbenos",
+          "intro": "Déjanos tus datos y un asesor se comunicará contigo.",
+          "submit_label": "Enviar",
+          "fields": [
+            "name",
+            "email",
+            "phone",
+            "message"
+          ]
+        }
+      }
+    ]
+  },
+  "meta": []
+}
+
+
+
+
+api/admin/sections/131
+{
+  "status": "success",
+  "data": {
+    "id": 131,
+    "site_id": 4,
+    "page_id": 43,
+    "type": "banner_carousel",
+    "position": 1,
+    "content": {
+      "slides": [
+        {
+          "image": "media/placeholder-banner-tectuus.jpg",
+          "title": "Equipo industrial para gas natural",
+          "subtitle": "EDRM, compresoras y valvulería.",
+          "link_url": null,
+          "link_label": null
+        }
+      ]
+    },
+    "created_at": "2026-09-05T02:42:56.000000Z",
+    "updated_at": "2026-09-05T02:42:56.000000Z"
+  },
+  "meta": []
+}
+
+
+api/admin/sections/132
+{
+  "status": "success",
+  "data": {
+    "id": 132,
+    "site_id": 4,
+    "page_id": 43,
+    "type": "rich_text",
+    "position": 2,
+    "content": {
+      "title": null,
+      "body": "<p>Contenido pendiente de redactar.</p>",
+      "video_url": null
+    },
+    "created_at": "2026-09-05T02:42:56.000000Z",
+    "updated_at": "2026-09-05T02:42:56.000000Z"
+  },
+  "meta": []
+}
+
+/api/admin/sections/133
+{
+  "status": "success",
+  "data": {
+    "id": 133,
+    "site_id": 4,
+    "page_id": 43,
+    "type": "clients_showcase",
+    "position": 3,
+    "content": {
+      "title": "Nuestros clientes",
+      "logos": [
+        {
+          "image": "media/placeholder-logo.png",
+          "name": "Cliente de ejemplo",
+          "url": null
+        }
+      ]
+    },
+    "created_at": "2026-09-05T02:42:56.000000Z",
+    "updated_at": "2026-09-05T02:42:56.000000Z"
+  },
+  "meta": []
+}

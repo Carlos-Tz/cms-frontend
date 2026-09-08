@@ -1,0 +1,42 @@
+---
+import { mediaUrl } from "../../functions/fetch";
+
+interface Testimonial {
+  quote: string;
+  author?: string | null;
+  role?: string | null;
+  photo?: string | null;
+}
+
+interface Props {
+  title?: string | null;
+  items?: Testimonial[];
+}
+
+const { title, items = [] } = Astro.props;
+---
+
+{items.length > 0 && (
+  <section class="section section--alt">
+    <div class="container">
+      <div class="section-head section-head--center">
+        <span class="eyebrow">Testimonios</span>
+        <h2 class="section-title">{title ?? "Lo que dicen nuestros clientes"}</h2>
+      </div>
+      <div class="grid grid--3">
+        {items.map((item) => (
+          <blockquote class="card testimonial-card">
+            <p class="testimonial-card__quote">“{item.quote}”</p>
+            <footer class="testimonial-card__meta">
+              {item.photo && <img class="testimonial-card__photo" src={mediaUrl(item.photo)} alt="" />}
+              <div>
+                {item.author && <p class="testimonial-card__author">{item.author}</p>}
+                {item.role && <p class="testimonial-card__role">{item.role}</p>}
+              </div>
+            </footer>
+          </blockquote>
+        ))}
+      </div>
+    </div>
+  </section>
+)}

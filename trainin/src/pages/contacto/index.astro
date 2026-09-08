@@ -1,0 +1,21 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import PageSections from "../../components/PageSections.astro";
+import { fetchData } from "../../functions/fetch";
+
+type PageResponse = {
+  status: string;
+  data: { slug: string; path: string; title: string; sections: { type: string; content: Record<string, any> }[] };
+  meta: Record<string, any>;
+};
+
+// Site "traninn-logistic", page "contacto" (CMS path /contacto). Its lead form
+// is the second of the site's two: leads land tagged with source "contacto".
+const pageResponse: PageResponse | undefined = await fetchData("pages/contacto");
+const page = pageResponse?.data;
+const sections = page?.sections ?? [];
+---
+
+<Layout title={page?.title}>
+  <PageSections sections={sections} slug={page?.slug} />
+</Layout>

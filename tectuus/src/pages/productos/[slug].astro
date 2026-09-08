@@ -1,0 +1,128 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import LeadCaptureForm from "../../components/sections/LeadCaptureForm.astro";
+import { fetchAllProducts, fetchProduct, formatPrice } from "../../functions/catalog";
+import { mediaUrl, FALLBACK_IMAGE } from "../../functions/fetch";
+import type { Product } from "../../types/catalog";
+
+// One page per active product. Inactive ones never reach here: they're absent
+// from the listing, and their detail endpoint 404s.
+export async function getStaticPaths() {
+  const products = await fetchAllProducts();
+
+  return products.map((product) => ({
+    params: { slug: product.slug },
+    props: { listing: product },
+  }));
+}
+
+const { slug } = Astro.params;
+const { listing } = Astro.props;
+
+// The listing omits `description` and keeps only the first image, so the
+// detail endpoint is what fills the page. Falls back to the listing fields if
+// that request fails, so the page still renders.
+const detail: Product | undefined = await fetchProduct(slug!);
+const product: Product = detail ?? listing;
+
+// The detail endpoint returns every image; the listing only carried the first.
+const gallery: string[] = product.images?.length
+  ? product.images
+  : ([listing?.image].filter(Boolean) as string[]);
+const description = product.description?.trim();
+---
+
+<Layout
+  title={product.name}
+  description={description || `${product.name} — ${product.category?.name ?? "equipo industrial"} para gas natural.`}
+  image={gallery[0] ? mediaUrl(gallery[0]) : undefined}
+>
+  <section class="section product-detail">
+    <div class="container">
+      <nav class="breadcrumb" aria-label="Ruta de navegación">
+        <a href="/productos">Productos</a>
+        {product.category?.slug && (
+          <>
+            <span aria-hidden="true">/</span>
+            <a href={`/productos?category=${product.category.slug}`}>{product.category.name}</a>
+          </>
+        )}
+        <span aria-hidden="true">/</span>
+        <span aria-current="page">{product.name}</span>
+      </nav>
+
+      <div class="split product-detail__layout">
+        <div class="product-detail__media">
+          <div class="product-detail__plate">
+            <img
+              class="product-detail__image"
+              id="product-image"
+              src={gallery[0] ? mediaUrl(gallery[0]) : FALLBACK_IMAGE}
+              alt={product.name}
+              width="720"
+              height="540"
+            />
+          </div>
+          {gallery.length > 1 && (
+            <div class="product-detail__thumbs" role="group" aria-label="Imágenes del producto">
+              {gallery.map((image, index) => (
+                <button
+                  type="button"
+                  class:list={["product-detail__thumb", { "is-active": index === 0 }]}
+                  data-product-thumb={mediaUrl(image)}
+                  aria-label={`Ver imagen ${index + 1} de ${product.name}`}
+                >
+                  <img src={mediaUrl(image)} alt="" loading="lazy" width="120" height="90" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          {product.category?.name && <p class="eyebrow">{product.category.name}</p>}
+          <h1 class="product-detail__title">{product.name}</h1>
+          <p class="product-detail__price">{formatPrice(product.price)}</p>
+
+          {description ? (
+            <p class="product-detail__text">{description}</p>
+          ) : (
+            <p class="product-detail__text">
+              Escríbenos para recibir la ficha técnica y las especificaciones de este equipo.
+            </p>
+          )}
+
+          <div class="product-detail__actions">
+            <a class="btn-primary" href="#cotizar">Solicitar cotización</a>
+            <a class="btn-secondary" href="/productos">Ver todo el catálogo</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--ink" id="cotizar">
+    <div class="container container--narrow">
+      <LeadCaptureForm
+        formId="product-lead-form"
+        source="productos"
+        title="Solicita una cotización"
+        intro={`Cuéntanos qué necesitas de ${product.name} y un asesor te contacta.`}
+        submit_label="Enviar solicitud"
+      />
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const mainImage = document.getElementById("product-image") as HTMLImageElement | null;
+  const thumbs = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-product-thumb]"));
+
+  thumbs.forEach((thumb) => {
+    thumb.addEventListener("click", () => {
+      if (!mainImage || !thumb.dataset.productThumb) return;
+      mainImage.src = thumb.dataset.productThumb;
+      thumbs.forEach((item) => item.classList.toggle("is-active", item === thumb));
+    });
+  });
+</script>

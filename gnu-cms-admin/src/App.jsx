@@ -51,6 +51,11 @@ import TraininNuestraHistoria from './pages/trainin/sobre-nosotros/nuestra-histo
 import TraininUbicaciones from './pages/trainin/ubicaciones'
 import TraininContacto from './pages/trainin/contacto'
 import TraininBlog from './pages/trainin/blog'
+import TectuusSelectPage from './pages/tectuus/select-page'
+import TectuusInicio from './pages/tectuus/inicio'
+import TectuusSobreNosotros from './pages/tectuus/sobre-nosotros'
+import TectuusProductos from './pages/tectuus/productos'
+import TectuusContacto from './pages/tectuus/contacto'
 
 const FEATURES = [
   {
@@ -208,6 +213,11 @@ export default function App() {
       <Route path="/trainin/ubicaciones" element={<TraininUbicaciones />} />
       <Route path="/trainin/contacto" element={<TraininContacto />} />
       <Route path="/trainin/blog" element={<TraininBlog />} />
+      <Route path="/tectuus/select-page" element={<TectuusSelectPage />} />
+      <Route path="/tectuus/inicio" element={<TectuusInicio />} />
+      <Route path="/tectuus/sobre-nosotros" element={<TectuusSobreNosotros />} />
+      <Route path="/tectuus/productos" element={<TectuusProductos />} />
+      <Route path="/tectuus/contacto" element={<TectuusContacto />} />
     </Routes>
   )
 }

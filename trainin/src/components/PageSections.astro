@@ -52,9 +52,12 @@ export type PageSection = { type: string; content: Record<string, any> };
 
 interface Props {
 	sections: PageSection[];
+	// Slug of the page being rendered, forwarded to sections that need to know
+	// where they live (the lead form tags its submissions with it).
+	slug?: string;
 }
 
-const { sections } = Astro.props;
+const { sections, slug } = Astro.props;
 ---
 
 {
@@ -116,7 +119,9 @@ const { sections } = Astro.props;
 
 			case "lead_capture_form": {
 				const { title, intro, submit_label, fields = [] } = section.content as LeadCaptureForm;
-				return <Contacto title={title} intro={intro} submitLabel={submit_label} fields={fields} />;
+				return (
+					<Contacto title={title} intro={intro} submitLabel={submit_label} fields={fields} source={slug} />
+				);
 			}
 
 			default:

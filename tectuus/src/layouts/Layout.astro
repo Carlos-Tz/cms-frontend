@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
-import { fetchData } from "../functions/fetch";
+import { fetchData, FALLBACK_IMAGE } from "../functions/fetch";
+import { fetchCategories } from "../functions/catalog";
 import { seo } from "../config/seo";
 import NavItem from "../components/nav/NavItem.astro";
 import NavItemMobile from "../components/nav/NavItemMobile.astro";
@@ -17,9 +18,13 @@ interface Props {
   image?: string | null;
   // Set true on pages that shouldn't be indexed (e.g. a "not found" state).
   noindex?: boolean;
+  // Slug of the page being rendered, exposed as `data-page` on <main> so a
+  // single page can carry its own typographic treatment (see the justified
+  // copy on `inicio` in global.css).
+  slug?: string | null;
 }
 
-const { title, description, image, noindex = false } = Astro.props;
+const { title, description, image, noindex = false, slug = null } = Astro.props;
 
 const pageTitle = title ? `${title} ${seo.titleSeparator} ${seo.siteName}` : seo.defaultTitle;
 const pageDescription = description ?? seo.defaultDescription;
@@ -37,7 +42,22 @@ const fallbackMenu: MenuItem[] = [
 ];
 
 const menuResponse: MenuResponse | undefined = await fetchData("menu");
-const menuItems: MenuItem[] = menuResponse?.data?.length ? menuResponse.data : fallbackMenu;
+const cmsMenu: MenuItem[] = menuResponse?.data?.length ? menuResponse.data : fallbackMenu;
+
+// The CMS menu is derived from the `pages` table, and product categories are
+// rows the admin manages — not pages — so "Productos" always comes back with
+// `children: []`. Its submenu is built here from the catalog instead.
+const categories = await fetchCategories();
+const categoryChildren: MenuItem[] = categories.map((category) => ({
+  slug: category.slug,
+  path: `/productos?category=${category.slug}`,
+  title: category.name,
+  children: [],
+}));
+
+const menuItems: MenuItem[] = cmsMenu.map((item) =>
+  item.slug === "productos" && !item.children?.length ? { ...item, children: categoryChildren } : item
+);
 
 // Footer contact info, social links and the WhatsApp button are all editable
 // from the CMS admin (Landing Page → Datos de contacto / Redes sociales /
@@ -94,6 +114,16 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
 
+    {/* Archivo is loaded with its width axis: display type is set expanded
+        (see --display-stretch), which is where the engineered feel comes from.
+        IBM Plex Sans carries body copy. */}
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..700&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+    />
+
     <title>{pageTitle}</title>
     <meta name="description" content={pageDescription} />
     <link rel="canonical" href={canonicalUrl} />
@@ -112,6 +142,24 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={pageDescription} />
     {socialImageUrl && <meta name="twitter:image" content={socialImageUrl} />}
+
+    <script is:inline define:vars={{ fallbackImage: FALLBACK_IMAGE }}>
+      // A CMS image path can point at a file that was never uploaded, which
+      // would drop a broken-image icon into the layout. Swap those for the
+      // blank plate instead. Registered here in <head> with capture, since
+      // error events fire during load and don't bubble.
+      document.addEventListener(
+        "error",
+        (event) => {
+          const el = event.target;
+          if (el && el.tagName === "IMG" && el.dataset.fallback !== "1") {
+            el.dataset.fallback = "1";
+            el.src = fallbackImage;
+          }
+        },
+        true
+      );
+    </script>
   </head>
   <body>
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -154,7 +202,7 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
       </nav>
     </header>
 
-    <main id="contenido">
+    <main id="contenido" data-page={slug}>
       <slot />
     </main>
 
@@ -201,8 +249,11 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
           </div>
         </div>
         <div class="footer-bottom">
-          <span>GNU Gas Natural {new Date().getFullYear()} · Tectuus. Todos los derechos reservados.</span>
-          <span>Aviso de privacidad · Términos y condiciones</span>
+          <span>Tectuus, parte de GNU Gas Natural. Todos los derechos reservados, {new Date().getFullYear()}.</span>
+          <span class="footer-bottom__legal">
+            <span>Aviso de privacidad</span>
+            <span>Términos y condiciones</span>
+          </span>
         </div>
       </div>
     </footer>
@@ -263,23 +314,27 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
         if (event.key === "Escape") navItems.forEach(closeNavItem);
       });
 
-      const revealTargets = document.querySelectorAll(".section-head, .card, .gallery-item");
+      // The only scroll-triggered motion on the site: each section's dimension
+      // rule strikes itself as the block comes into view. Cards and images
+      // stay put — they don't need to announce themselves.
+      const rules = document.querySelectorAll<HTMLElement>(".section-head");
 
-      if ("IntersectionObserver" in window && revealTargets.length) {
+      if ("IntersectionObserver" in window && rules.length) {
         const observer = new IntersectionObserver(
           (entries) => {
             entries.forEach((entry) => {
               if (entry.isIntersecting) {
-                entry.target.classList.add("is-visible");
+                entry.target.classList.add("is-drawn");
                 observer.unobserve(entry.target);
               }
             });
           },
-          { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+          { threshold: 0.2, rootMargin: "0px 0px -60px 0px" }
         );
 
-        revealTargets.forEach((el) => {
-          el.classList.add("reveal");
+        rules.forEach((el) => {
+          // Opting in from JS keeps the rule visible when JS never runs.
+          el.dataset.draw = "";
           observer.observe(el);
         });
       }

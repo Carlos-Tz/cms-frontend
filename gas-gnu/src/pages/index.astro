@@ -9,7 +9,7 @@ import BlogTeaser from "../components/sections/BlogTeaser.astro";
 import ClientsShowcase from "../components/sections/ClientsShowcase.astro";
 import StationsMap from "../components/sections/StationsMap.astro";
 import noImg from "../assets/images/noimg.jpg";
-import { fetchData, mediaUrl } from "../functions/fetch";
+import { fetchData, mediaUrl, BASE_URL } from "../functions/fetch";
 
 type Slide = {
   image: string;
@@ -83,30 +83,24 @@ const slides: Slide[] = bannerCarousel?.slides?.length
   : fallbackSlides;
 
 // "Hasta un 60%" is the headline savings claim across the hero and the
-// simulator's fallback rate — keep both in sync if this default changes.
+// simulator's fallback rate — used only when the CMS has no fuel_prices at
+// all (so there's no known price to convert a peso spend into a quantity)
+// or the live savings-simulator endpoint is unreachable.
 const FALLBACK_SAVINGS_RATE = 0.6;
 const GNV_FUEL_KEY = "gas-natural";
 
-type FuelOption = { fuel: string; label: string; rate: number };
+type FuelOption = { fuel: string; label: string; pricePerUnit: number };
 
-// equivalence_factor normalizes each fuel's native unit (m³, litro, …) to a
-// comparable cost basis; GNV's own factor is always 1 (the reference unit).
-const effectiveCost = (price: FuelPrice) => price.price_per_unit * price.equivalence_factor;
+// The actual savings math is server-side (GET savings-simulator?fuel=&quantity=);
+// this only needs each fuel's price to convert the visitor's peso spend into
+// the quantity that endpoint expects.
+const fuelOptions: FuelOption[] = (savingsSimulator?.fuel_prices ?? [])
+  .filter((price) => price.fuel !== GNV_FUEL_KEY && price.price_per_unit > 0)
+  .map((price) => ({ fuel: price.fuel, label: price.label, pricePerUnit: price.price_per_unit }));
 
-const gnvPrice = savingsSimulator?.fuel_prices?.find((price) => price.fuel === GNV_FUEL_KEY);
-const fuelOptions: FuelOption[] = gnvPrice
-  ? savingsSimulator!.fuel_prices!
-      .filter((price) => price.fuel !== GNV_FUEL_KEY && price.price_per_unit > 0)
-      .map((price) => ({
-        fuel: price.fuel,
-        label: price.label,
-        rate: 1 - effectiveCost(gnvPrice) / effectiveCost(price),
-      }))
-  : [];
-
-const fallbackFuelOptions: FuelOption[] = [{ fuel: "gasolina", label: "Gasolina", rate: FALLBACK_SAVINGS_RATE }];
+const fallbackFuelOptions: FuelOption[] = [{ fuel: "gasolina", label: "Gasolina", pricePerUnit: 0 }];
 const savingsFuelOptions = fuelOptions.length ? fuelOptions : fallbackFuelOptions;
-const savingsRatesByFuel = Object.fromEntries(savingsFuelOptions.map((option) => [option.fuel, option.rate]));
+const savingsFuelPrices = Object.fromEntries(savingsFuelOptions.map((option) => [option.fuel, option.pricePerUnit]));
 
 const fallbackFeatures: FeatureItem[] = [
   { icon: null, title: "Instala tu equipo de GNV", text: "Conversión certificada para que tu auto ruede con gas natural vehicular desde la primera semana." },
@@ -282,6 +276,7 @@ const blogPosts = blogTeaser?.posts?.length ? blogTeaser.posts : fallbackPosts;
           intro={leadCaptureForm?.intro}
           submit_label={leadCaptureForm?.submit_label ?? "Enviar mensaje"}
           fields={leadCaptureForm?.fields}
+          source="inicio"
         />
       </div>
     </section>
@@ -333,7 +328,7 @@ const blogPosts = blogTeaser?.posts?.length ? blogTeaser.posts : fallbackPosts;
   }
 </script>
 
-<script is:inline define:vars={{ savingsRatesByFuel }}>
+<script define:vars={{ apiBase: BASE_URL, savingsFuelPrices, fallbackRate: FALLBACK_SAVINGS_RATE }} is:inline>
   const savingsForm = document.querySelector("#savings-form");
   const fuelSelect = document.querySelector("#fuel-type");
   const savingsValue = document.querySelector("#savings-value");
@@ -357,17 +352,8 @@ const blogPosts = blogTeaser?.posts?.length ? blogTeaser.posts : fallbackPosts;
     requestAnimationFrame(tick);
   }
 
-  savingsForm?.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const input = document.querySelector("#monthly-spend");
-    const spend = Number(input?.value ?? 0);
-    if (!Number.isFinite(spend) || spend <= 0) return;
-
-    const savingsRate = savingsRatesByFuel[fuelSelect?.value] ?? 0;
-
-    const monthlySavings = Math.round(spend * savingsRate);
+  function showSavings(monthlySavings) {
     const annualSavings = monthlySavings * 12;
-
     if (savingsValue) {
       animateCount(savingsValue, currentMonthly, monthlySavings, 650, (v) => `$${v.toLocaleString("es-MX")} MXN`);
       currentMonthly = monthlySavings;
@@ -376,5 +362,33 @@ const blogPosts = blogTeaser?.posts?.length ? blogTeaser.posts : fallbackPosts;
       savingsValue.classList.add("is-updated");
     }
     if (savingsAnnual) savingsAnnual.textContent = `Ahorro anual estimado: $${annualSavings.toLocaleString("es-MX")} MXN`;
+  }
+
+  savingsForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const input = document.querySelector("#monthly-spend");
+    const spend = Number(input?.value ?? 0);
+    if (!Number.isFinite(spend) || spend <= 0) return;
+
+    const fuel = fuelSelect?.value;
+    const pricePerUnit = savingsFuelPrices[fuel];
+
+    // The real savings math is server-side: convert the peso spend into the
+    // quantity (liters/m³) that endpoint expects, using this fuel's price.
+    if (pricePerUnit) {
+      try {
+        const quantity = spend / pricePerUnit;
+        const response = await fetch(`${apiBase}savings-simulator?fuel=${fuel}&quantity=${quantity}`);
+        const result = await response.json().catch(() => null);
+        if (response.ok && result?.status === "success" && Number.isFinite(result?.data?.savings)) {
+          showSavings(Math.round(result.data.savings));
+          return;
+        }
+      } catch (error) {
+        // fall through to the local estimate below
+      }
+    }
+
+    showSavings(Math.round(spend * fallbackRate));
   });
 </script>

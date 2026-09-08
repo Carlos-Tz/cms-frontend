@@ -115,6 +115,16 @@ const embedUrl = videoUrl ? toEmbedUrl(videoUrl) : null;
 		font-size: 1rem;
 		line-height: 1.7;
 		color: var(--color-text-60);
+		/* Justified body copy; hyphenation (the page is lang="es") keeps the
+		   spacing from opening rivers on narrow columns. */
+		text-align: justify;
+		hyphens: auto;
+		-webkit-hyphens: auto;
+	}
+	.prose :is(h1, h2, h3, h4) {
+		text-align: left;
+		hyphens: manual;
+		-webkit-hyphens: manual;
 	}
 	.prose :is(h2, h3) {
 		margin-top: 1.5rem;

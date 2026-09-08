@@ -1,21 +1,43 @@
+/* Design tokens.
+ *
+ * The visual language borrows from engineering drawings — the documents this
+ * client's customers already read: hairline linework, dimension rules,
+ * registration ticks, isometric grid paper. Two rules keep it from turning
+ * into generic "tech" styling:
+ *
+ *   1. Cyan is a pen, not a paint. It appears as 1px lines and small ticks,
+ *      never as a large fill or a gradient wash.
+ *   2. Green means action. Buttons and the WhatsApp handle are green; nothing
+ *      decorative is.
+ */
 :root {
-  /* Fonts — swap the family names to rebrand; keep a system-ui fallback */
-  --font-display: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Fonts — Archivo carries a width axis (100–125%); display type is set
+     expanded, which is where the engineered, signage-like feel comes from.
+     IBM Plex Sans was designed for technical documentation. */
+  --font-display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --display-stretch: 112%;
 
-  /* Type scale — clamp(min, preferred, max) so headings stay fluid across viewports.
-     --text-h1 drives every page's main heading (hero slide, page hero). */
-  --text-h1: clamp(2rem, 4vw, 3rem);
-  --text-h2: clamp(1.5rem, 2.4vw, 2rem);
-  --text-h3: 1.125rem;
+  /* Type scale — a modular progression, fluid at the display sizes only.
+     --text-display is the homepage banner; --text-h1 every interior page. */
+  --text-display: clamp(2.5rem, 5.4vw, 4.25rem);
+  --text-h1: clamp(2.1rem, 4.2vw, 3.25rem);
+  --text-h2: clamp(1.55rem, 2.6vw, 2.125rem);
+  --text-h3: 1.1875rem;
   --text-body: 1.0625rem;
   --text-small: 0.875rem;
+  --text-micro: 0.8125rem;
   --heading-font-weight: 700;
-  --heading-letter-spacing: -0.01em;
+  --heading-letter-spacing: -0.02em;
 
-  /* Backgrounds — white canvas alternating with a warm muted tile */
+  /* Measure — body copy stays under 80 characters. */
+  --measure: 34rem;
+  --measure-prose: 40rem;
+
+  /* Grounds — cool throughout, so the page reads like paper under fluorescent
+     light rather than a warm editorial spread. */
   --color-bg: #ffffff;
-  --color-bg-alt: #f4f2f0;
+  --color-bg-alt: #eef2f7;
 
   /* Brand — from the Tectuus sitemap board */
   --color-primary: #163a64; /* navy */
@@ -26,11 +48,15 @@
   --color-primary-tint: #bdeeff; /* cyan tint, for accents on dark */
   --color-primary-soft: rgba(22, 58, 100, 0.06);
 
-  /* Deep ink surfaces (hero, page hero) */
-  --color-ink: #163a64;
-  --color-ink-2: #0e2946;
+  /* The pen. Every hairline, tick and dimension rule is drawn with this. */
+  --color-line: #3ec6ef;
+  --color-line-soft: rgba(62, 198, 239, 0.4);
 
-  /* Neutral brand tones (footer) */
+  /* Deep ink surfaces (hero, feature band, footer) */
+  --color-ink: #0a1e35;
+  --color-ink-2: #061525;
+
+  /* Neutral brand tone, kept from the board for muted UI */
   --color-taupe: #6b665e;
   --color-taupe-dark: #55514a;
 
@@ -40,33 +66,42 @@
 
   /* Text on light backgrounds */
   --color-text: #16202c;
-  --color-text-60: rgba(22, 32, 44, 0.64);
-  --color-text-40: rgba(22, 32, 44, 0.42);
+  --color-text-60: rgba(22, 32, 44, 0.66);
+  --color-text-40: rgba(22, 32, 44, 0.45);
 
   /* Text on dark backgrounds */
   --color-text-on-dark: #ffffff;
-  --color-text-on-dark-70: rgba(255, 255, 255, 0.68);
-  --color-text-on-dark-45: rgba(255, 255, 255, 0.45);
+  --color-text-on-dark-70: rgba(255, 255, 255, 0.7);
+  --color-text-on-dark-45: rgba(255, 255, 255, 0.48);
 
   /* Borders / surfaces */
-  --color-border: rgba(22, 58, 100, 0.14);
-  --color-border-hover: rgba(22, 58, 100, 0.3);
+  --color-border: rgba(22, 58, 100, 0.16);
+  --color-border-hover: rgba(22, 58, 100, 0.34);
   --color-border-on-dark: rgba(255, 255, 255, 0.16);
   --color-surface: #ffffff;
   --color-surface-muted: rgba(22, 58, 100, 0.04);
-  --color-surface-on-dark: rgba(255, 255, 255, 0.06);
+  --color-surface-on-dark: rgba(255, 255, 255, 0.05);
 
-  /* Radius — pill for actions, lg for cards */
+  /* Radius — geometry encodes role: pill for things you do, near-square
+     plates for things you read. */
+  --radius-plate: 0.25rem;
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
   --radius-full: 999px;
 
-  /* Shadows */
-  --shadow-cta: 0 10px 30px -8px rgba(22, 58, 100, 0.35);
-  --shadow-card: 0 4px 24px -8px rgba(22, 58, 100, 0.12);
-  --shadow-float: 0 20px 45px -18px rgba(22, 58, 100, 0.35);
+  /* Shadows — tight and cool. No soft grey blur under every card. */
+  --shadow-plate: 0 1px 2px rgba(10, 30, 53, 0.05);
+  --shadow-plate-raised: 0 18px 32px -24px rgba(10, 30, 53, 0.5);
+  --shadow-cta: 0 10px 22px -12px rgba(47, 168, 76, 0.65);
+  --shadow-card: var(--shadow-plate);
+  --shadow-float: 0 20px 45px -18px rgba(10, 30, 53, 0.45);
+
+  /* Isometric grid paper, for ink surfaces. Drawn at 30°/150° like the
+     isometric sheets piping runs are sketched on. */
+  --grid-iso: repeating-linear-gradient(30deg, rgba(62, 198, 239, 0.07) 0 1px, transparent 1px 46px),
+    repeating-linear-gradient(150deg, rgba(62, 198, 239, 0.07) 0 1px, transparent 1px 46px);
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

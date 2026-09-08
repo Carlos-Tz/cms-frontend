@@ -5,6 +5,7 @@ import FeatureGrid from "./sections/FeatureGrid.astro";
 import LeadCaptureForm from "./sections/LeadCaptureForm.astro";
 import StationsMap from "./sections/StationsMap.astro";
 import ClientsShowcase from "./sections/ClientsShowcase.astro";
+import SavingsSimulator from "./sections/SavingsSimulator.astro";
 
 interface Section {
   type: string;
@@ -38,6 +39,8 @@ const { sections } = Astro.props;
       return <StationsMap {...(section.content as any)} />;
     case "clients_showcase":
       return <ClientsShowcase {...(section.content as any)} />;
+    case "savings_simulator":
+      return <SavingsSimulator {...(section.content as any)} />;
     default:
       return null;
   }

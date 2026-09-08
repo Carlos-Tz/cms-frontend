@@ -18,6 +18,10 @@ interface Props {
   submit_label?: string | null;
   fields?: string[];
   formId?: string;
+  // Slug of the page rendering this form. The API uses it to attribute the
+  // lead and to whitelist which non-core fields (below) that page's form
+  // is allowed to send.
+  source?: string;
 }
 
 const {
@@ -26,6 +30,7 @@ const {
   submit_label = "Enviar",
   fields = ["name", "email", "phone", "message"],
   formId = "lead-form",
+  source,
 } = Astro.props;
 ---
 
@@ -61,14 +66,28 @@ const {
   </form>
 </div>
 
-<script define:vars={{ apiBase: BASE_URL, leadFormId: formId }} is:inline>
+<script define:vars={{ apiBase: BASE_URL, leadFormId: formId, leadSource: source }} is:inline>
+  // Only these four map to real `leads` columns; anything else a form
+  // collects (vehicle_description, fleet_size, …) is an extra the API only
+  // accepts nested under `details`, whitelisted server-side against the
+  // source page's own declared `fields[]`.
+  const CORE_LEAD_FIELDS = ["name", "email", "phone", "message"];
+
   const form = document.getElementById(leadFormId);
   const status = form ? form.querySelector("[data-lead-form-status]") : null;
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submitButton = form.querySelector('button[type="submit"]');
-    const data = Object.fromEntries(new FormData(form).entries());
+    const formData = Object.fromEntries(new FormData(form).entries());
+
+    const payload = leadSource ? { source: leadSource } : {};
+    const details = {};
+    for (const [key, value] of Object.entries(formData)) {
+      if (CORE_LEAD_FIELDS.includes(key)) payload[key] = value;
+      else details[key] = value;
+    }
+    if (Object.keys(details).length) payload.details = details;
 
     if (submitButton) submitButton.disabled = true;
     if (status) {
@@ -83,10 +102,14 @@ const {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       const result = await response.json().catch(() => null);
-      if (!response.ok) throw new Error("request failed");
+
+      if (!response.ok) {
+        const firstError = result?.errors ? Object.values(result.errors)[0]?.[0] : null;
+        throw new Error(firstError || result?.message || "request failed");
+      }
 
       form.reset();
       if (status) {
@@ -95,7 +118,10 @@ const {
       }
     } catch (error) {
       if (status) {
-        status.textContent = "No pudimos enviar tu mensaje. Intenta de nuevo.";
+        status.textContent =
+          error instanceof Error && error.message !== "request failed"
+            ? error.message
+            : "No pudimos enviar tu mensaje. Intenta de nuevo.";
         status.className = "lead-form__status lead-form__status--error";
       }
     } finally {

@@ -1,8 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import SectionRenderer from "../components/SectionRenderer.astro";
-import noImg from "../assets/images/noimg.jpg";
-import { fetchData } from "../functions/fetch";
+import { fetchData, FALLBACK_IMAGE } from "../functions/fetch";
 import type { PageResponse, PageSection } from "../types/page";
 
 const pageResponse: PageResponse | undefined = await fetchData("pages/inicio");
@@ -17,7 +16,7 @@ const fallbackSections: PageSection[] = [
     content: {
       slides: [
         {
-          image: noImg.src,
+          image: FALLBACK_IMAGE,
           title: "Soluciones integrales para tu industria",
           subtitle:
             "Diseñamos, instalamos y damos mantenimiento a sistemas de gas natural para plantas industriales en todo México.",
@@ -25,14 +24,14 @@ const fallbackSections: PageSection[] = [
           link_label: "Conoce nuestros productos",
         },
         {
-          image: noImg.src,
+          image: FALLBACK_IMAGE,
           title: "Seguridad y eficiencia en cada proyecto",
           subtitle: "Equipos certificados y personal especializado que acompañan tu operación de principio a fin.",
           link_url: null,
           link_label: null,
         },
         {
-          image: noImg.src,
+          image: FALLBACK_IMAGE,
           title: "Tu operación, siempre en marcha",
           subtitle: "Monitoreo y mantenimiento preventivo para que tu suministro de gas natural nunca se detenga.",
           link_url: null,
@@ -45,7 +44,7 @@ const fallbackSections: PageSection[] = [
     type: "clients_showcase",
     content: {
       title: "Nuestros clientes",
-      logos: Array.from({ length: 6 }, (_, index) => ({ name: `Cliente ${index + 1}`, image: noImg.src, url: null })),
+      logos: Array.from({ length: 6 }, (_, index) => ({ name: `Cliente ${index + 1}`, image: FALLBACK_IMAGE, url: null })),
     },
   },
   {
@@ -93,6 +92,6 @@ const fallbackSections: PageSection[] = [
 const sections = page?.sections?.length ? page.sections : fallbackSections;
 ---
 
-<Layout>
-  <SectionRenderer sections={sections} />
+<Layout slug={page?.slug ?? "inicio"}>
+  <SectionRenderer sections={sections} pageSlug={page?.slug ?? "inicio"} />
 </Layout>

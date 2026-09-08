@@ -12,5 +12,5 @@ const sections = page?.sections ?? [];
 
 <Layout title={page?.title ?? "Sobre nosotros"}>
   {!page && <PageHero title="¿Quiénes somos?" subtitle="Historia, misión, visión y valores." />}
-  <SectionRenderer sections={sections} />
+  <SectionRenderer sections={sections} pageSlug={page?.slug ?? "sobre-nosotros"} />
 </Layout>

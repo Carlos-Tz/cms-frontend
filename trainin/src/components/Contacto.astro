@@ -1,5 +1,6 @@
 ---
 import { BASE_URL } from "../functions/fetch";
+import { fetchGlobals, whatsappHref } from "../functions/globals";
 
 // Field list matches the CMS's generic "lead_capture_form" section (shared
 // with gas-gnu's LeadCaptureForm.astro): a set of field keys the admin picks,
@@ -21,9 +22,17 @@ interface Props {
 	fields: string[];
 	whatsappUrl?: string | null;
 	formId?: string;
+	// Slug of the page holding this form. Travels with the lead as `source`,
+	// which the CMS validates against the site published pages and uses to
+	// tell one form apart from another in the admin inbox.
+	source?: string | null;
 }
 
-const { title, intro, submitLabel, fields, whatsappUrl, formId = "contacto-lead-form" } = Astro.props;
+const { title, intro, submitLabel, fields, whatsappUrl, formId = "contacto-lead-form", source } = Astro.props;
+
+// The WhatsApp number is site-wide data rather than part of this section, so
+// it is read from `globals` unless the caller already resolved it.
+const ctaHref = whatsappUrl ?? whatsappHref((await fetchGlobals())?.whatsapp_button);
 ---
 
 <section id="contacto" class="section section--dark contacto">
@@ -32,8 +41,8 @@ const { title, intro, submitLabel, fields, whatsappUrl, formId = "contacto-lead-
 			{title && <h2 class="section-title">{title}</h2>}
 			{intro && <p class="contacto-text">{intro}</p>}
 
-			{whatsappUrl && (
-				<a class="btn-primary contacto-whatsapp" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+			{ctaHref && (
+				<a class="btn-primary contacto-whatsapp" href={ctaHref} target="_blank" rel="noopener noreferrer">
 					Escribir por WhatsApp
 				</a>
 			)}
@@ -140,7 +149,7 @@ const { title, intro, submitLabel, fields, whatsappUrl, formId = "contacto-lead-
 	}
 </style>
 
-<script define:vars={{ apiBase: BASE_URL, leadFormId: formId }} is:inline>
+<script define:vars={{ apiBase: BASE_URL, leadFormId: formId, leadSource: source ?? null }} is:inline>
 	const form = document.getElementById(leadFormId);
 	const status = form ? form.querySelector("[data-lead-status]") : null;
 
@@ -148,6 +157,7 @@ const { title, intro, submitLabel, fields, whatsappUrl, formId = "contacto-lead-
 		event.preventDefault();
 		const submitButton = form.querySelector('button[type="submit"]');
 		const data = Object.fromEntries(new FormData(form).entries());
+		let serverMessage = "";
 
 		if (submitButton) submitButton.disabled = true;
 		if (status) status.textContent = "Enviando...";
@@ -159,15 +169,21 @@ const { title, intro, submitLabel, fields, whatsappUrl, formId = "contacto-lead-
 					"Content-Type": "application/json",
 					Accept: "application/json",
 				},
-				body: JSON.stringify(data),
+				// `source` tags the lead with the page it came from.
+				body: JSON.stringify(leadSource ? { ...data, source: leadSource } : data),
 			});
 			const result = await response.json().catch(() => null);
-			if (!response.ok) throw new Error("request failed");
+			if (!response.ok) {
+				// The CMS answers 422 with a field message and 429 when the
+				// per-IP throttle trips; both are worth showing verbatim.
+				serverMessage = result?.meta?.message || result?.message || "";
+				throw new Error("request failed");
+			}
 
 			form.reset();
 			if (status) status.textContent = result?.meta?.message || "¡Gracias! Un asesor de Traninn Logistic te contactará muy pronto.";
 		} catch (error) {
-			if (status) status.textContent = "No pudimos enviar tu mensaje. Intenta de nuevo.";
+			if (status) status.textContent = serverMessage || "No pudimos enviar tu mensaje. Intenta de nuevo.";
 		} finally {
 			if (submitButton) submitButton.disabled = false;
 		}
