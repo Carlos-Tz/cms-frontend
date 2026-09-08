@@ -351,19 +351,36 @@ button {
 }
 
 .hero__track {
-  display: flex;
+  position: relative;
   height: 100%;
 }
 
+/* Slides stack on top of each other; swapping `.is-active` crossfades between
+   them instead of the old display:none/block hard cut (display can't transition). */
 .hero-slide {
-  min-width: 100%;
+  position: absolute;
+  inset: 0;
   height: 100%;
-  position: relative;
-  display: none;
+  opacity: 0;
+  transition: opacity 1s var(--ease-out);
+  pointer-events: none;
 }
 
 .hero-slide.is-active {
-  display: block;
+  opacity: 1;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+@keyframes hero-slide-img-in {
+  from {
+    opacity: 0;
+    transform: scale(1.06);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .hero-slide__img {
@@ -373,6 +390,17 @@ button {
   height: 100%;
   object-fit: cover;
   z-index: 0;
+  animation: hero-slide-img-in 1.8s var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide {
+    transition: none;
+  }
+
+  .hero-slide__img {
+    animation: none;
+  }
 }
 
 .hero-slide__scrim {
