@@ -39,7 +39,33 @@ function toEmbedUrl(url: string) {
   }
 }
 
-const embedUrl = video_url ? toEmbedUrl(video_url) : null;
+// Autoplay is opt-in per player and browsers only honor it while the video is
+// muted, so ask for both through the embed's own query params.
+function withAutoplay(url: string) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "");
+
+    if (host === "youtube.com" || host === "youtube-nocookie.com") {
+      parsed.searchParams.set("autoplay", "1");
+      parsed.searchParams.set("mute", "1");
+      parsed.searchParams.set("playsinline", "1");
+      return parsed.toString();
+    }
+
+    if (host === "player.vimeo.com") {
+      parsed.searchParams.set("autoplay", "1");
+      parsed.searchParams.set("muted", "1");
+      return parsed.toString();
+    }
+
+    return url;
+  } catch {
+    return url;
+  }
+}
+
+const embedUrl = video_url ? withAutoplay(toEmbedUrl(video_url)) : null;
 ---
 
 <section class="section">
@@ -48,7 +74,13 @@ const embedUrl = video_url ? toEmbedUrl(video_url) : null;
     <div class="prose" set:html={body} />
     {embedUrl && (
       <div class="rich-text__video">
-        <iframe src={embedUrl} title={title ?? "Video"} loading="lazy" allowfullscreen></iframe>
+        <iframe
+          src={embedUrl}
+          title={title ?? "Video"}
+          loading="lazy"
+          allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+          allowfullscreen
+        ></iframe>
       </div>
     )}
   </div>
