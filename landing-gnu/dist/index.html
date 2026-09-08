@@ -1,0 +1,149 @@
+<!DOCTYPE html><html lang="es"><head><meta charset="utf-8"><link rel="icon" type="image/svg+xml" href="/favicon.svg"><link rel="icon" href="/favicon.ico"><meta name="viewport" content="width=device-width"><meta name="generator" content="Astro v7.1.2"><title>GNU Gas Natural — Energía limpia para tu hogar, negocio y flotilla</title><meta name="description" content="GNU Gas Natural: soluciones de Gas Natural Comprimido, Domiciliario y Vehicular. Simula tu ahorro y encuentra tu estación más cercana."><link rel="canonical" href="https://www.gnugas.mx/"><meta property="og:type" content="website"><meta property="og:site_name" content="GNU Gas Natural"><meta property="og:locale" content="es_MX"><meta property="og:url" content="https://www.gnugas.mx/"><meta property="og:title" content="GNU Gas Natural — Energía limpia para tu hogar, negocio y flotilla"><meta property="og:description" content="GNU Gas Natural: soluciones de Gas Natural Comprimido, Domiciliario y Vehicular. Simula tu ahorro y encuentra tu estación más cercana."><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="GNU Gas Natural — Energía limpia para tu hogar, negocio y flotilla"><meta name="twitter:description" content="GNU Gas Natural: soluciones de Gas Natural Comprimido, Domiciliario y Vehicular. Simula tu ahorro y encuentra tu estación más cercana."><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="/_astro/Layout.DReX4OkR.css"></head><body><header class="site-header"><div class="container site-header__inner"><a href="#inicio" class="brand"><span class="brand__mark" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 1 3-1 4-2 4a2 2 0 0 1-2-2c0-2 2-3 1-6-2 1-4 3-4 6a5 5 0 0 0 5 5 5 5 0 0 0 5-5c0-4-3-6-3-9-3 1-5 4-5 7" fill="#45d6c9"></path></svg></span>GNU <span style="color: var(--color-primary-light);">Gas Natural</span></a><nav class="nav" aria-label="Principal"><a class="nav-link" href="/">Inicio</a><a class="nav-link" href="/nuestros-servicios">Nuestros Servicios</a><a class="nav-link" href="/sobre-nosotros">Sobre Nosotros</a><a class="nav-link" href="/desarrollo-sostenible">Desarrollo Sostenible</a><a class="nav-link" href="/blog">Blog</a><a class="nav-link" href="/contacto">Contacto</a></nav><div class="header-actions"><a class="btn-primary" href="#contacto">Cotiza aquí</a></div></div></header><main id="inicio"><!-- Hero: full-bleed carousel driven by the CMS --><section class="hero" id="banner-carousel"><div class="hero__track"><div class="hero-slide is-active"><img class="hero-slide__img" src="https://gnu-headless-cms.165.227.59.215.sslip.io/storage/media/6tioyyQL2Jx890AOpYq82diGrQtxIoSGZvH4b35u.webp" alt=""><div class="hero-slide__scrim" aria-hidden="true"></div><div class="container hero-slide__content"><h1 class="hero-slide__title">Energía que impulsa a México</h1><p class="hero-slide__subtitle">Gas natural comprimido, distribuido y vehicular.</p><a class="btn-primary hero-slide__cta" href="https://www.google.com" target="_blank" rel="noopener noreferrer">Ir al sitio</a></div></div></div><div class="hero__dots" role="tablist" aria-label="Banners"></div></section><!-- Simulador de ahorro --><section class="simulator-band" id="simulador"><div class="container simulator"><div><span class="eyebrow eyebrow--on-dark">Simulador de ahorro</span><h2 class="simulator__heading">Simulador de ahorro</h2><p class="simulator__lead">Calcula cuánto ahorras al cambiar tu combustible actual por gas natural.</p><form class="savings-simulator-form" style="margin-top: 1.5rem;"><div class="field field--on-dark"><label for="current-fuel">Combustible actual</label><select class="savings-simulator-fuel" id="current-fuel" name="current-fuel"><option value="diesel">Diésel</option><option value="gasolina">Gasolina</option></select></div><div class="field field--on-dark"><label for="monthly-spend">Gasto mensual actual (MXN)</label><input type="number" class="savings-simulator-spend" id="monthly-spend" name="monthly-spend" min="0" placeholder="Ej. 4500" required></div><button type="submit" class="btn-primary">Calcular ahorro</button></form></div><div class="simulator__result"><p class="simulator__result-value savings-simulator-value">$0 MXN</p><p class="simulator__result-label">Ahorro mensual estimado</p><p class="simulator__result-label savings-simulator-annual" style="margin-top: 0.75rem;">Ahorro anual estimado: $0 MXN</p></div></div></section><script>(function(){const comparableFuels = [{"fuel":"diesel","label":"Diésel","price_per_unit":25.9,"unit":"litro","equivalence_factor":0.95},{"fuel":"gasolina","label":"Gasolina","price_per_unit":24.3,"unit":"litro","equivalence_factor":0.84}];
+const gasNaturalPrice = {"fuel":"gas-natural","label":"Gas natural","price_per_unit":12.5,"unit":"m³","equivalence_factor":1};
+
+  document.querySelectorAll(".savings-simulator-form").forEach((form) => {
+    const section = form.closest(".simulator-band");
+    const valueEl = section?.querySelector(".savings-simulator-value");
+    const annualEl = section?.querySelector(".savings-simulator-annual");
+    const fuelSelect = form.querySelector(".savings-simulator-fuel");
+    const FALLBACK_SAVINGS_RATE = 0.35;
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let currentMonthly = 0;
+
+    function animateCount(el, from, to, duration, format) {
+      if (!el) return;
+      if (prefersReducedMotion || from === to) {
+        el.textContent = format(to);
+        return;
+      }
+      const start = performance.now();
+      function tick(now) {
+        const progress = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = format(Math.round(from + (to - from) * eased));
+        if (progress < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = form.querySelector(".savings-simulator-spend");
+      const spend = Number(input?.value ?? 0);
+      if (!Number.isFinite(spend) || spend <= 0) return;
+
+      const selectedFuel = comparableFuels.find((fuel) => fuel.fuel === fuelSelect?.value);
+      let monthlySavings;
+
+      if (selectedFuel && gasNaturalPrice) {
+        const unitsConsumed = spend / selectedFuel.price_per_unit;
+        const gasNaturalUnitsNeeded = unitsConsumed * selectedFuel.equivalence_factor;
+        const gasNaturalCost = gasNaturalUnitsNeeded * gasNaturalPrice.price_per_unit;
+        monthlySavings = Math.max(0, Math.round(spend - gasNaturalCost));
+      } else {
+        monthlySavings = Math.round(spend * FALLBACK_SAVINGS_RATE);
+      }
+
+      const annualSavings = monthlySavings * 12;
+
+      if (valueEl) {
+        animateCount(valueEl, currentMonthly, monthlySavings, 650, (v) => `$${v.toLocaleString("es-MX")} MXN`);
+        currentMonthly = monthlySavings;
+        valueEl.classList.remove("is-updated");
+        void valueEl.offsetWidth;
+        valueEl.classList.add("is-updated");
+      }
+      if (annualEl) annualEl.textContent = `Ahorro anual estimado: $${annualSavings.toLocaleString("es-MX")} MXN`;
+    });
+  });
+})();</script><!-- Contenido editorial / video de la portada --><section class="section"><div class="container" style="max-width: 46rem;"><div class="prose"><h1>Lorem Ipsum Landscape</h1>
+
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae justo nec neque tincidunt tincidunt. Sed euismod, nisl vel consectetur interdum, nunc libero tincidunt magna, vitae tincidunt erat ipsum at libero.</p>
+
+<h2>Discover the Landscape</h2>
+
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Praesent commodo, magna at tincidunt consequat, sapien neque volutpat mauris, vitae tincidunt lorem justo vel erat. Donec vitae lacus sed justo tincidunt consequat.</p>
+
+<p>Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Mauris consectetur, neque at fermentum tincidunt, erat sapien malesuada ipsum, vitae ullamcorper nulla lectus vel augue.</p>
+
+<h2>Natural Beauty</h2>
+
+<p>Curabitur feugiat, mauris non tincidunt consequat, lectus purus vestibulum libero, vitae malesuada lorem augue sit amet nisl. Integer consectetur sapien ut arcu consequat, vitae interdum neque faucibus.</p>
+
+<ul>
+  <li>Lorem ipsum dolor sit amet</li>
+  <li>Consectetur adipiscing elit</li>
+  <li>Praesent commodo mauris</li>
+  <li>Vestibulum ante ipsum primis</li>
+</ul>
+
+<h3>A Place to Explore</h3>
+
+<p>Suspendisse potenti. Donec tincidunt, nisl eget consequat tincidunt, justo neque faucibus lorem, vitae posuere lectus nulla at magna. Aliquam erat volutpat. Sed consequat, purus vitae tincidunt elementum, justo sapien malesuada libero, vitae interdum augue erat sed neque.</p>
+
+<p>Morbi vel lectus at ipsum malesuada consectetur. Nam vitae augue eget erat consequat tincidunt. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas.</p>
+
+<h2>Experience the Environment</h2>
+
+<p>Quisque tincidunt, lorem sit amet consequat facilisis, sapien erat posuere magna, non tincidunt purus nisl vitae arcu. Fusce elementum, massa at volutpat tincidunt, libero lorem consectetur neque, vitae commodo ipsum lorem vel erat.</p>
+
+<blockquote>
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Donec vitae sapien vel lorem tincidunt malesuada.
+</blockquote>
+
+<p>Donec consequat ipsum vitae ligula tincidunt, eget elementum libero facilisis. Aenean sit amet neque vitae justo interdum consectetur. Nam tincidunt, massa quis interdum posuere, lorem erat tincidunt nulla, vitae feugiat ipsum lorem sed neque.</p>
+
+<h3>Explore More</h3>
+
+<p>Aliquam erat volutpat. Phasellus consequat, ipsum vitae tincidunt commodo, neque lorem vestibulum erat, vitae malesuada libero sapien sed justo. Integer sed lorem vel arcu consequat vestibulum.</p>
+
+<ol>
+  <li>Explore the surrounding landscape</li>
+  <li>Discover natural environments</li>
+  <li>Enjoy the scenery and atmosphere</li>
+</ol>
+
+<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed vitae lectus vel lorem tincidunt consequat. Donec feugiat, libero vitae commodo tincidunt, sapien ipsum malesuada neque, vel consequat erat lorem vitae nisl.</p></div><div class="rich-text__video"><iframe src="https://www.youtube.com/embed/qzGxK6Uiu04" title="Video" loading="lazy" allowfullscreen></iframe></div></div></section><!-- Nuestros Clientes --><section class="section"><div class="container"><div class="section-head section-head--center"><span class="eyebrow">Nuestros Clientes</span><h2 class="section-title">Nuestros clientes</h2></div><div class="logo-grid"><div class="logo-card"><div class="logo-card__figure"><img class="logo-card__img" src="https://gnu-headless-cms.165.227.59.215.sslip.io/storage/media/TFAY4svCch6uElM0R981pWpe9zZ7zL2quLaGx02p.webp" alt="Cliente de ejemplo"></div><span class="logo-card__name">Cliente de ejemplo</span></div><div class="logo-card"><div class="logo-card__figure"><img class="logo-card__img" src="https://gnu-headless-cms.165.227.59.215.sslip.io/storage/media/HOzX0zOfjuwTFgFTM2QiG6PKS7D42Djgk60UGu4L.jpg" alt="2"></div><span class="logo-card__name">2</span></div></div></div></section><!-- Testimonios --><section class="section section--alt"><div class="container"><div class="section-head section-head--center"><span class="eyebrow">Testimonios</span><h2 class="section-title">Lo que dicen nuestros clientes</h2></div><div class="grid grid--3"><blockquote class="card testimonial-card"><p class="testimonial-card__quote">“Pendiente de redactar.”</p><footer class="testimonial-card__meta"><div><p class="testimonial-card__author">Cliente de ejemplo</p></div></footer></blockquote></div></div></section><!-- Contacto --><section class="section" id="contacto"><div class="container" style="max-width: 34rem;"><div class="section-head section-head--center"><span class="eyebrow">Contacto</span><h2 class="section-title">Contáctanos</h2><p class="section-subtitle">Déjanos tus datos y un asesor se comunicará contigo.</p></div><div class="card"><p class="card__title" style="margin-bottom: 1rem;">Cotiza sin compromiso</p><form id="home-lead-form"><div class="field"><label for="home-lead-form-name">Nombre completo</label><input type="text" id="home-lead-form-name" name="name" placeholder="Tu nombre" required></div><div class="field"><label for="home-lead-form-email">Correo electrónico</label><input type="email" id="home-lead-form-email" name="email" placeholder="tucorreo@ejemplo.com" required></div><div class="field"><label for="home-lead-form-phone">Teléfono</label><input type="tel" id="home-lead-form-phone" name="phone" placeholder="Ej. 55 1234 5678"></div><div class="field"><label for="home-lead-form-message">Mensaje</label><textarea id="home-lead-form-message" name="message" rows="3" placeholder="Cuéntanos qué necesitas"></textarea></div><button type="submit" class="btn-primary">Enviar</button><p class="lead-form__status" data-lead-form-status role="status" aria-live="polite"></p></form></div><script>(function(){const apiBase = "https://gnu-headless-cms.165.227.59.215.sslip.io/api/public/gnu/";
+const leadFormId = "home-lead-form";
+
+  const form = document.getElementById(leadFormId);
+  const status = form ? form.querySelector("[data-lead-form-status]") : null;
+
+  form?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const submitButton = form.querySelector('button[type="submit"]');
+    const data = Object.fromEntries(new FormData(form).entries());
+
+    if (submitButton) submitButton.disabled = true;
+    if (status) {
+      status.textContent = "Enviando...";
+      status.className = "lead-form__status";
+    }
+
+    try {
+      const response = await fetch(apiBase + "leads", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+      const result = await response.json().catch(() => null);
+      if (!response.ok) throw new Error("request failed");
+
+      form.reset();
+      if (status) {
+        status.textContent = result?.meta?.message || "Gracias por contactarnos.";
+        status.className = "lead-form__status lead-form__status--success";
+      }
+    } catch (error) {
+      if (status) {
+        status.textContent = "No pudimos enviar tu mensaje. Intenta de nuevo.";
+        status.className = "lead-form__status lead-form__status--error";
+      }
+    } finally {
+      if (submitButton) submitButton.disabled = false;
+    }
+  });
+})();</script></div></section><section class="section section--alt"><div class="container"><div class="section-head section-head--center"><h2 class="section-title">Dónde encontrarnos</h2></div><div class="stations-layout"><div class="stations-map"><iframe class="stations-map__frame" src="https://www.google.com/maps?q=25.6714%2C-100.3094&amp;z=11&amp;output=embed" loading="lazy" title="Dónde encontrarnos"></iframe></div><ul class="stations-list"><li class="stations-list__item"><p class="stations-list__name">Estación Guadalupe</p><p class="stations-list__address">Av. Pablo Livas 500, Guadalupe, N.L.</p><p class="stations-list__meta">Lunes a domingo de 6:00 a 22:00</p><p class="stations-list__meta">+52 81 0000 0000</p><a class="stations-list__link" href="https://www.google.com/maps/dir/?api=1&amp;destination=25.6768,-100.256" target="_blank" rel="noopener noreferrer">Cómo llegar →</a></li><li class="stations-list__item"><p class="stations-list__name">Estación Monterrey Centro</p><p class="stations-list__address">Av. Constitución 100, Monterrey, N.L.</p><p class="stations-list__meta">Lunes a domingo de 6:00 a 22:00</p><p class="stations-list__meta">+52 81 0000 0000</p><a class="stations-list__link" href="https://www.google.com/maps/dir/?api=1&amp;destination=25.6714,-100.3094" target="_blank" rel="noopener noreferrer">Cómo llegar →</a></li></ul></div></div></section></main><footer class="site-footer" id="contacto-footer"><div class="container"><div class="footer-grid"><div><a href="#inicio" class="brand" style="color: #fff;"><span class="brand__mark" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 1 3-1 4-2 4a2 2 0 0 1-2-2c0-2 2-3 1-6-2 1-4 3-4 6a5 5 0 0 0 5 5 5 5 0 0 0 5-5c0-4-3-6-3-9-3 1-5 4-5 7" fill="#45d6c9"></path></svg></span>GNU Gas Natural</a><p style="margin-top: 1rem; font-size: 0.875rem; max-width: 20rem;">Energía limpia y ahorro real para hogares, negocios y flotillas vehiculares en todo México.</p><div class="social-row"><a class="social-icon" href="https://facebook.com/gnu" target="_blank" rel="noopener noreferrer" aria-label="facebook"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 21v-8h2.7l.4-3.1h-3.1V8c0-.9.25-1.5 1.55-1.5H17V3.6C16.6 3.55 15.5 3.4 14.2 3.4c-2.7 0-4.5 1.65-4.5 4.65v2.85H7v3.1h2.7V21h3.8z"/></svg></a><a class="social-icon" href="https://instagram.com/gnu" target="_blank" rel="noopener noreferrer" aria-label="instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.2" cy="6.8" r="1"/></svg></a><a class="social-icon" href="https://linkedin.com/company/gnu" target="_blank" rel="noopener noreferrer" aria-label="linkedin"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6.94 8.5H3.56V20h3.38V8.5zM5.25 3.5a1.96 1.96 0 1 0 0 3.92 1.96 1.96 0 0 0 0-3.92zM20.44 20h-3.37v-6.05c0-1.44-.03-3.3-2.02-3.3-2.02 0-2.33 1.58-2.33 3.2V20H9.35V8.5h3.24v1.57h.05c.45-.86 1.56-1.77 3.21-1.77 3.43 0 4.06 2.26 4.06 5.19V20z"/></svg></a></div></div><div><p class="footer-heading">Navegación</p><a class="footer-link" href="/">Inicio</a><a class="footer-link" href="/nuestros-servicios">Nuestros Servicios</a><a class="footer-link" href="/sobre-nosotros">Sobre Nosotros</a><a class="footer-link" href="/desarrollo-sostenible">Desarrollo Sostenible</a><a class="footer-link" href="/blog">Blog</a><a class="footer-link" href="/contacto">Contacto</a></div><div><p class="footer-heading">Servicios</p><a class="footer-link" href="/nuestros-servicios">Gas Natural Comprimido (GNC)</a><a class="footer-link" href="/nuestros-servicios">Gas Natural Domiciliario (GND)</a><a class="footer-link" href="/nuestros-servicios">Gas Natural Vehicular (GNV)</a></div><div><p class="footer-heading">Contacto</p><p class="footer-link">Av. Ejemplo 123, Monterrey, Nuevo León</p><p class="footer-link">contacto@gnu.mx</p><p class="footer-link">+52 81 0000 0000</p><p class="footer-link">Lunes a viernes de 9:00 a 18:00</p></div></div><div class="footer-bottom"><span>© 2025 GNU Gas Natural. Todos los derechos reservados.</span><span>Aviso de privacidad · Términos y condiciones</span></div></div></footer><a class="whatsapp-fab" href="https://wa.me/528100000000?text=Hola%2C%20quiero%20informaci%C3%B3n%20sobre%20gas%20natural." target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp"><svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.05-1.35A10 10 0 1 0 12 2zm0 18.1a8.06 8.06 0 0 1-4.1-1.12l-.3-.18-3 .8.8-2.93-.19-.3A8.1 8.1 0 1 1 12 20.1zm4.44-6.06c-.24-.12-1.43-.7-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.53.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.35-1.67-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02 0 1.19.87 2.34 1 2.5.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"></path></svg></a><script type="module">var e=document.querySelectorAll(`.section-head, .card, .blog-card, .logo-card, .simulator`);if(`IntersectionObserver`in window&&e.length){let t=new IntersectionObserver(e=>{e.forEach(e=>{e.isIntersecting&&(e.target.classList.add(`is-visible`),t.unobserve(e.target))})},{threshold:.15,rootMargin:`0px 0px -40px 0px`});e.forEach(e=>{e.classList.add(`reveal`),t.observe(e)})}</script></body></html><script type="module">var e=document.querySelector(`.hero__track`),t=Array.from(document.querySelectorAll(`.hero-slide`)),n=document.querySelector(`.hero__dots`);if(e&&t.length&&n){t.forEach((e,t)=>{let r=document.createElement(`button`);r.className=`hero__dot`+(t===0?` is-active`:``),r.setAttribute(`aria-label`,`Ir al banner ${t+1}`),r.addEventListener(`click`,()=>i(t)),n.appendChild(r)});let e=Array.from(n.querySelectorAll(`.hero__dot`)),r=0;function i(n){t[r].classList.remove(`is-active`),e[r].classList.remove(`is-active`),r=n,t[r].classList.add(`is-active`),e[r].classList.add(`is-active`)}setInterval(()=>{i((r+1)%t.length)},5e3)}</script>
