@@ -102,9 +102,13 @@ const published = formatPublishedAt(entry.published_at);
     color: var(--color-dark);
   }
 
+  /* Padded to clear the 24 CSS-px minimum target size (WCAG 2.5.8); the
+     negative inline margin keeps the text visually flush with the column. */
   .blog-entry-back {
     display: inline-block;
-    margin-top: 2.5rem;
+    margin-top: 2.25rem;
+    padding: 0.35rem 0.5rem;
+    margin-inline: -0.5rem;
     font-weight: 700;
     color: var(--color-red);
   }

@@ -50,8 +50,12 @@ const heroSubtitle = pageHero?.subtitle ?? "Noticias y artículos sobre el gas n
         {posts.length ? (
           <>
             <div class="grid grid--3">
-              {posts.map((post) => (
-                <a href={`/blog/${post.slug}`} class="blog-card">
+              {posts.map((post, index) => (
+                <a
+                  href={`/blog/${post.slug}`}
+                  class="blog-card"
+                  style={`animation-delay: ${index * 0.12}s`}
+                >
                   <img class="blog-card__cover" src={post.cover_image ? mediaUrl(post.cover_image) : noImg.src} alt="" />
                   <div class="blog-card__body">
                     <p class="blog-card__tag">{formatDate(post.published_at)}</p>

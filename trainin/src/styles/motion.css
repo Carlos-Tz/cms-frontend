@@ -1,0 +1,203 @@
+/* Motion layer — scroll reveals, hero atmosphere and the shared easing token.
+   Loaded globally from Layout.astro so the classes the reveal script adds at
+   runtime aren't subject to Astro's per-component style scoping. */
+
+:root {
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Scroll reveal (progressive enhancement — JS adds .reveal, no-JS content stays
+   visible). Selector tripled so it outranks the component-scoped rules Astro
+   emits as `.card[data-astro-cid-…]`: those sit at the same specificity as a
+   doubled class and would otherwise win the whole `transition` shorthand by
+   source order, silently dropping the opacity transition. */
+.reveal.reveal.reveal {
+  opacity: 0;
+  transform: translateY(56px);
+  transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out);
+}
+
+.reveal.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Reveal, but for elements already inside the viewport at load — see the
+   comment in Layout.astro's script for why this has to be a keyframe
+   `animation` rather than the `.reveal` transition above. */
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(56px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal-instant {
+  animation: reveal-in 0.9s var(--ease-out) both;
+}
+
+/* Grid children ease in one after another rather than as one block; --i is the
+   child's position among its revealing siblings, set by the reveal script. */
+.reveal[style*="--i"],
+.reveal-instant[style*="--i"] {
+  transition-delay: calc(var(--i, 0) * 0.09s);
+  animation-delay: calc(var(--i, 0) * 0.09s);
+}
+
+/* Cards lift toward the pointer. Scoped component styles own the resting look;
+   only the motion lives here so every card behaves the same way. */
+.card,
+.servicio-card,
+.feature-card,
+.cliente-card,
+.blog-card,
+.gallery-item {
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out),
+    border-color 0.3s ease;
+}
+
+.card:hover,
+.servicio-card:hover,
+.feature-card:hover,
+.cliente-card:hover,
+.blog-card:hover,
+.gallery-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px -18px rgba(32, 29, 30, 0.35);
+  border-color: rgba(200, 16, 46, 0.35);
+}
+
+/* Imagery inside a lifting card creeps in slightly, so the hover reads as depth
+   rather than a flat nudge. The card clips it (overflow: hidden). */
+.servicio-card .servicio-image,
+.blog-card .blog-card-image,
+.gallery-item img {
+  transition: transform 0.6s var(--ease-out);
+}
+
+.servicio-card:hover .servicio-image,
+.blog-card:hover .blog-card-image,
+.gallery-item:hover img {
+  transform: scale(1.06);
+}
+
+/* Client logos sit muted until pointed at — see Clientes.astro for the
+   grayscale/opacity resting state this adds the lift to. */
+.cliente-logo {
+  transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s var(--ease-out),
+    border-color 0.3s ease;
+}
+
+.cliente-logo:hover {
+  transform: translateY(-4px) scale(1.03);
+  border-color: rgba(200, 16, 46, 0.35);
+}
+
+/* Section headings underline themselves as the block arrives. .is-visible is
+   added by the same observer that drives .reveal. */
+.section-head {
+  position: relative;
+}
+
+.section-head .section-title::after {
+  content: "";
+  display: block;
+  width: 3.5rem;
+  height: 3px;
+  margin-top: 1rem;
+  border-radius: var(--radius-full);
+  background: var(--color-red);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.7s 0.15s var(--ease-out);
+}
+
+.section-head.is-visible .section-title::after,
+.section-head.reveal-instant .section-title::after {
+  transform: scaleX(1);
+}
+
+/* The simulator's computed figures count into place when the result changes —
+   the script toggles .is-updated to replay this. */
+@keyframes result-pop {
+  0% {
+    transform: translateY(0.4rem);
+    opacity: 0.35;
+  }
+  100% {
+    transform: none;
+    opacity: 1;
+  }
+}
+
+.simulador-result-value.is-updated {
+  animation: result-pop 0.45s var(--ease-out);
+}
+
+/* Floating WhatsApp button — a slow idle breath so it stays noticeable without
+   demanding attention, and a definite press response. */
+@keyframes fab-breathe {
+  0%,
+  100% {
+    box-shadow: 0 10px 24px -10px rgba(37, 211, 102, 0.9);
+  }
+  50% {
+    box-shadow: 0 14px 34px -8px rgba(37, 211, 102, 0.95);
+  }
+}
+
+.whatsapp-fab {
+  animation: fab-breathe 3.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal.reveal.reveal {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .reveal-instant {
+    animation: none;
+  }
+
+  .reveal[style*="--i"],
+  .reveal-instant[style*="--i"] {
+    transition-delay: 0s;
+    animation-delay: 0s;
+  }
+
+  .card:hover,
+  .servicio-card:hover,
+  .feature-card:hover,
+  .cliente-card:hover,
+  .blog-card:hover,
+  .gallery-item:hover,
+  .cliente-logo:hover {
+    transform: none;
+  }
+
+  .servicio-card:hover .servicio-image,
+  .blog-card:hover .blog-card-image,
+  .gallery-item:hover img {
+    transform: none;
+  }
+
+  .section-head .section-title::after {
+    transform: scaleX(1);
+    transition: none;
+  }
+
+  .simulador-result-value.is-updated,
+  .whatsapp-fab {
+    animation: none;
+  }
+}

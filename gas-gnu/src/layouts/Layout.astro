@@ -223,6 +223,17 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
         });
       });
 
+      // Resizing past the breakpoint with the drawer open would otherwise leave
+      // aria-expanded="true" on a toggle the CSS has just hidden.
+      const desktopNav = window.matchMedia("(min-width: 901px)");
+      const syncNavToBreakpoint = () => {
+        if (!desktopNav.matches) return;
+        mobileNav?.classList.remove("is-open");
+        toggle?.setAttribute("aria-expanded", "false");
+      };
+      desktopNav.addEventListener("change", syncNavToBreakpoint);
+      syncNavToBreakpoint();
+
       const navItems = Array.from(document.querySelectorAll<HTMLElement>(".nav-item"));
 
       function closeNavItem(item: HTMLElement) {
@@ -253,27 +264,69 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
         if (event.key === "Escape") navItems.forEach(closeNavItem);
       });
 
-      const revealTargets = document.querySelectorAll(
-        ".section-head, .card, .blog-card, .testimonial-card, .simulator"
+      // .blog-card is deliberately absent: it runs its own staggered bounce-in
+      // on load (see global.css) and would fight the reveal for opacity/transform.
+      const revealTargets = Array.from(
+        document.querySelectorAll(
+          ".section-head, .card, .clients-grid__logo, .testimonial-card, .simulator, .prose, .stations-map, .scheduler, .rewards__inner"
+        )
       );
 
-      if ("IntersectionObserver" in window && revealTargets.length) {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add("is-visible");
-                observer.unobserve(entry.target);
-              }
-            });
-          },
-          { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
-        );
+      // Siblings inside these containers ease in one after another rather than
+      // as one block; --i is the child's position among its revealing siblings.
+      const STAGGER_PARENTS = ".clients-grid, .grid, .locations__list";
 
+      if (revealTargets.length) {
+        const staggerCounts = new Map<Element, number>();
         revealTargets.forEach((el) => {
-          el.classList.add("reveal");
-          observer.observe(el);
+          const parent = el.parentElement?.closest(STAGGER_PARENTS);
+          if (!parent) return;
+          const index = staggerCounts.get(parent) ?? 0;
+          staggerCounts.set(parent, index + 1);
+          (el as HTMLElement).style.setProperty("--i", String(index));
         });
+
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+
+        // Anything already inside the viewport at load (a short page, or a
+        // scroll position the browser restored on refresh) would have the
+        // IntersectionObserver below report it as "intersecting" the instant
+        // observe() runs. A CSS *transition* only animates if the browser gets
+        // to paint the "before" state first — this early in the page's
+        // lifecycle that's never guaranteed, so it can jump straight to the
+        // end state with nothing visible in between. A keyframe *animation*
+        // doesn't have that requirement (it always plays from its own 0%
+        // keyframe once applied), so already-visible elements get one of
+        // those instead of the scroll-triggered transition.
+        const alreadyVisible: Element[] = [];
+        const belowFold: Element[] = [];
+        revealTargets.forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          (rect.top < viewportHeight && rect.bottom > 0 ? alreadyVisible : belowFold).push(el);
+        });
+
+        alreadyVisible.forEach((el) => el.classList.add("reveal-instant"));
+
+        if (belowFold.length && "IntersectionObserver" in window) {
+          const observer = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  entry.target.classList.add("is-visible");
+                  observer.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+          );
+
+          belowFold.forEach((el) => {
+            el.classList.add("reveal");
+            observer.observe(el);
+          });
+        } else {
+          belowFold.forEach((el) => el.classList.add("reveal", "is-visible"));
+        }
       }
     </script>
   </body>

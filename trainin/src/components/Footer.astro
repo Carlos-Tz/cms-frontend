@@ -157,8 +157,16 @@ const year = new Date().getFullYear();
 		padding: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 0.65rem;
+		gap: 0.25rem;
 		font-size: 0.9rem;
+	}
+	/* A 0.9rem line measures ~20px tall, under the 24 CSS-px minimum target size
+	   (WCAG 2.5.8). The padding makes up the difference and replaces most of the
+	   list gap, so the column's rhythm is unchanged. */
+	.footer-col a,
+	.footer-contact-text {
+		display: block;
+		padding: 0.35rem 0;
 	}
 	.footer-col a:hover {
 		color: #fff;

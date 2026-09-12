@@ -84,12 +84,59 @@ const { slides, id, compact = false } = Astro.props;
 		visibility: visible;
 	}
 
+	/* Slow Ken-Burns drift. Scale never dips below 1 so object-fit: cover never
+	   reveals an edge, and 0%/100% match so the loop is seamless. */
+	@keyframes hero-img-zoom {
+		0%,
+		100% {
+			transform: scale(1.04);
+		}
+		50% {
+			transform: scale(1.2);
+		}
+	}
+
 	.hero-slide-img {
 		position: absolute;
 		inset: 0;
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
+		animation: hero-img-zoom 26s ease-in-out infinite;
+	}
+
+	/* Copy resolves a beat after the image, line by line. Only the opening slide
+	   gets it — the rest arrive by crossfade, which is its own motion. */
+	@keyframes hero-copy-in {
+		from {
+			opacity: 0;
+			transform: translateY(1.4rem);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	.hero-slide:first-child .hero-slide-content > * {
+		animation: hero-copy-in 0.9s 0.2s var(--ease-out) both;
+	}
+	.hero-slide:first-child .hero-slide-content > *:nth-child(2) {
+		animation-delay: 0.34s;
+	}
+	.hero-slide:first-child .hero-slide-content > *:nth-child(3) {
+		animation-delay: 0.48s;
+	}
+
+	/* The active dot fills from the left over the autoplay interval, so the
+	   carousel shows how long the current banner has left. */
+	@keyframes hero-dot-fill {
+		from {
+			transform: scaleX(0);
+		}
+		to {
+			transform: scaleX(1);
+		}
 	}
 
 	.hero-slide-overlay {
@@ -160,6 +207,7 @@ const { slides, id, compact = false } = Astro.props;
 		z-index: 2;
 	}
 	.hero-dot {
+		position: relative;
 		width: 2.25rem;
 		height: 0.3rem;
 		border-radius: var(--radius-full);
@@ -167,10 +215,48 @@ const { slides, id, compact = false } = Astro.props;
 		background: rgba(255, 255, 255, 0.35);
 		cursor: pointer;
 		padding: 0;
-		transition: background 0.2s ease;
+		transition: background 0.2s ease, width 0.3s var(--ease-out);
+	}
+	/* The painted bar is 5px tall, well under the 24×24 CSS-px target WCAG 2.5.8
+	   asks for; this enlarges what the finger has to hit without changing what
+	   is drawn. */
+	.hero-dot::before {
+		content: "";
+		position: absolute;
+		inset: -1.1rem -0.25rem;
+	}
+	.hero-dot:hover {
+		background: rgba(255, 255, 255, 0.6);
 	}
 	.hero-dot[aria-current="true"] {
+		width: 3.25rem;
+	}
+	.hero-dot::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
 		background: var(--color-red);
+		transform: scaleX(0);
+		transform-origin: left center;
+	}
+	/* 6s matches the carousel's autoplay interval in the script below. */
+	.hero-dot[aria-current="true"]::after {
+		animation: hero-dot-fill 6s linear forwards;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.hero-slide-img,
+		.hero-slide:first-child .hero-slide-content > * {
+			animation: none;
+		}
+		.hero-slide {
+			transition: none;
+		}
+		.hero-dot[aria-current="true"]::after {
+			animation: none;
+			transform: scaleX(1);
+		}
 	}
 </style>
 

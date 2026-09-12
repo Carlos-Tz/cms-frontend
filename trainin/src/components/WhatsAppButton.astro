@@ -37,4 +37,14 @@ const { href = "https://wa.me/000000000000" } = Astro.props;
 	.whatsapp-fab:hover {
 		transform: scale(1.06);
 	}
+	.whatsapp-fab:active {
+		transform: scale(0.94);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.whatsapp-fab:hover,
+		.whatsapp-fab:active {
+			transform: none;
+		}
+	}
 </style>

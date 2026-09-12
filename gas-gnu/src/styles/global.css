@@ -49,11 +49,15 @@ button {
   cursor: pointer;
 }
 
-/* Scroll reveal (progressive enhancement — JS adds .reveal, no-JS content stays visible) */
-.reveal {
+/* Scroll reveal (progressive enhancement — JS adds .reveal, no-JS content stays visible).
+   Selector doubled (.reveal.reveal) to out-specificity components like .card/.blog-card
+   that declare their own `transition` shorthand for hover — otherwise, at equal
+   specificity, whichever rule comes later in the file wins the ENTIRE shorthand and
+   silently drops the opacity transition. */
+.reveal.reveal {
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+  transform: translateY(64px);
+  transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out);
 }
 
 .reveal.is-visible {
@@ -66,6 +70,46 @@ button {
     opacity: 1 !important;
     transform: none !important;
     transition: none !important;
+  }
+}
+
+/* Reveal, but for elements already inside the viewport at load — see the
+   comment in Layout.astro's script for why this needs to be a keyframe
+   `animation` rather than the `.reveal` transition above. */
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    transform: translateY(64px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.reveal-instant {
+  animation: reveal-in 0.9s var(--ease-out) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-instant {
+    animation: none;
+  }
+}
+
+/* Grid children ease in one after another rather than as one block. The reveal
+   script sets --i per child on the containers listed in its STAGGER selector. */
+.reveal[style*="--i"],
+.reveal-instant[style*="--i"] {
+  transition-delay: calc(var(--i, 0) * 0.09s);
+  animation-delay: calc(var(--i, 0) * 0.09s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal[style*="--i"],
+  .reveal-instant[style*="--i"] {
+    transition-delay: 0s;
+    animation-delay: 0s;
   }
 }
 
@@ -384,9 +428,6 @@ button {
   border-bottom: 1px solid var(--color-border);
 }
 
-.nav-mobile.is-open {
-  display: flex;
-}
 
 .nav-item {
   position: relative;
@@ -521,6 +562,14 @@ button {
   .nav-toggle {
     display: flex;
   }
+
+  /* Only the mobile breakpoint may show the drawer: left unscoped, a menu left
+     open before a resize to desktop stays expanded under the header next to
+     the desktop nav. The resize handler in Layout.astro clears aria-expanded
+     to match. */
+  .nav-mobile.is-open {
+    display: flex;
+  }
 }
 
 /* HERO — full-bleed, CMS-driven carousel */
@@ -533,19 +582,48 @@ button {
 }
 
 .hero__track {
-  display: flex;
+  position: relative;
   height: 100%;
 }
 
+/* Slides stack on top of each other; swapping `.is-active` crossfades between
+   them instead of a display:none/block hard cut (display can't transition). */
 .hero-slide {
-  min-width: 100%;
+  position: absolute;
+  inset: 0;
   height: 100%;
-  position: relative;
-  display: none;
+  opacity: 0;
+  transition: opacity 1s var(--ease-out);
+  pointer-events: none;
 }
 
 .hero-slide.is-active {
-  display: block;
+  opacity: 1;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+/* Opacity (one-shot fade-in) and transform (looping zoom) animate independently
+   so the zoom can run forever without ever replaying the fade-in. */
+@keyframes hero-slide-img-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Slow Ken-Burns-style zoom; scale never dips below 1 so object-fit: cover
+   never reveals an edge. 0%/100% match for a seamless loop. */
+@keyframes hero-slide-img-zoom {
+  0%,
+  100% {
+    transform: scale(1.05);
+  }
+  50% {
+    transform: scale(1.25);
+  }
 }
 
 .hero-slide__img {
@@ -555,6 +633,45 @@ button {
   height: 100%;
   object-fit: cover;
   z-index: 0;
+  animation:
+    hero-slide-img-in 1.4s var(--ease-out) both,
+    hero-slide-img-zoom 24s ease-in-out infinite;
+}
+
+/* Hero copy resolves a beat after the image, line by line. Only the first
+   slide gets it — later slides arrive by crossfade, which is its own motion. */
+@keyframes hero-copy-in {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-slide:first-child .hero-slide__content > * {
+  animation: hero-copy-in 0.9s 0.25s var(--ease-out) both;
+}
+
+.hero-slide:first-child .hero-slide__content > *:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.hero-slide:first-child .hero-slide__content > *:nth-child(3) {
+  animation-delay: 0.55s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide {
+    transition: none;
+  }
+
+  .hero-slide__img,
+  .hero-slide:first-child .hero-slide__content > * {
+    animation: none;
+  }
 }
 
 .hero-slide__scrim {
@@ -600,7 +717,9 @@ button {
   position: absolute;
   z-index: 3;
   bottom: 1.5rem;
-  right: 1.5rem;
+  /* Left-aligned with the container's gutter. Bottom-right is where the fixed
+     WhatsApp button lives, and it would sit on top of the row. */
+  left: max(1.5rem, calc(50% - 37.5rem + 1.5rem));
   display: flex;
   gap: 0.5rem;
 }
@@ -634,6 +753,25 @@ button {
 .hero-stats__item {
   display: flex;
   flex-direction: column;
+  animation: hero-copy-in 0.8s var(--ease-out) both;
+}
+
+.hero-stats__item:nth-child(2) {
+  animation-delay: 0.6s;
+}
+
+.hero-stats__item:nth-child(3) {
+  animation-delay: 0.72s;
+}
+
+.hero-stats__item:first-child {
+  animation-delay: 0.48s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-stats__item {
+    animation: none;
+  }
 }
 
 .hero-stats__item strong {
@@ -928,15 +1066,45 @@ button {
   object-fit: contain;
   filter: grayscale(1);
   opacity: 0.6;
-  transition: filter 0.2s ease, opacity 0.2s ease;
+  transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s var(--ease-out);
 }
 
 .clients-grid__logo:hover {
   filter: grayscale(0);
   opacity: 1;
+  transform: translateY(-4px) scale(1.06);
 }
 
-/* BLOG */
+@media (prefers-reduced-motion: reduce) {
+  .clients-grid__logo:hover {
+    transform: none;
+  }
+}
+
+/* BLOG — cards bounce in from the bottom on page load (staggered per-card via
+   an inline animation-delay, see blog/index.astro), rather than waiting for
+   the shared scroll-reveal observer. */
+@keyframes blog-card-bounce-in {
+  0% {
+    opacity: 0;
+    transform: translateY(90px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-18px);
+  }
+  70% {
+    transform: translateY(9px);
+  }
+  85% {
+    transform: translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .blog-card {
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
@@ -945,6 +1113,13 @@ button {
   display: flex;
   flex-direction: column;
   transition: border-color 0.2s ease, transform 0.2s ease;
+  animation: blog-card-bounce-in 1s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-card {
+    animation: none;
+  }
 }
 
 .blog-card:hover {
@@ -957,6 +1132,11 @@ button {
   width: 100%;
   object-fit: cover;
   background: var(--color-bg-alt);
+  transition: transform 0.5s var(--ease-out);
+}
+
+.blog-card:hover .blog-card__cover {
+  transform: scale(1.06);
 }
 
 .blog-card__body {
@@ -1082,8 +1262,12 @@ button {
   max-width: 42rem;
 }
 
+/* Padded to clear the 24 CSS-px minimum target size (WCAG 2.5.8); the
+   negative inline margin keeps the text visually flush with the column. */
 .blog-post__back {
   display: inline-block;
+  padding: 0.35rem 0.5rem;
+  margin-inline: -0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-primary);
@@ -1289,4 +1473,46 @@ button {
 
 .whatsapp-fab:hover {
   transform: scale(1.06);
+}
+
+/* iOS Safari zooms the whole page when a focused control's text is under 16px,
+   and there is no way back out except a pinch. Below the tablet breakpoint the
+   controls go to exactly 16px; the desktop sizes above are unaffected. */
+@media (max-width: 860px) {
+  .field input,
+  .field textarea,
+  .field select {
+    font-size: 1rem;
+  }
+}
+
+/* The painted dot is only a few pixels tall, far under the 24×24 CSS-px target
+   WCAG 2.5.8 asks for. A transparent pseudo-element enlarges what the finger
+   has to hit without changing what is drawn; the row's gap is widened so
+   neighbouring targets don't overlap. */
+.hero__dots {
+  gap: 1rem;
+}
+
+.hero__dot {
+  position: relative;
+}
+
+.hero__dot::after {
+  content: "";
+  position: absolute;
+  inset: -1.125rem -0.5rem;
+}
+
+/* CMS-authored rich text can carry anything an editor pastes. A wide table or
+   an <iframe> embed would otherwise push the whole page sideways on a phone,
+   so each is made to scroll or shrink inside the column instead. */
+.prose :is(table, pre) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.prose :is(img, iframe, video, embed, object) {
+  max-width: 100%;
 }

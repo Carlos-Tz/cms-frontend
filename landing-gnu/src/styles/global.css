@@ -622,7 +622,9 @@ body.nav-open {
   position: absolute;
   z-index: 3;
   bottom: 1.75rem;
-  right: 1.5rem;
+  /* Left-aligned with the container's gutter. Bottom-right is where the fixed
+     WhatsApp button lives, and it would sit on top of the whole row. */
+  left: max(1.5rem, calc(50% - 37.5rem + 1.5rem));
   display: flex;
   gap: 0.5rem;
 }
@@ -1015,9 +1017,13 @@ body.nav-open {
   color: var(--color-text-60);
 }
 
+/* Padded to clear the 24 CSS-px minimum target size (WCAG 2.5.8); the
+   negative inline margin keeps the text visually flush with the column. */
 .stations-list__link {
   display: inline-block;
-  margin-top: 0.625rem;
+  margin-top: 0.375rem;
+  padding: 0.35rem 0.5rem;
+  margin-inline: -0.5rem;
   font-size: var(--text-small);
   font-weight: 600;
   color: var(--color-primary);
@@ -1208,8 +1214,12 @@ body.nav-open {
   max-width: 42rem;
 }
 
+/* Padded to clear the 24 CSS-px minimum target size (WCAG 2.5.8); the
+   negative inline margin keeps the text visually flush with the column. */
 .blog-post__back {
   display: inline-block;
+  padding: 0.35rem 0.5rem;
+  margin-inline: -0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--color-primary);
@@ -1367,4 +1377,46 @@ body.nav-open {
 
 .whatsapp-fab:hover {
   transform: scale(1.06);
+}
+
+/* iOS Safari zooms the whole page when a focused control's text is under 16px,
+   and there is no way back out except a pinch. Below the tablet breakpoint the
+   controls go to exactly 16px; the desktop sizes above are unaffected. */
+@media (max-width: 860px) {
+  .field input,
+  .field select,
+  .field textarea {
+    font-size: 1rem;
+  }
+}
+
+/* The painted dot is only a few pixels tall, far under the 24×24 CSS-px target
+   WCAG 2.5.8 asks for. A transparent pseudo-element enlarges what the finger
+   has to hit without changing what is drawn; the row's gap is widened so
+   neighbouring targets don't overlap. */
+.hero__dots {
+  gap: 1rem;
+}
+
+.hero__dot {
+  position: relative;
+}
+
+.hero__dot::after {
+  content: "";
+  position: absolute;
+  inset: -1.125rem -0.5rem;
+}
+
+/* CMS-authored rich text can carry anything an editor pastes. A wide table or
+   an <iframe> embed would otherwise push the whole page sideways on a phone,
+   so each is made to scroll or shrink inside the column instead. */
+.prose :is(table, pre) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.prose :is(img, iframe, video, embed, object) {
+  max-width: 100%;
 }

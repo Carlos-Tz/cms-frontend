@@ -110,7 +110,62 @@ const isActive = (item: MenuItem): boolean =>
 				Escríbenos
 			</a>
 		</div>
+
+		<button
+			class="nav-toggle"
+			id="nav-toggle"
+			type="button"
+			aria-label="Abrir menú"
+			aria-expanded="false"
+			aria-controls="nav-mobile"
+		>
+			<span></span><span></span><span></span>
+		</button>
 	</div>
+
+	{/* Below 900px the inline nav is hidden and this drawer takes over. A parent
+	    with children becomes a <details> so its sublinks are reachable without
+	    a hover state that phones don't have. */}
+	<nav class="nav-mobile" id="nav-mobile" aria-label="Navegación móvil">
+		{navItems.map((item) =>
+			item.children?.length ? (
+				<details class="nav-mobile__item">
+					<summary>{item.title}</summary>
+					<ul class="nav-mobile__sublist">
+						<li>
+							<a href={item.path} aria-current={isCurrent(item.path) ? "page" : undefined}>
+								Ver {item.title}
+							</a>
+						</li>
+						{item.children.map((child) => (
+							<li>
+								<a href={child.path} aria-current={isCurrent(child.path) ? "page" : undefined}>
+									{child.title}
+								</a>
+							</li>
+						))}
+					</ul>
+				</details>
+			) : (
+				<a href={item.path} aria-current={isCurrent(item.path) ? "page" : undefined}>
+					{item.title}
+				</a>
+			)
+		)}
+
+		<div class="nav-mobile__actions">
+			<div class="socials socials--mobile" aria-label="Redes sociales">
+				{socials.map((s) => (
+					<a href={s.href} aria-label={s.label} class="social-icon">
+						<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d={s.path}></path></svg>
+					</a>
+				))}
+			</div>
+			<a class="btn-primary header-cta" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+				Escríbenos
+			</a>
+		</div>
+	</nav>
 </header>
 
 <style>
@@ -251,9 +306,183 @@ const isActive = (item: MenuItem): boolean =>
 		font-size: 0.85rem;
 	}
 
-	@media (max-width: 900px) {
-		.nav {
+	.nav-toggle {
+		display: none;
+		flex-direction: column;
+		justify-content: center;
+		gap: 5px;
+		width: 2.5rem;
+		height: 2.5rem;
+		padding: 0 0.6rem;
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		background: none;
+		cursor: pointer;
+	}
+	.nav-toggle span {
+		display: block;
+		height: 2px;
+		border-radius: 1px;
+		background: var(--color-dark);
+		transition: transform 0.2s ease, opacity 0.2s ease;
+	}
+	/* Open state folds the three bars into a cross. */
+	.nav-toggle[aria-expanded="true"] span:first-child {
+		transform: translateY(7px) rotate(45deg);
+	}
+	.nav-toggle[aria-expanded="true"] span:nth-child(2) {
+		opacity: 0;
+	}
+	.nav-toggle[aria-expanded="true"] span:last-child {
+		transform: translateY(-7px) rotate(-45deg);
+	}
+
+	.nav-mobile {
+		display: none;
+		flex-direction: column;
+		padding: 0.5rem 1.5rem 1.5rem;
+		border-top: 1px solid var(--color-border);
+		background: #fff;
+		/* The header is sticky, so a long menu has to scroll on its own rather
+		   than running off the bottom of the viewport. */
+		max-height: calc(100dvh - 4.5rem);
+		overflow-y: auto;
+	}
+
+	.nav-mobile a {
+		display: block;
+		padding: 0.7rem 0;
+		font-size: 0.95rem;
+		font-weight: 600;
+		color: var(--color-text);
+		border-bottom: 1px solid var(--color-border);
+	}
+	.nav-mobile a[aria-current="page"] {
+		color: var(--color-red);
+	}
+
+	.nav-mobile__item summary {
+		padding: 0.7rem 0;
+		font-size: 0.95rem;
+		font-weight: 600;
+		cursor: pointer;
+		list-style: none;
+		border-bottom: 1px solid var(--color-border);
+	}
+	.nav-mobile__item summary::-webkit-details-marker {
+		display: none;
+	}
+	.nav-mobile__item summary::after {
+		content: "＋";
+		float: right;
+		color: var(--color-red);
+	}
+	.nav-mobile__item[open] summary::after {
+		content: "−";
+	}
+
+	.nav-mobile__sublist {
+		margin: 0;
+		padding: 0 0 0 1rem;
+		list-style: none;
+	}
+	.nav-mobile__sublist a {
+		font-weight: 500;
+		color: var(--color-text-60);
+	}
+
+	/* .socials is hidden in the header row below 1240px; inside the drawer it
+	   stays, since that is where navigation lives at those widths. */
+	.nav-mobile .socials--mobile {
+		display: flex;
+	}
+
+	.nav-mobile__actions {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		flex-wrap: wrap;
+		gap: 1rem;
+		margin-top: 1.25rem;
+	}
+	.nav-mobile__actions a {
+		border-bottom: none;
+		padding: 0;
+	}
+	.nav-mobile__actions .header-cta {
+		color: #fff;
+		padding: 0.6rem 1.35rem;
+	}
+
+	/* Between the breakpoint and ~1240px the row fits only once the social
+	   icons step aside; the CTA and the nav itself are what visitors need. */
+	@media (max-width: 1240px) {
+		.socials {
 			display: none;
+		}
+
+		.nav-list {
+			gap: 1.15rem;
+		}
+	}
+
+	@media (max-width: 1080px) {
+		.nav,
+		.header-actions {
+			display: none;
+		}
+
+		.nav-toggle {
+			display: flex;
+		}
+
+		/* Scoped to the breakpoint so a drawer left open before a resize to
+		   desktop can't stay expanded beside the inline nav. */
+		.nav-mobile.is-open {
+			display: flex;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.nav-toggle span,
+		.nav-caret,
+		.submenu {
+			transition: none;
 		}
 	}
 </style>
+
+<script>
+	const toggle = document.getElementById("nav-toggle");
+	const mobileNav = document.getElementById("nav-mobile");
+
+	toggle?.addEventListener("click", () => {
+		const isOpen = mobileNav?.classList.toggle("is-open");
+		toggle.setAttribute("aria-expanded", String(Boolean(isOpen)));
+		toggle.setAttribute("aria-label", isOpen ? "Cerrar menú" : "Abrir menú");
+	});
+
+	function closeMobileNav() {
+		mobileNav?.classList.remove("is-open");
+		toggle?.setAttribute("aria-expanded", "false");
+		toggle?.setAttribute("aria-label", "Abrir menú");
+	}
+
+	// Astro ships static pages, so a link click is a full navigation — but the
+	// drawer is closed anyway for in-page anchors and for the back button
+	// restoring this page from the bfcache.
+	mobileNav?.querySelectorAll("a").forEach((link) => link.addEventListener("click", closeMobileNav));
+
+	document.addEventListener("keydown", (event) => {
+		if (event.key === "Escape") closeMobileNav();
+	});
+
+	// Resizing past the breakpoint with the drawer open would otherwise leave
+	// aria-expanded="true" on a toggle the CSS has just hidden.
+	const desktopNav = window.matchMedia("(min-width: 1081px)");
+	const syncNavToBreakpoint = () => {
+		if (desktopNav.matches) closeMobileNav();
+	};
+	desktopNav.addEventListener("change", syncNavToBreakpoint);
+	syncNavToBreakpoint();
+</script>

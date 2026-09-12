@@ -179,6 +179,42 @@ button {
   opacity: 1;
 }
 
+/* Plates and copy settle into place as they come into view. Deliberately short
+   travel and no overshoot — the page should feel like it's being drawn, not
+   like things are being thrown onto it. JS adds these classes, so with no JS
+   the content is simply already there.
+
+   Selector doubled (.reveal.reveal) to out-specificity components like .card /
+   .product-card that declare their own `transition` shorthand for hover:
+   at equal specificity whichever rule comes later wins the ENTIRE shorthand
+   and would silently drop the opacity transition. */
+.reveal.reveal {
+  opacity: 0;
+  transform: translateY(1.5rem);
+  transition: opacity 0.75s var(--ease-out), transform 0.75s var(--ease-out);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Reveal, but for elements already inside the viewport at load — see the
+   comment in Layout.astro's script for why this has to be a keyframe
+   `animation` rather than the transition above. `rise` already describes
+   exactly this move, so it is reused rather than duplicated. */
+.reveal-instant {
+  animation: rise 0.75s var(--ease-out) both;
+}
+
+/* Members of a grid arrive left-to-right instead of as one slab; --i is the
+   element's position among its revealing siblings, set by the reveal script. */
+.reveal[style*="--i"],
+.reveal-instant[style*="--i"] {
+  transition-delay: calc(var(--i, 0) * 0.07s);
+  animation-delay: calc(var(--i, 0) * 0.07s);
+}
+
 .section-head--center {
   margin-left: auto;
   margin-right: auto;
@@ -556,9 +592,6 @@ button {
   border-bottom: 1px solid var(--color-border);
 }
 
-.nav-mobile.is-open {
-  display: flex;
-}
 
 .nav-mobile .btn-primary {
   margin-top: 1.25rem;
@@ -690,6 +723,14 @@ button {
   .nav-toggle {
     display: flex;
   }
+
+  /* Only the mobile breakpoint may show the drawer: left unscoped, a menu left
+     open before a resize to desktop stays expanded under the header next to
+     the desktop nav. The resize handler in Layout.astro clears aria-expanded
+     to match. */
+  .nav-mobile.is-open {
+    display: flex;
+  }
 }
 
 /* HERO — the banner sits on ink over isometric grid paper, copy left, the
@@ -771,6 +812,35 @@ button {
   right: 0;
   border-bottom: 2px solid var(--color-line);
   border-right: 2px solid var(--color-line);
+}
+
+/* The brackets clip in from their corner as the slide takes over, the way
+   registration marks land on a plate. They sit at the end of the slide's own
+   0.6s crossfade rather than competing with it. */
+@keyframes bracket-in {
+  from {
+    clip-path: inset(0 100% 100% 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes bracket-in-reverse {
+  from {
+    clip-path: inset(100% 0 0 100%);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.hero-slide.is-active .hero-slide__media::before {
+  animation: bracket-in 0.55s 0.35s var(--ease-out) both;
+}
+
+.hero-slide.is-active .hero-slide__media::after {
+  animation: bracket-in-reverse 0.55s 0.45s var(--ease-out) both;
 }
 
 .hero-slide__img {
@@ -1069,12 +1139,13 @@ button {
   object-fit: contain;
   filter: grayscale(1);
   opacity: 0.6;
-  transition: filter 0.2s ease, opacity 0.2s ease;
+  transition: filter 0.25s ease, opacity 0.25s ease, transform 0.25s var(--ease-out);
 }
 
 .clients-grid__item:hover .clients-grid__logo {
   filter: grayscale(0);
   opacity: 1;
+  transform: scale(1.06);
 }
 
 /* CLIENT WALL — when the CMS carries a testimonial per client, the quote is
@@ -1176,7 +1247,7 @@ button {
 /* IMAGE GALLERY */
 .gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(275px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 275px), 1fr));
   gap: 1.25rem;
 }
 
@@ -1186,12 +1257,24 @@ button {
   overflow: hidden;
   background: var(--color-bg-alt);
   border: 1px solid var(--color-border);
+  transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s var(--ease-out);
+}
+
+.gallery-item:hover {
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-plate-raised);
+  transform: translateY(-3px);
 }
 
 .gallery-item img {
   width: 100%;
   aspect-ratio: 4 / 3;
   object-fit: cover;
+  transition: transform 0.5s var(--ease-out);
+}
+
+.gallery-item:hover img {
+  transform: scale(1.04);
 }
 
 .gallery-caption {
@@ -1746,4 +1829,70 @@ a.footer-link:hover {
   .section-head[data-draw]::after {
     opacity: 1;
   }
+
+  .reveal.reveal {
+    opacity: 1;
+    transform: none;
+  }
+
+  .reveal[style*="--i"],
+  .reveal-instant[style*="--i"] {
+    transition-delay: 0s;
+    animation-delay: 0s;
+  }
+
+  .hero-slide.is-active .hero-slide__media::before,
+  .hero-slide.is-active .hero-slide__media::after {
+    animation: none;
+    clip-path: none;
+  }
+
+  .gallery-item:hover,
+  .gallery-item:hover img,
+  .clients-grid__item:hover .clients-grid__logo {
+    transform: none;
+  }
+}
+
+/* iOS Safari zooms the whole page when a focused control's text is under 16px,
+   and there is no way back out except a pinch. Below the tablet breakpoint the
+   controls go to exactly 16px; the desktop sizes above are unaffected. */
+@media (max-width: 860px) {
+  .field input,
+  .field select,
+  .field textarea,
+  .catalog-search input {
+    font-size: 1rem;
+  }
+}
+
+/* The painted dot is only a few pixels tall, far under the 24×24 CSS-px target
+   WCAG 2.5.8 asks for. A transparent pseudo-element enlarges what the finger
+   has to hit without changing what is drawn; the row's gap is widened so
+   neighbouring targets don't overlap. */
+.hero__dots {
+  gap: 0.75rem;
+}
+
+.hero__dot {
+  position: relative;
+}
+
+.hero__dot::after {
+  content: "";
+  position: absolute;
+  inset: -1.3rem -0.375rem;
+}
+
+/* CMS-authored rich text can carry anything an editor pastes. A wide table or
+   an <iframe> embed would otherwise push the whole page sideways on a phone,
+   so each is made to scroll or shrink inside the column instead. */
+.prose :is(table, pre) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.prose :is(img, iframe, video, embed, object) {
+  max-width: 100%;
 }

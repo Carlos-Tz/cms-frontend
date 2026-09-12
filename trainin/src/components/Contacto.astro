@@ -147,6 +147,16 @@ const ctaHref = whatsappUrl ?? whatsappHref((await fetchGlobals())?.whatsapp_but
 			gap: 2rem;
 		}
 	}
+
+	/* iOS Safari zooms the whole page when a focused control's text is under
+	   16px, and there is no way back out except a pinch. */
+	@media (max-width: 860px) {
+		.field input,
+		.field select,
+		.field textarea {
+			font-size: 1rem;
+		}
+	}
 </style>
 
 <script define:vars={{ apiBase: BASE_URL, leadFormId: formId, leadSource: source ?? null }} is:inline>

@@ -185,4 +185,16 @@ const embedUrl = videoUrl ? withAutoplay(toEmbedUrl(videoUrl)) : null;
 		height: 100%;
 		border: none;
 	}
+	/* CMS-authored rich text can carry anything an editor pastes. A wide table or
+	   an <iframe> embed would otherwise push the whole page sideways on a phone,
+	   so each is made to scroll or shrink inside the column instead. */
+	.prose :is(table, pre) {
+	  display: block;
+	  max-width: 100%;
+	  overflow-x: auto;
+	}
+
+	.prose :is(img, iframe, video, embed, object) {
+	  max-width: 100%;
+	}
 </style>
