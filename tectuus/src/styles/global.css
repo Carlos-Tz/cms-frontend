@@ -1757,6 +1757,11 @@ a.footer-link:hover {
   background: rgba(62, 198, 239, 0.1);
 }
 
+.social-row--nav-mobile {
+  justify-content: center;
+  margin-top: 1rem;
+}
+
 .social-icon--on-dark {
   border-color: var(--color-border-on-dark);
   color: var(--color-text-on-dark-70);
