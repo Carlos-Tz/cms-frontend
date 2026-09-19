@@ -205,6 +205,13 @@ const whatsappHref = whatsappDigits
           <NavItemMobile item={item} />
         ))}
         <a href="/contacto" class="btn-primary">Escríbenos</a>
+        <div class="social-row social-row--nav-mobile" aria-label="Redes sociales">
+          {socialNetworks.map((item) => (
+            <a class="social-icon" href={item.url || "#"} target="_blank" rel="noopener noreferrer" aria-label={item.network}>
+              <Fragment set:html={SOCIAL_ICON_MARKUP[item.network]} />
+            </a>
+          ))}
+        </div>
       </nav>
     </header>
 

@@ -1441,6 +1441,21 @@ button {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
+.social-row--nav-mobile {
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.social-icon--on-light {
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.social-icon--on-light:hover {
+  background: var(--color-primary-soft);
+  border-color: var(--color-border-hover);
+}
+
 .footer-bottom {
   margin-top: 2.5rem;
   padding-top: 1.5rem;
