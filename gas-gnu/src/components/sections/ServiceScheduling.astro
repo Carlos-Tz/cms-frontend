@@ -10,6 +10,7 @@ interface Props {
 const { title, intro, success_message } = Astro.props;
 
 type PublicStation = {
+  id?: number;
   name: string;
   address: string;
   latitude: number;
@@ -19,20 +20,21 @@ type PublicStation = {
 };
 type StationsResponse = { status: string; data: PublicStation[]; meta: Record<string, any> };
 
-// The public "stations" endpoint doesn't expose the numeric station id that
-// appointments/availability and POST appointments require, so it's mapped
-// here by name until the CMS exposes it directly.
-const STATION_IDS: Record<string, number> = {
+// `id` is what appointments/availability and POST appointments key on, and it
+// comes straight from the listing. The name map below is only the bridge for
+// an API host that hasn't shipped that field yet — delete it (and the `??`)
+// once every environment answers `stations` with an id. A station that matches
+// neither is dropped rather than guessed: the wrong id books the wrong workshop.
+const LEGACY_STATION_IDS: Record<string, number> = {
   "Estación Morelia": 3,
   "Estación Uruapan": 4,
 };
 
 const stationsResponse: StationsResponse | undefined = await fetchData("stations");
 const stations = (stationsResponse?.data ?? [])
-  .filter((station) => station.name in STATION_IDS)
-  .map((station) => ({ ...station, id: STATION_IDS[station.name] }));
+  .map((station) => ({ ...station, id: station.id ?? LEGACY_STATION_IDS[station.name] }))
+  .filter((station) => Number.isFinite(Number(station.id)));
 
-const todayIso = new Date().toISOString().slice(0, 10);
 const fallbackSuccessMessage = "Tu cita quedó registrada. Te esperamos.";
 ---
 
@@ -56,7 +58,7 @@ const fallbackSuccessMessage = "Tu cita quedó registrada. Te esperamos.";
           </div>
           <div class="field">
             <label for="scheduler-date">Fecha</label>
-            <input type="date" id="scheduler-date" min={todayIso} required />
+            <input type="date" id="scheduler-date" required />
           </div>
           <button type="submit" class="btn-secondary">Ver horarios</button>
         </form>
@@ -112,6 +114,15 @@ const fallbackSuccessMessage = "Tu cita quedó registrada. Te esperamos.";
   const selectedLabel = document.getElementById("scheduler-selected-label");
   const statusEl = document.getElementById("scheduler-status");
   const successMessage = document.querySelector(".scheduler")?.dataset.successMessage || "Tu cita quedó registrada.";
+
+  // `min` has to be set in the browser: the site is built statically, so a
+  // date rendered into the HTML is the build's date and lets visitors pick a
+  // day the API already rejects with `after_or_equal:today`. Local time, not
+  // UTC — in Mexico those are different days for six hours every evening.
+  if (dateInput) {
+    const now = new Date();
+    dateInput.min = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  }
 
   function stationName(id) {
     const option = Array.from(stationSelect?.options ?? []).find((opt) => opt.value === String(id));

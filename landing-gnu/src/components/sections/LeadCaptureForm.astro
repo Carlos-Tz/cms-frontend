@@ -16,6 +16,10 @@ interface Props {
   submit_label?: string | null;
   fields?: string[];
   formId?: string;
+  // Slug of the page holding this form. Travels with the lead as `source`; the
+  // CMS validates it against the site's published pages and the admin inbox
+  // filters on it to tell one form apart from another.
+  source?: string | null;
 }
 
 const {
@@ -24,6 +28,7 @@ const {
   submit_label = "Enviar",
   fields = ["name", "email", "phone", "message"],
   formId = "lead-form",
+  source = null,
 } = Astro.props;
 ---
 
@@ -59,14 +64,28 @@ const {
   </form>
 </div>
 
-<script define:vars={{ apiBase: BASE_URL, leadFormId: formId }} is:inline>
+<script define:vars={{ apiBase: BASE_URL, leadFormId: formId, leadSource: source }} is:inline>
+  // Only these four map to real `leads` columns. Anything else the CMS lists
+  // in this section's `fields[]` (empresa, flota, …) is an extra the API only
+  // accepts nested under `details`, whitelisted server-side against the source
+  // page's own declared fields — sent flat, it is silently dropped.
+  const CORE_LEAD_FIELDS = ["name", "email", "phone", "message"];
+
   const form = document.getElementById(leadFormId);
   const status = form ? form.querySelector("[data-lead-form-status]") : null;
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
     const submitButton = form.querySelector('button[type="submit"]');
-    const data = Object.fromEntries(new FormData(form).entries());
+    const entries = Object.fromEntries(new FormData(form).entries());
+
+    const data = leadSource ? { source: leadSource } : {};
+    const details = {};
+    for (const [key, value] of Object.entries(entries)) {
+      if (CORE_LEAD_FIELDS.includes(key)) data[key] = value;
+      else details[key] = value;
+    }
+    if (Object.keys(details).length) data.details = details;
 
     if (submitButton) submitButton.disabled = true;
     if (status) {
@@ -84,7 +103,16 @@ const {
         body: JSON.stringify(data),
       });
       const result = await response.json().catch(() => null);
-      if (!response.ok) throw new Error("request failed");
+
+      if (!response.ok) {
+        // 429 is the route's throttle:10,1; 422 carries per-field messages.
+        const firstError = result?.errors ? Object.values(result.errors)[0]?.[0] : null;
+        throw new Error(
+          response.status === 429
+            ? "Recibimos demasiados envíos. Espera un momento e intenta de nuevo."
+            : firstError || result?.message || "No pudimos enviar tu mensaje. Intenta de nuevo."
+        );
+      }
 
       form.reset();
       if (status) {
@@ -93,7 +121,7 @@ const {
       }
     } catch (error) {
       if (status) {
-        status.textContent = "No pudimos enviar tu mensaje. Intenta de nuevo.";
+        status.textContent = error?.message || "No pudimos enviar tu mensaje. Intenta de nuevo.";
         status.className = "lead-form__status lead-form__status--error";
       }
     } finally {

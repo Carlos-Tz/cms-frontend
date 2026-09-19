@@ -6,7 +6,6 @@ export default function CargaPesada() {
     <PageSectionsEditor
       site="traninn-logistic"
       page="carga-pesada"
-      pageId={40}
       title="Carga pesada"
       backTo="/trainin/nuestros-servicios"
     />

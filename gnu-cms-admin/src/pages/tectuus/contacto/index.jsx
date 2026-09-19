@@ -138,7 +138,7 @@ export default function TectuusContacto() {
               {sectionsTotal > 0 && <span className="text-white/40">{sectionsTotal} secciones</span>}
             </p>
           </header>
-          <SectionsFields site="tectuus" page="contacto" pageId={46} onTotalChange={setSectionsTotal} />
+          <SectionsFields site="tectuus" page="contacto" onTotalChange={setSectionsTotal} />
         </section>
       </div>
     </main>

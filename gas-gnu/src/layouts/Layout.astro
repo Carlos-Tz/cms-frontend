@@ -80,10 +80,16 @@ const socialNetworks = (socialIcons?.networks?.length ? socialIcons.networks : f
   (item) => SOCIAL_ICON_MARKUP[item.network]
 );
 
-const whatsappDigits = (whatsappButton?.phone || "5210000000000").replace(/\D/g, "");
-const whatsappHref = `https://wa.me/${whatsappDigits}${
-  whatsappButton?.prefilled_message ? `?text=${encodeURIComponent(whatsappButton.prefilled_message)}` : ""
-}`;
+// No number in the CMS means no button. A WhatsApp link pointing at a
+// placeholder number looks live and goes nowhere, which is worse than no CTA:
+// the visitor writes and nobody ever reads it. `phone` is required by the
+// section schema, so this only bites when `/globals` failed at build time.
+const whatsappDigits = (whatsappButton?.phone ?? "").replace(/\D/g, "");
+const whatsappHref = whatsappDigits
+  ? `https://wa.me/${whatsappDigits}${
+      whatsappButton?.prefilled_message ? `?text=${encodeURIComponent(whatsappButton.prefilled_message)}` : ""
+    }`
+  : null;
 ---
 
 <!doctype html>
@@ -195,6 +201,7 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
       </div>
     </footer>
 
+    {whatsappHref && (
     <a
       class="whatsapp-fab"
       href={whatsappHref}
@@ -206,6 +213,7 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
         <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.05-1.35A10 10 0 1 0 12 2zm0 18.1a8.06 8.06 0 0 1-4.1-1.12l-.3-.18-3 .8.8-2.93-.19-.3A8.1 8.1 0 1 1 12 20.1zm4.44-6.06c-.24-.12-1.43-.7-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.53.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.35-1.67-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02 0 1.19.87 2.34 1 2.5.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/>
       </svg>
     </a>
+    )}
 
     <script>
       const toggle = document.getElementById("nav-toggle");

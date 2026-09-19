@@ -6,7 +6,6 @@ export default function TraininInicio() {
     <PageSectionsEditor
       site="traninn-logistic"
       page="inicio"
-      pageId={32}
       includeGlobals
       title="Landing Page — Trainin Logistic"
       backTo="/trainin/select-page"

@@ -15,7 +15,9 @@ export interface MenuItem {
 interface Props {
 	menu?: MenuItem[];
 	socials?: Social[];
-	whatsappUrl?: string;
+	// Null when the CMS has no WhatsApp number: the CTA is then not rendered
+	// at all, rather than pointing at a placeholder.
+	whatsappUrl?: string | null;
 }
 
 // Used only if the CMS menu endpoint is unreachable.
@@ -32,7 +34,7 @@ const fallbackSocials: Social[] = [
 	{ label: "linkedin", href: "#", path: "M6.94 8.5H4.56V19h2.38V8.5ZM5.75 4.9a1.38 1.38 0 1 0 0 2.76 1.38 1.38 0 0 0 0-2.76ZM19.44 19h-2.38v-5.37c0-1.28-.46-2.15-1.6-2.15-.87 0-1.39.59-1.62 1.15-.08.2-.1.49-.1.77V19H11.4s.03-9.44 0-10.5h2.34v1.49c.31-.48 .87-1.16 2.12-1.16 1.55 0 2.71 1.01 2.71 3.18V19Z" },
 ];
 
-const { menu, socials = fallbackSocials, whatsappUrl = "https://wa.me/000000000000" } = Astro.props;
+const { menu, socials = fallbackSocials, whatsappUrl = null } = Astro.props;
 
 // The CMS menu endpoint does not list the blog, so it is appended alongside it.
 const blogItem: MenuItem = { slug: "blog", path: "/blog", title: "Blog", children: [] };
@@ -106,9 +108,9 @@ const isActive = (item: MenuItem): boolean =>
 					</a>
 				))}
 			</div>
-			<a class="btn-primary header-cta" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+			{whatsappUrl && <a class="btn-primary header-cta" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
 				Escríbenos
-			</a>
+			</a>}
 		</div>
 
 		<button
@@ -161,9 +163,9 @@ const isActive = (item: MenuItem): boolean =>
 					</a>
 				))}
 			</div>
-			<a class="btn-primary header-cta" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+			{whatsappUrl && <a class="btn-primary header-cta" href={whatsappUrl} target="_blank" rel="noopener noreferrer">
 				Escríbenos
-			</a>
+			</a>}
 		</div>
 	</nav>
 </header>

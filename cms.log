@@ -1,0 +1,430 @@
+# cms.log — Revisión de uso de la API (2026-09-18)
+
+Alcance: `cms-backend` (Laravel) como contrato, y luego `gnu-cms-admin`,
+`landing-gnu`, `gas-gnu`, `tectuus` y `trainin` como consumidores.
+
+Todo se verificó contra la API desplegada en
+`https://gnu-headless-cms.165.227.59.215.sslip.io`, no sólo contra los seeders
+locales (que están más atrasados que la base desplegada: los seeders de `gnu`
+definen 11 páginas y la base tiene 17).
+
+---
+
+## 1. Contrato del backend
+
+Dos superficies, registradas en `bootstrap/app.php`:
+
+- **Pública** `/api/public/{site}` — sólo lectura salvo `POST leads` y
+  `POST appointments` (ambas con `throttle:10,1`). El sitio se resuelve por slug
+  en la ruta, nunca por payload del cliente.
+- **Admin** `/api/admin` — JWT (`auth:api`), sólo `POST auth/login` abierta.
+
+Slugs de sitio y su frontend:
+
+| slug | proyecto |
+|---|---|
+| `gnu` | landing-gnu |
+| `gnu-vehicular` | gas-gnu |
+| `tectuus` | tectuus |
+| `traninn-logistic` | trainin |
+
+Toda respuesta usa `{ status, data, meta }`.
+
+**Estado real de los controladores admin:** `SiteController`, `UserController`
+y `MenuController` siguen siendo *placeholders* (devuelven `{data: [], meta}`).
+El panel no los consume, así que no rompe nada hoy, pero `apiResource('sites')`,
+`('users')` y `('menus')` están publicados en `routes/admin.php` como si
+funcionaran.
+
+**Verificación de slugs:** se comprobaron una por una las 46 páginas que piden
+los cuatro sitios Astro contra `GET {site}/pages/{slug}`. **Todas responden 200.**
+No hay ningún slug roto en ningún frontend.
+
+---
+
+## 2. Cambios aplicados
+
+### cms-backend
+
+**`app/Http/Controllers/Public/StationController.php` — se expone `id`.**
+
+`GET {site}/stations` devolvía `name, address, latitude, longitude, phone,
+schedule` pero **no el `id`**, y sin embargo `appointments/availability` y
+`POST appointments` funcionan exclusivamente con el id numérico de la estación.
+Por eso `gas-gnu` tenía un mapa nombre→id quemado en el código
+(`"Estación Morelia": 3`), con dos consecuencias: una estación nueva o
+renombrada desde el panel desaparecía del agendador, y un id equivocado agenda
+en el taller equivocado. Ahora el listado lleva el `id`.
+
+Cambio aditivo, no rompe a ningún consumidor actual.
+
+**`tests/Feature/StationTest.php`** — se añade la aserción de que el listado
+público trae el `id`.
+
+> ⚠️ **No se pudo ejecutar `composer test` ni `vendor/bin/pint`**: no hay `php`
+> en el PATH de esta máquina. Los dos cambios están sin ejecutar la suite.
+
+### gnu-cms-admin
+
+**`src/functions/fetch.jsx` — `handleUnauthorized()` no existía.**
+
+Bug real: `fetchData()` llamaba a `handleUnauthorized()` en el caso 401 y esa
+función **no estaba definida en ningún lado del proyecto**. Como el TTL del JWT
+es de una hora, cualquier sesión que expirara con el panel abierto lanzaba un
+`ReferenceError` en vez de mandar al login. Se implementó: limpia el token y
+redirige a `/login` (redirección por `window.location` porque este módulo vive
+fuera del router).
+
+Además, `fetchData` devolvía `undefined` en 401 y en error de red mientras
+todos sus llamadores leen `res.status` / `res.data`. Ahora devuelve siempre la
+forma `{status, data, meta}` de la API. Se quitó el `alert('Error al obtener
+datos ', error)` (dos argumentos a `alert`, el segundo se ignoraba) y el
+`console.log` de cada respuesta.
+
+**`src/store/sessionStore.jsx` — `tenantDomain` ya no se persiste.**
+
+Se guardaba en `localStorage`, así que un navegador que ya hubiera abierto el
+panel quedaba clavado al host de API del primer build, y apuntar el panel a otro
+entorno (cambiar `VITE_BASE_URL`) no surtía efecto hasta limpiar el storage. El
+valor sale ahora siempre del build. Sólo se persiste el token.
+
+### landing-gnu
+
+**`src/components/sections/LeadCaptureForm.astro` — se perdía el `source` y los
+campos extra.**
+
+Era el único de los cuatro sitios que mandaba el formulario plano:
+`JSON.stringify(Object.fromEntries(new FormData(form)))`.
+
+1. **No mandaba `source`.** El backend valida `source` contra las páginas
+   publicadas del sitio y el inbox del panel filtra por él (`GET
+   /api/admin/leads?source=`). Todos los leads de `gnu` estaban llegando sin
+   origen, así que no había manera de distinguir el formulario de la home del
+   de `/contacto`. **Éste era el único de los hallazgos de formularios que ya
+   estaba perdiendo datos en producción.**
+2. **Campos extra planos.** `StoreLeadRequest` sólo acepta `name`, `email`,
+   `phone`, `message`, `source` y `details`; cualquier otra clave de primer
+   nivel Laravel simplemente la ignora. Los extras tienen que ir anidados en
+   `details`, donde el backend los valida contra el `fields[]` declarado por la
+   sección de la página de origen. Ahora se separan igual que en gas-gnu y
+   tectuus.
+3. Se muestran los mensajes de error del servidor (422 por campo, 429 del
+   throttle) en vez de un texto genérico.
+
+`SectionRenderer.astro` y las 15 páginas que lo usan pasan ahora `pageSlug`, y
+la home pasa `source` a su formulario directo.
+
+**`src/components/sections/SavingsSimulator.astro` — no usaba el endpoint.**
+
+Reimplementaba toda la fórmula de ahorro en el navegador con los
+`fuel_prices` horneados en el HTML, e ignoraba `GET {site}/savings-simulator`,
+que es quien posee el cálculo y los precios de referencia. Al ser un sitio
+estático, esos precios son tan viejos como el último build: el admin editaba
+los precios y el simulador seguía respondiendo con los anteriores.
+
+Ahora llama al endpoint (con el `page` correcto, ver abajo) y conserva la
+fórmula local únicamente como respaldo offline — el mismo patrón que ya usaba
+gas-gnu.
+
+**`src/layouts/Layout.astro` — el menú estaba quemado.**
+
+Era el único de los cuatro sitios que no consumía `GET {site}/menu`; los otros
+tres sí. `gnu` tiene 17 páginas y un árbol de dos niveles en el CMS, y
+despublicar una página desde el panel no la quitaba del nav. Ahora el nav sale
+del endpoint (nivel superior; este header no tiene desplegables y cada hija es
+alcanzable desde su padre) con la lista anterior como respaldo si el endpoint no
+responde.
+
+Efecto visible ya en el build: los títulos ahora son los del CMS
+("Nuestros servicios", no "Nuestros Servicios") y el orden es el del CMS
+(Contacto antes que Blog).
+
+### gas-gnu
+
+**`src/components/sections/ServiceScheduling.astro`**
+
+- Usa el `id` que devuelve la API y deja el mapa de nombres sólo como puente
+  para un host que todavía no tenga el cambio del backend desplegado
+  (`station.id ?? LEGACY_STATION_IDS[station.name]`). **Hay que borrar ese mapa
+  en cuanto el backend esté en producción.** Sin el respaldo, el agendador
+  desaparecía por completo de `/ubicaciones/agenda-tu-verificacion` hasta el
+  deploy — se verificó en el build.
+- El `min` del input de fecha se calcula ahora en el navegador. Estaba
+  renderizado en el HTML, o sea que era la fecha del build: unos días después
+  del deploy dejaba elegir fechas pasadas que la API rechaza con
+  `after_or_equal:today`. Además se usa hora local, no UTC (en México son días
+  distintos durante seis horas cada tarde).
+
+**`src/pages/index.astro`** — la llamada a `savings-simulator` no mandaba `page`.
+Un sitio puede llevar varias secciones `savings_simulator` con precios propios
+(`gnu` lleva una en la home y otra en `/nuestros-servicios/gnc`), y sin ese
+parámetro el endpoint responde con la primera del sitio, que no tiene por qué
+ser la de esta página. Hoy `gnu-vehicular` sólo tiene una, así que era latente.
+
+### trainin
+
+**`src/components/Contacto.astro`** — mandaba el formulario plano con `source`
+añadido al mismo nivel. Su diccionario de campos declara `company`, que no es
+columna de `leads`: si el CMS llegara a declararlo en `fields[]`, se enviaría
+plano y el backend lo descartaría en silencio. Ahora separa núcleo y `details`
+igual que los demás. También se muestran los errores por campo del 422 (estaban
+en `errors`, y sólo se leía `meta.message` / `message`) y un texto propio para
+el 429.
+
+**`src/components/Simulador.astro`** — mismo caso que landing-gnu: calculaba el
+ahorro en el navegador con tasas horneadas en el build y nunca llamaba al
+endpoint. Como este simulador recalcula en cada pulsación, se resolvió así: la
+tasa local da la cifra instantánea mientras se escribe y, 400 ms después, la
+respuesta del endpoint es la que queda (con guarda contra respuestas obsoletas).
+`PageSections.astro` le pasa el `slug` de la página.
+
+### tectuus
+
+**Sin cambios.** Es el consumidor más correcto de los cuatro: separa
+`source`/`details` en el formulario, distingue 422 de 429, pagina el catálogo
+completo en build con tope de seguridad (`MAX_PAGES`), usa el endpoint de detalle
+para lo que el listado omite y cae al del listado si falla, y trata `price: null`
+como "a cotizar" en vez de como cero.
+
+---
+
+## 3. Hallazgos no corregidos (requieren tu decisión)
+
+1. **`gnu-cms-admin/src/pages/tectuus/*` tiene ids de base de datos quemados**
+   — `<SectionsFields site="tectuus" page="contacto" pageId={46} />` y
+   `pageId={45}` en productos. Son ids de filas de la base desplegada: se rompen
+   con cualquier reseed. El comentario de `page-sections-editor.jsx` justifica
+   ese filtrado en cliente diciendo que `GET /api/admin/sections?site&page=`
+   ignora el filtro `page` del lado del servidor para `traninn-logistic`. **No
+   pude verificar esa afirmación** (hace falta un token de admin). Leyendo
+   `SectionController::index`, el filtro parece correcto. Vale la pena
+   comprobarlo con un token: si el filtro funciona, sobra todo el rodeo de
+   `pageId`/`includeGlobals` y los ids quemados.
+
+2. **Páginas huérfanas que sí se publican.** No las borré porque son rutas
+   visibles hacia fuera:
+   - `landing-gnu/src/pages/inicio/index.astro` — HTML de andamio que imprime
+     "Home" en `/inicio` (duplica `/`).
+   - `landing-gnu/src/pages/public.html` — se publica como `/public`.
+   - `trainin/src/pages/nosotros/index.astro` — contiene literalmente
+     `sobre nosotros...`.
+   - `trainin/src/pages/servicios/index.astro` — contiene literalmente `serv`.
+
+   Las cuatro salen en `dist/` en cada build. `trainin` ya tiene
+   `/sobre-nosotros` y `/nuestros-servicios` reales.
+
+3. **Tipos de sección que ningún renderer dibuja.** Ambos renderers descartan en
+   silencio lo que no conocen (correcto, así una sección nueva del CMS no rompe
+   una página), pero hoy quedarían fuera:
+   - `landing-gnu/SectionRenderer.astro`: `banner_carousel`, `testimonials`.
+   - `gas-gnu/SectionRenderer.astro`: `banner_carousel`, `testimonials`,
+     `savings_simulator`, `image_gallery`.
+
+   No es un problema **hoy** porque en ambos sitios esos tipos sólo existen en
+   `inicio`, y las dos homes son páginas a medida que no pasan por el renderer.
+   Se vuelve un problema en cuanto el blueprint ponga un `banner_carousel` en
+   otra página.
+
+4. **`gas-gnu/StationsMap.astro` no usa `GET stations`** — dibuja un iframe de
+   Google Maps con el `center` de la sección. Es una decisión válida, pero
+   significa que las estaciones que el admin da de alta no aparecen en
+   `/ubicaciones` de gas-gnu, mientras que en landing-gnu y trainin sí.
+
+5. **`traninn-logistic` no tiene página `blog` en el CMS**, pero `trainin`
+   publica `/blog` y `/blog/[slug]` consumiendo `GET {site}/blog` (que sí
+   responde: hay un post publicado). O sea que el blog existe y funciona, pero
+   no es alcanzable desde el menú porque el menú se deriva de `pages`.
+
+6. **Rutas admin publicadas sobre controladores placeholder** —
+   `sites`, `users`, `menus`.
+
+---
+
+## 4. Verificación
+
+| Proyecto | Comando | Resultado |
+|---|---|---|
+| landing-gnu | `astro build` / `astro check` | 24 páginas · 0 errores, 0 avisos |
+| gas-gnu | `astro build` / `astro check` | 18 páginas · 0 errores, 0 avisos |
+| tectuus | `astro build` / `astro check` | 5 páginas · 0 errores, 0 avisos |
+| trainin | `astro build` | 15 páginas OK (sin `@astrojs/check` instalado; no se instaló) |
+| gnu-cms-admin | `oxlint src` / `vite build` | sólo avisos previos de fast-refresh; build OK |
+| cms-backend | `composer test`, `pint` | **no ejecutados: no hay `php` en el PATH** |
+
+Nota: los `dist/` están versionados y los builds de verificación los
+regeneraron, por eso aparecen modificados en `git status`.
+
+---
+
+## 5. Siguiente paso recomendado
+
+Desplegar primero el backend (`StationController`) y, una vez confirmado que
+`GET gnu-vehicular/stations` devuelve `id`, borrar `LEGACY_STATION_IDS` de
+`gas-gnu/src/components/sections/ServiceScheduling.astro` y reconstruir.
+
+---
+---
+
+# Revisión 2 — Botón de WhatsApp (2026-09-18)
+
+Alcance: el `whatsapp_button` en los cuatro sitios Astro y su edición desde el
+panel React.
+
+## 1. Cómo está definido
+
+Es una sección **global** (`page_id: null`), igual que `contact_info` y
+`social_icons`: no pertenece a ninguna página, y `GET {site}/globals` la sirve
+junto con las otras dos. Su esquema editable (`UpdateSectionRequest`) tiene
+exactamente dos campos:
+
+- `phone` — **requerido**, string, máx. 40
+- `prefilled_message` — opcional, string, máx. 500
+
+Valores en producción hoy (los cuatro sitios tienen número y mensaje):
+
+| sitio | phone | mensaje |
+|---|---|---|
+| gnu | `+528100000000` | "Hola, quiero información sobre gas natural." |
+| gnu-vehicular | `+524430000000` | "…sobre gas natural vehicular." |
+| tectuus | `+524430000000` | "…sobre equipo industrial." |
+| traninn-logistic | `+524430000000` | "…sobre transporte de gas natural." |
+
+Son números de relleno (terminan en ceros) pero el formato es correcto para
+`wa.me`: `52` + 10 dígitos.
+
+## 2. Estado en los sitios Astro
+
+**Los cuatro renderizan el botón correctamente hoy.** Se verificó el HTML
+construido: los cuatro salen con el número y el mensaje del CMS, ya codificado
+con `encodeURIComponent`.
+
+El problema estaba en **qué pasa cuando el CMS no responde**. Cada sitio
+sustituía el número por uno de relleno distinto e igualmente inventado:
+
+| sitio | número de respaldo |
+|---|---|
+| landing-gnu | `525555550192` |
+| gas-gnu | `5210000000000` |
+| tectuus | `5215500000000` |
+| trainin | `000000000000` |
+
+Como los sitios son estáticos, si `/globals` falla durante un build el sitio se
+publica con un botón de WhatsApp que **se ve vivo y no lleva a ningún lado**: el
+visitante escribe y nadie lo lee nunca. Eso es peor que no tener botón.
+
+**Corregido en los cuatro:** sin número en el CMS, el botón no se renderiza.
+`phone` es requerido por el esquema, así que en operación normal no cambia nada
+— se verificó que el HTML construido contra la API viva es idéntico al de antes,
+y que con la API caída no queda ni un solo `wa.me` en la página.
+
+**trainin además tenía la lógica duplicada.** `src/functions/globals.ts` ya
+exporta `whatsappHref()`, que devuelve `null` cuando no hay número — el
+comportamiento correcto — pero `Layout.astro` no lo usaba: tenía su propia copia
+con el respaldo `000000000000`. El helper sólo lo consumía `Contacto.astro`.
+Ahora el layout usa el helper.
+
+Eso destapó un segundo problema en trainin: `whatsappUrl` viaja a
+`Header.astro`, `Footer.astro` y `WhatsAppButton.astro`, y los tres declaraban
+`whatsappUrl?: string` con default `"https://wa.me/000000000000"`. Un default de
+parámetro **no** se aplica con `null`, sólo con `undefined`, así que un `null`
+habría llegado tal cual a `href={null}` y habría dejado tres CTAs que no hacen
+nada. Los tres props son ahora `string | null` y los cuatro puntos de uso (CTA
+del header en escritorio y en móvil, enlace "WhatsApp directo" del footer, y el
+FAB) se renderizan sólo si hay URL. `Contacto.astro` ya lo hacía bien.
+
+## 3. Estado en el panel React — aquí está el problema de fondo
+
+**`gnu-vehicular` no tenía editor de botón de WhatsApp, en absoluto.**
+
+`src/pages/gas-natural/inicio/index.jsx` es una página hecha a mano con su
+propio `SECTION_EDITORS`, y ese mapa sólo tiene seis tipos: `banner_carousel`,
+`savings_simulator`, `feature_grid`, `testimonials`, `stations_map`,
+`lead_capture_form`. No están `whatsapp_button`, `contact_info` ni
+`social_icons`. Aunque la sección llegara, `SectionCard` cae al `<pre>` de JSON
+en modo lectura. Es decir: **el número de WhatsApp de gas-gnu no se podía
+cambiar desde el panel.**
+
+Y hay un problema anterior a ése, que afecta a los cuatro sitios: **las
+secciones globales se pedían con el filtro de página**. Las cuatro landing pages
+del panel llaman a `GET /api/admin/sections?site=X&page=inicio`, y
+`SectionController::index` filtra con `whereHas('page', …)`, que por definición
+excluye las filas con `page_id: null`. O sea que, si ese filtro funciona, las
+tres secciones globales no llegan nunca y el flag `includeGlobals` de
+`tectuus/inicio` y `trainin/inicio` no tiene nada que filtrar.
+
+> El comentario que había en `page-sections-editor.jsx` afirma lo contrario: que
+> el servidor **ignora** el filtro `page` y devuelve todas las secciones del
+> sitio ("confirmed for traninn-logistic: identical payload for page=inicio and
+> page=ubicaciones"). Las dos lecturas no pueden ser ciertas a la vez y **no
+> pude comprobar cuál es la buena**: hace falta un token de admin. Ver §5.
+
+**Corregido de forma que funciona con cualquiera de las dos lecturas:**
+
+- `page-sections-editor.jsx` pide ahora las globales **explícitamente** con
+  `GET /api/admin/sections?site=X&global=1`, en paralelo con las de la página, y
+  fusiona deduplicando por `id`. Ya no depende de que viajen de polizón.
+- Se exporta un componente `GlobalSectionsFields` con las tres secciones
+  globales bajo el título "Contenido del sitio".
+- `gnu/editable-sections` y `gas-natural/inicio` —las dos páginas hechas a
+  mano— lo incrustan al final de su propia lista, y filtran las globales de esa
+  lista para que no se dupliquen si el servidor sí las devolvía. Con eso
+  `gnu-vehicular` gana los tres editores sin copiar por tercera vez el código.
+
+**Se eliminaron los ids de base de datos quemados.** Era el hallazgo nº 1 de la
+revisión anterior. Había 15 (`pageId={43}`, `{32}`, `{45}`, `{46}`, `{33}`…):
+ids de filas reales que cualquier reseed invalida. `SectionsFields` resuelve
+ahora el id a partir del slug con `GET /api/admin/pages?site=X`, y el filtrado
+en cliente se mantiene por si el filtro del servidor no funciona.
+
+## 4. Verificación
+
+| Proyecto | Comando | Resultado |
+|---|---|---|
+| landing-gnu | `astro build` / `astro check` | 24 páginas · 0 errores |
+| gas-gnu | `astro build` / `astro check` | 18 páginas · 0 errores |
+| tectuus | `astro build` / `astro check` | 5 páginas · 0 errores |
+| trainin | `astro build` | 15 páginas OK |
+| gnu-cms-admin | `oxlint src` / `vite build` | sólo avisos previos; build OK |
+
+Además, build de los cuatro sitios con `CMS_API_URL` apuntando a un host muerto:
+**cero apariciones de `wa.me`** en el HTML resultante; y contra la API viva, el
+HTML es idéntico al anterior a los cambios.
+
+## 5. Lo que falta comprobar (necesito un dato tuyo)
+
+Para cerrar el capítulo del panel hace falta saber qué devuelve realmente
+`GET /api/admin/sections?site=traninn-logistic&page=inicio`. Con un token de
+admin bastan estas dos llamadas:
+
+    curl -H "Authorization: Bearer <TOKEN>" \
+      ".../api/admin/sections?site=traninn-logistic&page=inicio"
+    curl -H "Authorization: Bearer <TOKEN>" \
+      ".../api/admin/sections?site=traninn-logistic&page=ubicaciones"
+
+- Si los dos payloads son **distintos**, el filtro funciona y sobra el filtrado
+  en cliente de `SectionsFields` (se puede simplificar).
+- Si son **idénticos**, el filtro `page` está roto en el backend y hay que
+  arreglarlo ahí; el filtrado en cliente queda como red de seguridad.
+
+Dato relacionado: **`GET /api/admin/sections` no tiene ni un solo test.** Ni el
+filtro `site`, ni `page`, ni `global`. Por eso la contradicción lleva tiempo sin
+resolverse. Vale la pena un test de los tres filtros una vez sepamos cuál es el
+comportamiento correcto.
+
+## 6. Hallazgos menores no corregidos
+
+1. **`gnu/editable-sections` tiene tres editores ahora muertos** —
+   `ContactInfoEditor`, `SocialIconsEditor` y `WhatsappButtonEditor` siguen en su
+   `SECTION_EDITORS` local, pero las globales ya se renderizan por
+   `GlobalSectionsFields`. Son ~100 líneas duplicadas de las del componente
+   compartido; conviene borrarlas para que nadie edite la copia equivocada.
+2. **`trainin/src/components/Contacto.astro` vuelve a pedir `/globals`** con
+   `await fetchGlobals()` aunque `Layout.astro` ya lo pidió — una petición HTTP
+   extra por página en cada build. Se arregla pasándole el `whatsappUrl` desde
+   `PageSections.astro`.
+3. **Los cuatro números de producción son de relleno** (`+528100000000`,
+   `+524430000000` ×3). Funcionan como enlace pero no son números reales de
+   WhatsApp; hay que cargar los definitivos desde el panel antes de publicar.
+4. **`gas-gnu`, `tectuus` y `trainin` comparten el mismo número**
+   (`+524430000000`). Probablemente sea el relleno del seeder, no algo
+   intencional.

@@ -117,6 +117,7 @@ const marqueeLogos = useLogoMarquee ? [...logos, ...logos] : logos;
       title={savingsSimulator?.title}
       intro={savingsSimulator?.intro}
       fuel_prices={savingsSimulator?.fuel_prices}
+      page={pageResponse?.data?.slug ?? "inicio"}
     />
 
     <!-- Contenido editorial / video de la portada -->
@@ -196,6 +197,7 @@ const marqueeLogos = useLogoMarquee ? [...logos, ...logos] : logos;
           title="Cotiza sin compromiso"
           submit_label={leadCaptureForm?.submit_label ?? "Enviar mensaje"}
           fields={leadCaptureForm?.fields}
+          source={pageResponse?.data?.slug ?? "inicio"}
         />
       </div>
     </section>

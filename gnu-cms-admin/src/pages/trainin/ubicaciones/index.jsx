@@ -6,7 +6,6 @@ export default function TraininUbicaciones() {
     <PageSectionsEditor
       site="traninn-logistic"
       page="ubicaciones"
-      pageId={41}
       title="Ubicaciones — Trainin Logistic"
       backTo="/trainin/select-page"
     />

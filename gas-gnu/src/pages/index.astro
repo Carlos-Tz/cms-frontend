@@ -328,7 +328,18 @@ const blogPosts = blogTeaser?.posts?.length ? blogTeaser.posts : fallbackPosts;
   }
 </script>
 
-<script define:vars={{ apiBase: BASE_URL, savingsFuelPrices, fallbackRate: FALLBACK_SAVINGS_RATE }} is:inline>
+<script
+  define:vars={{
+    apiBase: BASE_URL,
+    savingsFuelPrices,
+    fallbackRate: FALLBACK_SAVINGS_RATE,
+    // Which savings_simulator section to price against. A site may carry more
+    // than one, each with its own reference prices; without this the endpoint
+    // answers with the site's first, which need not be this page's.
+    simulatorPage: pageResponse?.data?.slug ?? "inicio",
+  }}
+  is:inline
+>
   const savingsForm = document.querySelector("#savings-form");
   const fuelSelect = document.querySelector("#fuel-type");
   const savingsValue = document.querySelector("#savings-value");
@@ -378,7 +389,9 @@ const blogPosts = blogTeaser?.posts?.length ? blogTeaser.posts : fallbackPosts;
     if (pricePerUnit) {
       try {
         const quantity = spend / pricePerUnit;
-        const response = await fetch(`${apiBase}savings-simulator?fuel=${fuel}&quantity=${quantity}`);
+        const query = new URLSearchParams({ fuel, quantity: String(quantity) });
+        if (simulatorPage) query.set("page", simulatorPage);
+        const response = await fetch(`${apiBase}savings-simulator?${query}`);
         const result = await response.json().catch(() => null);
         if (response.ok && result?.status === "success" && Number.isFinite(result?.data?.savings)) {
           showSavings(Math.round(result.data.savings));

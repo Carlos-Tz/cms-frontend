@@ -6,7 +6,6 @@ export default function TectuusSobreNosotros() {
     <PageSectionsEditor
       site="tectuus"
       page="sobre-nosotros"
-      pageId={44}
       title="¿Quiénes somos? — Tectuus"
       backTo="/tectuus/select-page"
     />

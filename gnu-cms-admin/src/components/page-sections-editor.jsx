@@ -918,20 +918,57 @@ function SectionCard({ section, onUpdated }) {
   )
 }
 
-// Headless: the section cards, without page chrome (header/back link).
-// Lets a host page (e.g. the Contacto admin page) embed section editing inline
+// The loaders below all answer `null` on failure, so a caller can tell "the
+// request failed" apart from "there are no sections here".
+
+/** Numeric id of a page, by slug, or null when it can't be resolved. */
+async function resolvePageId(site, pageSlug) {
+  const res = await fetchData(`/api/admin/pages?site=${site}`)
+  if (res?.status !== 'success') return null
+
+  return res.data.find((p) => p.slug === pageSlug)?.id ?? null
+}
+
+async function loadPageSections(site, pageSlug) {
+  const [pageId, res] = await Promise.all([
+    resolvePageId(site, pageSlug),
+    fetchData(`/api/admin/sections?site=${site}&page=${pageSlug}`),
+  ])
+
+  if (res?.status !== 'success') return null
+
+  // Without an id there is nothing to narrow by, so the server's answer stands.
+  return pageId == null ? res.data : res.data.filter((s) => s.page_id === pageId)
+}
+
+async function loadSiteSections(site) {
+  const res = await fetchData(`/api/admin/sections?site=${site}`)
+  return res?.status === 'success' ? res.data : null
+}
+
+async function loadGlobalSections(site) {
+  const res = await fetchData(`/api/admin/sections?site=${site}&global=1`)
+  return res?.status === 'success' ? res.data.filter((s) => s.page_id == null) : null
+}
+
+// Headless: the section cards, without page chrome (header/back link). Lets a
+// host page (e.g. the Contacto admin page) embed section editing inline
 // alongside its own content instead of duplicating a "Back" link and title.
 //
-// `pageId`/`includeGlobals`: some sites' `GET /api/admin/sections?site&page=`
-// ignores the `page` filter server-side and returns every section for the
-// whole site instead (confirmed for traninn-logistic: identical payload for
-// page=inicio and page=ubicaciones). Each section still carries the correct
-// numeric `page_id` though, so when a caller passes `pageId` we filter to it
-// client-side. `includeGlobals` additionally keeps `page_id: null` sections
-// (site-wide content like contact_info/social_icons/whatsapp_button) — pass
-// it only from the one page meant to surface them, same convention as
-// gnu/editable-sections for its landing page.
-export function SectionsFields({ site = 'gnu', page, pageId, includeGlobals = false, onTotalChange }) {
+// `GET /api/admin/sections?site&page=` has been observed returning every
+// section of the site instead of just the page's (noted for traninn-logistic:
+// identical payload for page=inicio and page=ubicaciones), so the page's own
+// sections are narrowed client-side by `page_id`. That id is resolved from
+// `GET /api/admin/pages?site=` rather than hard-coded: it is a database row id
+// and any reseed moves it.
+//
+// `includeGlobals` surfaces the site-wide sections — contact_info,
+// social_icons, whatsapp_button — which have `page_id: null`. They are asked
+// for explicitly with `?global=1` rather than hoping they ride along with the
+// page query: `whereHas('page', …)` excludes a null page_id, so when the
+// `page` filter *does* work they would never appear. Pass the flag only from
+// the one page meant to surface them (each site's landing page).
+export function SectionsFields({ site = 'gnu', page, includeGlobals = false, onTotalChange }) {
   const [sections, setSections] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -943,24 +980,26 @@ export function SectionsFields({ site = 'gnu', page, pageId, includeGlobals = fa
       setLoading(true)
       setError('')
 
-      const query = page
-        ? `/api/admin/sections?site=${site}&page=${page}`
-        : `/api/admin/sections?site=${site}`
-      const res = await fetchData(query)
+      const [pageSections, globalSections] = await Promise.all([
+        page ? loadPageSections(site, page) : loadSiteSections(site),
+        includeGlobals ? loadGlobalSections(site) : Promise.resolve([]),
+      ])
 
       if (cancelled) return
 
-      if (res?.status === 'success') {
-        const data =
-          pageId == null
-            ? res.data
-            : res.data.filter((s) => s.page_id === pageId || (includeGlobals && s.page_id == null))
-        setSections(data)
-        onTotalChange?.(data.length)
-      } else {
+      if (pageSections === null || globalSections === null) {
         setError('No se pudieron cargar las secciones.')
+        setLoading(false)
+        return
       }
 
+      // The two requests can overlap when the server ignores the `page`
+      // filter and hands back the globals as well, so dedupe by id.
+      const byId = new Map([...pageSections, ...globalSections].map((s) => [s.id, s]))
+      const data = [...byId.values()]
+
+      setSections(data)
+      onTotalChange?.(data.length)
       setLoading(false)
     }
 
@@ -970,7 +1009,7 @@ export function SectionsFields({ site = 'gnu', page, pageId, includeGlobals = fa
       cancelled = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [site, page, pageId, includeGlobals])
+  }, [site, page, includeGlobals])
 
   function handleUpdated(updatedSection) {
     setSections((prev) => prev.map((s) => (s.id === updatedSection.id ? updatedSection : s)))
@@ -989,7 +1028,62 @@ export function SectionsFields({ site = 'gnu', page, pageId, includeGlobals = fa
   )
 }
 
-export default function PageSectionsEditor({ site = 'gnu', page, pageId, includeGlobals, title, backTo }) {
+// Just the site-wide sections (contact_info, social_icons, whatsapp_button).
+// Exported for the two landing pages that predate this component and keep
+// their own section list — they embed this below it instead of growing a
+// second copy of the three editors.
+export function GlobalSectionsFields({ site = 'gnu' }) {
+  const [sections, setSections] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function load() {
+      setLoading(true)
+      setError('')
+
+      const data = await loadGlobalSections(site)
+      if (cancelled) return
+
+      if (data === null) setError('No se pudo cargar el contenido del sitio.')
+      else setSections(data)
+
+      setLoading(false)
+    }
+
+    load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [site])
+
+  function handleUpdated(updatedSection) {
+    setSections((prev) => prev.map((s) => (s.id === updatedSection.id ? updatedSection : s)))
+  }
+
+  if (loading) return <p className="text-sm text-white/60">Cargando contenido del sitio…</p>
+  if (error) return <p className="text-sm text-rose-400">{error}</p>
+  if (sections.length === 0) return null
+
+  return (
+    <section className="mt-10 space-y-4">
+      <header>
+        <h2 className="text-lg font-semibold tracking-tight">Contenido del sitio</h2>
+        <p className="mt-1 text-sm text-white/60">
+          Datos de contacto, redes sociales y botón de WhatsApp. Aplican a todas las páginas de este sitio.
+        </p>
+      </header>
+      {sections.map((section) => (
+        <SectionCard key={section.id} section={section} onUpdated={handleUpdated} />
+      ))}
+    </section>
+  )
+}
+
+export default function PageSectionsEditor({ site = 'gnu', page, includeGlobals, title, backTo }) {
   const [total, setTotal] = useState(0)
 
   return (
@@ -1007,13 +1101,7 @@ export default function PageSectionsEditor({ site = 'gnu', page, pageId, include
           </p>
         </header>
 
-        <SectionsFields
-          site={site}
-          page={page}
-          pageId={pageId}
-          includeGlobals={includeGlobals}
-          onTotalChange={setTotal}
-        />
+        <SectionsFields site={site} page={page} includeGlobals={includeGlobals} onTotalChange={setTotal} />
       </div>
     </main>
   )

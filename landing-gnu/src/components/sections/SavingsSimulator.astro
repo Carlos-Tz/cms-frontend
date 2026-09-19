@@ -1,4 +1,6 @@
 ---
+import { BASE_URL } from "../../functions/fetch";
+
 interface FuelPrice {
   fuel: string;
   label: string;
@@ -11,9 +13,14 @@ interface Props {
   title?: string | null;
   intro?: string | null;
   fuel_prices?: FuelPrice[];
+  // Slug of the page this simulator sits on. `gnu` carries one on the home
+  // page and another on /nuestros-servicios/gnc, each with its own reference
+  // prices, and the endpoint needs this to pick the right one — without it it
+  // silently answers with the site's first.
+  page?: string | null;
 }
 
-const { title, intro, fuel_prices = [] } = Astro.props;
+const { title, intro, fuel_prices = [], page = null } = Astro.props;
 
 const gasNaturalPrice = fuel_prices.find((fuel) => fuel.fuel === "gas-natural");
 const comparableFuels = fuel_prices.filter((fuel) => fuel.fuel !== "gas-natural");
@@ -55,7 +62,7 @@ const comparableFuels = fuel_prices.filter((fuel) => fuel.fuel !== "gas-natural"
   </section>
 )}
 
-<script is:inline define:vars={{ comparableFuels, gasNaturalPrice }}>
+<script is:inline define:vars={{ comparableFuels, gasNaturalPrice, apiBase: BASE_URL, simulatorPage: page }}>
   document.querySelectorAll(".savings-simulator-form").forEach((form) => {
     const section = form.closest(".simulator-band");
     const valueEl = section?.querySelector(".savings-simulator-value");
@@ -81,22 +88,45 @@ const comparableFuels = fuel_prices.filter((fuel) => fuel.fuel !== "gas-natural"
       requestAnimationFrame(tick);
     }
 
-    form.addEventListener("submit", (event) => {
+    // The savings math belongs to the CMS (`GET {site}/savings-simulator`):
+    // it owns the reference prices and stays right after the admin edits them,
+    // whereas the `fuel_prices` baked into this page are as old as the last
+    // build. The local formula below is only the offline fallback.
+    async function serverSavings(selectedFuel, spend) {
+      if (!selectedFuel?.price_per_unit) return null;
+
+      const quantity = spend / selectedFuel.price_per_unit;
+      const query = new URLSearchParams({ fuel: selectedFuel.fuel, quantity: String(quantity) });
+      if (simulatorPage) query.set("page", simulatorPage);
+
+      try {
+        const response = await fetch(`${apiBase}savings-simulator?${query}`);
+        const result = await response.json().catch(() => null);
+        if (!response.ok || result?.status !== "success") return null;
+        return Number.isFinite(result?.data?.savings) ? Math.max(0, Math.round(result.data.savings)) : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const input = form.querySelector(".savings-simulator-spend");
       const spend = Number(input?.value ?? 0);
       if (!Number.isFinite(spend) || spend <= 0) return;
 
       const selectedFuel = comparableFuels.find((fuel) => fuel.fuel === fuelSelect?.value);
-      let monthlySavings;
+      let monthlySavings = await serverSavings(selectedFuel, spend);
 
-      if (selectedFuel && gasNaturalPrice) {
-        const unitsConsumed = spend / selectedFuel.price_per_unit;
-        const gasNaturalUnitsNeeded = unitsConsumed * selectedFuel.equivalence_factor;
-        const gasNaturalCost = gasNaturalUnitsNeeded * gasNaturalPrice.price_per_unit;
-        monthlySavings = Math.max(0, Math.round(spend - gasNaturalCost));
-      } else {
-        monthlySavings = Math.round(spend * FALLBACK_SAVINGS_RATE);
+      if (monthlySavings === null) {
+        if (selectedFuel && gasNaturalPrice) {
+          const unitsConsumed = spend / selectedFuel.price_per_unit;
+          const gasNaturalUnitsNeeded = unitsConsumed * selectedFuel.equivalence_factor;
+          const gasNaturalCost = gasNaturalUnitsNeeded * gasNaturalPrice.price_per_unit;
+          monthlySavings = Math.max(0, Math.round(spend - gasNaturalCost));
+        } else {
+          monthlySavings = Math.round(spend * FALLBACK_SAVINGS_RATE);
+        }
       }
 
       const annualSavings = monthlySavings * 12;

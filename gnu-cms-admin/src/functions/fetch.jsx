@@ -327,29 +327,42 @@ export async function uploadMedia(file) {
     }
 }
 
+// A JWT expires (the API's default TTL is an hour) while the panel is still
+// open, so every request can come back 401. Dropping the stale token and
+// sending the user back to /login is the only way out — this module lives
+// outside the router, so the redirect is a plain location change.
+function handleUnauthorized() {
+    useSessionStore.setState({ accessToken: null })
+
+    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.assign('/login')
+    }
+}
+
 export async function fetchData(suffix) {
 
     const tenantDomain = useSessionStore.getState().tenantDomain
     const accessToken = useSessionStore.getState().accessToken
-    const TOKEN = accessToken
-    // console.log('request token', TOKEN)
 
     try {
         const response = await fetch(tenantDomain + suffix, {
             headers: {
-                'Authorization': `Bearer ${TOKEN}`
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json',
             }
         })
 
         if (response.status === 401) {
             handleUnauthorized()
-            return
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
         }
-        const res = await response.json()
-        console.log('Response for ', suffix, res)
-        return res
+
+        // Every caller reads `res.status`/`res.data`, so a failure has to come
+        // back in the same `{status, data, meta}` shape the API uses rather
+        // than as `undefined`.
+        return await response.json()
     } catch (error) {
-        alert('Error al obtener datos ', error)
-        console.error('Error fetching data:', error)
+        console.error('Error fetching data:', suffix, error)
+        return { status: 'error', data: null, meta: { message: 'No se pudieron obtener los datos.' } }
     }
 }

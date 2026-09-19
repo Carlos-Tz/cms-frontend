@@ -1,6 +1,8 @@
 ---
 // Content shape matches the CMS's "savings_simulator" section (shared with
 // landing-gnu/gas-gnu): a list of fuel prices compared against gas natural.
+import { BASE_URL } from "../functions/fetch";
+
 interface FuelPrice {
 	fuel: string;
 	label: string;
@@ -13,11 +15,15 @@ interface Props {
 	title?: string | null;
 	intro?: string | null;
 	fuelPrices: FuelPrice[];
+	// Slug of the page this simulator sits on. A site may carry more than one
+	// savings_simulator, each with its own reference prices, and the endpoint
+	// needs this to price against the right one.
+	page?: string | null;
 }
 
 const GNC_FUEL_KEY = "gas-natural";
 
-const { title, intro, fuelPrices } = Astro.props;
+const { title, intro, fuelPrices, page = null } = Astro.props;
 
 // equivalence_factor normalizes each fuel's native unit (m³, litro, …) to a
 // comparable cost basis; GNC's own factor is always 1 (the reference unit).
@@ -34,6 +40,9 @@ const fuelOptions = gncPrice
 		}))
 	: [];
 const savingsRatesByFuel = Object.fromEntries(fuelOptions.map((option) => [option.fuel, option.rate]));
+// The endpoint takes a quantity in the fuel's own unit, not a peso amount, so
+// the browser needs each price to convert the spend it was given.
+const pricesByFuel = Object.fromEntries(comparableFuels.map((price) => [price.fuel, price.price_per_unit]));
 ---
 
 <section id="simulador" class="section simulador">
@@ -168,7 +177,7 @@ const savingsRatesByFuel = Object.fromEntries(fuelOptions.map((option) => [optio
 	}
 </style>
 
-<script define:vars={{ savingsRatesByFuel }} is:inline>
+<script define:vars={{ savingsRatesByFuel, pricesByFuel, apiBase: BASE_URL, simulatorPage: page }} is:inline>
 	function formatCurrency(value) {
 		return `$${Math.round(value).toLocaleString("es-MX")} MXN`;
 	}
@@ -188,15 +197,9 @@ const savingsRatesByFuel = Object.fromEntries(fuelOptions.map((option) => [optio
 			el.classList.add("is-updated");
 		}
 
-		function recalc() {
-			const spend = Number(gastoMensual.value) || 0;
-			const rate = savingsRatesByFuel[fuelSelect.value] ?? 0;
-
-			const ahorroMensual = Math.max(spend * rate, 0);
-			const ahorroAnual = ahorroMensual * 12;
-
+		function render(ahorroMensual) {
 			const nextMensual = formatCurrency(ahorroMensual);
-			const nextAnual = formatCurrency(ahorroAnual);
+			const nextAnual = formatCurrency(ahorroMensual * 12);
 
 			if (ahorroMensualEl.textContent !== nextMensual) {
 				ahorroMensualEl.textContent = nextMensual;
@@ -206,6 +209,43 @@ const savingsRatesByFuel = Object.fromEntries(fuelOptions.map((option) => [optio
 				ahorroAnualEl.textContent = nextAnual;
 				pulse(ahorroAnualEl);
 			}
+		}
+
+		// The CMS owns the savings formula and the reference prices behind it
+		// (`GET {site}/savings-simulator`). The rates baked into this page are
+		// as old as the last build, so they only drive the instant estimate
+		// while typing; the figure that settles is the server's.
+		let pending = null;
+		let requestId = 0;
+
+		async function confirmWithServer(spend, fuel) {
+			const pricePerUnit = pricesByFuel[fuel];
+			if (!spend || !pricePerUnit) return;
+
+			const query = new URLSearchParams({ fuel, quantity: String(spend / pricePerUnit) });
+			if (simulatorPage) query.set("page", simulatorPage);
+
+			const id = ++requestId;
+			try {
+				const response = await fetch(`${apiBase}savings-simulator?${query}`);
+				const result = await response.json().catch(() => null);
+				// A stale answer must never overwrite a newer one.
+				if (id !== requestId || !response.ok || result?.status !== "success") return;
+				if (Number.isFinite(result?.data?.savings)) render(Math.max(result.data.savings, 0));
+			} catch (error) {
+				// Keep the local estimate already on screen.
+			}
+		}
+
+		function recalc() {
+			const spend = Number(gastoMensual.value) || 0;
+			const fuel = fuelSelect.value;
+			const rate = savingsRatesByFuel[fuel] ?? 0;
+
+			render(Math.max(spend * rate, 0));
+
+			clearTimeout(pending);
+			pending = setTimeout(() => confirmWithServer(spend, fuel), 400);
 		}
 
 		[fuelSelect, gastoMensual].forEach((input) => input.addEventListener("input", recalc));

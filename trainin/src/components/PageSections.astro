@@ -80,7 +80,7 @@ const { sections, slug } = Astro.props;
 
 			case "savings_simulator": {
 				const { title, intro, fuel_prices = [] } = section.content as SavingsSimulator;
-				return <Simulador title={title} intro={intro} fuelPrices={fuel_prices} />;
+				return <Simulador title={title} intro={intro} fuelPrices={fuel_prices} page={slug} />;
 			}
 
 			case "rich_text": {

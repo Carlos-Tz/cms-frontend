@@ -6,7 +6,6 @@ export default function QueHacemos() {
     <PageSectionsEditor
       site="traninn-logistic"
       page="que-hacemos"
-      pageId={34}
       title="¿Qué hacemos?"
       backTo="/trainin/sobre-nosotros"
     />

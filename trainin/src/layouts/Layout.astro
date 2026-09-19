@@ -5,6 +5,7 @@ import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
 import WhatsAppButton from "../components/WhatsAppButton.astro";
 import { fetchData } from "../functions/fetch";
+import { whatsappHref } from "../functions/globals";
 import type { GlobalsResponse } from "../types/globals";
 
 interface Props {
@@ -52,10 +53,10 @@ const socialLinks = (socialIcons?.networks?.length ? socialIcons.networks : fall
 	.filter((item) => SOCIAL_ICON_PATHS[item.network])
 	.map((item) => ({ label: item.network, href: item.url || "#", path: SOCIAL_ICON_PATHS[item.network] }));
 
-const whatsappDigits = (whatsappButton?.phone || "000000000000").replace(/\D/g, "");
-const whatsappHref = `https://wa.me/${whatsappDigits}${
-	whatsappButton?.prefilled_message ? `?text=${encodeURIComponent(whatsappButton.prefilled_message)}` : ""
-}`;
+// `whatsappHref()` already builds this and answers null when the CMS has no
+// number; the inline copy this replaces fell back to wa.me/000000000000, a
+// live-looking link to nowhere. Null hides the button instead.
+const whatsappUrl = whatsappHref(whatsappButton);
 ---
 
 <html lang="es">
@@ -69,12 +70,12 @@ const whatsappHref = `https://wa.me/${whatsappDigits}${
 		<title>{title}</title>
 	</head>
 	<body>
-		<Header menu={menuItems} socials={socialLinks} whatsappUrl={whatsappHref} />
+		<Header menu={menuItems} socials={socialLinks} whatsappUrl={whatsappUrl} />
 		<main>
 			<slot />
 		</main>
-		<Footer menu={menuItems} socials={socialLinks} whatsappUrl={whatsappHref} contact={contactInfo} />
-		<WhatsAppButton href={whatsappHref} />
+		<Footer menu={menuItems} socials={socialLinks} whatsappUrl={whatsappUrl} contact={contactInfo} />
+		{whatsappUrl && <WhatsAppButton href={whatsappUrl} />}
 
 		<script>
 			// Site-wide scroll reveal. Elements opt in from JS, so with no JS the

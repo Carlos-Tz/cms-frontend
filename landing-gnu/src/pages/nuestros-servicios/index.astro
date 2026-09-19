@@ -24,7 +24,7 @@ const children = [
 <Layout title={page?.title ?? "Nuestros Servicios"}>
   <main>
     {!page && <PageHero title="Nuestros Servicios" subtitle="Soluciones de gas natural para tu operación." />}
-    <SectionRenderer sections={sections} />
+    <SectionRenderer sections={sections} pageSlug={page?.slug} />
 
     <section class="section">
       <div class="container">

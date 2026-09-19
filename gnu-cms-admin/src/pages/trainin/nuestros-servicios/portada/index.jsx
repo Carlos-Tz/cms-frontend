@@ -6,7 +6,6 @@ export default function NuestrosServiciosPortada() {
     <PageSectionsEditor
       site="traninn-logistic"
       page="nuestros-servicios"
-      pageId={37}
       title="Nuestros servicios — Portada"
       backTo="/trainin/nuestros-servicios"
     />

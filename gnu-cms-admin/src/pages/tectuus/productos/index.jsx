@@ -603,7 +603,7 @@ export default function TectuusProductos() {
           </p>
         </header>
 
-        <SectionsFields site="tectuus" page="productos" pageId={45} onTotalChange={setSectionsTotal} />
+        <SectionsFields site="tectuus" page="productos" onTotalChange={setSectionsTotal} />
 
         <CategoriesSection />
         <ProductsSection />

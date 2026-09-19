@@ -6,7 +6,6 @@ export default function PropositoEmpresarial() {
     <PageSectionsEditor
       site="traninn-logistic"
       page="proposito-empresarial"
-      pageId={35}
       title="Propósito empresarial"
       backTo="/trainin/sobre-nosotros"
     />

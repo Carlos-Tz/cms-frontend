@@ -18,6 +18,6 @@ const sections = page?.sections ?? [];
 <Layout title={page?.title ?? "GNC"}>
   <main>
     {!page && <PageHero title="GNC" subtitle="Gas natural comprimido" />}
-    <SectionRenderer sections={sections} />
+    <SectionRenderer sections={sections} pageSlug={page?.slug} />
   </main>
 </Layout>

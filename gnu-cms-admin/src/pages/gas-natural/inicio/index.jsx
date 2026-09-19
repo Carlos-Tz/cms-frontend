@@ -6,6 +6,7 @@ import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
 import markerIcon from 'leaflet/dist/images/marker-icon.png'
 import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { fetchData, updateSection } from '../../../functions/fetch'
+import { GlobalSectionsFields } from '../../../components/page-sections-editor'
 import {
   inputClass,
   fieldError,
@@ -594,8 +595,11 @@ export default function GasNaturalInicio() {
       if (cancelled) return
 
       if (res?.status === 'success') {
-        setSections(res.data)
-        setTotal(res.meta?.total ?? res.data.length)
+        // Site-wide sections are rendered separately by GlobalSectionsFields, so
+        // they are dropped here whether or not the `page` filter let them through.
+        const pageSections = res.data.filter((s) => s.page_id != null)
+        setSections(pageSections)
+        setTotal(pageSections.length)
       } else {
         setError('No se pudieron cargar las secciones.')
       }
@@ -642,6 +646,8 @@ export default function GasNaturalInicio() {
             ))}
           </div>
         )}
+
+        <GlobalSectionsFields site="gnu-vehicular" />
       </div>
     </main>
   )

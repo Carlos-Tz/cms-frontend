@@ -6,7 +6,6 @@ export default function NuestraHistoria() {
     <PageSectionsEditor
       site="traninn-logistic"
       page="nuestra-historia"
-      pageId={36}
       title="Nuestra historia"
       backTo="/trainin/sobre-nosotros"
     />

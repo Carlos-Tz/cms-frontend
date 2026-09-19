@@ -6,7 +6,6 @@ export default function TransporteDeGnc() {
     <PageSectionsEditor
       site="traninn-logistic"
       page="transporte-de-gnc"
-      pageId={38}
       title="Transporte de GNC"
       backTo="/trainin/nuestros-servicios"
     />

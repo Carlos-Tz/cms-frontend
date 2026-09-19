@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { fetchData, updateSection } from '../../../functions/fetch'
+import { GlobalSectionsFields } from '../../../components/page-sections-editor'
 import {
   inputClass,
   fieldError,
@@ -568,8 +569,11 @@ export default function EditableSections() {
       if (cancelled) return
 
       if (res?.status === 'success') {
-        setSections(res.data)
-        setTotal(res.meta?.total ?? res.data.length)
+        // Site-wide sections are rendered separately by GlobalSectionsFields, so
+        // they are dropped here whether or not the `page` filter let them through.
+        const pageSections = res.data.filter((s) => s.page_id != null)
+        setSections(pageSections)
+        setTotal(pageSections.length)
       } else {
         setError('No se pudieron cargar las secciones.')
       }
@@ -616,6 +620,8 @@ export default function EditableSections() {
             ))}
           </div>
         )}
+
+        <GlobalSectionsFields site="gnu" />
       </div>
     </main>
   )

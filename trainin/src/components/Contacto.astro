@@ -160,14 +160,28 @@ const ctaHref = whatsappUrl ?? whatsappHref((await fetchGlobals())?.whatsapp_but
 </style>
 
 <script define:vars={{ apiBase: BASE_URL, leadFormId: formId, leadSource: source ?? null }} is:inline>
+	// Only these four map to real `leads` columns. Anything else this form
+	// collects — `company` today, whatever the CMS adds to `fields[]` later —
+	// has to travel nested under `details`, which the API whitelists against
+	// the source page's own declared fields. Sent flat it is simply ignored.
+	const CORE_LEAD_FIELDS = ["name", "email", "phone", "message"];
+
 	const form = document.getElementById(leadFormId);
 	const status = form ? form.querySelector("[data-lead-status]") : null;
 
 	form?.addEventListener("submit", async (event) => {
 		event.preventDefault();
 		const submitButton = form.querySelector('button[type="submit"]');
-		const data = Object.fromEntries(new FormData(form).entries());
+		const entries = Object.fromEntries(new FormData(form).entries());
 		let serverMessage = "";
+
+		const data = leadSource ? { source: leadSource } : {};
+		const details = {};
+		for (const [key, value] of Object.entries(entries)) {
+			if (CORE_LEAD_FIELDS.includes(key)) data[key] = value;
+			else details[key] = value;
+		}
+		if (Object.keys(details).length) data.details = details;
 
 		if (submitButton) submitButton.disabled = true;
 		if (status) status.textContent = "Enviando...";
@@ -179,14 +193,17 @@ const ctaHref = whatsappUrl ?? whatsappHref((await fetchGlobals())?.whatsapp_but
 					"Content-Type": "application/json",
 					Accept: "application/json",
 				},
-				// `source` tags the lead with the page it came from.
-				body: JSON.stringify(leadSource ? { ...data, source: leadSource } : data),
+				body: JSON.stringify(data),
 			});
 			const result = await response.json().catch(() => null);
 			if (!response.ok) {
-				// The CMS answers 422 with a field message and 429 when the
-				// per-IP throttle trips; both are worth showing verbatim.
-				serverMessage = result?.meta?.message || result?.message || "";
+				// A 422 carries the per-field messages in `errors`, with
+				// `message` only summarising them; 429 is the per-IP throttle.
+				const firstError = result?.errors ? Object.values(result.errors)[0]?.[0] : null;
+				serverMessage =
+					response.status === 429
+						? "Recibimos demasiados envíos. Espera un momento e intenta de nuevo."
+						: firstError || result?.meta?.message || result?.message || "";
 				throw new Error("request failed");
 			}
 
