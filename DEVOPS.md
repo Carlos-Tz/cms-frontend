@@ -273,7 +273,7 @@ Note `npm run build` **exits 0 even if the CMS is unreachable** — `fetchData()
 Worth knowing before you promise anything:
 
 - **No CI/CD.** No `.github/workflows`, no `Dockerfile`, no `docker-compose`, no `*.toml`, no `_redirects`, no deploy scripts anywhere in the repo.
-- **No CMS→rebuild webhook.** Publishing is manual.
+- **No CMS→rebuild webhook.** Rebuilds are triggered by hand from the admin's **Reconstruir página** button, served by `build-server/` (see its README). It must run on the host that serves the sites, with `DEPLOY_CMD_<SITE>` set if `dist/` has to be copied elsewhere.
 - **No tests, no linting in the Astro projects** (only the admin has `oxlint`).
 - **No staging environment** — all four `.env` files point at the one production CMS host.
 

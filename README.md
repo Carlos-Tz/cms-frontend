@@ -73,7 +73,7 @@ Full dev/build/deploy instructions (including Nginx/S3/CloudFront/Azure Static W
 If you only edit content through `gnu-cms-admin` and don't touch code, here's what you need to know:
 
 1. **Log in to `gnu-cms-admin`** and edit the section, page, or blog post you need to change. Saving in the admin updates the backend immediately.
-2. **The public site does not update by itself.** Because the public sites (`landing-gnu`, etc.) are static, a saved change only becomes visible on the live site after a developer (or an automated job, if one is set up) **rebuilds and redeploys** that specific site. If nobody has wired up an automatic rebuild trigger yet, ask a developer to run the deploy for the site you edited.
+2. **The public site does not update by itself.** Because the public sites (`landing-gnu`, etc.) are static, a saved change only becomes visible on the live site after a developer (or an automated job, if one is set up) **rebuilds and redeploys** that specific site. Once you are done editing, open that site in the admin and press **Reconstruir página** at the top of its page list; the button shows when the rebuild finishes (or fails, with details). If the button reports the service is unreachable, ask a developer to run the deploy.
 3. **Follow the image/text size limits.** The admin does **not** validate image dimensions or text length before saving — it will let you save an oversized image or an overly long headline, but the live site's layout will look broken (cropped image, overflowing text). See [`DOCUMENTACION-CONTENIDO-LANDING-GNU.txt`](./DOCUMENTACION-CONTENIDO-LANDING-GNU.txt) for the per-section recommended image sizes and text lengths for `landing-gnu`.
 4. **Images**: max 5 MB per file (hard server limit, no warning in the UI beforehand); JPG for photos, PNG for logos/icons with transparency; keep files well under 1 MB where possible since nothing is compressed automatically.
 5. **Nothing you edit is private.** The public sites have no login — anything saved and published is visible to anyone who visits the site once it's rebuilt. Don't use the admin to stage content you don't want the public to eventually see.
@@ -87,4 +87,4 @@ End-to-end, for any of the public sites:
 3. The resulting `dist/` is deployed (copied to the server, synced to S3, or redeployed on the hosting platform) — see that project's README for the exact steps.
 4. Only after step 3 is the change visible to site visitors.
 
-There is currently no automatic webhook from the CMS to trigger a rebuild — until one exists, publishing is a manual step after every content change.
+There is no automatic webhook from the CMS. Editors trigger a rebuild with the **Reconstruir página** button on each site's page list in the admin, which calls [`build-server/`](./build-server/README.md) — a small Node service that runs `npm run build` (and an optional deploy command) for that site.

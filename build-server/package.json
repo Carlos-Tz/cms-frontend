@@ -1,0 +1,12 @@
+{
+  "name": "build-server",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}

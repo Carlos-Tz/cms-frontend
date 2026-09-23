@@ -1,0 +1,170 @@
+// Build service for the public Astro sites.
+//
+// The Astro sites only read the CMS at build time, so an edit saved in
+// gnu-cms-admin is invisible until the site is rebuilt. The admin is a browser
+// SPA and cannot run `npm run build` itself — it calls this service instead.
+//
+//   GET  /builds/:site   → current/last build status for that site
+//   POST /builds/:site   → start `npm run build` (then DEPLOY_CMD_<SITE>, if set)
+//
+// `:site` is the admin route prefix (gnu, gas-natural, trainin, tectuus).
+// Every request must carry the admin's bearer token; it is validated by
+// forwarding it to the CMS, so no extra secret has to be shared with editors.
+//
+// Zero dependencies — run with `node server.mjs` (Node >= 22).
+
+import http from 'node:http'
+import path from 'node:path'
+import fs from 'node:fs'
+import { spawn } from 'node:child_process'
+import { fileURLToPath } from 'node:url'
+
+const HERE = path.dirname(fileURLToPath(import.meta.url))
+
+loadEnvFile(path.join(HERE, '.env'))
+
+const PORT = Number(process.env.PORT ?? 4400)
+const CMS_BASE_URL = (process.env.CMS_BASE_URL ?? 'https://gnu-headless-cms.165.227.59.215.sslip.io').replace(/\/+$/, '')
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173')
+    .split(',').map((s) => s.trim()).filter(Boolean)
+const SITES_ROOT = path.resolve(HERE, process.env.SITES_ROOT ?? '..')
+const LOG_LINES = 200
+
+// Admin route prefix → Astro project folder + CMS slug (see DEVOPS.md §1 —
+// the three names do not match each other).
+const SITES = {
+    'gnu':         { folder: 'landing-gnu', slug: 'gnu' },
+    'gas-natural': { folder: 'gas-gnu',     slug: 'gnu-vehicular' },
+    'trainin':     { folder: 'trainin',     slug: 'traninn-logistic' },
+    'tectuus':     { folder: 'tectuus',     slug: 'tectuus' },
+}
+
+// In-memory state, one entry per site. Lost on restart, which is fine: it only
+// drives the admin's progress indicator.
+const builds = Object.fromEntries(Object.keys(SITES).map((key) => [key, idleState()]))
+
+function idleState() {
+    return { status: 'idle', startedAt: null, finishedAt: null, error: null, log: [] }
+}
+
+function loadEnvFile(file) {
+    if (!fs.existsSync(file)) return
+    for (const line of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+        const match = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/)
+        if (match && process.env[match[1]] === undefined) {
+            process.env[match[1]] = match[2].replace(/^(['"])(.*)\1$/, '$2')
+        }
+    }
+}
+
+function appendLog(state, chunk) {
+    // Strip ANSI colors: the log is shown as plain text in the admin.
+    const lines = chunk.toString().replace(/\x1b\[[0-9;]*m/g, '').split(/\r?\n/).filter((l) => l.trim() !== '')
+    state.log.push(...lines)
+    if (state.log.length > LOG_LINES) state.log.splice(0, state.log.length - LOG_LINES)
+}
+
+function run(command, cwd, state) {
+    return new Promise((resolve, reject) => {
+        appendLog(state, `$ ${command}`)
+        const child = spawn(command, { cwd, shell: true, env: process.env })
+        child.stdout.on('data', (d) => appendLog(state, d))
+        child.stderr.on('data', (d) => appendLog(state, d))
+        child.on('error', reject)
+        child.on('close', (code) =>
+            code === 0 ? resolve() : reject(new Error(`"${command}" terminó con código ${code}`)))
+    })
+}
+
+async function startBuild(key) {
+    const site = SITES[key]
+    const state = { ...idleState(), status: 'running', startedAt: new Date().toISOString() }
+    builds[key] = state
+
+    const cwd = path.join(SITES_ROOT, site.folder)
+    try {
+        await run('npm run build', cwd, state)
+
+        // `npm run build` exits 0 even when the CMS is unreachable (fetchData
+        // swallows the error), so at least make sure something was emitted
+        // before any deploy step publishes it.
+        const index = path.join(cwd, 'dist', 'index.html')
+        if (!fs.existsSync(index) || fs.statSync(index).size === 0) {
+            throw new Error('La compilación no generó dist/index.html')
+        }
+
+        const deployCmd = process.env[`DEPLOY_CMD_${key.toUpperCase().replace(/-/g, '_')}`]
+        if (deployCmd) await run(deployCmd, cwd, state)
+
+        state.status = 'success'
+    } catch (error) {
+        state.status = 'error'
+        state.error = error.message
+        appendLog(state, error.message)
+    } finally {
+        state.finishedAt = new Date().toISOString()
+    }
+}
+
+// A token is accepted if the CMS accepts it for an admin read on that site.
+async function isAuthorized(req, site) {
+    const auth = req.headers.authorization
+    if (!auth?.startsWith('Bearer ')) return false
+    try {
+        const res = await fetch(`${CMS_BASE_URL}/api/admin/sections?site=${encodeURIComponent(site.slug)}`, {
+            headers: { Authorization: auth, Accept: 'application/json' },
+        })
+        return res.ok
+    } catch (error) {
+        console.error('No se pudo validar el token con el CMS:', error)
+        return false
+    }
+}
+
+function send(res, status, body) {
+    res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' })
+    res.end(JSON.stringify(body))
+}
+
+const server = http.createServer(async (req, res) => {
+    const origin = req.headers.origin
+    if (origin && ALLOWED_ORIGINS.includes(origin)) {
+        res.setHeader('Access-Control-Allow-Origin', origin)
+        res.setHeader('Vary', 'Origin')
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+        res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type')
+    }
+    if (req.method === 'OPTIONS') {
+        res.writeHead(204)
+        return res.end()
+    }
+
+    const match = req.url.match(/^\/builds\/([a-z-]+)\/?(?:\?.*)?$/)
+    const key = match?.[1]
+    const site = key && SITES[key]
+    if (!site) return send(res, 404, { status: 'error', meta: { message: 'Sitio no encontrado' } })
+
+    if (!(await isAuthorized(req, site))) {
+        return send(res, 401, { status: 'error', meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } })
+    }
+
+    if (req.method === 'GET') {
+        return send(res, 200, { status: 'success', data: builds[key] })
+    }
+
+    if (req.method === 'POST') {
+        if (builds[key].status === 'running') {
+            return send(res, 409, { status: 'error', data: builds[key], meta: { message: 'Ya hay una reconstrucción en curso para este sitio.' } })
+        }
+        startBuild(key)
+        return send(res, 202, { status: 'success', data: builds[key] })
+    }
+
+    send(res, 405, { status: 'error', meta: { message: 'Método no permitido' } })
+})
+
+server.listen(PORT, () => {
+    console.log(`build-server escuchando en http://localhost:${PORT}`)
+    console.log(`  sitios en ${SITES_ROOT}`)
+    console.log(`  orígenes permitidos: ${ALLOWED_ORIGINS.join(', ')}`)
+})

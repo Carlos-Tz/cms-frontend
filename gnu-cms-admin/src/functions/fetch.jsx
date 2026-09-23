@@ -366,3 +366,45 @@ export async function fetchData(suffix) {
         return { status: 'error', data: null, meta: { message: 'No se pudieron obtener los datos.' } }
     }
 }
+
+// Site rebuilds go to the build-server service (see /build-server), not the
+// CMS: the Astro sites only read the CMS at build time, so saved edits stay
+// invisible until the site is rebuilt. `site` is the admin route prefix
+// (gnu, gas-natural, trainin, tectuus).
+const BUILD_SERVER_URL = import.meta.env.VITE_BUILD_SERVER_URL
+
+async function buildRequest(site, method) {
+    const accessToken = useSessionStore.getState().accessToken
+
+    if (!BUILD_SERVER_URL) {
+        return { status: 'error', data: null, meta: { message: 'El servicio de reconstrucción no está configurado (VITE_BUILD_SERVER_URL).' } }
+    }
+
+    try {
+        const response = await fetch(`${BUILD_SERVER_URL}/builds/${site}`, {
+            method,
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json',
+            },
+        })
+
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error contacting build server:', site, error)
+        return { status: 'error', data: null, meta: { message: 'No se pudo contactar al servicio de reconstrucción.' } }
+    }
+}
+
+export function rebuildSite(site) {
+    return buildRequest(site, 'POST')
+}
+
+export function getRebuildStatus(site) {
+    return buildRequest(site, 'GET')
+}
