@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router'
 import RebuildSiteButton from '../../components/rebuild-site-button'
+import SiteUrlLink from '../../components/site-url-link'
 
 const PAGES = [
   { title: 'Landing Page', subtitle: 'Portada del sitio GNU', path: '/gnu/editable-sections' },
@@ -14,6 +15,8 @@ const PAGES = [
 export default function SelectPage() {
   const navigate = useNavigate()
 
+
+
   return (
     <main className="min-h-screen bg-[#0b0611] text-white">
       <div className="mx-auto max-w-3xl px-6 py-8">
@@ -25,6 +28,8 @@ export default function SelectPage() {
           <h1 className="text-2xl font-bold tracking-tight">Página web GNU</h1>
           <p className="mt-1 text-sm text-white/60">Selecciona una página para editar.</p>
         </header>
+
+        <SiteUrlLink site="gnu" />
 
         <RebuildSiteButton site="gnu" />
 

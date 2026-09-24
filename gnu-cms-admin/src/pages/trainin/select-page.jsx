@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router'
 import RebuildSiteButton from '../../components/rebuild-site-button'
+import SiteUrlLink from '../../components/site-url-link'
 
 const PAGES = [
   { title: 'Inicio', subtitle: 'Portada del sitio Trainin Logistic', path: '/trainin/inicio' },
@@ -25,6 +26,8 @@ export default function SelectPage() {
           <h1 className="text-2xl font-bold tracking-tight">Trainin Logistic</h1>
           <p className="mt-1 text-sm text-white/60">Selecciona una página para editar.</p>
         </header>
+
+        <SiteUrlLink site="trainin" />
 
         <RebuildSiteButton site="trainin" />
 

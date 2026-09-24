@@ -2,6 +2,39 @@
 
 React + Vite app using Tailwind CSS v4 (`@tailwindcss/vite`, no config file — utilities used directly) and `react-router` v8 (import from `"react-router"`, not `react-router-dom`).
 
+## Server layout (production)
+
+All sites are static files served from `/var/www/html/sitios-cms/`:
+
+```
+/var/www/html/sitios-cms/
+├── administracion-cms/   ← this admin (vite build output)
+├── gnu/                  ← landing-gnu
+│   ├── code/             ← the Astro project itself (package.json, src/, node_modules/ installed)
+│   ├── _astro/           ┐
+│   ├── blog/ contacto/…  │ contents of code/dist/ after `npm run build`
+│   ├── index.html        │ (index.html, _astro/, one folder per route)
+│   └── favicon.*         ┘
+├── gnu-gas-natural/      ← gas-gnu            (same layout: code/ + build output)
+├── tectuus/              ← tectuus            (same layout)
+└── traninn-logistic/     ← trainin            (same layout)
+```
+
+Each site folder holds the build output **directly** (not inside a `dist/` folder), next to a `code/` folder that is the Astro project as in this repo, with `node_modules` already installed. A rebuild runs `npm run build` in `<site>/code` and replaces everything in `<site>/` **except `code/`** with the contents of `<site>/code/dist/`.
+
+Admin route prefix → repo project → server folder:
+
+| Admin route | Repo project (= `code/` on the server) | Server folder |
+| :-- | :-- | :-- |
+| `/gnu` | `landing-gnu` | `gnu` |
+| `/gas-natural` | `gas-gnu` | `gnu-gas-natural` |
+| `/trainin` | `trainin` | `traninn-logistic` |
+| `/tectuus` | `tectuus` | `tectuus` |
+
+## "Reconstruir página"
+
+`src/components/rebuild-site-button.jsx` (on each site's `select-page.jsx`) publishes saved CMS edits. The browser can't run `npm run build`, so the button calls `build-server/` (`VITE_BUILD_SERVER_URL`, see `src/functions/fetch.jsx` → `rebuildSite` / `getRebuildStatus`). The service runs `npm run build` in `PUBLISH_ROOT/<server folder>/code` and then replaces everything in `PUBLISH_ROOT/<server folder>` except `code/` with `code/dist/`. See `../build-server/README.md`.
+
 ## Routing
 
 - `src/App.jsx` owns the top-level `<Routes>` and renders the landing page directly.

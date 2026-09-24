@@ -7,7 +7,7 @@ const PAGES = [
   { title: 'Página web GNU', subtitle: 'Updated 2 hours ago', status: 'active', site: 'gnu' },
   { title: 'Gas natural vehicular', subtitle: 'Updated yesterday', status: 'active', site: 'gas-natural' },
   { title: 'Trainnin logistic', subtitle: 'Awaiting review', status: 'active', site: 'trainin' },
-  { title: 'Tectuus', subtitle: 'Broken link detected', status: 'pending', site: 'tectuus' },
+  { title: 'Tectuus', subtitle: 'Broken link detected', status: 'active', site: 'tectuus' },
 ]
 
 export default function Home() {

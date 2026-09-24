@@ -5,7 +5,8 @@
 // SPA and cannot run `npm run build` itself — it calls this service instead.
 //
 //   GET  /builds/:site   → current/last build status for that site
-//   POST /builds/:site   → start `npm run build` (then DEPLOY_CMD_<SITE>, if set)
+//   POST /builds/:site   → run `npm run build`, then publish dist/ into the
+//                          site's folder under PUBLISH_ROOT
 //
 // `:site` is the admin route prefix (gnu, gas-natural, trainin, tectuus).
 // Every request must carry the admin's bearer token; it is validated by
@@ -27,16 +28,22 @@ const PORT = Number(process.env.PORT ?? 4400)
 const CMS_BASE_URL = (process.env.CMS_BASE_URL ?? 'https://gnu-headless-cms.165.227.59.215.sslip.io').replace(/\/+$/, '')
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173')
     .split(',').map((s) => s.trim()).filter(Boolean)
+// Folder the web server serves the sites from (production:
+// /var/www/html/sitios-cms). Each site folder there holds the published build
+// plus the Astro project itself in `code/`, so that is where the build runs.
+// Unset (local dev) → build the repo's projects under SITES_ROOT, don't publish.
+const PUBLISH_ROOT = process.env.PUBLISH_ROOT ? path.resolve(process.env.PUBLISH_ROOT) : null
 const SITES_ROOT = path.resolve(HERE, process.env.SITES_ROOT ?? '..')
+const CODE_DIR = 'code'
 const LOG_LINES = 200
 
-// Admin route prefix → Astro project folder + CMS slug (see DEVOPS.md §1 —
-// the three names do not match each other).
+// Admin route prefix → repo project folder, published folder under
+// PUBLISH_ROOT, and CMS slug (see DEVOPS.md §1 — the names do not match).
 const SITES = {
-    'gnu':         { folder: 'landing-gnu', slug: 'gnu' },
-    'gas-natural': { folder: 'gas-gnu',     slug: 'gnu-vehicular' },
-    'trainin':     { folder: 'trainin',     slug: 'traninn-logistic' },
-    'tectuus':     { folder: 'tectuus',     slug: 'tectuus' },
+    'gnu':         { folder: 'landing-gnu', publish: 'gnu',              slug: 'gnu' },
+    'gas-natural': { folder: 'gas-gnu',     publish: 'gnu-gas-natural',  slug: 'gnu-vehicular' },
+    'trainin':     { folder: 'trainin',     publish: 'traninn-logistic', slug: 'traninn-logistic' },
+    'tectuus':     { folder: 'tectuus',     publish: 'tectuus',          slug: 'tectuus' },
 }
 
 // In-memory state, one entry per site. Lost on restart, which is fine: it only
@@ -76,25 +83,41 @@ function run(command, cwd, state) {
     })
 }
 
+// The published folders hold the build output directly (index.html, _astro/,
+// one folder per route), so replace their contents with dist/'s — everything
+// except `code/`, which is the project being built.
+function publish(dist, target, state) {
+    if (fs.existsSync(path.join(dist, CODE_DIR))) {
+        throw new Error(`dist/ contiene "${CODE_DIR}/", que choca con la carpeta del proyecto`)
+    }
+    appendLog(state, `Publicando dist/ en ${target}`)
+    for (const entry of fs.readdirSync(target)) {
+        if (entry === CODE_DIR) continue
+        fs.rmSync(path.join(target, entry), { recursive: true, force: true })
+    }
+    fs.cpSync(dist, target, { recursive: true })
+}
+
 async function startBuild(key) {
     const site = SITES[key]
     const state = { ...idleState(), status: 'running', startedAt: new Date().toISOString() }
     builds[key] = state
 
-    const cwd = path.join(SITES_ROOT, site.folder)
+    const target = PUBLISH_ROOT && path.join(PUBLISH_ROOT, site.publish)
+    const cwd = target ? path.join(target, CODE_DIR) : path.join(SITES_ROOT, site.folder)
     try {
         await run('npm run build', cwd, state)
 
         // `npm run build` exits 0 even when the CMS is unreachable (fetchData
         // swallows the error), so at least make sure something was emitted
-        // before any deploy step publishes it.
-        const index = path.join(cwd, 'dist', 'index.html')
+        // before it replaces the live site.
+        const dist = path.join(cwd, 'dist')
+        const index = path.join(dist, 'index.html')
         if (!fs.existsSync(index) || fs.statSync(index).size === 0) {
             throw new Error('La compilación no generó dist/index.html')
         }
 
-        const deployCmd = process.env[`DEPLOY_CMD_${key.toUpperCase().replace(/-/g, '_')}`]
-        if (deployCmd) await run(deployCmd, cwd, state)
+        if (target) publish(dist, target, state)
 
         state.status = 'success'
     } catch (error) {
@@ -165,6 +188,8 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
     console.log(`build-server escuchando en http://localhost:${PORT}`)
-    console.log(`  sitios en ${SITES_ROOT}`)
+    console.log(PUBLISH_ROOT
+        ? `  compilando <sitio>/${CODE_DIR} y publicando en ${PUBLISH_ROOT}`
+        : `  compilando en ${SITES_ROOT} (sin publicar)`)
     console.log(`  orígenes permitidos: ${ALLOWED_ORIGINS.join(', ')}`)
 })
