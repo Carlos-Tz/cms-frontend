@@ -114,6 +114,21 @@ button {
   }
 }
 
+/* Printing (or saving as PDF) renders the entire page at once. If the visitor
+   does that before scrolling through — a very normal thing to do — whatever
+   .reveal targets the IntersectionObserver hadn't reached yet would print
+   permanently invisible, since nothing about print rendering ever fires it.
+   Force everything visible for print regardless of scroll/JS state. */
+@media print {
+  .reveal,
+  .reveal-instant {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
 /* Contact page — the form takes noticeably longer to ease in than the
    site-wide reveal default. Covers both reveal paths: .reveal (scrolled into
    view) and .reveal-instant (already in view at load). */
@@ -273,21 +288,21 @@ button {
   background: var(--color-bg-alt);
 }
 
+/* Plain icon, no circular badge — larger and just colored, so a small
+   CMS-uploaded icon reads clearly instead of getting lost in a tiny dark tile. */
 .card__icon {
-  width: 3rem;
-  height: 3rem;
-  border-radius: var(--radius-full);
+  width: 2.75rem;
+  height: 2.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-ink);
-  color: var(--color-accent);
+  color: var(--color-primary-alt);
   margin-bottom: 1.25rem;
 }
 
 .card__icon-img {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
@@ -334,15 +349,14 @@ button {
   color: #ffffff;
 }
 
-.brand__mark {
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid var(--color-border-on-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.brand__logo {
+  display: block;
+  height: 2.25rem;
+  width: auto;
+}
+
+.brand__logo--footer {
+  height: 2.75rem;
 }
 
 .nav {
@@ -896,18 +910,30 @@ body.nav-open {
   }
 }
 
-/* Testimonials */
+/* Testimonials — capped card width + centered so 1-2 items don't stretch
+   edge to edge the way a plain auto-fit grid would. */
+.testimonial-grid {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 22rem));
+  justify-content: center;
+}
+
 .testimonial-card {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
   margin: 0;
+}
+
+.testimonial-card__mark {
+  color: var(--color-primary);
+  opacity: 0.5;
 }
 
 .testimonial-card__quote {
   font-size: var(--text-body);
   color: var(--color-text);
   font-style: italic;
+  line-height: 1.6;
 }
 
 .testimonial-card__meta {
@@ -915,13 +941,17 @@ body.nav-open {
   align-items: center;
   gap: 0.75rem;
   margin-top: auto;
+  padding-top: 0.25rem;
 }
 
 .testimonial-card__photo {
   width: 2.75rem;
   height: 2.75rem;
   border-radius: var(--radius-full);
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--color-bg-alt);
+  padding: 0.25rem;
+  border: 1px solid var(--color-border);
 }
 
 .testimonial-card__author {
@@ -1048,6 +1078,22 @@ body.nav-open {
 
 .lead-form__status--error {
   color: var(--color-status-error);
+}
+
+/* Home page contact section — text and form side by side instead of both
+   capped to a narrow centered column, which left large empty margins on
+   anything wider than a phone. */
+.contact-layout {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 860px) {
+  .contact-layout {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
 }
 
 /* Blog — cards bounce in from the bottom on page load (staggered per-card via
@@ -1257,9 +1303,10 @@ body.nav-open {
   color: var(--color-text-60);
 }
 
-.prose :is(h2, h3) {
+.prose :is(h1, h2, h3, h4) {
   margin-top: 2rem;
   color: var(--color-text);
+  font-size: var(--text-h3);
 }
 
 .prose p + p {
@@ -1271,16 +1318,101 @@ body.nav-open {
   text-decoration: underline;
 }
 
-.rich-text__video {
-  margin-top: 2rem;
+/* Timeline — admins commonly structure a rich_text body as
+   <section><h2>…</h2><h3>2002</h3><p>…</p><h3>2006</h3><p>…</p>…</section>
+   (e.g. "Nuestra historia"). Style that recurring year-by-year pattern as a
+   proper vertical timeline instead of plain stacked headings. Scoped to a
+   <section> specifically so it doesn't touch ordinary prose h3 usage. */
+.prose section {
   position: relative;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: var(--color-ink);
+  margin-top: 1.75rem;
+  padding-left: 2rem;
+  border-left: 2px solid var(--color-border);
 }
 
-.rich-text__video iframe {
+.prose section h2 {
+  margin-top: 0;
+  margin-left: -2rem;
+}
+
+.prose section h3 {
+  position: relative;
+  margin-top: 2.25rem;
+  color: var(--color-primary-alt);
+  font-size: var(--text-h3);
+}
+
+.prose section h2 + h3 {
+  margin-top: 1.75rem;
+}
+
+.prose section h3::before {
+  content: "";
+  position: absolute;
+  top: 0.45em;
+  left: -2.375rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-alt);
+  box-shadow: 0 0 0 4px var(--color-bg);
+}
+
+.prose section h3 + p {
+  margin-top: 0.5rem;
+}
+
+/* Rich text with a video — media on one side, copy on the other (home page). */
+.rich-text-media {
+  /* --section-bg is scrubbed by scroll position (see RichText.astro's script);
+     falls back to the plain ink color with no JS / before the first frame. */
+  background: var(--section-bg, var(--color-ink));
+}
+
+.rich-text-media .section-title {
+  color: #ffffff;
+}
+
+.rich-text-media .prose {
+  color: var(--color-text-on-dark-70);
+}
+
+.rich-text-media .prose :is(h1, h2, h3, h4) {
+  color: #ffffff;
+}
+
+.rich-text-media .prose a {
+  color: var(--color-primary-light);
+}
+
+.rich-text-media__layout {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 860px) {
+  .rich-text-media__layout {
+    grid-template-columns: 1fr 1fr;
+    gap: 3.5rem;
+    /* Video keeps its own 16:9 box (see below) instead of being stretched to
+       match the text column's height — stretching it forced the YouTube
+       player itself to letterbox (black bars) to keep the video at 16:9
+       inside a taller box. Centering it splits the leftover space evenly
+       above/below instead of dumping it all in one large gap underneath. */
+    align-items: center;
+  }
+}
+
+.rich-text-media__video {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--color-ink-2);
+  box-shadow: var(--shadow-float);
+}
+
+.rich-text-media__video iframe {
   position: absolute;
   inset: 0;
   width: 100%;

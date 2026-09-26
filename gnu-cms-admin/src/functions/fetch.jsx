@@ -66,9 +66,16 @@ export async function updateSection(id, content) {
             },
             body: JSON.stringify({ content }),
         })
-        const res = await response.json()
-        console.log('On PUT sections response ', res)
-        return res
+
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
+
+        const result = await response.json()
+        console.log('Response on update section: ', result)
+        console.log('For url: ', `${tenantDomain}/api/admin/sections/${id}`)
+        return result
     } catch (error) {
         console.error('Error updating section:', error)
         return { status: 'error', meta: { message: 'No se pudo actualizar la sección' } }
@@ -89,6 +96,11 @@ export async function createBlogPost(payload) {
             },
             body: JSON.stringify(payload),
         })
+
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
 
         return await response.json()
     } catch (error) {
@@ -112,6 +124,11 @@ export async function updateBlogPost(id, payload) {
             body: JSON.stringify(payload),
         })
 
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
+
         return await response.json()
     } catch (error) {
         console.error('Error updating blog post:', error)
@@ -131,6 +148,11 @@ export async function deleteBlogPost(id) {
                 'Accept': 'application/json',
             },
         })
+
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
 
         if (response.status === 204) {
             return { status: 'success' }
@@ -158,6 +180,11 @@ export async function createProductCategory(payload) {
             body: JSON.stringify(payload),
         })
 
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
+
         return await response.json()
     } catch (error) {
         console.error('Error creating product category:', error)
@@ -180,6 +207,11 @@ export async function updateProductCategory(id, payload) {
             body: JSON.stringify(payload),
         })
 
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
+
         return await response.json()
     } catch (error) {
         console.error('Error updating product category:', error)
@@ -199,6 +231,11 @@ export async function deleteProductCategory(id) {
                 'Accept': 'application/json',
             },
         })
+
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
 
         if (response.status === 204) {
             return { status: 'success' }
@@ -226,6 +263,11 @@ export async function createProduct(payload) {
             body: JSON.stringify(payload),
         })
 
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
+
         return await response.json()
     } catch (error) {
         console.error('Error creating product:', error)
@@ -248,6 +290,11 @@ export async function updateProduct(id, payload) {
             body: JSON.stringify(payload),
         })
 
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
+
         return await response.json()
     } catch (error) {
         console.error('Error updating product:', error)
@@ -267,6 +314,11 @@ export async function deleteProduct(id) {
                 'Accept': 'application/json',
             },
         })
+
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
 
         if (response.status === 204) {
             return { status: 'success' }
@@ -291,6 +343,11 @@ export async function deleteAppointment(id) {
                 'Accept': 'application/json',
             },
         })
+
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
 
         if (response.status === 204) {
             return { status: 'success' }
@@ -320,7 +377,16 @@ export async function uploadMedia(file) {
             body: formData,
         })
 
-        return await response.json()
+        // console.log('Response on upload: ', await response.json())
+
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
+
+        const result = await response.json()
+        console.log(result)
+        return result;
     } catch (error) {
         console.error('Error uploading media:', error)
         return { status: 'error', meta: { message: 'No se pudo subir el archivo' } }

@@ -183,22 +183,24 @@ const marqueeLogos = useLogoMarquee ? [...logos, ...logos] : logos;
 
     <!-- Contacto -->
     <section class="section" id="contacto">
-      <div class="container" style="max-width: 34rem;">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">Contacto</span>
-          <h2 class="section-title">{leadCaptureForm?.title ?? "Hablemos de tu proyecto de gas natural"}</h2>
-          <p class="section-subtitle">
-            {leadCaptureForm?.intro ??
-              "Déjanos tus datos y un asesor te contactará."}
-          </p>
+      <div class="container">
+        <div class="contact-layout">
+          <div class="section-head">
+            <span class="eyebrow">Contacto</span>
+            <h2 class="section-title">{leadCaptureForm?.title ?? "Hablemos de tu proyecto de gas natural"}</h2>
+            <p class="section-subtitle">
+              {leadCaptureForm?.intro ??
+                "Déjanos tus datos y un asesor te contactará."}
+            </p>
+          </div>
+          <LeadCaptureForm
+            formId="home-lead-form"
+            title="Cotiza sin compromiso"
+            submit_label={leadCaptureForm?.submit_label ?? "Enviar mensaje"}
+            fields={leadCaptureForm?.fields}
+            source={pageResponse?.data?.slug ?? "inicio"}
+          />
         </div>
-        <LeadCaptureForm
-          formId="home-lead-form"
-          title="Cotiza sin compromiso"
-          submit_label={leadCaptureForm?.submit_label ?? "Enviar mensaje"}
-          fields={leadCaptureForm?.fields}
-          source={pageResponse?.data?.slug ?? "inicio"}
-        />
       </div>
     </section>
 

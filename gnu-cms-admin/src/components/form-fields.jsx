@@ -116,7 +116,16 @@ export function ImageField({ label, value, onChange, error, hint }) {
     setUploading(true)
     const res = await uploadMedia(file)
     setUploading(false)
-    if (res?.status === 'success') onChange(res.data.url)
+
+    if (res?.status === 'success') {
+      onChange(res.data.url)
+      return
+    }
+
+    // Upload failures come back as the API's raw Laravel error shape
+    // ({message, errors}), not the app's usual {status, data, meta}.
+    const text = res?.errors?.file?.[0] ?? res?.meta?.message ?? res?.message ?? 'No se pudo subir el archivo.'
+    setFeedback({ tone: 'error', text })
   }
 
   return (

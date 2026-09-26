@@ -40,6 +40,7 @@ const SECTION_LABELS = {
   social_icons: 'Redes sociales',
   whatsapp_button: 'Botón de WhatsApp',
   image_gallery: 'Galería de imágenes',
+  testimonials: 'Testimonios',
 }
 
 const NETWORK_OPTIONS = ['facebook', 'instagram', 'twitter', 'linkedin', 'youtube', 'tiktok']
@@ -837,6 +838,75 @@ function ImageGalleryEditor({ content, onChange, errors }) {
   )
 }
 
+function TestimonialsEditor({ content, onChange, errors }) {
+  const items = content.items ?? []
+
+  function updateItem(i, key, value) {
+    onChange({ ...content, items: updateArrayItem(items, i, key, value) })
+  }
+
+  function addItem() {
+    onChange({ ...content, items: [...items, { quote: '', author: '', role: null, photo: null }] })
+  }
+
+  function removeItem(i) {
+    onChange({ ...content, items: items.filter((_, idx) => idx !== i) })
+  }
+
+  return (
+    <div className="space-y-4">
+      <Field label="Título de la sección" error={fieldError(errors, 'content.title')}>
+        <input
+          type="text"
+          value={content.title ?? ''}
+          onChange={(e) => onChange({ ...content, title: e.target.value })}
+          className={inputClass}
+        />
+        <CharHint value={content.title} recommended={50} max={70} />
+      </Field>
+      {items.map((item, i) => (
+        <DynamicItem key={i} title={`Testimonio ${i + 1}`} onRemove={() => removeItem(i)}>
+          <ImageField
+            label="Foto"
+            hint="400×400 px (cuadrado 1:1) · JPG · máx. 5 MB, ideal menos de 200 KB."
+            value={item.photo}
+            onChange={(value) => updateItem(i, 'photo', value)}
+            error={fieldError(errors, `content.items.${i}.photo`)}
+          />
+          <Field label="Cita" required error={fieldError(errors, `content.items.${i}.quote`)}>
+            <textarea
+              rows={3}
+              value={item.quote ?? ''}
+              onChange={(e) => updateItem(i, 'quote', e.target.value)}
+              className={inputClass}
+            />
+            <CharHint value={item.quote} recommended={140} max={220} />
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Autor" required error={fieldError(errors, `content.items.${i}.author`)}>
+              <input
+                type="text"
+                value={item.author ?? ''}
+                onChange={(e) => updateItem(i, 'author', e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+            <Field label="Cargo / rol" error={fieldError(errors, `content.items.${i}.role`)}>
+              <input
+                type="text"
+                value={item.role ?? ''}
+                onChange={(e) => updateItem(i, 'role', e.target.value || null)}
+                className={inputClass}
+              />
+            </Field>
+          </div>
+        </DynamicItem>
+      ))}
+      <AddButton onClick={addItem}>+ Agregar testimonio</AddButton>
+    </div>
+  )
+}
+
 const SECTION_EDITORS = {
   page_hero: PageHeroEditor,
   feature_grid: FeatureGridEditor,
@@ -851,6 +921,7 @@ const SECTION_EDITORS = {
   social_icons: SocialIconsEditor,
   whatsapp_button: WhatsappButtonEditor,
   image_gallery: ImageGalleryEditor,
+  testimonials: TestimonialsEditor,
 }
 
 function SectionCard({ section, onUpdated }) {
@@ -1073,7 +1144,7 @@ export function GlobalSectionsFields({ site = 'gnu' }) {
       <header>
         <h2 className="text-lg font-semibold tracking-tight">Contenido del sitio</h2>
         <p className="mt-1 text-sm text-white/60">
-          Datos de contacto, redes sociales y botón de WhatsApp. Aplican a todas las páginas de este sitio.
+          Datos de contacto, redes sociales, botón de WhatsApp y testimonios. Aplican a todo el sitio, no a una página.
         </p>
       </header>
       {sections.map((section) => (

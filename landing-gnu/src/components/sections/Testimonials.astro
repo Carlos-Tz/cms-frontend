@@ -14,6 +14,17 @@ interface Props {
 }
 
 const { title, items = [] } = Astro.props;
+
+// CMS authors sometimes type their own quote marks into the text. The card
+// already adds a decorative one, so strip any the author included to avoid
+// doubling up (e.g. `""like this".`) — the closing quote is often followed
+// by trailing punctuation (a period), so the trailing match allows for one.
+const stripQuotes = (quote: string) =>
+  quote
+    .trim()
+    .replace(/^["“”'‘’]+/, "")
+    .replace(/["“”'‘’]+(?=[.!?]?\s*$)/, "")
+    .trim();
 ---
 
 {items.length > 0 && (
@@ -23,10 +34,16 @@ const { title, items = [] } = Astro.props;
         <span class="eyebrow">Testimonios</span>
         <h2 class="section-title">{title ?? "Lo que dicen nuestros clientes"}</h2>
       </div>
-      <div class="grid grid--3">
+      <div class="grid grid--3 testimonial-grid">
         {items.map((item) => (
           <blockquote class="card testimonial-card">
-            <p class="testimonial-card__quote">“{item.quote}”</p>
+            <svg class="testimonial-card__mark" width="34" height="26" viewBox="0 0 34 26" fill="none" aria-hidden="true">
+              <path
+                d="M14.4 0 8 12.2h5.6V26H0V13.6L6.4 0h8Zm19.6 0-6.4 12.2H33V26H19.6V13.6L26 0h8Z"
+                fill="currentColor"
+              />
+            </svg>
+            <p class="testimonial-card__quote">{stripQuotes(item.quote)}</p>
             <footer class="testimonial-card__meta">
               {item.photo && <img class="testimonial-card__photo" src={mediaUrl(item.photo)} alt="" />}
               <div>
