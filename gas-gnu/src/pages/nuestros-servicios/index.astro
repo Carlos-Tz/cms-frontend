@@ -1,23 +1,22 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import SectionRenderer from "../../components/SectionRenderer.astro";
-import PageHero from "../../components/sections/PageHero.astro";
-import { fetchData } from "../../functions/fetch";
+import CmsPage from "../../components/CmsPage.astro";
+import ChildPageCards from "../../components/ChildPageCards.astro";
 
-type PageResponse = {
-  status: string;
-  data: { slug: string; path: string; title: string; sections: Array<{ type: string; content: Record<string, any> }> };
-  meta: Record<string, any>;
-};
-
-const pageResponse: PageResponse | undefined = await fetchData("pages/nuestros-servicios");
-const page = pageResponse?.data;
-const sections = page?.sections ?? [];
+const fallbackChildren = [
+  { slug: "instala-tu-equipo-de-gnv", path: "/nuestros-servicios/instala-tu-equipo-de-gnv", title: "Instala tu equipo de GNV" },
+  { slug: "flotillas-empresariales", path: "/nuestros-servicios/flotillas-empresariales", title: "Flotillas empresariales" },
+  { slug: "estaciones-moviles", path: "/nuestros-servicios/estaciones-moviles", title: "Estaciones móviles" },
+];
 ---
 
-<Layout title={page?.title ?? "Nuestros servicios"}>
-  <main>
-    {!page && <PageHero title="Nuestros servicios" subtitle="Todo lo que necesitas para moverte con GNV." />}
-    <SectionRenderer sections={sections} pageSlug={page?.slug} />
-  </main>
-</Layout>
+<CmsPage slug="nuestros-servicios" fallbackTitle="Nuestros servicios" fallbackSubtitle="Todo lo que necesitas para moverte con GNV.">
+  <section class="section">
+    <div class="container">
+      <div class="section-head section-head--center">
+        <span class="eyebrow">Conoce más</span>
+        <h2 class="section-title">Explora Nuestros servicios</h2>
+      </div>
+      <ChildPageCards parent="nuestros-servicios" fallback={fallbackChildren} gridClass="grid--3" />
+    </div>
+  </section>
+</CmsPage>

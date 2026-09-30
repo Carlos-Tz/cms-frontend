@@ -1,62 +1,93 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import noImg from "../../assets/images/noimg.jpg";
-import { fetchData, mediaUrl } from "../../functions/fetch";
-
-type BlogListResponse = {
-  status: string;
-  data: Array<{ slug: string }>;
-  meta: { last_page: number };
-};
+import { mediaUrl } from "../../functions/fetch";
+import { seo } from "../../config/seo";
+import { getAllBlogPosts, getBlogPost } from "../../lib/cms";
 
 export async function getStaticPaths() {
-  const firstPage: BlogListResponse | undefined = await fetchData("blog?page=1");
-  const lastPage = firstPage?.meta?.last_page ?? 1;
-  const slugs = new Set((firstPage?.data ?? []).map((post) => post.slug));
-
-  for (let page = 2; page <= lastPage; page++) {
-    const nextPage: BlogListResponse | undefined = await fetchData(`blog?page=${page}`);
-    (nextPage?.data ?? []).forEach((post) => slugs.add(post.slug));
-  }
-
-  return Array.from(slugs).map((slug) => ({ params: { slug } }));
+  const posts = await getAllBlogPosts();
+  return posts.map((post) => ({ params: { slug: post.slug } }));
 }
 
-type BlogPost = {
-  slug: string;
-  title: string;
-  excerpt: string;
-  cover_image: string | null;
-  published_at: string;
-  body: string;
-};
-type BlogPostResponse = { status: string; data: BlogPost; meta: Record<string, any> };
-
 const { slug } = Astro.params;
-const postResponse: BlogPostResponse | undefined = await fetchData(`blog/${slug}`);
-const post = postResponse?.data;
+const post = await getBlogPost(slug!);
+
+// "Más artículos": the newest other posts, from the same list the static paths
+// were built from (memoized, so no extra request).
+const morePosts = (await getAllBlogPosts()).filter((other) => other.slug !== slug).slice(0, 3);
 
 const formatDate = (value: string) =>
   new Date(value).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+
+const coverUrl = post?.cover_image ? mediaUrl(post.cover_image) : null;
+const articleJsonLd = post
+  ? {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: post.title,
+      ...(post.excerpt && { description: post.excerpt }),
+      ...(coverUrl && { image: coverUrl }),
+      datePublished: post.published_at,
+      mainEntityOfPage: new URL(`/blog/${post.slug}`, seo.siteUrl).toString(),
+      publisher: { "@type": "Organization", name: seo.siteName, url: seo.siteUrl },
+    }
+  : null;
 ---
 
 <Layout
   title={post?.title ?? "Publicación no encontrada"}
-  description={post?.excerpt}
-  image={post?.cover_image ? mediaUrl(post.cover_image) : undefined}
+  description={post?.excerpt ?? undefined}
+  image={coverUrl}
   noindex={!post}
+  type={post ? "article" : "website"}
+  jsonLd={articleJsonLd}
 >
   <main>
     {post ? (
-      <article class="section">
-        <div class="container blog-post">
-          <a class="blog-post__back" href="/blog">← Volver al blog</a>
-          <p class="blog-card__tag">{formatDate(post.published_at)}</p>
-          <h1 class="blog-post__title">{post.title}</h1>
-          <img class="blog-post__cover" src={post.cover_image ? mediaUrl(post.cover_image) : noImg.src} alt="" />
-          <div class="blog-post__body prose" set:html={post.body} />
-        </div>
-      </article>
+      <>
+        <article class="section">
+          <div class="container blog-post">
+            <a class="blog-post__back" href="/blog">← Volver al blog</a>
+            <p class="blog-card__tag"><time datetime={post.published_at}>{formatDate(post.published_at)}</time></p>
+            <h1 class="blog-post__title">{post.title}</h1>
+            {post.excerpt && <p class="blog-post__lead">{post.excerpt}</p>}
+            <img class="blog-post__cover" src={coverUrl ?? noImg.src} alt="" />
+            <div class="blog-post__body prose" set:html={post.body} />
+          </div>
+        </article>
+
+        {morePosts.length > 0 && (
+          <section class="section section--alt">
+            <div class="container">
+              <div class="section-head section-head--center">
+                <span class="eyebrow">Sigue leyendo</span>
+                <h2 class="section-title">Más artículos</h2>
+              </div>
+              <div class="grid grid--3">
+                {morePosts.map((other) => (
+                  <a href={`/blog/${other.slug}`} class="blog-card service-card">
+                    <div class="service-card__media">
+                      <img
+                        class="blog-card__cover"
+                        src={other.cover_image ? mediaUrl(other.cover_image) : noImg.src}
+                        alt=""
+                        loading="lazy"
+                      />
+                    </div>
+                    <div class="blog-card__body">
+                      <p class="blog-card__tag"><time datetime={other.published_at}>{formatDate(other.published_at)}</time></p>
+                      <p class="blog-card__title">{other.title}</p>
+                      {other.excerpt && <p class="blog-card__excerpt">{other.excerpt}</p>}
+                      <span class="blog-card__link">Leer más <span class="service-card__arrow" aria-hidden="true">→</span></span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+      </>
     ) : (
       <div class="section container" style="text-align:center;">
         <h1 class="section-title">Publicación no encontrada</h1>

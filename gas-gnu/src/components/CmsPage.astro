@@ -1,0 +1,35 @@
+---
+// A page rendered straight from `GET pages/{slug}`: its sections in CMS order,
+// with its "Encabezado de página" doubling as the SEO summary — the hero
+// subtitle becomes the meta description and the hero image the social preview.
+// Anything passed as children renders after the sections (e.g. a hub's cards).
+import Layout from "../layouts/Layout.astro";
+import SectionRenderer from "./SectionRenderer.astro";
+import PageHero from "./sections/PageHero.astro";
+import { mediaUrl } from "../functions/fetch";
+import { getPage, heroOf } from "../lib/cms";
+
+interface Props {
+  slug: string;
+  // Shown only when the CMS is unreachable at build time.
+  fallbackTitle: string;
+  fallbackSubtitle?: string;
+}
+
+const { slug, fallbackTitle, fallbackSubtitle } = Astro.props;
+
+const page = await getPage(slug);
+const hero = heroOf(page);
+---
+
+<Layout
+  title={page?.title ?? fallbackTitle}
+  description={hero?.subtitle ?? fallbackSubtitle}
+  image={hero?.image ? mediaUrl(hero.image) : undefined}
+>
+  <main>
+    {!page && <PageHero title={fallbackTitle} subtitle={fallbackSubtitle} />}
+    <SectionRenderer sections={page?.sections ?? []} pageSlug={page?.slug} />
+    <slot />
+  </main>
+</Layout>

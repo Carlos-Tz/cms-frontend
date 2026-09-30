@@ -8,111 +8,40 @@ import LocationsList from "../components/sections/LocationsList.astro";
 import BlogTeaser from "../components/sections/BlogTeaser.astro";
 import ClientsShowcase from "../components/sections/ClientsShowcase.astro";
 import StationsMap from "../components/sections/StationsMap.astro";
-import noImg from "../assets/images/noimg.jpg";
-import { fetchData, mediaUrl, BASE_URL } from "../functions/fetch";
+import HeroCarousel from "../components/sections/HeroCarousel.astro";
+import SavingsSimulator from "../components/sections/SavingsSimulator.astro";
+import ChildPageCards from "../components/ChildPageCards.astro";
+import { mediaUrl } from "../functions/fetch";
+import { getBlogList, getPage, sectionOf } from "../lib/cms";
 
-type Slide = {
-  image: string;
-  title: string | null;
-  subtitle: string | null;
-  link_url: string | null;
-  link_label: string | null;
-};
+// The home page keeps a curated order rather than the CMS's raw section list:
+// each block is read by type from `pages/inicio`. Only types the CMS schema
+// actually defines are looked up — every other block comes from its own
+// endpoint (services from the menu, posts from `GET blog`).
+const page = await getPage("inicio");
 
-type FeatureItem = { icon: string | null; title: string; text: string };
-type Testimonial = { quote: string; name: string; role: string };
-type Location = { title: string; text: string };
-type BlogPost = { tag: string; title: string; url?: string | null; cover_image?: string | null };
-type FuelPrice = {
-  fuel: string;
-  label: string;
-  price_per_unit: number;
-  unit: string;
-  equivalence_factor: number;
-};
-type ClientLogo = { name: string; image: string };
-
-type PageSection = { type: string; content: Record<string, any> };
-type PageResponse = {
-  status: string;
-  data: { slug: string; path: string; title: string; sections: PageSection[] };
-  meta: Record<string, any>;
-};
-
-const pageResponse: PageResponse | undefined = await fetchData("pages/inicio");
-const sections = pageResponse?.data?.sections ?? [];
-const getSection = (type: string) => sections.find((section) => section.type === type)?.content;
-
-const bannerCarousel = getSection("banner_carousel") as { slides: Slide[] } | undefined;
-const savingsSimulator = getSection("savings_simulator") as
-  | { title: string; intro: string; fuel_prices?: FuelPrice[] }
-  | undefined;
+const bannerCarousel = sectionOf(page, "banner_carousel");
+const savingsSimulator = sectionOf(page, "savings_simulator");
 // The CMS reuses the generic "feature_grid" type for the rewards panel's
-// content (title/items), not a distinct "rewards_program" type — so this
-// feeds the rewards section below, not the Servicios grid.
-const featureGrid = getSection("feature_grid") as { title: string; items: FeatureItem[] } | undefined;
-const rewardsProgram = getSection("rewards_program") as
-  | { title: string; intro: string; benefits: string[]; cta_label: string; cta_url: string; image: string }
-  | undefined;
-const testimonials = getSection("testimonials") as { title: string; items: Testimonial[] } | undefined;
-const locationsList = getSection("locations_list") as
-  | { title: string; intro: string; locations: Location[]; center?: string; zoom?: string | number }
-  | undefined;
-const stationsMap = getSection("stations_map") as
-  | { title?: string | null; center?: string | null; zoom?: string | number | null }
-  | undefined;
-const blogTeaser = getSection("blog_teaser") as { title: string; posts: BlogPost[] } | undefined;
-const leadCaptureForm = getSection("lead_capture_form") as
-  | { title: string; intro: string; submit_label: string; fields: string[] }
-  | undefined;
-const clientsShowcase = getSection("clients_showcase") as { title?: string | null; logos: ClientLogo[] } | undefined;
+// content (title/items) — so it feeds the rewards section below.
+const rewardsGrid = sectionOf(page, "feature_grid");
+const testimonials = sectionOf(page, "testimonials");
+const stationsMap = sectionOf(page, "stations_map");
+const leadCaptureForm = sectionOf(page, "lead_capture_form");
+const clientsShowcase = sectionOf(page, "clients_showcase");
 
-const fallbackSlides: Slide[] = [
-  {
-    image: noImg.src,
-    title: "Ahorra hasta un 60% en combustible con GNV",
-    subtitle: "Convierte tu auto, camioneta o flotilla a gas natural vehicular.",
-    link_url: "/#simulador",
-    link_label: "Simula tu ahorro",
-  },
-  { image: noImg.src, title: "Instalación con 20% de descuento este mes", subtitle: "Promoción vigente", link_url: null, link_label: null },
-  { image: noImg.src, title: "Financiamiento a 12 meses sin intereses", subtitle: "Flotillas empresariales", link_url: null, link_label: null },
+const latestPosts = (await getBlogList(1))?.posts.slice(0, 3) ?? [];
+
+// The first banner is what the page opens on, so it is also its social preview.
+const firstSlide = bannerCarousel?.slides?.[0];
+const socialImage = firstSlide?.image ? mediaUrl(firstSlide.image) : undefined;
+
+// Offline fallbacks, used only when `pages/inicio` is unreachable at build time.
+const fallbackServices = [
+  { slug: "instala-tu-equipo-de-gnv", path: "/nuestros-servicios/instala-tu-equipo-de-gnv", title: "Instala tu equipo de GNV" },
+  { slug: "flotillas-empresariales", path: "/nuestros-servicios/flotillas-empresariales", title: "Flotillas empresariales" },
+  { slug: "estaciones-moviles", path: "/nuestros-servicios/estaciones-moviles", title: "Estaciones móviles" },
 ];
-const slides: Slide[] = bannerCarousel?.slides?.length
-  ? bannerCarousel.slides.map((slide) => ({ ...slide, image: mediaUrl(slide.image) }))
-  : fallbackSlides;
-
-// "Hasta un 60%" is the headline savings claim across the hero and the
-// simulator's fallback rate — used only when the CMS has no fuel_prices at
-// all (so there's no known price to convert a peso spend into a quantity)
-// or the live savings-simulator endpoint is unreachable.
-const FALLBACK_SAVINGS_RATE = 0.6;
-const GNV_FUEL_KEY = "gas-natural";
-
-type FuelOption = { fuel: string; label: string; pricePerUnit: number };
-
-// The actual savings math is server-side (GET savings-simulator?fuel=&quantity=);
-// this only needs each fuel's price to convert the visitor's peso spend into
-// the quantity that endpoint expects.
-const fuelOptions: FuelOption[] = (savingsSimulator?.fuel_prices ?? [])
-  .filter((price) => price.fuel !== GNV_FUEL_KEY && price.price_per_unit > 0)
-  .map((price) => ({ fuel: price.fuel, label: price.label, pricePerUnit: price.price_per_unit }));
-
-const fallbackFuelOptions: FuelOption[] = [{ fuel: "gasolina", label: "Gasolina", pricePerUnit: 0 }];
-const savingsFuelOptions = fuelOptions.length ? fuelOptions : fallbackFuelOptions;
-const savingsFuelPrices = Object.fromEntries(savingsFuelOptions.map((option) => [option.fuel, option.pricePerUnit]));
-
-const fallbackFeatures: FeatureItem[] = [
-  { icon: null, title: "Instala tu equipo de GNV", text: "Conversión certificada para que tu auto ruede con gas natural vehicular desde la primera semana." },
-  { icon: null, title: "Cotiza tu equipo", text: "Recibe una cotización a tu medida según marca, modelo y tipo de motor." },
-  { icon: null, title: "Financiamiento", text: "Planes a meses sin intereses para que tu conversión se pague sola con el ahorro mensual." },
-  { icon: null, title: "Flotillas empresariales", text: "Soluciones a escala para transporte de carga, taxis y flotillas corporativas." },
-  { icon: null, title: "Estaciones móviles", text: "Unidades de carga móvil para llevar el GNV donde tu operación lo necesite." },
-];
-// Servicios has no dedicated CMS section of its own yet (the CMS's one
-// feature_grid instance is the rewards panel's content, below), so it
-// always renders its curated fallback copy for now.
-const featureItems = fallbackFeatures;
 
 const fallbackBenefits = [
   "Acumula puntos por cada carga en estaciones GNU.",
@@ -120,58 +49,23 @@ const fallbackBenefits = [
   "Descuentos exclusivos para clientes frecuentes y flotillas.",
 ];
 
-const fallbackTestimonials: Testimonial[] = [
-  { quote: "Desde que convertí mi flotilla a GNV bajé más del 40% en gasto de combustible mensual.", name: "Ricardo Peña", role: "Flotilla de taxis, Morelia" },
-  { quote: "La instalación fue rápida y el soporte post-venta siempre responde el mismo día.", name: "Lupita Camacho", role: "Transporte de carga, Uruapan" },
-  { quote: "El simulador de ahorro me convenció antes de pisar el taller. Los números no mienten.", name: "Juan Osorio", role: "Cliente particular" },
+const fallbackTestimonials = [
+  { quote: "Desde que convertí mi flotilla a GNV bajé más del 40% en gasto de combustible mensual.", author: "Ricardo Peña", role: "Flotilla de taxis, Morelia" },
+  { quote: "La instalación fue rápida y el soporte post-venta siempre responde el mismo día.", author: "Lupita Camacho", role: "Transporte de carga, Uruapan" },
+  { quote: "El simulador de ahorro me convenció antes de pisar el taller. Los números no mienten.", author: "Juan Osorio", role: "Cliente particular" },
 ];
-const testimonialItems = testimonials?.items?.length ? testimonials.items : fallbackTestimonials;
 
-const fallbackLocations: Location[] = [
+const fallbackLocations = [
   { title: "Estaciones Morelia", text: "3 puntos de carga activos las 24 horas." },
   { title: "Estación Uruapan", text: "Carga rápida y área de espera techada." },
   { title: "Agenda tu verificación", text: "Reserva tu cita de verificación anual en línea." },
   { title: "Talleres", text: "Red de talleres certificados para mantenimiento de tu equipo." },
 ];
-const locations = locationsList?.locations?.length ? locationsList.locations : fallbackLocations;
-
-const fallbackPosts: BlogPost[] = [
-  { tag: "Verificación", title: "Verificación anual: qué necesitas y cuándo renovarla" },
-  { tag: "Sostenibilidad", title: "Transporte sostenible: el rol del GNV en las ciudades" },
-  { tag: "Seguridad", title: "Seguridad del GNV: mitos y realidades" },
-  { tag: "Comparativa", title: "GN vs. otros combustibles: ahorro y emisiones" },
-];
-const blogPosts = blogTeaser?.posts?.length ? blogTeaser.posts : fallbackPosts;
 ---
 
-<Layout>
+<Layout image={socialImage}>
   <main id="inicio">
-    <!-- <div>{JSON.stringify(pageResponse)}</div> -->
-    <!-- Hero: full-bleed carousel driven by the CMS -->
-    <section class="hero" id="banner-carousel">
-      <div class="hero__track">
-        {slides.map((slide, index) => (
-          <div class={"hero-slide" + (index === 0 ? " is-active" : "")}>
-            <img class="hero-slide__img" src={slide.image} alt="" />
-            <div class="hero-slide__scrim" aria-hidden="true" />
-            <div class="container hero-slide__content">
-              {slide.title && (
-                index === 0 ? (
-                  <h1 class="hero-slide__title">{slide.title}</h1>
-                ) : (
-                  <p class="hero-slide__title">{slide.title}</p>
-                )
-              )}
-              {slide.subtitle && <p class="hero-slide__subtitle">{slide.subtitle}</p>}
-              {slide.link_url && slide.link_label && (
-                <a class="btn-primary hero-slide__cta" href={slide.link_url}>{slide.link_label}</a>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div class="hero__dots" role="tablist" aria-label="Banners"></div>
-    </section>
+    <HeroCarousel slides={bannerCarousel?.slides} />
 
     <div class="hero-stats">
       <div class="container hero-stats__inner">
@@ -182,83 +76,49 @@ const blogPosts = blogTeaser?.posts?.length ? blogTeaser.posts : fallbackPosts;
     </div>
 
     <!-- Simulador de ahorro -->
-    <section class="simulator-band" id="simulador">
-      <div class="container simulator">
-        <div>
-          <span class="eyebrow eyebrow--on-dark">Simulador de ahorro</span>
-          <h2 class="simulator__heading">
-            {savingsSimulator?.title ?? "Descubre cuánto te ahorras al cambiar a GNV"}
-          </h2>
-          <p class="simulator__lead">
-            {savingsSimulator?.intro ??
-              "Ingresa tu gasto mensual actual en gasolina y descubre tu ahorro estimado al cambiarte a gas natural vehicular."}
-          </p>
-          <form id="savings-form" style="margin-top: 1.5rem;">
-            <div class="field field--on-dark">
-              <label for="fuel-type">Combustible que usas actualmente</label>
-              <select id="fuel-type" name="fuel-type">
-                {savingsFuelOptions.map((option) => (
-                  <option value={option.fuel}>{option.label}</option>
-                ))}
-              </select>
-            </div>
-            <div class="field field--on-dark">
-              <label for="monthly-spend">Gasto mensual actual (MXN)</label>
-              <input type="number" id="monthly-spend" name="monthly-spend" min="0" placeholder="Ej. 3000" required />
-            </div>
-            <button type="submit" class="btn-primary">Calcular mi ahorro</button>
-          </form>
+    <SavingsSimulator
+      title={savingsSimulator?.title}
+      intro={savingsSimulator?.intro}
+      fuel_prices={savingsSimulator?.fuel_prices}
+      page={page?.slug ?? "inicio"}
+    />
+
+    <!-- Nuestros Servicios: the real service pages, each card from its own hero -->
+    <section class="section section--alt" id="servicios">
+      <div class="container">
+        <div class="section-head section-head--center">
+          <span class="eyebrow">Nuestros servicios</span>
+          <h2 class="section-title">Todo lo que necesitas para moverte con GNV</h2>
         </div>
-        <div class="simulator__result">
-          <p class="simulator__result-value" id="savings-value">$0 MXN</p>
-          <p class="simulator__result-label">Ahorro mensual estimado</p>
-          <p class="simulator__result-label" id="savings-annual" style="margin-top: 0.75rem;">
-            Ahorro anual estimado: $0 MXN
-          </p>
-        </div>
+        <ChildPageCards parent="nuestros-servicios" fallback={fallbackServices} gridClass="grid--3" />
       </div>
     </section>
 
-    <!-- Nuestros Servicios -->
-    <FeatureGrid id="servicios" title="Todo lo que necesitas para moverte con GNV" items={featureItems} />
-
     <!-- Nuestros clientes -->
-    {clientsShowcase?.logos?.length ? (
-      <ClientsShowcase title={clientsShowcase.title} logos={clientsShowcase.logos} />
-    ) : null}
+    <ClientsShowcase title={clientsShowcase?.title} logos={clientsShowcase?.logos} />
 
     <!-- Programa de recompensas -->
-    {featureGrid?.items?.length ? (
-      <FeatureGrid id="recompensas" title={featureGrid.title} items={featureGrid.items} />
+    {rewardsGrid?.items?.length ? (
+      <FeatureGrid id="recompensas" title={rewardsGrid.title} items={rewardsGrid.items} />
     ) : (
-      <RewardsProgram
-        title={rewardsProgram?.title}
-        intro={rewardsProgram?.intro}
-        benefits={rewardsProgram?.benefits?.length ? rewardsProgram.benefits : fallbackBenefits}
-        cta_label={rewardsProgram?.cta_label ?? "Quiero inscribirme"}
-        cta_url={rewardsProgram?.cta_url ?? "/#contacto"}
-        image={rewardsProgram?.image}
-      />
+      <RewardsProgram benefits={fallbackBenefits} cta_label="Quiero inscribirme" cta_url="/#contacto" />
     )}
 
     <!-- Testimoniales -->
-    <Testimonials title={testimonials?.title} items={testimonialItems} />
+    <Testimonials
+      title={testimonials?.title}
+      items={testimonials?.items?.length ? testimonials.items : fallbackTestimonials}
+    />
 
-    <!-- Ubicaciones -->
-    {stationsMap ? (
+    <!-- Ubicaciones: the map and every active station from `GET stations` -->
+    {stationsMap?.center ? (
       <StationsMap id="ubicaciones" title={stationsMap.title} center={stationsMap.center} zoom={stationsMap.zoom} />
     ) : (
-      <LocationsList
-        title={locationsList?.title}
-        intro={locationsList?.intro}
-        locations={locations}
-        center={locationsList?.center}
-        zoom={locationsList?.zoom}
-      />
+      <LocationsList locations={fallbackLocations} />
     )}
 
-    <!-- Blog -->
-    <BlogTeaser title={blogTeaser?.title} posts={blogPosts} />
+    <!-- Blog: the newest real posts -->
+    <BlogTeaser posts={latestPosts} />
 
     <!-- Contacto -->
     <section class="section" id="contacto">
@@ -276,7 +136,7 @@ const blogPosts = blogTeaser?.posts?.length ? blogTeaser.posts : fallbackPosts;
           intro={leadCaptureForm?.intro}
           submit_label={leadCaptureForm?.submit_label ?? "Enviar mensaje"}
           fields={leadCaptureForm?.fields}
-          source="inicio"
+          source={page?.slug ?? "inicio"}
         />
       </div>
     </section>
@@ -296,112 +156,3 @@ const blogPosts = blogTeaser?.posts?.length ? blogTeaser.posts : fallbackPosts;
     }
   }
 </style>
-
-<script>
-  const track = document.querySelector<HTMLElement>(".hero__track");
-  const slides = Array.from(document.querySelectorAll<HTMLElement>(".hero-slide"));
-  const dotsContainer = document.querySelector<HTMLElement>(".hero__dots");
-
-  if (track && slides.length && dotsContainer) {
-    slides.forEach((_, index) => {
-      const dot = document.createElement("button");
-      dot.className = "hero__dot" + (index === 0 ? " is-active" : "");
-      dot.setAttribute("aria-label", `Ir al banner ${index + 1}`);
-      dot.addEventListener("click", () => showSlide(index));
-      dotsContainer.appendChild(dot);
-    });
-
-    const dots = Array.from(dotsContainer.querySelectorAll<HTMLButtonElement>(".hero__dot"));
-    let current = 0;
-
-    function showSlide(index: number) {
-      slides[current].classList.remove("is-active");
-      dots[current].classList.remove("is-active");
-      current = index;
-      slides[current].classList.add("is-active");
-      dots[current].classList.add("is-active");
-    }
-
-    setInterval(() => {
-      showSlide((current + 1) % slides.length);
-    }, 5000);
-  }
-</script>
-
-<script
-  define:vars={{
-    apiBase: BASE_URL,
-    savingsFuelPrices,
-    fallbackRate: FALLBACK_SAVINGS_RATE,
-    // Which savings_simulator section to price against. A site may carry more
-    // than one, each with its own reference prices; without this the endpoint
-    // answers with the site's first, which need not be this page's.
-    simulatorPage: pageResponse?.data?.slug ?? "inicio",
-  }}
-  is:inline
->
-  const savingsForm = document.querySelector("#savings-form");
-  const fuelSelect = document.querySelector("#fuel-type");
-  const savingsValue = document.querySelector("#savings-value");
-  const savingsAnnual = document.querySelector("#savings-annual");
-  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let currentMonthly = 0;
-
-  function animateCount(el, from, to, duration, format) {
-    if (!el) return;
-    if (prefersReducedMotion || from === to) {
-      el.textContent = format(to);
-      return;
-    }
-    const start = performance.now();
-    function tick(now) {
-      const progress = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      el.textContent = format(Math.round(from + (to - from) * eased));
-      if (progress < 1) requestAnimationFrame(tick);
-    }
-    requestAnimationFrame(tick);
-  }
-
-  function showSavings(monthlySavings) {
-    const annualSavings = monthlySavings * 12;
-    if (savingsValue) {
-      animateCount(savingsValue, currentMonthly, monthlySavings, 650, (v) => `$${v.toLocaleString("es-MX")} MXN`);
-      currentMonthly = monthlySavings;
-      savingsValue.classList.remove("is-updated");
-      void savingsValue.offsetWidth;
-      savingsValue.classList.add("is-updated");
-    }
-    if (savingsAnnual) savingsAnnual.textContent = `Ahorro anual estimado: $${annualSavings.toLocaleString("es-MX")} MXN`;
-  }
-
-  savingsForm?.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const input = document.querySelector("#monthly-spend");
-    const spend = Number(input?.value ?? 0);
-    if (!Number.isFinite(spend) || spend <= 0) return;
-
-    const fuel = fuelSelect?.value;
-    const pricePerUnit = savingsFuelPrices[fuel];
-
-    // The real savings math is server-side: convert the peso spend into the
-    // quantity (liters/m³) that endpoint expects, using this fuel's price.
-    if (pricePerUnit) {
-      try {
-        const quantity = spend / pricePerUnit;
-        const query = new URLSearchParams({ fuel, quantity: String(quantity) });
-        if (simulatorPage) query.set("page", simulatorPage);
-        const response = await fetch(`${apiBase}savings-simulator?${query}`);
-        const result = await response.json().catch(() => null);
-        if (response.ok && result?.status === "success" && Number.isFinite(result?.data?.savings)) {
-          showSavings(Math.round(result.data.savings));
-          return;
-        }
-      } catch (error) {
-        // fall through to the local estimate below
-      }
-    }
-
-    showSavings(Math.round(spend * fallbackRate));
-  });
-</script>

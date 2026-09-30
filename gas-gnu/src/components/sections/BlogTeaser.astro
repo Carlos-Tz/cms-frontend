@@ -1,39 +1,45 @@
 ---
+// The newest posts from `GET blog`, linking to their real pages.
 import { mediaUrl } from "../../functions/fetch";
 import noImg from "../../assets/images/noimg.jpg";
-
-interface Post {
-  tag: string;
-  title: string;
-  url?: string | null;
-  cover_image?: string | null;
-}
+import type { BlogPostSummary } from "../../lib/cms";
 
 interface Props {
   title?: string | null;
-  posts: Post[];
+  posts: BlogPostSummary[];
 }
 
 const { title, posts } = Astro.props;
+
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
 ---
 
-<section class="section" id="blog">
-  <div class="container">
-    <div class="section-head">
-      <span class="eyebrow">Blog</span>
-      <h2 class="section-title">{title ?? "Aprende más sobre el GNV"}</h2>
+{posts.length > 0 && (
+  <section class="section" id="blog">
+    <div class="container">
+      <div class="section-head blog-teaser__head">
+        <div>
+          <span class="eyebrow">Blog</span>
+          <h2 class="section-title">{title ?? "Aprende más sobre el GNV"}</h2>
+        </div>
+        <a class="btn-secondary btn-secondary--compact" href="/blog">Ver todo el blog</a>
+      </div>
+      <div class="grid grid--3">
+        {posts.map((post) => (
+          <a class="blog-card service-card" href={`/blog/${post.slug}`}>
+            <div class="service-card__media">
+              <img class="blog-card__cover" src={post.cover_image ? mediaUrl(post.cover_image) : noImg.src} alt="" loading="lazy" />
+            </div>
+            <div class="blog-card__body">
+              <span class="blog-card__tag"><time datetime={post.published_at}>{formatDate(post.published_at)}</time></span>
+              <h3 class="blog-card__title">{post.title}</h3>
+              {post.excerpt && <p class="blog-card__excerpt">{post.excerpt}</p>}
+              <span class="blog-card__link">Leer más <span class="service-card__arrow" aria-hidden="true">→</span></span>
+            </div>
+          </a>
+        ))}
+      </div>
     </div>
-    <div class="grid grid--3">
-      {posts.map((post) => (
-        <a class="blog-card" href={post.url || "#"}>
-          <img class="blog-card__cover" src={post.cover_image ? mediaUrl(post.cover_image) : noImg.src} alt="" />
-          <div class="blog-card__body">
-            <span class="blog-card__tag">{post.tag}</span>
-            <h3 class="blog-card__title">{post.title}</h3>
-            <span class="blog-card__link">Leer más →</span>
-          </div>
-        </a>
-      ))}
-    </div>
-  </div>
-</section>
+  </section>
+)}

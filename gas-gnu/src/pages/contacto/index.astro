@@ -2,22 +2,56 @@
 import Layout from "../../layouts/Layout.astro";
 import SectionRenderer from "../../components/SectionRenderer.astro";
 import PageHero from "../../components/sections/PageHero.astro";
-import { fetchData } from "../../functions/fetch";
+import LeadCaptureForm from "../../components/sections/LeadCaptureForm.astro";
+import ContactInfo from "../../components/sections/ContactInfo.astro";
+import { mediaUrl } from "../../functions/fetch";
+import { getGlobals, getPage, heroOf, whatsappHref } from "../../lib/cms";
 
-type PageResponse = {
-  status: string;
-  data: { slug: string; path: string; title: string; sections: Array<{ type: string; content: Record<string, any> }> };
-  meta: Record<string, any>;
-};
-
-const pageResponse: PageResponse | undefined = await fetchData("pages/contacto");
-const page = pageResponse?.data;
+const page = await getPage("contacto");
+const hero = heroOf(page);
 const sections = page?.sections ?? [];
+
+// The site-wide contact details sit next to the form, so a visitor who'd
+// rather call, write or send a WhatsApp doesn't have to hunt for the footer.
+const globals = await getGlobals();
+const contactInfo = globals.contact_info;
+const whatsapp = whatsappHref(globals);
+
+// The lead_capture_form section is pulled out of the list and rendered in a
+// two-column layout with those details, in its original position.
+const leadIndex = sections.findIndex((section) => section.type === "lead_capture_form");
+const leadSection = leadIndex === -1 ? undefined : sections[leadIndex];
+const sectionsBeforeLead = leadIndex === -1 ? sections : sections.slice(0, leadIndex);
+const sectionsAfterLead = leadIndex === -1 ? [] : sections.slice(leadIndex + 1);
 ---
 
-<Layout title={page?.title ?? "Contacto"}>
+<Layout
+  title={page?.title ?? "Contacto"}
+  description={hero?.subtitle ?? undefined}
+  image={hero?.image ? mediaUrl(hero.image) : undefined}
+>
   <main>
     {!page && <PageHero title="Contacto" subtitle="Hablemos de tu conversión a GNV." />}
-    <SectionRenderer sections={sections} pageSlug={page?.slug} />
+    <SectionRenderer sections={sectionsBeforeLead} pageSlug={page?.slug} />
+    {leadSection && (
+      <section class="section">
+        <div class="container contact-layout">
+          <div>
+            <span class="eyebrow">Contacto</span>
+            <h2 class="section-title">{leadSection.content.title ?? "Escríbenos"}</h2>
+            {leadSection.content.intro && <p class="section-subtitle">{leadSection.content.intro}</p>}
+            {contactInfo && <ContactInfo {...contactInfo} whatsappHref={whatsapp} inline />}
+          </div>
+          <LeadCaptureForm
+            formId="contact-lead-form"
+            title="Cotiza sin compromiso"
+            submit_label={leadSection.content.submit_label ?? "Enviar mensaje"}
+            fields={leadSection.content.fields}
+            source={page?.slug}
+          />
+        </div>
+      </section>
+    )}
+    <SectionRenderer sections={sectionsAfterLead} pageSlug={page?.slug} />
   </main>
 </Layout>

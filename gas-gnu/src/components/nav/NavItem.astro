@@ -3,28 +3,58 @@ import type { MenuItem } from "../../types/menu";
 
 interface Props {
   item: MenuItem;
+  // Current URL path, without trailing slash, to mark the active entry.
+  currentPath: string;
 }
 
-const { item } = Astro.props;
+const { item, currentPath } = Astro.props;
 const hasChildren = item.children?.length > 0;
+
+const isCurrent = (path: string) => currentPath === path;
+const inSection = (path: string) =>
+  path === "/" ? currentPath === "/" : currentPath === path || currentPath.startsWith(`${path}/`);
 ---
 
 {hasChildren ? (
   <div class="nav-item">
-    <button class="nav-link nav-link--toggle" aria-expanded="false" aria-haspopup="true">
+    <button
+      class:list={["nav-link", "nav-link--toggle", { "is-current": inSection(item.path) }]}
+      aria-expanded="false"
+      aria-haspopup="true"
+    >
       {item.title}
       <svg class="nav-caret" width="10" height="6" viewBox="0 0 10 6" aria-hidden="true">
         <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
     </button>
     <div class="nav-dropdown">
+      {/* The toggle is a button, so the hub page itself needs its own link. */}
+      <a
+        class:list={["nav-dropdown__link", "nav-dropdown__link--overview", { "is-current": isCurrent(item.path) }]}
+        href={item.path}
+        aria-current={isCurrent(item.path) ? "page" : undefined}
+      >
+        Ver todo {item.title.toLowerCase()} →
+      </a>
       {item.children.map((child) => (
         <div class="nav-dropdown__group">
-          <a class="nav-dropdown__link nav-dropdown__link--parent" href={child.path}>{child.title}</a>
+          <a
+            class:list={["nav-dropdown__link", "nav-dropdown__link--parent", { "is-current": isCurrent(child.path) }]}
+            href={child.path}
+            aria-current={isCurrent(child.path) ? "page" : undefined}
+          >
+            {child.title}
+          </a>
           {child.children?.length > 0 && (
             <div class="nav-dropdown__sublist">
               {child.children.map((grandchild) => (
-                <a class="nav-dropdown__link nav-dropdown__link--sub" href={grandchild.path}>{grandchild.title}</a>
+                <a
+                  class:list={["nav-dropdown__link", "nav-dropdown__link--sub", { "is-current": isCurrent(grandchild.path) }]}
+                  href={grandchild.path}
+                  aria-current={isCurrent(grandchild.path) ? "page" : undefined}
+                >
+                  {grandchild.title}
+                </a>
               ))}
             </div>
           )}
@@ -33,5 +63,11 @@ const hasChildren = item.children?.length > 0;
     </div>
   </div>
 ) : (
-  <a class="nav-link" href={item.path}>{item.title}</a>
+  <a
+    class:list={["nav-link", { "is-current": inSection(item.path) }]}
+    href={item.path}
+    aria-current={isCurrent(item.path) ? "page" : undefined}
+  >
+    {item.title}
+  </a>
 )}

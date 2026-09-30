@@ -1,11 +1,22 @@
 ---
+import { normalizeRichText } from "../../lib/richText";
+
 interface Props {
   title?: string | null;
   body: string;
   video_url?: string | null;
 }
 
-const { title, body, video_url } = Astro.props;
+const { title, body: rawBody, video_url } = Astro.props;
+
+// Rebuilds pasted (PDF-wrapped) copy into real paragraphs/headings and tidies
+// editor residue — see lib/richText.ts.
+const body = normalizeRichText(rawBody, { recoveredHeading: "h3" }).html;
+
+// An all-caps title ("NUESTROS SERVICIOS") is written as a label, not a
+// headline: it renders as the eyebrow above the copy, and the body's own
+// first heading (if any) carries the headline size.
+const isLabelTitle = !!title && title === title.toUpperCase() && /[A-ZÁÉÍÓÚÑ]{3}/.test(title);
 
 function toEmbedUrl(url: string) {
   try {
@@ -83,8 +94,8 @@ const embedUrl = video_url ? withAutoplay(toEmbedUrl(video_url)) : null;
           ></iframe>
         </div>
         <div class="rich-text-media__content">
-          {title && <h2 class="section-title">{title}</h2>}
-          <div class="prose" set:html={body} />
+          {title && (isLabelTitle ? <span class="eyebrow eyebrow--on-dark">{title}</span> : <h2 class="section-title">{title}</h2>)}
+          <div class:list={["prose", { "prose--after-label": isLabelTitle }]} set:html={body} />
         </div>
       </div>
     </div>
@@ -150,9 +161,9 @@ const embedUrl = video_url ? withAutoplay(toEmbedUrl(video_url)) : null;
   </>
 ) : (
   <section class="section">
-    <div class="container" style="max-width: 46rem;">
-      {title && <h2 class="section-title">{title}</h2>}
-      <div class="prose" set:html={body} />
+    <div class="container rich-text">
+      {title && (isLabelTitle ? <span class="eyebrow">{title}</span> : <h2 class="section-title">{title}</h2>)}
+      <div class:list={["prose", "prose--section", { "prose--after-label": isLabelTitle }]} set:html={body} />
     </div>
   </section>
 )}

@@ -1,0 +1,89 @@
+---
+// `contact_info`: address, phone, email and hours as actionable links (maps,
+// tel:, mailto:). Rendered from a page section, or from `globals` on /contacto.
+interface Props {
+  address?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  schedule?: string | null;
+  additional_info?: string | null;
+  // Optional WhatsApp link, from the site-wide whatsapp_button.
+  whatsappHref?: string | null;
+  // Inline renders just the list (to sit inside another layout); otherwise
+  // it is wrapped in its own section.
+  inline?: boolean;
+}
+
+const { address, phone, email, schedule, additional_info, whatsappHref, inline = false } = Astro.props;
+
+const items = [
+  address && {
+    label: "Dirección",
+    value: address,
+    href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`,
+    external: true,
+    icon: '<path d="M12 21s-7-5.4-7-11a7 7 0 0 1 14 0c0 5.6-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  },
+  phone && {
+    label: "Teléfono",
+    value: phone,
+    href: `tel:${phone.replace(/[^\d+]/g, "")}`,
+    icon: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>',
+  },
+  email && {
+    label: "Correo",
+    value: email,
+    href: `mailto:${email}`,
+    icon: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
+  },
+  whatsappHref && {
+    label: "WhatsApp",
+    value: "Escríbenos por WhatsApp",
+    href: whatsappHref,
+    external: true,
+    icon: '<path d="M4 20l1.3-3.9A8 8 0 1 1 8 19z"/>',
+  },
+  schedule && {
+    label: "Horario",
+    value: schedule,
+    icon: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  },
+].filter(Boolean) as Array<{ label: string; value: string; href?: string; external?: boolean; icon: string }>;
+---
+
+{items.length > 0 && (
+  inline ? (
+    <div class="contact-info">
+      <ul class="contact-info__list">
+        {items.map((item) => (
+          <li class="contact-info__item">
+            <span class="contact-info__icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" set:html={item.icon} />
+            </span>
+            <div>
+              <p class="contact-info__label">{item.label}</p>
+              {item.href ? (
+                <a
+                  class="contact-info__value contact-info__value--link"
+                  href={item.href}
+                  {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                >
+                  {item.value}
+                </a>
+              ) : (
+                <p class="contact-info__value">{item.value}</p>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+      {additional_info && <p class="contact-info__extra">{additional_info}</p>}
+    </div>
+  ) : (
+    <section class="section section--alt">
+      <div class="container" style="max-width: 46rem;">
+        <Astro.self {...Astro.props} inline />
+      </div>
+    </section>
+  )
+)}

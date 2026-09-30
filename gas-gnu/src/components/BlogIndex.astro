@@ -1,0 +1,91 @@
+---
+// One page of the blog listing. The site is built statically, so a `?page=`
+// query string never reaches the build — each page of `GET blog` gets its own
+// route instead: /blog for the first, /blog/pagina/{n} for the rest.
+import Layout from "../layouts/Layout.astro";
+import PageHero from "./sections/PageHero.astro";
+import noImg from "../assets/images/noimg.jpg";
+import { mediaUrl } from "../functions/fetch";
+import { getBlogList, getPage, heroOf } from "../lib/cms";
+
+interface Props {
+  page: number;
+}
+
+const { page } = Astro.props;
+
+const hero = heroOf(await getPage("blog"));
+const list = await getBlogList(page);
+const posts = list?.posts ?? [];
+const meta = list?.meta ?? { page, per_page: posts.length, total: posts.length, last_page: 1 };
+
+const pageHref = (n: number) => (n <= 1 ? "/blog" : `/blog/pagina/${n}`);
+
+const formatDate = (value: string) =>
+  new Date(value).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
+
+const heroTitle = hero?.title ?? "Blog";
+const heroSubtitle = hero?.subtitle ?? "Noticias y artículos sobre el gas natural vehicular.";
+const heroImage = hero?.image ? mediaUrl(hero.image) : null;
+---
+
+<Layout
+  title={page > 1 ? `${heroTitle} — Página ${page}` : heroTitle}
+  description={heroSubtitle}
+  image={heroImage}
+>
+  <main>
+    <PageHero title={heroTitle} subtitle={heroSubtitle} image={hero?.image} />
+
+    <section class="section">
+      <div class="container">
+        {posts.length ? (
+          <>
+            {meta.total > 0 && (
+              <p class="blog-index__count">
+                {meta.total} {meta.total === 1 ? "artículo" : "artículos"}
+                {meta.last_page > 1 && ` · Página ${meta.page} de ${meta.last_page}`}
+              </p>
+            )}
+            <div class="grid grid--3">
+              {posts.map((post, index) => (
+                <a
+                  href={`/blog/${post.slug}`}
+                  class="blog-card service-card"
+                  style={`animation-delay: ${index * 0.12}s`}
+                >
+                  <div class="service-card__media">
+                    <img
+                      class="blog-card__cover"
+                      src={post.cover_image ? mediaUrl(post.cover_image) : noImg.src}
+                      alt=""
+                      loading={index < 3 ? "eager" : "lazy"}
+                    />
+                  </div>
+                  <div class="blog-card__body">
+                    <p class="blog-card__tag"><time datetime={post.published_at}>{formatDate(post.published_at)}</time></p>
+                    <p class="blog-card__title">{post.title}</p>
+                    {post.excerpt && <p class="blog-card__excerpt">{post.excerpt}</p>}
+                    <span class="blog-card__link">Leer más <span class="service-card__arrow" aria-hidden="true">→</span></span>
+                  </div>
+                </a>
+              ))}
+            </div>
+
+            {meta.last_page > 1 && (
+              <nav class="pagination" aria-label="Páginas del blog">
+                {meta.page > 1 && <a class="btn-secondary" href={pageHref(meta.page - 1)} rel="prev">← Anteriores</a>}
+                <span class="pagination__status">Página {meta.page} de {meta.last_page}</span>
+                {meta.page < meta.last_page && (
+                  <a class="btn-secondary" href={pageHref(meta.page + 1)} rel="next">Siguientes →</a>
+                )}
+              </nav>
+            )}
+          </>
+        ) : (
+          <p class="section-subtitle" style="text-align:center;">Aún no hay publicaciones disponibles.</p>
+        )}
+      </div>
+    </section>
+  </main>
+</Layout>

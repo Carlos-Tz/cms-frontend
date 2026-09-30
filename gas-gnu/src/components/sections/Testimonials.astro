@@ -1,34 +1,56 @@
 ---
+import { mediaUrl } from "../../functions/fetch";
+
+// The CMS `testimonials` section sends `author` and an optional `photo`;
+// `name` is the shape of this site's own fallback copy.
 interface Testimonial {
   quote: string;
-  name: string;
-  role: string;
+  author?: string | null;
+  name?: string | null;
+  role?: string | null;
+  photo?: string | null;
 }
 
 interface Props {
   title?: string | null;
-  items: Testimonial[];
+  items?: Testimonial[];
 }
 
-const { title, items } = Astro.props;
+const { title, items = [] } = Astro.props;
+
+// Authors sometimes type their own quote marks; the card adds its own.
+const stripQuotes = (quote: string) =>
+  quote
+    .trim()
+    .replace(/^["“”'‘’]+/, "")
+    .replace(/["“”'‘’]+(?=[.!?]?\s*$)/, "")
+    .trim();
 ---
 
-<section class="section">
-  <div class="container">
-    <div class="section-head">
-      <span class="eyebrow">Testimoniales</span>
-      <h2 class="section-title">{title ?? "Clientes que ya ahorran con GNV"}</h2>
+{items.length > 0 && (
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <span class="eyebrow">Testimoniales</span>
+        <h2 class="section-title">{title ?? "Clientes que ya ahorran con GNV"}</h2>
+      </div>
+      <div class="grid grid--3">
+        {items.map((item) => {
+          const author = item.author ?? item.name;
+          return (
+            <blockquote class="card testimonial-card">
+              <p class="testimonial-card__quote">“{stripQuotes(item.quote)}”</p>
+              <footer class="testimonial-card__author">
+                {item.photo && <img class="testimonial-card__photo" src={mediaUrl(item.photo)} alt="" loading="lazy" />}
+                <div class="testimonial-card__who">
+                  {author && <strong>{author}</strong>}
+                  {item.role && <span>{item.role}</span>}
+                </div>
+              </footer>
+            </blockquote>
+          );
+        })}
+      </div>
     </div>
-    <div class="grid grid--3">
-      {items.map((item) => (
-        <div class="card testimonial-card">
-          <p class="testimonial-card__quote">“{item.quote}”</p>
-          <div class="testimonial-card__author">
-            <strong>{item.name}</strong>
-            <span>{item.role}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  </div>
-</section>
+  </section>
+)}

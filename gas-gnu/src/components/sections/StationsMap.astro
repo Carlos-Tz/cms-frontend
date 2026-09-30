@@ -1,13 +1,41 @@
 ---
+import { fetchData } from "../../functions/fetch";
+
+interface Station {
+  name: string;
+  address: string;
+  latitude: number;
+  longitude: number;
+  phone?: string | null;
+  schedule?: string | null;
+}
+
+interface StationsResponse {
+  status: string;
+  data: Station[];
+  meta: Record<string, any>;
+}
+
 interface Props {
   title?: string | null;
   center?: string | null;
   zoom?: string | number | null;
+  // Anchor id; the home page links "Ver todas las estaciones" to "ubicaciones".
   id?: string;
 }
 
 const { title, center, zoom = "12", id } = Astro.props;
-const embedSrc = center ? `https://www.google.com/maps?q=${encodeURIComponent(center)}&z=${zoom}&output=embed` : null;
+
+const embedFor = (query: string, z: string | number) =>
+  `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=${z}&output=embed`;
+const embedSrc = center ? embedFor(center, zoom ?? "12") : null;
+
+// The section's own content only carries the map's layout (center/zoom); the
+// actual pins come from the `stations` table via the public API. Each station
+// in the list can move the map to its own coordinates.
+const stationsResponse: StationsResponse | undefined = await fetchData("stations");
+const stations = stationsResponse?.data ?? [];
+const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
 ---
 
 <section class="section section--alt" id={id}>
@@ -15,14 +43,71 @@ const embedSrc = center ? `https://www.google.com/maps?q=${encodeURIComponent(ce
     {title && (
       <div class="section-head section-head--center">
         <h2 class="section-title">{title}</h2>
+        {stations.length > 1 && (
+          <p class="section-subtitle">{stations.length} estaciones · elige una para verla en el mapa</p>
+        )}
       </div>
     )}
-    <div class="stations-map">
-      {embedSrc ? (
-        <iframe class="stations-map__frame" src={embedSrc} loading="lazy" title={title ?? "Mapa"}></iframe>
-      ) : (
-        <div class="stations-map__placeholder">Mapa no disponible</div>
+    <div class={"stations-layout" + (stations.length ? "" : " stations-layout--map-only")} data-stations>
+      <div class="stations-map">
+        {embedSrc ? (
+          <iframe class="stations-map__frame" src={embedSrc} loading="lazy" title={title ?? "Mapa"} data-default-src={embedSrc}></iframe>
+        ) : (
+          <div class="stations-map__placeholder">Mapa no disponible</div>
+        )}
+      </div>
+      {stations.length > 0 && (
+        <ul class="stations-list">
+          {stations.map((station) => (
+            <li class="stations-list__item" data-station-src={embedFor(`${station.latitude},${station.longitude}`, 16)}>
+              <p class="stations-list__name">{station.name}</p>
+              <p class="stations-list__address">{station.address}</p>
+              {station.schedule && <p class="stations-list__meta">{station.schedule}</p>}
+              {station.phone && (
+                <a class="stations-list__meta stations-list__phone" href={telHref(station.phone)}>{station.phone}</a>
+              )}
+              <div class="stations-list__actions">
+                {embedSrc && (
+                  <button type="button" class="stations-list__focus" aria-pressed="false">Ver en el mapa</button>
+                )}
+                <a
+                  class="stations-list__link"
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${station.latitude},${station.longitude}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Cómo llegar →
+                </a>
+              </div>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   </div>
 </section>
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-stations]").forEach((layout) => {
+    const frame = layout.querySelector<HTMLIFrameElement>(".stations-map__frame");
+    if (!frame) return;
+    const items = Array.from(layout.querySelectorAll<HTMLElement>(".stations-list__item"));
+
+    items.forEach((item) => {
+      const button = item.querySelector<HTMLButtonElement>(".stations-list__focus");
+      button?.addEventListener("click", () => {
+        const active = item.classList.contains("is-active");
+        items.forEach((other) => {
+          other.classList.remove("is-active");
+          other.querySelector(".stations-list__focus")?.setAttribute("aria-pressed", "false");
+        });
+        // A second click on the same station goes back to the overview.
+        frame.src = active ? frame.dataset.defaultSrc ?? frame.src : item.dataset.stationSrc ?? frame.src;
+        if (!active) {
+          item.classList.add("is-active");
+          button.setAttribute("aria-pressed", "true");
+        }
+      });
+    });
+  });
+</script>

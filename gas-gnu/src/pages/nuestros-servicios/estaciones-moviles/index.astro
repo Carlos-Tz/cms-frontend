@@ -1,23 +1,5 @@
 ---
-import Layout from "../../../layouts/Layout.astro";
-import SectionRenderer from "../../../components/SectionRenderer.astro";
-import PageHero from "../../../components/sections/PageHero.astro";
-import { fetchData } from "../../../functions/fetch";
-
-type PageResponse = {
-  status: string;
-  data: { slug: string; path: string; title: string; sections: Array<{ type: string; content: Record<string, any> }> };
-  meta: Record<string, any>;
-};
-
-const pageResponse: PageResponse | undefined = await fetchData("pages/estaciones-moviles");
-const page = pageResponse?.data;
-const sections = page?.sections ?? [];
+import CmsPage from "../../../components/CmsPage.astro";
 ---
 
-<Layout title={page?.title ?? "Estaciones móviles"}>
-  <main>
-    {!page && <PageHero title="Estaciones móviles" subtitle="Suministro de gas natural donde opera tu flotilla." />}
-    <SectionRenderer sections={sections} pageSlug={page?.slug} />
-  </main>
-</Layout>
+<CmsPage slug="estaciones-moviles" fallbackTitle="Estaciones móviles" fallbackSubtitle="Suministro de gas natural donde opera tu flotilla." />

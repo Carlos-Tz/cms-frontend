@@ -3,32 +3,54 @@ import type { MenuItem } from "../../types/menu";
 
 interface Props {
   item: MenuItem;
+  currentPath: string;
 }
 
-const { item } = Astro.props;
+const { item, currentPath } = Astro.props;
 const hasChildren = item.children?.length > 0;
+
+const isCurrent = (path: string) => currentPath === path;
+// The branch holding the current page starts expanded.
+const inSection = (path: string) => currentPath === path || currentPath.startsWith(`${path}/`);
 ---
 
 {hasChildren ? (
-  <details class="nav-mobile__item">
+  <details class="nav-mobile__item" open={inSection(item.path)}>
     <summary>{item.title}</summary>
     <div class="nav-mobile__sublist">
+      {/* A <summary> only toggles, so the hub page gets its own first link. */}
+      <a href={item.path} class:list={{ "is-current": isCurrent(item.path) }} aria-current={isCurrent(item.path) ? "page" : undefined}>
+        Ver todo
+      </a>
       {item.children.map((child) =>
         child.children?.length > 0 ? (
-          <details class="nav-mobile__item nav-mobile__item--nested">
+          <details class="nav-mobile__item nav-mobile__item--nested" open={inSection(child.path)}>
             <summary>{child.title}</summary>
             <div class="nav-mobile__sublist">
+              <a href={child.path} class:list={{ "is-current": isCurrent(child.path) }} aria-current={isCurrent(child.path) ? "page" : undefined}>
+                Ver todo
+              </a>
               {child.children.map((grandchild) => (
-                <a href={grandchild.path}>{grandchild.title}</a>
+                <a
+                  href={grandchild.path}
+                  class:list={{ "is-current": isCurrent(grandchild.path) }}
+                  aria-current={isCurrent(grandchild.path) ? "page" : undefined}
+                >
+                  {grandchild.title}
+                </a>
               ))}
             </div>
           </details>
         ) : (
-          <a href={child.path}>{child.title}</a>
+          <a href={child.path} class:list={{ "is-current": isCurrent(child.path) }} aria-current={isCurrent(child.path) ? "page" : undefined}>
+            {child.title}
+          </a>
         )
       )}
     </div>
   </details>
 ) : (
-  <a href={item.path}>{item.title}</a>
+  <a href={item.path} class:list={{ "is-current": isCurrent(item.path) }} aria-current={isCurrent(item.path) ? "page" : undefined}>
+    {item.title}
+  </a>
 )}

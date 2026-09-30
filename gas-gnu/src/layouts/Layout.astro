@@ -1,11 +1,10 @@
 ---
 import "../styles/global.css";
-import { fetchData } from "../functions/fetch";
 import { seo } from "../config/seo";
 import NavItem from "../components/nav/NavItem.astro";
 import NavItemMobile from "../components/nav/NavItemMobile.astro";
-import type { MenuItem, MenuResponse } from "../types/menu";
-import type { GlobalsResponse } from "../types/globals";
+import type { MenuItem } from "../types/menu";
+import { getGlobals, getMenu, whatsappHref } from "../lib/cms";
 
 interface Props {
   // Page-specific title, WITHOUT the site name — Layout appends
@@ -17,9 +16,13 @@ interface Props {
   image?: string | null;
   // Set true on pages that shouldn't be indexed (e.g. a "not found" state).
   noindex?: boolean;
+  // og:type — "article" for blog posts, "website" everywhere else.
+  type?: "website" | "article";
+  // Extra schema.org structured data for this page (e.g. a BlogPosting).
+  jsonLd?: Record<string, unknown> | null;
 }
 
-const { title, description, image, noindex = false } = Astro.props;
+const { title, description, image, noindex = false, type = "website", jsonLd = null } = Astro.props;
 
 const pageTitle = title ? `${title} ${seo.titleSeparator} ${seo.siteName}` : seo.defaultTitle;
 const pageDescription = description ?? seo.defaultDescription;
@@ -27,36 +30,65 @@ const socialImage = image ?? seo.defaultImage;
 const canonicalUrl = new URL(Astro.url.pathname, seo.siteUrl).toString();
 const socialImageUrl = socialImage ? new URL(socialImage, seo.siteUrl).toString() : null;
 
-// Nav menu is CMS-driven (Landing Page → Menú). Falls back to the original
-// single-page anchors if the menu endpoint is unreachable.
+// Nav menu is CMS-driven (Landing Page → Menú). Falls back to the site's
+// top-level routes if the menu endpoint is unreachable.
 const fallbackMenu: MenuItem[] = [
-  { slug: "inicio", path: "/#inicio", title: "Inicio", children: [] },
-  { slug: "nuestros-servicios", path: "/#servicios", title: "Nuestros Servicios", children: [] },
-  { slug: "ubicaciones", path: "/#ubicaciones", title: "Ubicaciones", children: [] },
-  { slug: "contacto", path: "/#contacto", title: "Contacto", children: [] },
-  { slug: "blog", path: "/#blog", title: "Blog", children: [] },
+  { slug: "inicio", path: "/", title: "Inicio", children: [] },
+  { slug: "nuestros-servicios", path: "/nuestros-servicios", title: "Nuestros Servicios", children: [] },
+  { slug: "ubicaciones", path: "/ubicaciones", title: "Ubicaciones", children: [] },
+  { slug: "contacto", path: "/contacto", title: "Contacto", children: [] },
+  { slug: "blog", path: "/blog", title: "Blog", children: [] },
 ];
 
-const menuResponse: MenuResponse | undefined = await fetchData("menu");
-const menuItems: MenuItem[] = menuResponse?.data?.length ? menuResponse.data : fallbackMenu;
+const menu = await getMenu();
+const menuItems: MenuItem[] = menu.length ? menu : fallbackMenu;
+const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
+
+// A menu entry by slug, anywhere in the three-level tree.
+const findItem = (items: MenuItem[], slug: string): MenuItem | undefined => {
+  for (const item of items) {
+    if (item.slug === slug) return item;
+    const found = findItem(item.children ?? [], slug);
+    if (found) return found;
+  }
+};
+
+// The header CTAs go to the pages that actually do each job — the booking
+// form and the quote form — resolved from the menu so a moved or unpublished
+// page falls back to the home page's own blocks instead of a 404.
+const bookingPath = findItem(menuItems, "agenda-tu-verificacion")?.path ?? "/#contacto";
+const quotePath = findItem(menuItems, "cotiza-tu-equipo")?.path ?? "/#contacto";
+const locationsPath = findItem(menuItems, "ubicaciones")?.path ?? "/#ubicaciones";
+
+// Footer "Servicios": every service page, each linking to itself.
+const serviceItems = findItem(menuItems, "nuestros-servicios")?.children ?? [];
+const serviceLinks = serviceItems.length
+  ? serviceItems.flatMap((item) => [item, ...(item.children ?? [])]).map((item) => ({ href: item.path, label: item.title }))
+  : [
+      { href: "/nuestros-servicios/instala-tu-equipo-de-gnv", label: "Instala tu equipo" },
+      { href: "/nuestros-servicios/instala-tu-equipo-de-gnv/financiamiento", label: "Financiamiento" },
+      { href: "/nuestros-servicios/flotillas-empresariales", label: "Flotillas empresariales" },
+    ];
 
 // Footer contact info, social links and the WhatsApp button are all editable
 // from the CMS admin (Landing Page → Datos de contacto / Redes sociales /
 // Botón de WhatsApp) and shared by every page, so they come from the
 // site-wide `globals` endpoint. This layout wraps every page, so it fetches
 // them here rather than relying on each page to pass them down.
-const globalsResponse: GlobalsResponse | undefined = await fetchData("globals");
-const globals = globalsResponse?.data;
+const globals = await getGlobals();
 
 const contactInfo = globals?.contact_info;
 const socialIcons = globals?.social_icons;
-const whatsappButton = globals?.whatsapp_button;
 
 const footerEmail = contactInfo?.email ?? "hola@gnu-gnv.mx";
 const footerPhone = contactInfo?.phone;
 const footerSchedule = contactInfo?.schedule;
 const footerAddress = contactInfo?.address;
 const footerAdditionalInfo = contactInfo?.additional_info;
+const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
+const footerAddressHref = footerAddress
+  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(footerAddress)}`
+  : null;
 
 const SOCIAL_ICON_MARKUP: Record<string, string> = {
   facebook:
@@ -80,16 +112,32 @@ const socialNetworks = (socialIcons?.networks?.length ? socialIcons.networks : f
   (item) => SOCIAL_ICON_MARKUP[item.network]
 );
 
-// No number in the CMS means no button. A WhatsApp link pointing at a
-// placeholder number looks live and goes nowhere, which is worse than no CTA:
-// the visitor writes and nobody ever reads it. `phone` is required by the
-// section schema, so this only bites when `/globals` failed at build time.
-const whatsappDigits = (whatsappButton?.phone ?? "").replace(/\D/g, "");
-const whatsappHref = whatsappDigits
-  ? `https://wa.me/${whatsappDigits}${
-      whatsappButton?.prefilled_message ? `?text=${encodeURIComponent(whatsappButton.prefilled_message)}` : ""
-    }`
-  : null;
+// No number in the CMS means no button (see `whatsappHref`). `phone` is
+// required by the section schema, so this only bites when `/globals` failed
+// at build time.
+const whatsappLink = whatsappHref(globals);
+
+// Organization structured data from the same globals as the footer.
+const organizationJsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: seo.siteName,
+  url: seo.siteUrl,
+  ...(contactInfo?.email && { email: contactInfo.email }),
+  ...(contactInfo?.phone && {
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: contactInfo.phone,
+      contactType: "customer service",
+      areaServed: "MX",
+      availableLanguage: "es",
+    },
+  }),
+  ...(contactInfo?.address && { address: contactInfo.address }),
+  ...(socialIcons?.networks?.length && {
+    sameAs: socialIcons.networks.map((item) => item.url).filter((url) => url && url !== "#"),
+  }),
+});
 ---
 
 <!doctype html>
@@ -106,7 +154,7 @@ const whatsappHref = whatsappDigits
     <link rel="canonical" href={canonicalUrl} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={type} />
     <meta property="og:site_name" content={seo.siteName} />
     <meta property="og:locale" content={seo.locale} />
     <meta property="og:url" content={canonicalUrl} />
@@ -119,24 +167,27 @@ const whatsappHref = whatsappDigits
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={pageDescription} />
     {socialImageUrl && <meta name="twitter:image" content={socialImageUrl} />}
+
+    <script is:inline type="application/ld+json" set:html={organizationJsonLd} />
+    {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
   </head>
   <body>
     <header class="site-header">
       <div class="container site-header__inner">
-        <a href="/#inicio" class="brand">
+        <a href="/" class="brand">
           <span class="brand__mark" aria-hidden="true">GNU</span>
           Gas Natural <span style="color: var(--color-primary-light);">Vehicular</span>
         </a>
 
         <nav class="nav" aria-label="Principal">
           {menuItems.map((item) => (
-            <NavItem item={item} />
+            <NavItem item={item} currentPath={currentPath} />
           ))}
         </nav>
 
         <div class="header-actions">
-          <a class="btn-secondary btn-secondary--compact" href="/#contacto">Agenda tu verificación</a>
-          <a class="btn-primary btn-primary--compact" href="/#servicios">Cotiza tu equipo</a>
+          <a class="btn-secondary btn-secondary--compact" href={bookingPath}>Agenda tu verificación</a>
+          <a class="btn-primary btn-primary--compact" href={quotePath}>Cotiza tu equipo</a>
         </div>
 
         <button class="nav-toggle" id="nav-toggle" aria-label="Abrir menú" aria-expanded="false">
@@ -145,9 +196,9 @@ const whatsappHref = whatsappDigits
       </div>
       <nav class="nav-mobile" id="nav-mobile" aria-label="Principal móvil">
         {menuItems.map((item) => (
-          <NavItemMobile item={item} />
+          <NavItemMobile item={item} currentPath={currentPath} />
         ))}
-        <a href="/#servicios" class="btn-primary">Cotiza tu equipo</a>
+        <a href={quotePath} class="btn-primary">Cotiza tu equipo</a>
         <div class="social-row social-row--nav-mobile" aria-label="Redes sociales">
           {socialNetworks.map((item) => (
             <a
@@ -170,7 +221,7 @@ const whatsappHref = whatsappDigits
       <div class="container">
         <div class="footer-grid">
           <div>
-            <a href="/#inicio" class="brand" style="color: #fff;">
+            <a href="/" class="brand" style="color: #fff;">
               <span class="brand__mark" aria-hidden="true">GNU</span>
               Gas Natural Vehicular
             </a>
@@ -193,19 +244,21 @@ const whatsappHref = whatsappDigits
           </div>
           <div>
             <p class="footer-heading">Servicios</p>
-            <a class="footer-link" href="/#servicios">Instala tu equipo</a>
-            <a class="footer-link" href="/#servicios">Financiamiento</a>
-            <a class="footer-link" href="/#servicios">Flotillas empresariales</a>
+            {serviceLinks.map((link) => (
+              <a class="footer-link" href={link.href}>{link.label}</a>
+            ))}
           </div>
-          <div>
+          <address class="footer-contact">
             <p class="footer-heading">Contacto</p>
-            {footerAddress && <p class="footer-link">{footerAddress}</p>}
-            <p class="footer-link">{footerEmail}</p>
-            {footerPhone && <p class="footer-link">{footerPhone}</p>}
+            {footerAddress && footerAddressHref && (
+              <a class="footer-link" href={footerAddressHref} target="_blank" rel="noopener noreferrer">{footerAddress}</a>
+            )}
+            <a class="footer-link" href={`mailto:${footerEmail}`}>{footerEmail}</a>
+            {footerPhone && <a class="footer-link" href={telHref(footerPhone)}>{footerPhone}</a>}
             {footerSchedule && <p class="footer-link">{footerSchedule}</p>}
             {footerAdditionalInfo && <p class="footer-link">{footerAdditionalInfo}</p>}
-            <a class="footer-link" href="/#ubicaciones">Ver todas las estaciones →</a>
-          </div>
+            <a class="footer-link" href={locationsPath}>Ver todas las estaciones →</a>
+          </address>
         </div>
         <div class="footer-bottom">
           <span>© {new Date().getFullYear()} GNU Gas Natural Vehicular. Todos los derechos reservados.</span>
@@ -214,10 +267,10 @@ const whatsappHref = whatsappDigits
       </div>
     </footer>
 
-    {whatsappHref && (
+    {whatsappLink && (
     <a
       class="whatsapp-fab"
-      href={whatsappHref}
+      href={whatsappLink}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Escríbenos por WhatsApp"

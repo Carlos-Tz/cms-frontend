@@ -1,0 +1,79 @@
+---
+// `image_gallery`: a grid of CMS images, each with its optional caption and alt
+// text. A click opens the image full size in a native <dialog>.
+import { mediaUrl } from "../../functions/fetch";
+
+interface GalleryImage {
+  image: string;
+  caption?: string | null;
+  alt?: string | null;
+}
+
+interface Props {
+  title?: string | null;
+  images?: GalleryImage[];
+}
+
+const { title, images = [] } = Astro.props;
+const shown = images.filter((item) => item.image).map((item) => ({ ...item, src: mediaUrl(item.image) }));
+---
+
+{shown.length > 0 && (
+  <section class="section">
+    <div class="container">
+      {title && (
+        <div class="section-head section-head--center">
+          <h2 class="section-title">{title}</h2>
+        </div>
+      )}
+      <div class="gallery">
+        {shown.map((item) => (
+          <figure class="gallery__item">
+            <button
+              type="button"
+              class="gallery__open"
+              data-gallery-src={item.src}
+              data-gallery-alt={item.alt ?? item.caption ?? ""}
+              data-gallery-caption={item.caption ?? ""}
+              aria-label={`Ampliar imagen${item.caption ? `: ${item.caption}` : ""}`}
+            >
+              <img class="gallery__img" src={item.src} alt={item.alt ?? item.caption ?? ""} loading="lazy" />
+            </button>
+            {item.caption && <figcaption class="gallery__caption">{item.caption}</figcaption>}
+          </figure>
+        ))}
+      </div>
+    </div>
+
+    <dialog class="gallery-lightbox">
+      <form method="dialog">
+        <button class="gallery-lightbox__close" aria-label="Cerrar">×</button>
+      </form>
+      <img class="gallery-lightbox__img" src="" alt="" />
+      <p class="gallery-lightbox__caption"></p>
+    </dialog>
+  </section>
+)}
+
+<script>
+  document.querySelectorAll<HTMLElement>(".gallery").forEach((gallery) => {
+    const dialog = gallery.parentElement?.parentElement?.querySelector<HTMLDialogElement>(".gallery-lightbox");
+    const img = dialog?.querySelector<HTMLImageElement>(".gallery-lightbox__img");
+    const caption = dialog?.querySelector<HTMLElement>(".gallery-lightbox__caption");
+    if (!dialog || !img || !caption) return;
+
+    gallery.querySelectorAll<HTMLButtonElement>(".gallery__open").forEach((button) => {
+      button.addEventListener("click", () => {
+        img.src = button.dataset.gallerySrc ?? "";
+        img.alt = button.dataset.galleryAlt ?? "";
+        caption.textContent = button.dataset.galleryCaption ?? "";
+        dialog.showModal();
+      });
+    });
+
+    // A click on the backdrop (outside the image) closes it too.
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) dialog.close();
+    });
+  });
+</script>

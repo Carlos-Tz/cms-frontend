@@ -1,28 +1,69 @@
 ---
 import { mediaUrl } from "../../functions/fetch";
 
+// Every field the CMS `clients_showcase` item carries: the logo links out
+// when it has a `url`, `description` becomes its tooltip, and the logos with a
+// `quote` also get a quote card below the wall of logos.
 interface ClientLogo {
   name: string;
   image: string;
+  url?: string | null;
+  description?: string | null;
+  quote?: string | null;
+  quote_author?: string | null;
 }
 
 interface Props {
   title?: string | null;
-  logos: ClientLogo[];
+  logos?: ClientLogo[];
 }
 
-const { title, logos } = Astro.props;
+const { title, logos = [] } = Astro.props;
+const shown = logos.map((logo) => ({ ...logo, image: mediaUrl(logo.image) }));
+const quoted = shown.filter((logo) => logo.quote);
+
+const stripQuotes = (quote: string) =>
+  quote
+    .trim()
+    .replace(/^["“”'‘’]+/, "")
+    .replace(/["“”'‘’]+(?=[.!?]?\s*$)/, "")
+    .trim();
 ---
 
-<section class="section section--alt" id="clientes">
-  <div class="container">
-    <div class="section-head section-head--center">
-      <h2 class="section-title">{title ?? "Nuestros clientes"}</h2>
+{shown.length > 0 && (
+  <section class="section section--alt" id="clientes">
+    <div class="container">
+      <div class="section-head section-head--center">
+        <h2 class="section-title">{title ?? "Nuestros clientes"}</h2>
+      </div>
+      <div class="clients-grid">
+        {shown.map((logo) =>
+          logo.url ? (
+            <a class="clients-grid__link" href={logo.url} target="_blank" rel="noopener noreferrer" title={logo.description ?? logo.name}>
+              <img class="clients-grid__logo" src={logo.image} alt={logo.name} loading="lazy" />
+            </a>
+          ) : (
+            <img class="clients-grid__logo" src={logo.image} alt={logo.name} title={logo.description ?? undefined} loading="lazy" />
+          )
+        )}
+      </div>
+
+      {quoted.length > 0 && (
+        <div class="grid grid--3 client-quotes">
+          {quoted.map((logo) => (
+            <blockquote class="card testimonial-card">
+              <p class="testimonial-card__quote">“{stripQuotes(logo.quote!)}”</p>
+              <footer class="testimonial-card__author">
+                <img class="testimonial-card__photo testimonial-card__photo--logo" src={logo.image} alt="" loading="lazy" />
+                <div class="testimonial-card__who">
+                  {logo.quote_author && <strong>{logo.quote_author}</strong>}
+                  <span>{logo.description ?? logo.name}</span>
+                </div>
+              </footer>
+            </blockquote>
+          ))}
+        </div>
+      )}
     </div>
-    <div class="clients-grid">
-      {logos.map((logo) => (
-        <img class="clients-grid__logo" src={mediaUrl(logo.image)} alt={logo.name} loading="lazy" />
-      ))}
-    </div>
-  </div>
-</section>
+  </section>
+)}
