@@ -394,6 +394,95 @@ button {
   }
 }
 
+.nav-link.is-current {
+  color: #ffffff;
+}
+
+/* Second level of the CMS menu: a dropdown that opens on hover and on
+   keyboard focus (`:focus-within`), so it needs no script. */
+.nav-item {
+  position: relative;
+}
+
+.nav-item--has-menu > .nav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.nav-link__caret {
+  transition: transform 0.2s var(--ease-out);
+}
+
+.nav-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  min-width: 13rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border-on-dark);
+  border-radius: var(--radius-md);
+  background: var(--color-ink-2);
+  box-shadow: var(--shadow-float);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -6px);
+  transition: opacity 0.2s ease, transform 0.25s var(--ease-out), visibility 0s linear 0.25s;
+}
+
+/* Bridges the gap between the link and the panel so the pointer can travel
+   down without the hover dropping. */
+.nav-menu::before {
+  content: "";
+  position: absolute;
+  inset: -0.875rem 0 auto;
+  height: 0.875rem;
+}
+
+.nav-item--has-menu:hover .nav-menu,
+.nav-item--has-menu:focus-within .nav-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition: opacity 0.2s ease, transform 0.25s var(--ease-out);
+}
+
+.nav-item--has-menu:hover .nav-link__caret,
+.nav-item--has-menu:focus-within .nav-link__caret {
+  transform: rotate(180deg);
+}
+
+.nav-menu__link {
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-on-dark-70);
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nav-menu__link:hover,
+.nav-menu__link:focus-visible,
+.nav-menu__link.is-current {
+  background: var(--color-surface-on-dark);
+  color: #ffffff;
+}
+
+.nav-menu__link.is-current {
+  box-shadow: inset 2px 0 0 var(--color-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-menu,
+  .nav-link__caret {
+    transition: none;
+  }
+}
+
 /* Mobile nav — hamburger toggle + full-screen overlay panel, hidden entirely at desktop widths */
 .nav-toggle {
   display: inline-flex;
@@ -486,6 +575,33 @@ button {
   font-size: 1.25rem;
   font-weight: 700;
   color: #ffffff;
+}
+
+.mobile-nav__link.is-current {
+  color: var(--color-primary);
+}
+
+.mobile-nav__sublinks {
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border-on-dark);
+}
+
+.mobile-nav__sublink {
+  padding: 0.5rem 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text-on-dark-70);
+}
+
+.mobile-nav__sublink.is-current {
+  color: var(--color-primary);
+}
+
+/* The parent's own divider would sit between it and its children. */
+.mobile-nav__link:has(+ .mobile-nav__sublinks) {
+  border-bottom: none;
 }
 
 .mobile-nav__cta {
@@ -1198,6 +1314,88 @@ body.nav-open {
   color: var(--color-primary);
 }
 
+/* Child-page cards (ChildPageCards.astro, on /nuestros-servicios and
+   /sobre-nosotros): a blog card with a stronger hover — lift and shadow, a
+   brand tint over the zooming cover, and the arrow nudging forward, so the
+   child pages read as the section's main way onward. */
+.service-card {
+  transition: border-color 0.3s ease, transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+  /* `both` would keep the bounce-in's final transform forever and override the
+     hover lift; `backwards` releases it once the entrance finishes. */
+  animation-fill-mode: backwards;
+}
+
+.service-card__media {
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 30%, var(--color-primary-alt));
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-out);
+}
+
+.service-card .blog-card__cover {
+  display: block;
+  height: 11rem;
+}
+
+.service-card .card__title {
+  transition: color 0.3s ease;
+}
+
+.service-card__arrow {
+  display: inline-block;
+  transition: transform 0.3s var(--ease-out);
+}
+
+.service-card:hover,
+.service-card:focus-visible {
+  border-color: var(--color-primary);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-float);
+}
+
+.service-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.service-card:hover .blog-card__cover,
+.service-card:focus-visible .blog-card__cover {
+  transform: scale(1.08);
+}
+
+.service-card:hover .service-card__media::after,
+.service-card:focus-visible .service-card__media::after {
+  opacity: 0.45;
+}
+
+.service-card:hover .card__title,
+.service-card:focus-visible .card__title {
+  color: var(--color-primary-alt);
+}
+
+.service-card:hover .service-card__arrow,
+.service-card:focus-visible .service-card__arrow {
+  transform: translateX(6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-card:hover,
+  .service-card:focus-visible,
+  .service-card:hover .blog-card__cover,
+  .service-card:focus-visible .blog-card__cover,
+  .service-card:hover .service-card__arrow,
+  .service-card:focus-visible .service-card__arrow {
+    transform: none;
+  }
+}
+
 /* Page hero (blog and other interior pages) */
 .page-hero {
   position: relative;
@@ -1488,8 +1686,12 @@ body.nav-open {
   color: var(--color-text-on-dark-70);
 }
 
-.footer-link:hover {
+a.footer-link:hover {
   color: #ffffff;
+}
+
+.footer-contact {
+  font-style: normal;
 }
 
 .social-row {
@@ -1615,4 +1817,297 @@ label {
    arrow, so it needs its own explicit override. */
 .field select {
   cursor: url("/cursor.png") 17 16, auto;
+}
+
+/* ------------------------------------------------------------------
+   CMS fields that used to go unrendered
+------------------------------------------------------------------ */
+
+/* Blog: post excerpt as a lead paragraph, and the listing's post count. */
+.blog-post__lead {
+  margin-top: 1rem;
+  font-size: 1.1875rem;
+  line-height: 1.55;
+  color: var(--color-text-60);
+}
+
+.blog-index__count {
+  margin-bottom: 1.5rem;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-text-40);
+  text-align: center;
+}
+
+/* Clients: the grid variant wraps its cards so markup matches the marquee;
+   `display: contents` keeps them direct grid items. */
+.logo-grid__inner {
+  display: contents;
+}
+
+.logo-card__desc {
+  padding: 0 1rem 0.875rem;
+  margin-top: -0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-40);
+  text-align: center;
+}
+
+.client-quotes {
+  margin-top: 3rem;
+}
+
+.client-quotes__logo {
+  width: 3.25rem;
+  height: 2.75rem;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-alt);
+  padding: 0.25rem;
+  border: 1px solid var(--color-border);
+}
+
+/* Savings simulator: percentage and the per-fuel monthly cost breakdown. */
+.simulator__percent {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  background: rgba(52, 214, 152, 0.14);
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.simulator__breakdown {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border-on-dark);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.simulator__breakdown dt {
+  font-size: 0.75rem;
+  color: var(--color-text-on-dark-45);
+}
+
+.simulator__breakdown dd {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.simulator__breakdown div:last-child dd {
+  color: var(--color-primary);
+}
+
+.simulator__percent[hidden],
+.simulator__breakdown[hidden] {
+  display: none;
+}
+
+/* Stations: call link, and the "Ver en el mapa" toggle with its active card. */
+a.stations-list__phone {
+  display: block;
+  color: var(--color-primary-alt);
+}
+
+a.stations-list__phone:hover {
+  text-decoration: underline;
+}
+
+.stations-list__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 0.375rem;
+}
+
+.stations-list__actions .stations-list__link {
+  margin-top: 0;
+}
+
+.stations-list__focus {
+  padding: 0.35rem 0.875rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-hover);
+  background: transparent;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.stations-list__focus:hover,
+.stations-list__focus[aria-pressed="true"] {
+  border-color: var(--color-primary-alt);
+  background: var(--color-primary-alt);
+  color: #ffffff;
+}
+
+.stations-list__item {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stations-list__item.is-active {
+  border-color: var(--color-primary-alt);
+  box-shadow: inset 3px 0 0 var(--color-primary-alt);
+}
+
+/* Contact info: address/phone/email/hours as actionable rows. */
+.contact-info {
+  margin-top: 2rem;
+}
+
+.contact-info__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.125rem;
+}
+
+.contact-info__item {
+  display: flex;
+  gap: 0.875rem;
+  align-items: flex-start;
+}
+
+.contact-info__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  background: rgba(52, 214, 152, 0.14);
+  color: var(--color-primary-alt);
+}
+
+.contact-info__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-40);
+}
+
+.contact-info__value {
+  display: block;
+  margin-top: 0.125rem;
+  color: var(--color-text);
+}
+
+.contact-info__value--link {
+  font-weight: 600;
+  color: var(--color-primary-alt);
+}
+
+.contact-info__value--link:hover {
+  text-decoration: underline;
+}
+
+.contact-info__extra {
+  margin-top: 1.25rem;
+  font-size: var(--text-small);
+  color: var(--color-text-60);
+}
+
+/* Image gallery + lightbox. */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.gallery__item {
+  margin: 0;
+}
+
+.gallery__open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-bg-alt);
+  cursor: zoom-in;
+}
+
+.gallery__img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease-out);
+}
+
+.gallery__open:hover .gallery__img,
+.gallery__open:focus-visible .gallery__img {
+  transform: scale(1.05);
+}
+
+.gallery__open:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.gallery__caption {
+  margin-top: 0.5rem;
+  font-size: var(--text-small);
+  color: var(--color-text-60);
+}
+
+.gallery-lightbox {
+  max-width: min(92vw, 70rem);
+  max-height: 92vh;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-ink);
+  color: var(--color-text-on-dark-70);
+}
+
+.gallery-lightbox::backdrop {
+  background: rgba(10, 10, 11, 0.82);
+}
+
+.gallery-lightbox__img {
+  display: block;
+  max-width: 100%;
+  max-height: 80vh;
+  margin: 0 auto;
+}
+
+.gallery-lightbox__caption:not(:empty) {
+  padding: 0.875rem 1.25rem;
+  font-size: var(--text-small);
+}
+
+.gallery-lightbox__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-on-dark);
+  background: rgba(10, 10, 11, 0.6);
+  color: #ffffff;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery__img {
+    transition: none;
+  }
 }

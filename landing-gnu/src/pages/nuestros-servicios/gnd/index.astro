@@ -1,23 +1,5 @@
 ---
-import Layout from "../../../layouts/Layout.astro";
-import SectionRenderer from "../../../components/SectionRenderer.astro";
-import PageHero from "../../../components/sections/PageHero.astro";
-import { fetchData } from "../../../functions/fetch";
-
-type PageResponse = {
-  status: string;
-  data: { slug: string; path: string; title: string; sections: Array<{ type: string; content: Record<string, any> }> };
-  meta: Record<string, any>;
-};
-
-const pageResponse: PageResponse | undefined = await fetchData("pages/gnd");
-const page = pageResponse?.data;
-const sections = page?.sections ?? [];
+import CmsPage from "../../../components/CmsPage.astro";
 ---
 
-<Layout title={page?.title ?? "GND"}>
-  <main>
-    {!page && <PageHero title="GND" subtitle="Gas natural distribuido" />}
-    <SectionRenderer sections={sections} pageSlug={page?.slug} />
-  </main>
-</Layout>
+<CmsPage slug="gnd" fallbackTitle="GND" fallbackSubtitle="Gas natural distribuido" />

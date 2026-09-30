@@ -7,6 +7,10 @@ import EditableSections from './pages/gnu/editable-sections'
 import GnuBlog from './pages/gnu/blog'
 import GnuContacto from './pages/gnu/contacto'
 import GnuNuestrosServicios from './pages/gnu/nuestros-servicios'
+import GnuNuestrosServiciosPortada from './pages/gnu/nuestros-servicios/portada'
+import GnuGnc from './pages/gnu/nuestros-servicios/gnc'
+import GnuGnd from './pages/gnu/nuestros-servicios/gnd'
+import GnuGnv from './pages/gnu/nuestros-servicios/gnv'
 import GnuDesarrolloSostenible from './pages/gnu/desarrollo-sostenible'
 import GnuDesarrolloSostenPortada from './pages/gnu/desarrollo-sostenible/portada'
 import GnuDistintivoEsr from './pages/gnu/desarrollo-sostenible/distintivo-esr'
@@ -160,6 +164,10 @@ export default function App() {
       <Route path="/gnu/blog" element={<GnuBlog />} />
       <Route path="/gnu/contacto" element={<GnuContacto />} />
       <Route path="/gnu/nuestros-servicios" element={<GnuNuestrosServicios />} />
+      <Route path="/gnu/nuestros-servicios/portada" element={<GnuNuestrosServiciosPortada />} />
+      <Route path="/gnu/nuestros-servicios/gnc" element={<GnuGnc />} />
+      <Route path="/gnu/nuestros-servicios/gnd" element={<GnuGnd />} />
+      <Route path="/gnu/nuestros-servicios/gnv" element={<GnuGnv />} />
       <Route path="/gnu/desarrollo-sostenible" element={<GnuDesarrolloSostenible />} />
       <Route path="/gnu/desarrollo-sostenible/portada" element={<GnuDesarrolloSostenPortada />} />
       <Route path="/gnu/desarrollo-sostenible/distintivo-esr" element={<GnuDistintivoEsr />} />

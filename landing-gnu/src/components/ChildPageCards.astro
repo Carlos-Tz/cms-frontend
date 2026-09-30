@@ -1,0 +1,51 @@
+---
+import noImg from "../assets/images/noimg.jpg";
+import { mediaUrl } from "../functions/fetch";
+import { childrenOf, getPage, heroOf } from "../lib/cms";
+
+interface Props {
+  // Slug of the hub page whose children become cards.
+  parent: string;
+  // Used only when `GET menu` is unreachable at build time.
+  fallback: Array<{ slug: string; path: string; title: string }>;
+  gridClass?: string;
+}
+
+const { parent, fallback, gridClass = "grid--3" } = Astro.props;
+
+// The children come from the CMS menu, so a page unpublished in the admin
+// drops its card too instead of linking to a 404.
+const menuChildren = await childrenOf(parent);
+const children = menuChildren.length ? menuChildren : fallback;
+
+// Each card reuses its page's "Encabezado de página" (page_hero): the image and
+// subtitle the admin already edits there, so a card has no content of its own.
+const cards = await Promise.all(
+  children.map(async (child) => {
+    const hero = heroOf(await getPage(child.slug));
+    return {
+      path: child.path,
+      title: child.title,
+      subtitle: hero?.subtitle ?? null,
+      image: hero?.image ? mediaUrl(hero.image) : noImg.src,
+    };
+  }),
+);
+---
+
+{cards.length > 0 && (
+  <div class:list={["grid", gridClass]}>
+    {cards.map((card) => (
+      <a class="blog-card service-card" href={card.path}>
+        <div class="service-card__media">
+          <img class="blog-card__cover" src={card.image} alt="" loading="lazy" />
+        </div>
+        <div class="blog-card__body">
+          <p class="card__title">{card.title}</p>
+          {card.subtitle && <p class="blog-card__excerpt">{card.subtitle}</p>}
+          <span class="blog-card__link">Ver más <span class="service-card__arrow" aria-hidden="true">→</span></span>
+        </div>
+      </a>
+    ))}
+  </div>
+)}

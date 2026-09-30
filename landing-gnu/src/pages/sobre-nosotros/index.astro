@@ -1,54 +1,23 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import SectionRenderer from "../../components/SectionRenderer.astro";
-import { fetchData } from "../../functions/fetch";
+import CmsPage from "../../components/CmsPage.astro";
+import ChildPageCards from "../../components/ChildPageCards.astro";
 
-type PageResponse = {
-  status: string;
-  data: { slug: string; path: string; title: string; sections: Array<{ type: string; content: Record<string, any> }> };
-  meta: Record<string, any>;
-};
-
-const pageResponse: PageResponse | undefined = await fetchData("pages/sobre-nosotros");
-const page = pageResponse?.data;
-const sections = page?.sections ?? [];
-
-const children = [
-  { slug: "proposito-empresarial", label: "Propósito empresarial" },
-  { slug: "valores", label: "Valores" },
-  { slug: "certificaciones", label: "Certificaciones" },
-  { slug: "nuestra-historia", label: "Nuestra historia" },
+const fallbackChildren = [
+  { slug: "proposito-empresarial", path: "/sobre-nosotros/proposito-empresarial", title: "Propósito empresarial" },
+  { slug: "valores", path: "/sobre-nosotros/valores", title: "Valores" },
+  { slug: "certificaciones", path: "/sobre-nosotros/certificaciones", title: "Certificaciones" },
+  { slug: "nuestra-historia", path: "/sobre-nosotros/nuestra-historia", title: "Nuestra historia" },
 ];
 ---
 
-<Layout title={page?.title ?? "Sobre Nosotros"}>
-  <main>
-    {!page && (
-      <section class="page-hero">
-        <div class="page-hero__scrim" aria-hidden="true"></div>
-        <div class="container page-hero__content">
-          <h1 class="page-hero__title">Sobre Nosotros</h1>
-        </div>
-      </section>
-    )}
-
-    <SectionRenderer sections={sections} pageSlug={page?.slug} />
-
-    <section class="section">
-      <div class="container">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">Conoce más</span>
-          <h2 class="section-title">Explora Sobre Nosotros</h2>
-        </div>
-        <div class="grid grid--4">
-          {children.map((child) => (
-            <a class="card" href={`/sobre-nosotros/${child.slug}`}>
-              <p class="card__title">{child.label}</p>
-              <span class="blog-card__link">Ver más →</span>
-            </a>
-          ))}
-        </div>
+<CmsPage slug="sobre-nosotros" fallbackTitle="Sobre Nosotros">
+  <section class="section">
+    <div class="container">
+      <div class="section-head section-head--center">
+        <span class="eyebrow">Conoce más</span>
+        <h2 class="section-title">Explora Sobre Nosotros</h2>
       </div>
-    </section>
-  </main>
-</Layout>
+      <ChildPageCards parent="sobre-nosotros" fallback={fallbackChildren} gridClass="grid--4" />
+    </div>
+  </section>
+</CmsPage>

@@ -1,54 +1,23 @@
 ---
-import Layout from "../../layouts/Layout.astro";
-import SectionRenderer from "../../components/SectionRenderer.astro";
-import { fetchData } from "../../functions/fetch";
+import CmsPage from "../../components/CmsPage.astro";
+import ChildPageCards from "../../components/ChildPageCards.astro";
 
-type PageResponse = {
-  status: string;
-  data: { slug: string; path: string; title: string; sections: Array<{ type: string; content: Record<string, any> }> };
-  meta: Record<string, any>;
-};
-
-const pageResponse: PageResponse | undefined = await fetchData("pages/desarrollo-sostenible");
-const page = pageResponse?.data;
-const sections = page?.sections ?? [];
-
-const children = [
-  { slug: "distintivo-esr", label: "Distintivo ESR" },
-  { slug: "ecovadis", label: "EcoVadis" },
-  { slug: "voluntariado", label: "Voluntariado" },
-  { slug: "iniciativas-rse", label: "Iniciativas RSE" },
+const fallbackChildren = [
+  { slug: "distintivo-esr", path: "/desarrollo-sostenible/distintivo-esr", title: "Distintivo ESR" },
+  { slug: "ecovadis", path: "/desarrollo-sostenible/ecovadis", title: "EcoVadis" },
+  { slug: "voluntariado", path: "/desarrollo-sostenible/voluntariado", title: "Voluntariado" },
+  { slug: "iniciativas-rse", path: "/desarrollo-sostenible/iniciativas-rse", title: "Iniciativas RSE" },
 ];
 ---
 
-<Layout title={page?.title ?? "Desarrollo Sostenible"}>
-  <main>
-    {!page && (
-      <section class="page-hero">
-        <div class="page-hero__scrim" aria-hidden="true"></div>
-        <div class="container page-hero__content">
-          <h1 class="page-hero__title">Desarrollo Sostenible</h1>
-        </div>
-      </section>
-    )}
-
-    <SectionRenderer sections={sections} pageSlug={page?.slug} />
-
-    <section class="section">
-      <div class="container">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">Conoce más</span>
-          <h2 class="section-title">Explora Desarrollo Sostenible</h2>
-        </div>
-        <div class="grid grid--4">
-          {children.map((child) => (
-            <a class="card" href={`/desarrollo-sostenible/${child.slug}`}>
-              <p class="card__title">{child.label}</p>
-              <span class="blog-card__link">Ver más →</span>
-            </a>
-          ))}
-        </div>
+<CmsPage slug="desarrollo-sostenible" fallbackTitle="Desarrollo Sostenible">
+  <section class="section">
+    <div class="container">
+      <div class="section-head section-head--center">
+        <span class="eyebrow">Conoce más</span>
+        <h2 class="section-title">Explora Desarrollo Sostenible</h2>
       </div>
-    </section>
-  </main>
-</Layout>
+      <ChildPageCards parent="desarrollo-sostenible" fallback={fallbackChildren} gridClass="grid--4" />
+    </div>
+  </section>
+</CmsPage>

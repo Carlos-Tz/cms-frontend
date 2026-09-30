@@ -1,8 +1,7 @@
 ---
 import "../styles/global.css";
-import { fetchData } from "../functions/fetch";
+import { getGlobals, getMenu, whatsappHref, type MenuItem } from "../lib/cms";
 import { seo } from "../config/seo";
-import type { GlobalsResponse } from "../types/globals";
 import logo from "../assets/images/logo.png";
 
 interface Props {
@@ -15,9 +14,13 @@ interface Props {
   image?: string | null;
   // Set true on pages that shouldn't be indexed (e.g. a "not found" state).
   noindex?: boolean;
+  // og:type — "article" for blog posts, "website" everywhere else.
+  type?: "website" | "article";
+  // Extra schema.org structured data for this page (e.g. an Article).
+  jsonLd?: Record<string, unknown> | null;
 }
 
-const { title, description, image, noindex = false } = Astro.props;
+const { title, description, image, noindex = false, type = "website", jsonLd = null } = Astro.props;
 
 const pageTitle = title ? `${title} ${seo.titleSeparator} ${seo.siteName}` : seo.defaultTitle;
 const pageDescription = description ?? seo.defaultDescription;
@@ -27,43 +30,62 @@ const socialImageUrl = socialImage ? new URL(socialImage, seo.siteUrl).toString(
 
 // The nav comes from `GET menu`, which the CMS derives from the page map:
 // unpublishing a page in the admin has to drop it from the nav too, which a
-// hardcoded list can't do. Only the top level is rendered here — this header
-// has no dropdown, and every second-level page is reachable from its parent.
+// hardcoded list can't do. The whole tree is used: top-level entries in the
+// bar, their children in a dropdown (desktop) or indented below (mobile).
 // The literal list below is the fallback for an unreachable endpoint.
-type MenuItem = { slug: string; path: string; title: string; children?: MenuItem[] };
-type MenuResponse = { status: string; data: MenuItem[]; meta: Record<string, any> };
-
-const fallbackNavLinks = [
-  { href: "/", label: "Inicio" },
-  { href: "/nuestros-servicios", label: "Nuestros Servicios" },
-  { href: "/sobre-nosotros", label: "Sobre Nosotros" },
-  { href: "/desarrollo-sostenible", label: "Desarrollo Sostenible" },
-  { href: "/blog", label: "Blog" },
-  { href: "/contacto", label: "Contacto" },
+const fallbackNav: MenuItem[] = [
+  { slug: "inicio", path: "/", title: "Inicio", children: [] },
+  { slug: "nuestros-servicios", path: "/nuestros-servicios", title: "Nuestros Servicios", children: [] },
+  { slug: "sobre-nosotros", path: "/sobre-nosotros", title: "Sobre Nosotros", children: [] },
+  { slug: "desarrollo-sostenible", path: "/desarrollo-sostenible", title: "Desarrollo Sostenible", children: [] },
+  { slug: "blog", path: "/blog", title: "Blog", children: [] },
+  { slug: "contacto", path: "/contacto", title: "Contacto", children: [] },
 ];
 
-const menuResponse: MenuResponse | undefined = await fetchData("menu");
-const navLinks = menuResponse?.data?.length
-  ? menuResponse.data.map((item) => ({ href: item.path, label: item.title }))
-  : fallbackNavLinks;
+const menu = await getMenu();
+const navItems = menu.length ? menu : fallbackNav;
+
+// Marks the current section in the nav: exact match for "/", prefix match
+// for everything else so /sobre-nosotros/valores lights up "Sobre nosotros".
+const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
+const isCurrent = (path: string) =>
+  path === "/" ? currentPath === "/" : currentPath === path || currentPath.startsWith(`${path}/`);
+
+// Footer "Servicios" lists the real service pages from the same tree, each
+// linking to its own page rather than all of them to the hub.
+const services = navItems.find((item) => item.slug === "nuestros-servicios")?.children ?? [];
+const serviceLinks = services.length
+  ? services.map((item) => ({ href: item.path, label: item.title }))
+  : [
+      { href: "/nuestros-servicios/gnc", label: "Gas Natural Comprimido (GNC)" },
+      { href: "/nuestros-servicios/gnd", label: "Gas Natural Domiciliario (GND)" },
+      { href: "/nuestros-servicios/gnv", label: "Gas Natural Vehicular (GNV)" },
+    ];
+
+// Where the "Cotiza aquí" CTA goes: the contact page when the CMS publishes
+// one, otherwise the home page's own contact block.
+const contactPath = navItems.find((item) => item.slug === "contacto")?.path ?? "/#contacto";
 
 // Footer contact info, social links and the WhatsApp button are all editable
 // from the CMS admin (home page → Datos de contacto / Redes sociales / Botón
 // de WhatsApp) and shared by every page, so they come from the site-wide
 // `globals` endpoint. This layout wraps every page, so it fetches them here
 // rather than relying on each page to pass them down.
-const globalsResponse: GlobalsResponse | undefined = await fetchData("globals");
-const globals = globalsResponse?.data;
+const globals = await getGlobals();
 
 const contactInfo = globals?.contact_info;
 const socialIcons = globals?.social_icons;
-const whatsappButton = globals?.whatsapp_button;
 
 const footerEmail = contactInfo?.email ?? "contacto@gnugas.mx";
 const footerPhone = contactInfo?.phone ?? "800 555 0192";
 const footerSchedule = contactInfo?.schedule ?? "Lun–Vie, 9:00–18:00";
 const footerAddress = contactInfo?.address;
 const footerAdditionalInfo = contactInfo?.additional_info;
+const footerPhoneHref = `tel:${footerPhone.replace(/[^\d+]/g, "")}`;
+const footerAddressHref = footerAddress
+  ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(footerAddress)}`
+  : null;
+const currentYear = new Date().getFullYear();
 
 const SOCIAL_ICON_MARKUP: Record<string, string> = {
   facebook:
@@ -90,16 +112,34 @@ const socialNetworks = (socialIcons?.networks?.length ? socialIcons.networks : f
   (item) => SOCIAL_ICON_MARKUP[item.network]
 );
 
-// No number in the CMS means no button. A WhatsApp link pointing at a
-// placeholder number looks live and goes nowhere, which is worse than no CTA:
-// the visitor writes and nobody ever reads it. `phone` is required by the
-// section schema, so this only bites when `/globals` failed at build time.
-const whatsappDigits = (whatsappButton?.phone ?? "").replace(/\D/g, "");
-const whatsappHref = whatsappDigits
-  ? `https://wa.me/${whatsappDigits}${
-      whatsappButton?.prefilled_message ? `?text=${encodeURIComponent(whatsappButton.prefilled_message)}` : ""
-    }`
-  : null;
+// No number in the CMS means no button (see `whatsappHref`). `phone` is
+// required by the section schema, so this only bites when `/globals` failed
+// at build time.
+const whatsappLink = whatsappHref(globals);
+
+// Organization structured data, from the same globals as the footer: search
+// engines get the contact point and the official social profiles (`sameAs`).
+const organizationJsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: seo.siteName,
+  url: seo.siteUrl,
+  logo: new URL(logo.src, seo.siteUrl).toString(),
+  ...(contactInfo?.email && { email: contactInfo.email }),
+  ...(contactInfo?.phone && {
+    contactPoint: {
+      "@type": "ContactPoint",
+      telephone: contactInfo.phone,
+      contactType: "customer service",
+      areaServed: "MX",
+      availableLanguage: "es",
+    },
+  }),
+  ...(contactInfo?.address && { address: contactInfo.address }),
+  ...(socialIcons?.networks?.length && {
+    sameAs: socialIcons.networks.map((item) => item.url).filter((url) => url && url !== "#"),
+  }),
+});
 ---
 
 <!doctype html>
@@ -115,7 +155,7 @@ const whatsappHref = whatsappDigits
     <link rel="canonical" href={canonicalUrl} />
     {noindex && <meta name="robots" content="noindex, nofollow" />}
 
-    <meta property="og:type" content="website" />
+    <meta property="og:type" content={type} />
     <meta property="og:site_name" content={seo.siteName} />
     <meta property="og:locale" content={seo.locale} />
     <meta property="og:url" content={canonicalUrl} />
@@ -135,20 +175,56 @@ const whatsappHref = whatsappDigits
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@500;700;800&display=swap"
       rel="stylesheet"
     />
+
+    <script is:inline type="application/ld+json" set:html={organizationJsonLd} />
+    {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
   </head>
   <body>
     <header class="site-header">
       <div class="container site-header__inner">
-        <a href="#inicio" class="brand">
+        <a href="/" class="brand">
           <img class="brand__logo" src={logo.src} width={logo.width} height={logo.height} alt="GNU Gas Natural" />
         </a>
         <nav class="nav" aria-label="Principal">
-          {navLinks.map((link) => (
-            <a class="nav-link" href={link.href}>{link.label}</a>
-          ))}
+          {navItems.map((item) =>
+            item.children?.length ? (
+              <div class="nav-item nav-item--has-menu">
+                <a
+                  class:list={["nav-link", { "is-current": isCurrent(item.path) }]}
+                  href={item.path}
+                  aria-current={isCurrent(item.path) ? "page" : undefined}
+                  aria-haspopup="true"
+                >
+                  {item.title}
+                  <svg class="nav-link__caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
+                    <path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </a>
+                <div class="nav-menu">
+                  {item.children.map((child) => (
+                    <a
+                      class:list={["nav-menu__link", { "is-current": isCurrent(child.path) }]}
+                      href={child.path}
+                      aria-current={isCurrent(child.path) ? "page" : undefined}
+                    >
+                      {child.title}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <a
+                class:list={["nav-link", { "is-current": isCurrent(item.path) }]}
+                href={item.path}
+                aria-current={isCurrent(item.path) ? "page" : undefined}
+              >
+                {item.title}
+              </a>
+            )
+          )}
         </nav>
         <div class="header-actions">
-          <a class="btn-primary" href="#contacto">Cotiza aquí</a>
+          <a class="btn-primary" href={contactPath}>Cotiza aquí</a>
           <button
             type="button"
             class="nav-toggle"
@@ -168,7 +244,7 @@ const whatsappHref = whatsappDigits
     <div class="mobile-nav" id="mobile-nav" aria-hidden="true">
       <div class="mobile-nav__inner">
         <div class="mobile-nav__header">
-          <a href="#inicio" class="brand">
+          <a href="/" class="brand">
             <img class="brand__logo" src={logo.src} width={logo.width} height={logo.height} alt="GNU Gas Natural" />
           </a>
           <button type="button" class="mobile-nav__close" id="mobile-nav-close" aria-label="Cerrar menú">
@@ -178,11 +254,32 @@ const whatsappHref = whatsappDigits
           </button>
         </div>
         <nav class="mobile-nav__links" aria-label="Principal (móvil)">
-          {navLinks.map((link) => (
-            <a class="mobile-nav__link" href={link.href}>{link.label}</a>
+          {navItems.map((item) => (
+            <>
+              <a
+                class:list={["mobile-nav__link", { "is-current": isCurrent(item.path) }]}
+                href={item.path}
+                aria-current={isCurrent(item.path) ? "page" : undefined}
+              >
+                {item.title}
+              </a>
+              {item.children?.length > 0 && (
+                <div class="mobile-nav__sublinks">
+                  {item.children.map((child) => (
+                    <a
+                      class:list={["mobile-nav__sublink", { "is-current": isCurrent(child.path) }]}
+                      href={child.path}
+                      aria-current={isCurrent(child.path) ? "page" : undefined}
+                    >
+                      {child.title}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </>
           ))}
         </nav>
-        <a class="btn-primary mobile-nav__cta" href="#contacto">Cotiza aquí</a>
+        <a class="btn-primary mobile-nav__cta" href={contactPath}>Cotiza aquí</a>
         <div class="social-row mobile-nav__social" aria-label="Redes sociales">
           {socialNetworks.map((item) => (
             <a class="social-icon" href={item.url || "#"} target="_blank" rel="noopener noreferrer" aria-label={item.network}>
@@ -199,7 +296,7 @@ const whatsappHref = whatsappDigits
       <div class="container">
         <div class="footer-grid">
           <div>
-            <a href="#inicio" class="brand">
+            <a href="/" class="brand">
               <img class="brand__logo brand__logo--footer" src={logo.src} width={logo.width} height={logo.height} alt="GNU Gas Natural" />
             </a>
             <p style="margin-top: 1rem; font-size: 0.875rem; max-width: 20rem;">
@@ -215,36 +312,38 @@ const whatsappHref = whatsappDigits
           </div>
           <div>
             <p class="footer-heading">Navegación</p>
-            {navLinks.map((link) => (
-              <a class="footer-link" href={link.href}>{link.label}</a>
+            {navItems.map((item) => (
+              <a class="footer-link" href={item.path}>{item.title}</a>
             ))}
           </div>
           <div>
             <p class="footer-heading">Servicios</p>
-            <a class="footer-link" href="/nuestros-servicios">Gas Natural Comprimido (GNC)</a>
-            <a class="footer-link" href="/nuestros-servicios">Gas Natural Domiciliario (GND)</a>
-            <a class="footer-link" href="/nuestros-servicios">Gas Natural Vehicular (GNV)</a>
+            {serviceLinks.map((link) => (
+              <a class="footer-link" href={link.href}>{link.label}</a>
+            ))}
           </div>
-          <div>
+          <address class="footer-contact">
             <p class="footer-heading">Contacto</p>
-            {footerAddress && <p class="footer-link">{footerAddress}</p>}
-            <p class="footer-link">{footerEmail}</p>
-            <p class="footer-link">{footerPhone}</p>
+            {footerAddress && footerAddressHref && (
+              <a class="footer-link" href={footerAddressHref} target="_blank" rel="noopener noreferrer">{footerAddress}</a>
+            )}
+            <a class="footer-link" href={`mailto:${footerEmail}`}>{footerEmail}</a>
+            <a class="footer-link" href={footerPhoneHref}>{footerPhone}</a>
             <p class="footer-link">{footerSchedule}</p>
             {footerAdditionalInfo && <p class="footer-link">{footerAdditionalInfo}</p>}
-          </div>
+          </address>
         </div>
         <div class="footer-bottom">
-          <span>© 2025 GNU Gas Natural. Todos los derechos reservados.</span>
+          <span>© {currentYear} GNU Gas Natural. Todos los derechos reservados.</span>
           <span>Aviso de privacidad · Términos y condiciones</span>
         </div>
       </div>
     </footer>
 
-    {whatsappHref && (
+    {whatsappLink && (
     <a
       class="whatsapp-fab"
-      href={whatsappHref}
+      href={whatsappLink}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Escríbenos por WhatsApp"

@@ -1,0 +1,121 @@
+---
+// `banner_carousel`: the full-bleed hero slides. Usable on any page through
+// SectionRenderer, not only the home page.
+import noImg from "../../assets/images/noimg.jpg";
+import { mediaUrl } from "../../functions/fetch";
+
+interface Slide {
+  image: string;
+  title?: string | null;
+  subtitle?: string | null;
+  link_url?: string | null;
+  link_label?: string | null;
+}
+
+interface Props {
+  slides?: Slide[];
+}
+
+const { slides = [] } = Astro.props;
+
+const fallbackSlides: Slide[] = [
+  { image: noImg.src, title: "Hasta 40% menos que la gasolina", subtitle: "Ahorro real" },
+  { image: noImg.src, title: "+120 estaciones en todo México", subtitle: "Cobertura nacional" },
+  { image: noImg.src, title: "Menor huella de carbono desde hoy", subtitle: "Energía responsable" },
+];
+
+const shown = slides.length ? slides.map((slide) => ({ ...slide, image: mediaUrl(slide.image) })) : fallbackSlides;
+
+// Only links that leave the site open a new tab; "/contacto" or "#simulador"
+// stay in the same one.
+const isExternal = (url: string) => /^https?:\/\//i.test(url);
+---
+
+<section class="hero" id="banner-carousel" aria-roledescription="carrusel" aria-label="Banners">
+  <div class="hero__track">
+    {shown.map((slide, index) => (
+      <div
+        class={"hero-slide" + (index === 0 ? " is-active" : "")}
+        role="group"
+        aria-roledescription="diapositiva"
+        aria-label={`${index + 1} de ${shown.length}`}
+        aria-hidden={index === 0 ? undefined : "true"}
+      >
+        <img class="hero-slide__img" src={slide.image} alt="" fetchpriority={index === 0 ? "high" : undefined} loading={index === 0 ? "eager" : "lazy"} />
+        <div class="hero-slide__scrim" aria-hidden="true" />
+        <div class="container hero-slide__content">
+          {slide.title && (index === 0 ? <h1 class="hero-slide__title">{slide.title}</h1> : <p class="hero-slide__title">{slide.title}</p>)}
+          {slide.subtitle && <p class="hero-slide__subtitle">{slide.subtitle}</p>}
+          {slide.link_url && slide.link_label && (
+            <a
+              class="btn-primary hero-slide__cta"
+              href={slide.link_url}
+              {...(isExternal(slide.link_url) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            >
+              {slide.link_label}
+            </a>
+          )}
+        </div>
+      </div>
+    ))}
+  </div>
+  {shown.length > 1 && <div class="hero__dots" aria-label="Banners"></div>}
+</section>
+
+<script>
+  document.querySelectorAll<HTMLElement>(".hero").forEach((hero) => {
+    const slides = Array.from(hero.querySelectorAll<HTMLElement>(".hero-slide"));
+    const dotsContainer = hero.querySelector<HTMLElement>(".hero__dots");
+    if (slides.length < 2 || !dotsContainer) return;
+
+    slides.forEach((_, index) => {
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "hero__dot" + (index === 0 ? " is-active" : "");
+      dot.setAttribute("aria-label", `Ir al banner ${index + 1}`);
+      dot.addEventListener("click", () => {
+        showSlide(index);
+        restart();
+      });
+      dotsContainer.appendChild(dot);
+    });
+
+    const dots = Array.from(dotsContainer.querySelectorAll<HTMLButtonElement>(".hero__dot"));
+    let current = 0;
+    let timer: number | undefined;
+
+    function showSlide(index: number) {
+      slides[current].classList.remove("is-active");
+      slides[current].setAttribute("aria-hidden", "true");
+      dots[current].classList.remove("is-active");
+      dots[current].removeAttribute("aria-current");
+      current = index;
+      slides[current].classList.add("is-active");
+      slides[current].removeAttribute("aria-hidden");
+      dots[current].classList.add("is-active");
+      dots[current].setAttribute("aria-current", "true");
+    }
+
+    // Auto-advance pauses while the visitor hovers or focuses the carousel
+    // (so a CTA can't slide away mid-click) and never runs for reduced motion.
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    function start() {
+      if (reduced || timer) return;
+      timer = window.setInterval(() => showSlide((current + 1) % slides.length), 5000);
+    }
+    function stop() {
+      window.clearInterval(timer);
+      timer = undefined;
+    }
+    function restart() {
+      stop();
+      start();
+    }
+
+    hero.addEventListener("mouseenter", stop);
+    hero.addEventListener("mouseleave", start);
+    hero.addEventListener("focusin", stop);
+    hero.addEventListener("focusout", start);
+    start();
+  });
+</script>

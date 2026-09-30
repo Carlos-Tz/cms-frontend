@@ -5,179 +5,49 @@ import StationsMap from "../components/sections/StationsMap.astro";
 import RichText from "../components/sections/RichText.astro";
 import SavingsSimulator from "../components/sections/SavingsSimulator.astro";
 import Testimonials from "../components/sections/Testimonials.astro";
-import noImg from "../assets/images/noimg.jpg";
+import HeroCarousel from "../components/sections/HeroCarousel.astro";
+import ClientsShowcase from "../components/sections/ClientsShowcase.astro";
 import customerServiceIcon from "../assets/images/customer-service-agent-icon-vector.jpg";
-import { fetchData, mediaUrl } from "../functions/fetch";
-import type { GlobalsResponse } from "../types/globals";
+import { mediaUrl } from "../functions/fetch";
+import { getGlobals, getPage, sectionOf } from "../lib/cms";
 
-type Slide = {
-  image: string;
-  title: string | null;
-  subtitle: string | null;
-  link_url: string | null;
-  link_label: string | null;
-};
+// The home page keeps a curated order rather than the CMS's raw section list:
+// each block is read by type from `pages/inicio`, the stations map from the
+// contact page, and the testimonials from the site-wide globals.
+const page = await getPage("inicio");
+const contacto = await getPage("contacto");
+const globals = await getGlobals();
 
-type FuelPrice = {
-  fuel: string;
-  label: string;
-  price_per_unit: number;
-  unit: string;
-  equivalence_factor: number;
-};
+const bannerCarousel = sectionOf(page, "banner_carousel");
+const savingsSimulator = sectionOf(page, "savings_simulator");
+const richText = sectionOf(page, "rich_text");
+const clientsShowcase = sectionOf(page, "clients_showcase");
+const leadCaptureForm = sectionOf(page, "lead_capture_form");
+const stationsMap = sectionOf(contacto, "stations_map");
+const testimonials = globals.testimonials;
 
-type Logo = {
-  image: string;
-  name: string;
-  url: string | null;
-};
-
-type PageSection = { type: string; content: Record<string, any> };
-type PageResponse = {
-  status: string;
-  data: { slug: string; path: string; title: string; sections: PageSection[] };
-  meta: Record<string, any>;
-};
-
-const pageResponse: PageResponse | undefined = await fetchData("pages/inicio");
-const sections = pageResponse?.data?.sections ?? [];
-const getSection = (type: string) => sections.find((section) => section.type === type)?.content;
-
-const contactoResponse: PageResponse | undefined = await fetchData("pages/contacto");
-const contactoSections = contactoResponse?.data?.sections ?? [];
-const stationsMap = contactoSections.find((section) => section.type === "stations_map")?.content as
-  | { title: string; center: string; zoom?: string | number }
-  | undefined;
-
-const globalsResponse: GlobalsResponse | undefined = await fetchData("globals");
-const testimonials = globalsResponse?.data?.testimonials;
-
-const bannerCarousel = getSection("banner_carousel") as { slides: Slide[] } | undefined;
-const savingsSimulator = getSection("savings_simulator") as
-  | { title: string; intro: string; fuel_prices: FuelPrice[] }
-  | undefined;
-const richText = getSection("rich_text") as
-  | { title: string | null; body: string; video_url: string | null }
-  | undefined;
-const clientsShowcase = getSection("clients_showcase") as
-  | { title: string; logos: Logo[] }
-  | undefined;
-const leadCaptureForm = getSection("lead_capture_form") as
-  | { title: string; intro: string; submit_label: string; fields: string[] }
-  | undefined;
-
-const fallbackSlides: Slide[] = [
-  { image: noImg.src, title: "Hasta 40% menos que la gasolina", subtitle: "Ahorro real", link_url: null, link_label: null },
-  { image: noImg.src, title: "+120 estaciones en todo México", subtitle: "Cobertura nacional", link_url: null, link_label: null },
-  { image: noImg.src, title: "Menor huella de carbono desde hoy", subtitle: "Energía responsable", link_url: null, link_label: null },
-];
-const slides: Slide[] = bannerCarousel?.slides?.length
-  ? bannerCarousel.slides.map((slide) => ({ ...slide, image: mediaUrl(slide.image) }))
-  : fallbackSlides;
-
-const fallbackLogos: Logo[] = [{ image: noImg.src, name: "Cliente de ejemplo", url: null }];
-const logos: Logo[] = clientsShowcase?.logos?.length
-  ? clientsShowcase.logos.map((logo) => ({ ...logo, image: mediaUrl(logo.image) }))
-  : fallbackLogos;
-const useLogoMarquee = logos.length >= 4;
-const marqueeLogos = useLogoMarquee ? [...logos, ...logos] : logos;
+// The first banner is what the page opens on, so it is also its social preview.
+const firstSlide = bannerCarousel?.slides?.[0];
+const socialImage = firstSlide?.image ? mediaUrl(firstSlide.image) : undefined;
 ---
 
-<Layout>
+<Layout image={socialImage}>
   <main id="inicio">
-    <!-- Hero: full-bleed carousel driven by the CMS -->
-    <section class="hero" id="banner-carousel">
-      <div class="hero__track">
-        {slides.map((slide, index) => (
-          <div class={"hero-slide" + (index === 0 ? " is-active" : "")}>
-            <img class="hero-slide__img" src={slide.image} alt="" />
-            <div class="hero-slide__scrim" aria-hidden="true" />
-            <div class="container hero-slide__content">
-              {slide.title && (
-                index === 0 ? (
-                  <h1 class="hero-slide__title">{slide.title}</h1>
-                ) : (
-                  <p class="hero-slide__title">{slide.title}</p>
-                )
-              )}
-              {slide.subtitle && <p class="hero-slide__subtitle">{slide.subtitle}</p>}
-              {slide.link_url && slide.link_label && (
-                <a class="btn-primary hero-slide__cta" href={slide.link_url} target="_blank" rel="noopener noreferrer">
-                  {slide.link_label}
-                </a>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div class="hero__dots" role="tablist" aria-label="Banners"></div>
-    </section>
+    <HeroCarousel slides={bannerCarousel?.slides} />
 
     <!-- Simulador de ahorro -->
     <SavingsSimulator
       title={savingsSimulator?.title}
       intro={savingsSimulator?.intro}
       fuel_prices={savingsSimulator?.fuel_prices}
-      page={pageResponse?.data?.slug ?? "inicio"}
+      page={page?.slug ?? "inicio"}
     />
 
     <!-- Contenido editorial / video de la portada -->
     {richText && <RichText title={richText.title} body={richText.body} video_url={richText.video_url} />}
 
     <!-- Nuestros Clientes -->
-    <section class="section" id="clientes">
-      <div class="container">
-        <div class="section-head section-head--center">
-          <span class="eyebrow">Nuestros Clientes</span>
-          <h2 class="section-title">{clientsShowcase?.title ?? "Nuestros clientes"}</h2>
-        </div>
-        {useLogoMarquee ? (
-          <div class="logo-marquee">
-            <div class="logo-marquee__track">
-              {marqueeLogos.map((logo) => (
-                <div class="logo-marquee__item">
-                  {logo.url ? (
-                    <a class="logo-card" href={logo.url} target="_blank" rel="noopener noreferrer">
-                      <div class="logo-card__figure">
-                        <img class="logo-card__img" src={logo.image} alt={logo.name} />
-                      </div>
-                      <span class="logo-card__name">{logo.name}</span>
-                    </a>
-                  ) : (
-                    <div class="logo-card">
-                      <div class="logo-card__figure">
-                        <img class="logo-card__img" src={logo.image} alt={logo.name} />
-                      </div>
-                      <span class="logo-card__name">{logo.name}</span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div class="logo-grid">
-            {logos.map((logo) =>
-              logo.url ? (
-                <a class="logo-card" href={logo.url} target="_blank" rel="noopener noreferrer">
-                  <div class="logo-card__figure">
-                    <img class="logo-card__img" src={logo.image} alt={logo.name} />
-                  </div>
-                  <span class="logo-card__name">{logo.name}</span>
-                </a>
-              ) : (
-                <div class="logo-card">
-                  <div class="logo-card__figure">
-                    <img class="logo-card__img" src={logo.image} alt={logo.name} />
-                  </div>
-                  <span class="logo-card__name">{logo.name}</span>
-                </div>
-              )
-            )}
-          </div>
-        )}
-      </div>
-    </section>
+    <ClientsShowcase id="clientes" title={clientsShowcase?.title} logos={clientsShowcase?.logos} />
 
     <!-- Testimonios -->
     <Testimonials title={testimonials?.title} items={testimonials?.items} />
@@ -200,7 +70,7 @@ const marqueeLogos = useLogoMarquee ? [...logos, ...logos] : logos;
             title="Cotiza sin compromiso"
             submit_label={leadCaptureForm?.submit_label ?? "Enviar mensaje"}
             fields={leadCaptureForm?.fields}
-            source={pageResponse?.data?.slug ?? "inicio"}
+            source={page?.slug ?? "inicio"}
           />
         </div>
       </div>
@@ -213,35 +83,6 @@ const marqueeLogos = useLogoMarquee ? [...logos, ...logos] : logos;
 </Layout>
 
 <script>
-  const track = document.querySelector<HTMLElement>(".hero__track");
-  const slides = Array.from(document.querySelectorAll<HTMLElement>(".hero-slide"));
-  const dotsContainer = document.querySelector<HTMLElement>(".hero__dots");
-
-  if (track && slides.length && dotsContainer) {
-    slides.forEach((_, index) => {
-      const dot = document.createElement("button");
-      dot.className = "hero__dot" + (index === 0 ? " is-active" : "");
-      dot.setAttribute("aria-label", `Ir al banner ${index + 1}`);
-      dot.addEventListener("click", () => showSlide(index));
-      dotsContainer.appendChild(dot);
-    });
-
-    const dots = Array.from(dotsContainer.querySelectorAll<HTMLButtonElement>(".hero__dot"));
-    let current = 0;
-
-    function showSlide(index: number) {
-      slides[current].classList.remove("is-active");
-      dots[current].classList.remove("is-active");
-      current = index;
-      slides[current].classList.add("is-active");
-      dots[current].classList.add("is-active");
-    }
-
-    setInterval(() => {
-      showSlide((current + 1) % slides.length);
-    }, 5000);
-  }
-
   // "Nuestros Clientes" logos: colorful and zoomed in by default (--logo-zoom
   // falls back to 1.18 in CSS), scrubbed down to 1 ("zero zoom") as the
   // section scrolls up through the viewport.

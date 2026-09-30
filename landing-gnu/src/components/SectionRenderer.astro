@@ -6,6 +6,10 @@ import LeadCaptureForm from "./sections/LeadCaptureForm.astro";
 import StationsMap from "./sections/StationsMap.astro";
 import ClientsShowcase from "./sections/ClientsShowcase.astro";
 import SavingsSimulator from "./sections/SavingsSimulator.astro";
+import HeroCarousel from "./sections/HeroCarousel.astro";
+import ImageGallery from "./sections/ImageGallery.astro";
+import Testimonials from "./sections/Testimonials.astro";
+import ContactInfo from "./sections/ContactInfo.astro";
 
 interface Section {
   type: string;
@@ -20,12 +24,18 @@ interface Props {
 }
 
 const { sections, pageSlug = null } = Astro.props;
+
+// Every section type the CMS can put on a page has a renderer here, so adding
+// one in the admin never silently drops it. `social_icons` and
+// `whatsapp_button` are site-wide: the layout renders them from `globals`.
 ---
 
 {sections.map((section) => {
   switch (section.type) {
     case "page_hero":
       return <PageHero {...(section.content as any)} />;
+    case "banner_carousel":
+      return <HeroCarousel slides={section.content.slides} />;
     case "rich_text":
       return <RichText {...(section.content as any)} />;
     case "feature_grid":
@@ -34,7 +44,7 @@ const { sections, pageSlug = null } = Astro.props;
       return (
         <section class="section">
           <div class="container" style="max-width: 34rem;">
-            <LeadCaptureForm {...(section.content as any)} source={pageSlug} />
+            <LeadCaptureForm {...(section.content as any)} formId={`lead-form-${pageSlug ?? "page"}`} source={pageSlug} />
           </div>
         </section>
       );
@@ -44,6 +54,12 @@ const { sections, pageSlug = null } = Astro.props;
       return <ClientsShowcase {...(section.content as any)} />;
     case "savings_simulator":
       return <SavingsSimulator {...(section.content as any)} page={pageSlug} />;
+    case "image_gallery":
+      return <ImageGallery {...(section.content as any)} />;
+    case "testimonials":
+      return <Testimonials {...(section.content as any)} />;
+    case "contact_info":
+      return <ContactInfo {...(section.content as any)} />;
     default:
       return null;
   }

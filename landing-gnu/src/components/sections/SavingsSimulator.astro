@@ -57,6 +57,17 @@ const comparableFuels = fuel_prices.filter((fuel) => fuel.fuel !== "gas-natural"
         <p class="simulator__result-label savings-simulator-annual" style="margin-top: 0.75rem;">
           Ahorro anual estimado: $0 MXN
         </p>
+        <p class="simulator__percent savings-simulator-percent" hidden></p>
+        <dl class="simulator__breakdown savings-simulator-breakdown" hidden>
+          <div>
+            <dt class="savings-simulator-current-label">Hoy pagas</dt>
+            <dd class="savings-simulator-current-cost"></dd>
+          </div>
+          <div>
+            <dt>Con gas natural</dt>
+            <dd class="savings-simulator-gas-cost"></dd>
+          </div>
+        </dl>
       </div>
     </div>
   </section>
@@ -103,9 +114,38 @@ const comparableFuels = fuel_prices.filter((fuel) => fuel.fuel !== "gas-natural"
         const response = await fetch(`${apiBase}savings-simulator?${query}`);
         const result = await response.json().catch(() => null);
         if (!response.ok || result?.status !== "success") return null;
-        return Number.isFinite(result?.data?.savings) ? Math.max(0, Math.round(result.data.savings)) : null;
+        return Number.isFinite(result?.data?.savings) ? result.data : null;
       } catch (error) {
         return null;
+      }
+    }
+
+    const percentEl = section?.querySelector(".savings-simulator-percent");
+    const breakdownEl = section?.querySelector(".savings-simulator-breakdown");
+    const currentLabelEl = section?.querySelector(".savings-simulator-current-label");
+    const currentCostEl = section?.querySelector(".savings-simulator-current-cost");
+    const gasCostEl = section?.querySelector(".savings-simulator-gas-cost");
+    const money = (value) => `$${Math.round(value).toLocaleString("es-MX")} MXN`;
+
+    // The CMS answer carries more than the saving: the percentage and what
+    // each fuel costs per month. Shown when present, hidden on the offline
+    // fallback so the panel never shows numbers it did not compute.
+    function showBreakdown(result) {
+      const percent = result?.savings_percent;
+      if (percentEl) {
+        percentEl.hidden = !Number.isFinite(percent);
+        if (Number.isFinite(percent)) percentEl.textContent = `${Math.max(0, percent).toLocaleString("es-MX", { maximumFractionDigits: 1 })}% menos cada mes`;
+      }
+      const current = result?.current_fuel;
+      const gas = result?.natural_gas;
+      if (breakdownEl) {
+        const ok = Number.isFinite(current?.cost) && Number.isFinite(gas?.cost);
+        breakdownEl.hidden = !ok;
+        if (ok) {
+          if (currentLabelEl) currentLabelEl.textContent = `Hoy pagas (${current.label.toLowerCase()})`;
+          if (currentCostEl) currentCostEl.textContent = money(current.cost);
+          if (gasCostEl) gasCostEl.textContent = money(gas.cost);
+        }
       }
     }
 
@@ -116,7 +156,9 @@ const comparableFuels = fuel_prices.filter((fuel) => fuel.fuel !== "gas-natural"
       if (!Number.isFinite(spend) || spend <= 0) return;
 
       const selectedFuel = comparableFuels.find((fuel) => fuel.fuel === fuelSelect?.value);
-      let monthlySavings = await serverSavings(selectedFuel, spend);
+      const serverResult = await serverSavings(selectedFuel, spend);
+      showBreakdown(serverResult);
+      let monthlySavings = serverResult ? Math.max(0, Math.round(serverResult.savings)) : null;
 
       if (monthlySavings === null) {
         if (selectedFuel && gasNaturalPrice) {

@@ -4,69 +4,100 @@ import { mediaUrl } from "../../functions/fetch";
 interface Logo {
   image: string;
   name: string;
-  url: string | null;
+  url?: string | null;
+  // Optional per-logo extras: the pages that only show a wall of logos leave
+  // them empty; the ones that do fill them get a quote card per client.
+  description?: string | null;
+  quote?: string | null;
+  quote_author?: string | null;
 }
 
 interface Props {
   title?: string | null;
-  logos: Logo[];
+  logos?: Logo[];
+  // Anchor id; the home page hooks its scroll-driven logo zoom to "clientes".
+  id?: string;
 }
 
-const { title, logos } = Astro.props;
-const useMarquee = logos.length >= 4;
-const marqueeLogos = useMarquee ? [...logos, ...logos] : logos;
+const { title, logos = [], id } = Astro.props;
+const shown = logos.map((logo) => ({ ...logo, image: mediaUrl(logo.image) }));
+const useMarquee = shown.length >= 4;
+const marqueeLogos = useMarquee ? [...shown, ...shown] : shown;
+const quoted = shown.filter((logo) => logo.quote);
+
+// Same clean-up as the testimonials: the card adds its own quote mark.
+const stripQuotes = (quote: string) =>
+  quote
+    .trim()
+    .replace(/^["“”'‘’]+/, "")
+    .replace(/["“”'‘’]+(?=[.!?]?\s*$)/, "")
+    .trim();
 ---
 
-<section class="section">
-  <div class="container">
-    <div class="section-head section-head--center">
-      <span class="eyebrow">Nuestros Clientes</span>
-      <h2 class="section-title">{title ?? "Nuestros clientes"}</h2>
-    </div>
-    {useMarquee ? (
-      <div class="logo-marquee">
-        <div class="logo-marquee__track">
-          {marqueeLogos.map((logo) => (
-            <div class="logo-marquee__item">
-              {logo.url ? (
-                <a class="logo-card" href={logo.url} target="_blank" rel="noopener noreferrer">
-                  <div class="logo-card__figure">
-                    <img class="logo-card__img" src={mediaUrl(logo.image)} alt={logo.name} />
-                  </div>
-                  <span class="logo-card__name">{logo.name}</span>
-                </a>
-              ) : (
-                <div class="logo-card">
-                  <div class="logo-card__figure">
-                    <img class="logo-card__img" src={mediaUrl(logo.image)} alt={logo.name} />
-                  </div>
-                  <span class="logo-card__name">{logo.name}</span>
+{shown.length > 0 && (
+  <section class="section" id={id}>
+    <div class="container">
+      <div class="section-head section-head--center">
+        <span class="eyebrow">Nuestros Clientes</span>
+        <h2 class="section-title">{title ?? "Nuestros clientes"}</h2>
+      </div>
+      <div class={useMarquee ? "logo-marquee" : "logo-grid"}>
+        <div class={useMarquee ? "logo-marquee__track" : "logo-grid__inner"}>
+          {marqueeLogos.map((logo, index) => {
+            // The marquee's second copy is decorative: hidden from assistive
+            // tech and the tab order so each client is announced once.
+            const duplicate = useMarquee && index >= shown.length;
+            const inner = (
+              <>
+                <div class="logo-card__figure">
+                  <img class="logo-card__img" src={logo.image} alt={duplicate ? "" : logo.name} loading="lazy" />
                 </div>
-              )}
-            </div>
-          ))}
+                <span class="logo-card__name">{logo.name}</span>
+                {logo.description && <span class="logo-card__desc">{logo.description}</span>}
+              </>
+            );
+            const card = logo.url ? (
+              <a
+                class="logo-card"
+                href={logo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                tabindex={duplicate ? -1 : undefined}
+                title={logo.description ?? undefined}
+              >
+                {inner}
+              </a>
+            ) : (
+              <div class="logo-card" title={logo.description ?? undefined}>{inner}</div>
+            );
+            return useMarquee ? (
+              <div class="logo-marquee__item" aria-hidden={duplicate ? "true" : undefined}>{card}</div>
+            ) : (
+              card
+            );
+          })}
         </div>
       </div>
-    ) : (
-      <div class="logo-grid">
-        {logos.map((logo) =>
-          logo.url ? (
-            <a class="logo-card" href={logo.url} target="_blank" rel="noopener noreferrer">
-              <div class="logo-card__figure">
-                <img class="logo-card__img" src={mediaUrl(logo.image)} alt={logo.name} />
-              </div>
-              <span class="logo-card__name">{logo.name}</span>
-            </a>
-          ) : (
-            <div class="logo-card">
-              <div class="logo-card__figure">
-                <img class="logo-card__img" src={mediaUrl(logo.image)} alt={logo.name} />
-              </div>
-              <span class="logo-card__name">{logo.name}</span>
-            </div>
-          )
-        )}
-      </div>
-    )}
-  </div>
-</section>
+
+      {quoted.length > 0 && (
+        <div class="grid grid--3 testimonial-grid client-quotes">
+          {quoted.map((logo) => (
+            <blockquote class="card testimonial-card">
+              <svg class="testimonial-card__mark" width="34" height="26" viewBox="0 0 34 26" fill="none" aria-hidden="true">
+                <path d="M14.4 0 8 12.2h5.6V26H0V13.6L6.4 0h8Zm19.6 0-6.4 12.2H33V26H19.6V13.6L26 0h8Z" fill="currentColor" />
+              </svg>
+              <p class="testimonial-card__quote">{stripQuotes(logo.quote!)}</p>
+              <footer class="testimonial-card__meta">
+                <img class="client-quotes__logo" src={logo.image} alt="" loading="lazy" />
+                <div>
+                  {logo.quote_author && <p class="testimonial-card__author">{logo.quote_author}</p>}
+                  <p class="testimonial-card__role">{logo.description ?? logo.name}</p>
+                </div>
+              </footer>
+            </blockquote>
+          ))}
+        </div>
+      )}
+    </div>
+  </section>
+)}

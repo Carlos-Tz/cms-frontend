@@ -1,0 +1,14 @@
+---
+import BlogIndex from "../../../components/BlogIndex.astro";
+import { getBlogList } from "../../../lib/cms";
+
+// Page 1 lives at /blog; this route covers 2..last_page.
+export async function getStaticPaths() {
+  const lastPage = (await getBlogList(1))?.meta.last_page ?? 1;
+  return Array.from({ length: Math.max(0, lastPage - 1) }, (_, i) => ({ params: { page: String(i + 2) } }));
+}
+
+const page = Number(Astro.params.page);
+---
+
+<BlogIndex page={page} />
