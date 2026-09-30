@@ -588,8 +588,13 @@ body.nav-open {
     transition: none;
   }
 
-  .hero-slide__img {
-    animation: none;
+  .hero-slide__img,
+  .page-hero__img {
+    /* !important: .page-hero__img's own `animation` declaration comes later
+       in this file (with equal specificity), so it would otherwise win over
+       this override regardless of prefers-reduced-motion — same trap as the
+       .reveal/.card transition clash elsewhere in this file. */
+    animation: none !important;
   }
 }
 
@@ -1096,6 +1101,12 @@ body.nav-open {
   }
 }
 
+.contact-agent-icon {
+  width: 6rem;
+  height: auto;
+  margin-bottom: 1.25rem;
+}
+
 /* Blog — cards bounce in from the bottom on page load (staggered per-card via
    an inline animation-delay, see blog/index.astro), rather than waiting for
    the shared scroll-reveal observer. */
@@ -1196,6 +1207,24 @@ body.nav-open {
   overflow: hidden;
 }
 
+/* With a CMS image the hero takes the image's own 8:3 shape (the 2400x900 px
+   the content guide asks for), so the photo shows whole on wide screens
+   instead of being cropped to a thin strip. It's a min-height (37.5vw = the
+   full-bleed width at 8:3), not `aspect-ratio`: that one stops growing with
+   its content under `overflow: hidden`, which would clip the title on narrow
+   screens. Here the block just grows and `object-fit: cover` crops the
+   sides instead. */
+.page-hero--image {
+  min-height: 37.5vw;
+  display: flex;
+  align-items: center;
+  padding: 5rem 0;
+}
+
+.page-hero--image .page-hero__content {
+  width: 100%;
+}
+
 .page-hero::before {
   content: "";
   position: absolute;
@@ -1217,6 +1246,10 @@ body.nav-open {
   object-fit: cover;
   z-index: 0;
   opacity: 0.5;
+  /* Same slow Ken-Burns drift as the home page's hero carousel — these inner
+     pages only ever have one static background image (no slides to crossfade
+     between), so they just get the continuous zoom, not the one-shot fade-in. */
+  animation: hero-slide-img-zoom 24s ease-in-out infinite;
 }
 
 .page-hero__scrim {
@@ -1556,4 +1589,30 @@ body.nav-open {
 
 .prose :is(img, iframe, video, embed, object) {
   max-width: 100%;
+}
+
+/* Custom cursor — the company logo, with a graceful fallback to the browser's
+   native cursor if the image ever fails to load. Placed last in the file so
+   it reliably wins over earlier equal-specificity `cursor` rules (button's
+   own `cursor: pointer` above, and .field select's below) regardless of
+   selector order elsewhere in the stylesheet. */
+html,
+body {
+  cursor: url("/cursor.png") 17 16, auto;
+}
+
+a,
+button,
+input,
+textarea,
+select,
+label {
+  cursor: url("/cursor.png") 17 16, auto;
+}
+
+/* `.field select` sets its own `cursor: pointer` (class+tag, higher
+   specificity than the plain `select` rule above) for its custom dropdown
+   arrow, so it needs its own explicit override. */
+.field select {
+  cursor: url("/cursor.png") 17 16, auto;
 }

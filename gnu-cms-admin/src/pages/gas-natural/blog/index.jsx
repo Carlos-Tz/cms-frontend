@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { fetchData, createBlogPost, updateBlogPost, deleteBlogPost } from '../../../functions/fetch'
 import { inputClass, buttonSecondaryClass, Field, CharHint, WordHint, ImageField } from '../../../components/form-fields'
+import { SectionsFields } from '../../../components/page-sections-editor'
 
 const SITE_ID = 2
 
@@ -216,6 +217,18 @@ export default function GasNaturalBlog() {
             {formMode ? 'Cancelar' : '+ Nuevo artículo'}
           </button>
         </header>
+
+        {/* The /blog page itself is a blueprint page (slug "blog") carrying one
+            page_hero: its title, subtitle and image head the article list. */}
+        <section className="mb-10">
+          <header className="mb-4">
+            <h2 className="text-lg font-semibold">Portada del blog</h2>
+            <p className="mt-1 text-sm text-white/60">
+              Encabezado de la página /blog: título, subtítulo e imagen que aparecen arriba de la lista de artículos.
+            </p>
+          </header>
+          <SectionsFields site="gnu-vehicular" page="blog" />
+        </section>
 
         {formMode && (
           <div className="mb-8">

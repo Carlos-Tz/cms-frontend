@@ -6,6 +6,7 @@ import RichText from "../components/sections/RichText.astro";
 import SavingsSimulator from "../components/sections/SavingsSimulator.astro";
 import Testimonials from "../components/sections/Testimonials.astro";
 import noImg from "../assets/images/noimg.jpg";
+import customerServiceIcon from "../assets/images/customer-service-agent-icon-vector.jpg";
 import { fetchData, mediaUrl } from "../functions/fetch";
 import type { GlobalsResponse } from "../types/globals";
 
@@ -186,6 +187,7 @@ const marqueeLogos = useLogoMarquee ? [...logos, ...logos] : logos;
       <div class="container">
         <div class="contact-layout">
           <div class="section-head">
+            <img class="contact-agent-icon" src={customerServiceIcon.src} alt="" />
             <span class="eyebrow">Contacto</span>
             <h2 class="section-title">{leadCaptureForm?.title ?? "Hablemos de tu proyecto de gas natural"}</h2>
             <p class="section-subtitle">

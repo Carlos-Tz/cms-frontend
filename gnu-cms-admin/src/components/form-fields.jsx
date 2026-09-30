@@ -7,7 +7,7 @@ export const inputClass =
 export const buttonSecondaryClass =
   'rounded-full border border-white/15 px-4 py-2 text-sm font-medium text-white/80 transition hover:border-white/30 hover:text-white'
 
-export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+export const MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 
 export function fieldError(errors, path) {
   const messages = errors?.[path]
