@@ -58,11 +58,30 @@ const telHref = (phone: string) => `tel:${phone.replace(/[^\d+]/g, "")}`;
         <ul class="stations-list">
           {stations.map((station) => (
             <li class="stations-list__item" data-station-src={embedFor(`${station.latitude},${station.longitude}`, 16)}>
-              <p class="stations-list__name">{station.name}</p>
+              <p class="stations-list__name">
+                <svg class="stations-list__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z" />
+                  <circle cx="12" cy="9.5" r="2.25" />
+                </svg>
+                {station.name}
+              </p>
               <p class="stations-list__address">{station.address}</p>
-              {station.schedule && <p class="stations-list__meta">{station.schedule}</p>}
+              {station.schedule && (
+                <p class="stations-list__meta stations-list__meta--icon">
+                  <svg class="stations-list__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 7v5l3.25 1.95" />
+                  </svg>
+                  {station.schedule}
+                </p>
+              )}
               {station.phone && (
-                <a class="stations-list__meta stations-list__phone" href={telHref(station.phone)}>{station.phone}</a>
+                <a class="stations-list__meta stations-list__meta--icon stations-list__phone" href={telHref(station.phone)}>
+                  <svg class="stations-list__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 4h3.2l1.6 4.4-2.1 1.5a10.5 10.5 0 0 0 4.9 4.9l1.5-2.1 4.4 1.6V17a2 2 0 0 1-2.1 2A14.5 14.5 0 0 1 3 5.1 2 2 0 0 1 5 4Z" />
+                  </svg>
+                  {station.phone}
+                </a>
               )}
               <div class="stations-list__actions">
                 {embedSrc && (

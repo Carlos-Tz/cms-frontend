@@ -335,35 +335,16 @@ button {
   padding-bottom: 1rem;
 }
 
-.brand,
-.logo {
+.brand {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   text-decoration: none;
-  color: var(--color-text);
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1rem;
-  letter-spacing: -0.01em;
 }
 
-.brand__mark,
-.logo__mark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
+.brand__logo {
   height: 2.25rem;
-  border-radius: var(--radius-full);
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
-  color: var(--color-text-on-dark);
-  font-weight: 800;
-  font-size: 0.8rem;
-}
-
-.logo__mark--footer {
-  margin-bottom: 0.5rem;
+  width: auto;
 }
 
 .nav {
@@ -2040,4 +2021,31 @@ a.stations-list__phone:hover {
   .gallery__img {
     transition: none;
   }
+}
+
+/* Custom cursor. Appended last so it wins ties in specificity against the
+   plain `cursor: pointer` rules above; the higher-specificity selectors
+   below still need their own explicit override to actually win. */
+html,
+body {
+  cursor: url("/pointer.png") 16 16, auto;
+}
+
+a,
+button,
+input,
+textarea,
+select,
+label {
+  cursor: url("/pointer.png") 16 16, auto;
+}
+
+.btn-primary,
+.nav-toggle,
+.nav-link--toggle,
+.nav-mobile__item summary,
+.scheduler__slot,
+.stations-list__focus,
+.gallery-lightbox__close {
+  cursor: url("/pointer.png") 16 16, auto;
 }

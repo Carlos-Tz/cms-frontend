@@ -1,12 +1,13 @@
 ---
 import { mediaUrl } from "../../functions/fetch";
+import TestimonialTiles from "./TestimonialTiles.astro";
 
 interface Logo {
   image: string;
   name: string;
   url?: string | null;
   // Optional per-logo extras: the pages that only show a wall of logos leave
-  // them empty; the ones that do fill them get a quote card per client.
+  // them empty; the ones that do fill them get a quote tile per client.
   description?: string | null;
   quote?: string | null;
   quote_author?: string | null;
@@ -23,19 +24,21 @@ const { title, logos = [], id } = Astro.props;
 const shown = logos.map((logo) => ({ ...logo, image: mediaUrl(logo.image) }));
 const useMarquee = shown.length >= 4;
 const marqueeLogos = useMarquee ? [...shown, ...shown] : shown;
-const quoted = shown.filter((logo) => logo.quote);
-
-// Same clean-up as the testimonials: the card adds its own quote mark.
-const stripQuotes = (quote: string) =>
-  quote
-    .trim()
-    .replace(/^["“”'‘’]+/, "")
-    .replace(/["“”'‘’]+(?=[.!?]?\s*$)/, "")
-    .trim();
+// Reuses the same tile component as the home page's "Lo que dicen nuestros
+// clientes" — the logo doubles as the tile's photo, since these quotes don't
+// have a separate headshot.
+const quotedItems = shown
+  .filter((logo) => logo.quote)
+  .map((logo) => ({
+    quote: logo.quote!,
+    author: logo.quote_author,
+    role: logo.description ?? logo.name,
+    photo: logo.image,
+  }));
 ---
 
 {shown.length > 0 && (
-  <section class="section" id={id}>
+  <section class="section" id={id} data-clients-showcase>
     <div class="container">
       <div class="section-head section-head--center">
         <span class="eyebrow">Nuestros Clientes</span>
@@ -79,25 +82,50 @@ const stripQuotes = (quote: string) =>
         </div>
       </div>
 
-      {quoted.length > 0 && (
-        <div class="grid grid--3 testimonial-grid client-quotes">
-          {quoted.map((logo) => (
-            <blockquote class="card testimonial-card">
-              <svg class="testimonial-card__mark" width="34" height="26" viewBox="0 0 34 26" fill="none" aria-hidden="true">
-                <path d="M14.4 0 8 12.2h5.6V26H0V13.6L6.4 0h8Zm19.6 0-6.4 12.2H33V26H19.6V13.6L26 0h8Z" fill="currentColor" />
-              </svg>
-              <p class="testimonial-card__quote">{stripQuotes(logo.quote!)}</p>
-              <footer class="testimonial-card__meta">
-                <img class="client-quotes__logo" src={logo.image} alt="" loading="lazy" />
-                <div>
-                  {logo.quote_author && <p class="testimonial-card__author">{logo.quote_author}</p>}
-                  <p class="testimonial-card__role">{logo.description ?? logo.name}</p>
-                </div>
-              </footer>
-            </blockquote>
-          ))}
+      {quotedItems.length > 0 && (
+        <div class="client-quotes">
+          <TestimonialTiles items={quotedItems} />
         </div>
       )}
     </div>
   </section>
 )}
+
+<script>
+  // Logos are colorful and zoomed in by default (--logo-zoom falls back to
+  // 1.18 in CSS), scrubbed down to 1 ("zero zoom") as each instance of this
+  // section scrolls up through the viewport — wherever the component is used,
+  // not just the home page.
+  document.querySelectorAll<HTMLElement>("[data-clients-showcase]").forEach((section) => {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) return;
+
+    const ZOOM_MAX = 1.18;
+    const ZOOM_MIN = 1;
+    let ticking = false;
+
+    function updateLogoZoom() {
+      const rect = section.getBoundingClientRect();
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      // 0 while the section's top hasn't reached the viewport bottom yet,
+      // 1 once its top has scrolled all the way to the viewport top.
+      const progress = Math.min(1, Math.max(0, (viewportHeight - rect.top) / viewportHeight));
+      const zoom = ZOOM_MAX - (ZOOM_MAX - ZOOM_MIN) * progress;
+      section.style.setProperty("--logo-zoom", zoom.toFixed(3));
+      ticking = false;
+    }
+
+    updateLogoZoom();
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(updateLogoZoom);
+        }
+      },
+      { passive: true }
+    );
+    window.addEventListener("resize", updateLogoZoom);
+  });
+</script>

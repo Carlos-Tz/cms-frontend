@@ -12,6 +12,10 @@ html {
 
 body {
   margin: 0;
+  /* Read by .site-header (own height) and .hero (fills what's left of the
+     viewport below it) — declared here, not on .site-header, since .hero is
+     its sibling and wouldn't otherwise inherit it. */
+  --header-height: 3.8125rem;
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
@@ -73,20 +77,27 @@ button {
 #inicio .simulator__lead,
 #inicio .section-subtitle,
 #inicio .card__text,
-#inicio .testimonial-card__quote {
+#inicio .testimonial-tile__quote {
   text-align: justify;
   text-align-last: left;
 }
 
 /* Scroll reveal (progressive enhancement — JS adds .reveal, no-JS content stays visible).
-   Selector doubled (.reveal.reveal) to out-specificity components like .card/.blog-card/
-   .logo-card that declare their own `transition` shorthand for hover — otherwise, at equal
-   specificity, whichever rule comes later in the file wins the ENTIRE shorthand and silently
-   drops the opacity transition. */
+   Selector doubled (.reveal.reveal) to out-specificity components like .card/.logo-card/
+   .stations-list__item/.testimonial-tile that declare their own `transition` shorthand for
+   hover — otherwise, at equal specificity, whichever rule comes later in the file wins the
+   ENTIRE shorthand and silently drops the opacity transition.
+   Winning outright cuts both ways, though: once an element is revealed it keeps the .reveal
+   class forever, so from then on THIS shorthand is also the only one governing its hover
+   transitions — border-color and box-shadow are listed here too (the two other properties
+   those components animate on :hover) so hover still eases smoothly instead of snapping
+   instantly. transform is already covered above for the reveal itself, so it doubles as the
+   hover-lift's transition too (just at the reveal's slower pace, not each component's own). */
 .reveal.reveal {
   opacity: 0;
   transform: translateY(64px);
-  transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out);
+  transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out), border-color 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .reveal.is-visible {
@@ -288,12 +299,13 @@ button {
   border: 1px solid var(--color-border);
   background: #ffffff;
   padding: 2rem;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
   border-color: var(--color-border-hover);
   transform: translateY(-2px);
+  box-shadow: 0 12px 24px -16px rgba(0, 0, 0, 0.25);
 }
 
 .card--surface {
@@ -337,6 +349,7 @@ button {
   position: sticky;
   top: 0;
   z-index: 40;
+  height: var(--header-height);
   background: rgba(10, 10, 11, 0.78);
   backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--color-border-on-dark);
@@ -645,11 +658,13 @@ body.nav-open {
   }
 }
 
-/* Hero — full-bleed, CMS-driven carousel */
+/* Hero — full-bleed, CMS-driven carousel. Fills exactly what's left of the
+   viewport below the sticky header (100dvh accounts for mobile browser
+   chrome), so there's never a gap of bare background under the fold. */
 .hero {
   position: relative;
-  height: min(90vh, 780px);
-  min-height: 34rem;
+  height: calc(100dvh - var(--header-height));
+  min-height: 28rem;
   overflow: hidden;
   background: var(--color-ink);
 }
@@ -962,9 +977,9 @@ body.nav-open {
 }
 
 /* Colorful and zoomed in by default; `--logo-zoom` is scrubbed by scroll
-   position (see #clientes script) down to 1 ("zero zoom") as the section
-   scrolls into place. The custom property lives on the section so every
-   logo image inherits the same value. */
+   position (see ClientsShowcase.astro's own script) down to 1 ("zero zoom")
+   as the section scrolls into place. The custom property lives on the
+   section so every logo image inherits the same value. */
 .logo-card__img {
   width: 100%;
   height: 100%;
@@ -1041,63 +1056,6 @@ body.nav-open {
     flex-wrap: wrap;
     overflow-x: auto;
   }
-}
-
-/* Testimonials — capped card width + centered so 1-2 items don't stretch
-   edge to edge the way a plain auto-fit grid would. */
-.testimonial-grid {
-  grid-template-columns: repeat(auto-fit, minmax(240px, 22rem));
-  justify-content: center;
-}
-
-.testimonial-card {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  margin: 0;
-}
-
-.testimonial-card__mark {
-  color: var(--color-primary);
-  opacity: 0.5;
-}
-
-.testimonial-card__quote {
-  font-size: var(--text-body);
-  color: var(--color-text);
-  font-style: italic;
-  line-height: 1.6;
-}
-
-.testimonial-card__meta {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: auto;
-  padding-top: 0.25rem;
-}
-
-.testimonial-card__photo {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: var(--radius-full);
-  object-fit: contain;
-  background: var(--color-bg-alt);
-  padding: 0.25rem;
-  border: 1px solid var(--color-border);
-}
-
-.testimonial-card__author {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.9375rem;
-  color: var(--color-text);
-}
-
-.testimonial-card__role {
-  margin-top: 0.125rem;
-  font-size: var(--text-small);
-  color: var(--color-text-60);
 }
 
 /* Testimonial tiles (home "Lo que dicen nuestros clientes"): each tile shows
@@ -1340,6 +1298,7 @@ body.nav-open {
   aspect-ratio: 16 / 5;
   background: var(--color-bg-alt);
   border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-float);
 }
 
 @media (min-width: 860px) {
@@ -1370,10 +1329,26 @@ body.nav-open {
   flex-direction: column;
   gap: 1.25rem;
   margin: 0;
-  padding: 0;
+  padding: 0 0.75rem 0 0;
   list-style: none;
   max-height: 24rem;
   overflow-y: auto;
+  /* Firefox thin scrollbar; the ::-webkit- rules below cover Chrome/Safari/Edge. */
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-hover) transparent;
+}
+
+.stations-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.stations-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.stations-list::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-hover);
+  border-radius: var(--radius-full);
 }
 
 .stations-list__item {
@@ -1381,9 +1356,19 @@ body.nav-open {
   border: 1px solid var(--color-border);
   background: var(--color-bg);
   padding: 1.25rem;
+  /* transition lives on the later .stations-list__item rule, next to .is-active */
+}
+
+.stations-list__item:hover {
+  border-color: var(--color-border-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -16px rgba(0, 0, 0, 0.25);
 }
 
 .stations-list__name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.9375rem;
@@ -1392,14 +1377,28 @@ body.nav-open {
 
 .stations-list__address {
   margin-top: 0.375rem;
+  margin-left: 1.5rem;
   font-size: var(--text-small);
   color: var(--color-text-60);
 }
 
 .stations-list__meta {
-  margin-top: 0.25rem;
+  margin-top: 0.375rem;
+  margin-left: 1.5rem;
   font-size: var(--text-small);
   color: var(--color-text-60);
+}
+
+.stations-list__meta--icon {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-left: 0;
+}
+
+.stations-list__icon {
+  flex-shrink: 0;
+  color: var(--color-primary-alt);
 }
 
 /* Padded to clear the 24 CSS-px minimum target size (WCAG 2.5.8); the
@@ -1640,9 +1639,12 @@ body.nav-open {
    full-bleed width at 8:3), not `aspect-ratio`: that one stops growing with
    its content under `overflow: hidden`, which would clip the title on narrow
    screens. Here the block just grows and `object-fit: cover` crops the
-   sides instead. */
+   sides instead. On short, wide viewports 37.5vw alone can fall short of
+   the header, leaving bare background under the fold (the same gap the home
+   carousel had) — `max()` also fills what's left of the viewport, same fix,
+   same --header-height var. */
 .page-hero--image {
-  min-height: 37.5vw;
+  min-height: max(37.5vw, calc(100dvh - var(--header-height)));
   display: flex;
   align-items: center;
   padding: 5rem 0;
@@ -2278,7 +2280,7 @@ a.footer-link:hover {
    selector order elsewhere in the stylesheet. */
 html,
 body {
-  cursor: url("/cursor.png") 17 16, auto;
+  cursor: url("/pointer.png") 17 16, auto;
 }
 
 a,
@@ -2287,14 +2289,14 @@ input,
 textarea,
 select,
 label {
-  cursor: url("/cursor.png") 17 16, auto;
+  cursor: url("/pointer.png") 17 16, auto;
 }
 
 /* `.field select` sets its own `cursor: pointer` (class+tag, higher
    specificity than the plain `select` rule above) for its custom dropdown
    arrow, so it needs its own explicit override. */
 .field select {
-  cursor: url("/cursor.png") 17 16, auto;
+  cursor: url("/pointer.png") 17 16, auto;
 }
 
 /* ------------------------------------------------------------------
@@ -2333,16 +2335,6 @@ label {
 
 .client-quotes {
   margin-top: 3rem;
-}
-
-.client-quotes__logo {
-  width: 3.25rem;
-  height: 2.75rem;
-  object-fit: contain;
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-alt);
-  padding: 0.25rem;
-  border: 1px solid var(--color-border);
 }
 
 /* Savings simulator: percentage and the per-fuel monthly cost breakdown. */
@@ -2389,7 +2381,10 @@ label {
 
 /* Stations: call link, and the "Ver en el mapa" toggle with its active card. */
 a.stations-list__phone {
-  display: block;
+  /* display:flex (not block) so its icon sits inline with the number —
+     .stations-list__meta--icon's own display:flex would otherwise lose to
+     this compound selector's higher specificity. */
+  display: flex;
   color: var(--color-primary-alt);
 }
 
@@ -2429,11 +2424,12 @@ a.stations-list__phone:hover {
 }
 
 .stations-list__item {
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .stations-list__item.is-active {
   border-color: var(--color-primary-alt);
+  background: rgba(0, 76, 153, 0.05);
   box-shadow: inset 3px 0 0 var(--color-primary-alt);
 }
 
