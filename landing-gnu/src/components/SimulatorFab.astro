@@ -1,0 +1,136 @@
+---
+// Site-wide floating savings simulator: a FAB that expands into the same
+// calculator the home page shows, so it is one tap away on every page.
+// Rendered by Layout with the home page's reference prices.
+import SimulatorCalculator, { type FuelPrice } from "./SimulatorCalculator.astro";
+
+interface Props {
+  title?: string | null;
+  fuel_prices?: FuelPrice[];
+  page?: string | null;
+}
+
+const { title, fuel_prices = [], page = null } = Astro.props;
+const hasComparableFuels = fuel_prices.some((fuel) => fuel.fuel !== "gas-natural");
+---
+
+{hasComparableFuels && (
+  <div class="sim-fab" data-sim-fab>
+    <div
+      class="sim-fab__panel"
+      id="sim-fab-panel"
+      role="dialog"
+      aria-modal="false"
+      aria-labelledby="sim-fab-title"
+      hidden
+    >
+      <div class="sim-fab__head">
+        <span class="sim-fab__badge" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="3" width="14" height="18" rx="2.5" /><path d="M8.5 7h7M8.5 11h1M12 11h1M15.5 11h0M8.5 14.5h1M12 14.5h1M8.5 18h1M12 18h1M15.5 14.5V18" />
+          </svg>
+        </span>
+        <div>
+          <p class="sim-fab__title" id="sim-fab-title">{title ?? "Simulador de ahorro"}</p>
+          <p class="sim-fab__subtitle">Descubre cuánto ahorras con gas natural</p>
+        </div>
+        <button type="button" class="sim-fab__close" data-sim-fab-close aria-label="Cerrar simulador">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+        </button>
+      </div>
+      <div class="sim-fab__body">
+        <SimulatorCalculator fuel_prices={fuel_prices} page={page} idPrefix="sim-fab" variant="compact" />
+      </div>
+    </div>
+
+    <button
+      type="button"
+      class="sim-fab__toggle"
+      aria-expanded="false"
+      aria-controls="sim-fab-panel"
+      aria-label="Abrir simulador de ahorro"
+    >
+      <span class="sim-fab__ring" aria-hidden="true"></span>
+      <span class="sim-fab__icon sim-fab__icon--open" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="3" width="14" height="18" rx="2.5" /><path d="M8.5 7h7M8.5 11h1M12 11h1M15.5 11h0M8.5 14.5h1M12 14.5h1M8.5 18h1M12 18h1M15.5 14.5V18" />
+        </svg>
+      </span>
+      <span class="sim-fab__icon sim-fab__icon--close" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      </span>
+      <span class="sim-fab__label">Calcula tu ahorro</span>
+    </button>
+  </div>
+)}
+
+<script>
+  document.querySelectorAll<HTMLElement>("[data-sim-fab]").forEach((fab) => {
+    const toggle = fab.querySelector<HTMLButtonElement>(".sim-fab__toggle");
+    const panel = fab.querySelector<HTMLElement>(".sim-fab__panel");
+    const closeButton = fab.querySelector<HTMLButtonElement>("[data-sim-fab-close]");
+    if (!toggle || !panel) return;
+
+    const mobile = window.matchMedia("(max-width: 640px)");
+    let closeTimer: number | undefined;
+
+    function open() {
+      window.clearTimeout(closeTimer);
+      panel!.hidden = false;
+      // Next frame, so the entrance transition starts from the hidden state.
+      requestAnimationFrame(() => fab.classList.add("is-open"));
+      toggle!.setAttribute("aria-expanded", "true");
+      toggle!.setAttribute("aria-label", "Cerrar simulador de ahorro");
+      document.body.classList.toggle("sim-fab-sheet-open", mobile.matches);
+      window.setTimeout(() => panel!.querySelector<HTMLInputElement>(".savings-simulator-spend")?.focus({ preventScroll: true }), 220);
+    }
+
+    function close(returnFocus = true) {
+      fab.classList.remove("is-open");
+      toggle!.setAttribute("aria-expanded", "false");
+      toggle!.setAttribute("aria-label", "Abrir simulador de ahorro");
+      document.body.classList.remove("sim-fab-sheet-open");
+      closeTimer = window.setTimeout(() => (panel!.hidden = true), 320);
+      if (returnFocus) toggle!.focus({ preventScroll: true });
+    }
+
+    toggle.addEventListener("click", () => (fab.classList.contains("is-open") ? close() : open()));
+    closeButton?.addEventListener("click", () => close());
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && fab.classList.contains("is-open")) close();
+    });
+    // A click anywhere outside the FAB folds it back.
+    document.addEventListener("pointerdown", (event) => {
+      if (fab.classList.contains("is-open") && !fab.contains(event.target as Node)) close(false);
+    });
+
+    // The label collapses to the bare round button once the visitor scrolls,
+    // so the pill doesn't sit over content the whole way down.
+    let ticking = false;
+    const updateCompact = () => {
+      fab.classList.toggle("is-compact", window.scrollY > 240);
+      ticking = false;
+    };
+    updateCompact();
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (!ticking) {
+          ticking = true;
+          requestAnimationFrame(updateCompact);
+        }
+      },
+      { passive: true },
+    );
+
+    // While the page's own simulator section is on screen the FAB would be a
+    // second copy of it, so it steps aside (unless it's already open).
+    const inline = document.querySelector("[data-inline-simulator]");
+    if (inline && "IntersectionObserver" in window) {
+      new IntersectionObserver(
+        ([entry]) => fab.classList.toggle("is-tucked", entry.isIntersecting && !fab.classList.contains("is-open")),
+        { threshold: 0.35 },
+      ).observe(inline);
+    }
+  });
+</script>

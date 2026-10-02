@@ -1,6 +1,10 @@
 :root {
-  /* Fonts — swap the family names to rebrand; keep a system-ui fallback */
-  --font-display: "Manrope", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Fonts — per the brand manual: headings in "Quatro" (a commercial face not
+     available on the web — Poppins is the closest open alternative: same
+     geometric, full-contrast character, and it carries the Light↔Bold range
+     the manual asks headlines to mix). Body stays on Inter, which serves the
+     same "Helvetica/Arial for long text" role the manual specifies. */
+  --font-display: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* Type scale — clamp(min, preferred, max) so headings stay fluid across viewports.
@@ -15,20 +19,57 @@
 
   /* Backgrounds — true near-black canvas, alternating with a neutral parchment tile */
   --color-bg: #ffffff;
-  --color-bg-alt: #f5f5f5;
+  --color-bg-alt: #f2f6f9;
+  /* Deep navy used by the dark bands, so they read as brand rather than plain black */
+  --color-navy: #061a2e;
+  --color-navy-2: #0b2a47;
   --color-ink: #0a0a0b;
   --color-ink-2: #141416;
   --color-ink-3: #1c1c1e;
 
-  /* Brand — deep blue for light-surface text/links, one bright accent for every action/signal */
-  --color-primary: #34d698;
-  --color-primary-alt: #004c99;
-  --color-primary-light: #8ec3f5;
-  --color-accent: #2997ff;
+  /* Brand — per the identity manual's primary palette (p.11): blue + light/sky
+     blue are the only colors stated as "always primary," alongside gray and
+     white. --color-primary keeps its existing role as the small-accent/icon
+     color (eyebrows, quote marks, highlights) but now uses the manual's
+     documented Teal secondary instead of an off-brand mint-green — the
+     manual explicitly scopes secondary colors to exactly that kind of UI
+     highlight, "never used in very large areas" (p.13). */
+  --color-primary: #00caca; /* Teal, Pantone 7709 — secondary/UI-accent only */
+  --color-primary-alt: #1f5ca9; /* Blue, Pantone 286 — primary brand blue */
+  --color-primary-light: #a9e3ff; /* Light blue, Pantone 2905 — secondary */
+  --color-accent: #27bff0; /* Light/sky blue, Pantone 298 — primary brand accent */
 
-  /* Status */
-  --color-status-active: #34d399;
-  --color-status-error: #fb7185;
+  /* Secondary palette (manual p.13) — for charts, badges and small UI accents
+     only; the manual explicitly warns against using these as large fills. */
+  --color-secondary-blue: #0082d6;
+  --color-secondary-green: #48ad3e;
+  --color-secondary-green-dark: #128836;
+  --color-secondary-green-2: #029640;
+
+  /* Complementary palette (manual p.16) — reserved for specific promotional
+     campaigns and signage, not core site UI. Kept here so a future campaign
+     page can reach for an on-brand color instead of an arbitrary one. */
+  --color-complementary-yellow: #ffd100;
+  --color-complementary-orange: #ee7203;
+  --color-complementary-coral: #ea4f5f;
+  --color-complementary-red: #fa0032;
+  --color-complementary-magenta: #b82585;
+  --color-complementary-purple: #7f328a;
+  --color-complementary-violet: #5b08a4;
+
+  /* Grayscale (manual p.14) — the brand's own neutral scale, for whenever a
+     true gray reads better than an opacity-faded --color-text. */
+  --color-gray: #929292; /* flat mid-gray, Pantone 444 — also a primary color */
+  --color-slate-900: #3c484d;
+  --color-slate-700: #6a767d;
+  --color-slate-500: #96a3a8;
+  --color-slate-300: #c2cacf;
+  --color-slate-100: #dfe4e8;
+
+  /* Status — brand green/red standing in for generic success/error, so even
+     these small indicators stay on-palette. */
+  --color-status-active: #029640;
+  --color-status-error: #fa0032;
 
   /* Text on light backgrounds */
   --color-text: #1d1d1f;
@@ -55,6 +96,15 @@
 
   /* The one reserved elevation — used only where content "rests" on a tile */
   --shadow-float: 0 24px 48px -20px rgba(0, 0, 0, 0.4);
+  --shadow-soft: 0 1px 2px rgba(6, 26, 46, 0.06), 0 12px 32px -18px rgba(6, 26, 46, 0.28);
+  --shadow-glow: 0 14px 34px -10px rgba(39, 191, 240, 0.55);
+
+  /* Brand gradient — brand teal into the primary sky-blue accent */
+  --gradient-brand: linear-gradient(120deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  --gradient-ink: linear-gradient(160deg, var(--color-navy) 0%, var(--color-ink) 70%);
+
+  /* Section rhythm — one value so every band breathes the same */
+  --section-space: clamp(3.5rem, 7vw, 5.5rem);
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

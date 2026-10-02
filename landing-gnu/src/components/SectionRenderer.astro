@@ -2,7 +2,7 @@
 import PageHero from "./sections/PageHero.astro";
 import RichText from "./sections/RichText.astro";
 import FeatureGrid from "./sections/FeatureGrid.astro";
-import LeadCaptureForm from "./sections/LeadCaptureForm.astro";
+import ContactBand from "./sections/ContactBand.astro";
 import StationsMap from "./sections/StationsMap.astro";
 import ClientsShowcase from "./sections/ClientsShowcase.astro";
 import SavingsSimulator from "./sections/SavingsSimulator.astro";
@@ -41,13 +41,7 @@ const { sections, pageSlug = null } = Astro.props;
     case "feature_grid":
       return <FeatureGrid {...(section.content as any)} />;
     case "lead_capture_form":
-      return (
-        <section class="section">
-          <div class="container" style="max-width: 34rem;">
-            <LeadCaptureForm {...(section.content as any)} formId={`lead-form-${pageSlug ?? "page"}`} source={pageSlug} />
-          </div>
-        </section>
-      );
+      return <ContactBand {...(section.content as any)} formId={`lead-form-${pageSlug ?? "page"}`} source={pageSlug} />;
     case "stations_map":
       return <StationsMap {...(section.content as any)} />;
     case "clients_showcase":

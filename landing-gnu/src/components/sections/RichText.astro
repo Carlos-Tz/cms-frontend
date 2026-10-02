@@ -94,7 +94,7 @@ const embedUrl = video_url ? withAutoplay(toEmbedUrl(video_url)) : null;
           ></iframe>
         </div>
         <div class="rich-text-media__content">
-          {title && (isLabelTitle ? <span class="eyebrow eyebrow--on-dark">{title}</span> : <h2 class="section-title">{title}</h2>)}
+          {title && (isLabelTitle ? <span class="eyebrow">{title}</span> : <h2 class="section-title">{title}</h2>)}
           <div class:list={["prose", { "prose--after-label": isLabelTitle }]} set:html={body} />
         </div>
       </div>
@@ -102,18 +102,16 @@ const embedUrl = video_url ? withAutoplay(toEmbedUrl(video_url)) : null;
   </section>
 
   <script>
-    // Drifts the section's background from black (the same ink as "Simulador
-    // de ahorro" right above it) to a muted, softer tone of the logo's blue
-    // as it scrolls through view. Desaturated rather than lightened toward
-    // white, so it keeps roughly the same luminance as the vivid logo blue
-    // (#015694) — the white heading / near-white body text stay readable
-    // against it the whole way through.
+    // Drifts the section's background from white (matching "Simulador de
+    // ahorro" right above it) to a very light tint of the logo's blue as it
+    // scrolls through view — the dark heading / body text stay readable
+    // against it the whole way through since neither stop ever gets dark.
     document.querySelectorAll<HTMLElement>(".rich-text-media").forEach((section) => {
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
       const stops: [number, number, number][] = [
-        [10, 10, 11], // --color-ink — same black as "Simulador de ahorro"
-        [37, 89, 127], // muted mid-tone of the logo blue (#25597F)
+        [255, 255, 255], // --color-bg — same white as "Simulador de ahorro"
+        [224, 236, 246], // light tint of the logo blue (#1f5ca9)
       ];
 
       function colorAt(t: number) {

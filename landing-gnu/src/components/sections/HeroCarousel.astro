@@ -31,7 +31,7 @@ const shown = slides.length ? slides.map((slide) => ({ ...slide, image: mediaUrl
 const isExternal = (url: string) => /^https?:\/\//i.test(url);
 ---
 
-<section class="hero" id="banner-carousel" aria-roledescription="carrusel" aria-label="Banners">
+<section class="hero texture-grain" id="banner-carousel" aria-roledescription="carrusel" aria-label="Banners">
   <div class="hero__track">
     {shown.map((slide, index) => (
       <div
@@ -59,10 +59,21 @@ const isExternal = (url: string) => /^https?:\/\//i.test(url);
       </div>
     ))}
   </div>
+  <div class="hero__glow" aria-hidden="true"></div>
   {shown.length > 1 && <div class="hero__dots" aria-label="Banners"></div>}
+  <button type="button" class="hero__scroll" aria-label="Ir al siguiente contenido">
+    <span class="hero__scroll-mouse" aria-hidden="true"><span class="hero__scroll-wheel"></span></span>
+  </button>
 </section>
 
 <script>
+  // The scroll cue jumps to whatever section follows the carousel on this page.
+  document.querySelectorAll<HTMLElement>(".hero").forEach((hero) => {
+    hero.querySelector(".hero__scroll")?.addEventListener("click", () => {
+      hero.nextElementSibling?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
   document.querySelectorAll<HTMLElement>(".hero").forEach((hero) => {
     const slides = Array.from(hero.querySelectorAll<HTMLElement>(".hero-slide"));
     const dotsContainer = hero.querySelector<HTMLElement>(".hero__dots");

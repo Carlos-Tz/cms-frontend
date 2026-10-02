@@ -1,13 +1,12 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import LeadCaptureForm from "../components/sections/LeadCaptureForm.astro";
+import ContactBand from "../components/sections/ContactBand.astro";
 import StationsMap from "../components/sections/StationsMap.astro";
 import RichText from "../components/sections/RichText.astro";
 import SavingsSimulator from "../components/sections/SavingsSimulator.astro";
 import Testimonials from "../components/sections/Testimonials.astro";
 import HeroCarousel from "../components/sections/HeroCarousel.astro";
 import ClientsShowcase from "../components/sections/ClientsShowcase.astro";
-import customerServiceIcon from "../assets/images/customer-service-agent-icon-vector.jpg";
 import { mediaUrl } from "../functions/fetch";
 import { getGlobals, getPage, sectionOf } from "../lib/cms";
 
@@ -35,7 +34,7 @@ const socialImage = firstSlide?.image ? mediaUrl(firstSlide.image) : undefined;
   <main id="inicio">
     <HeroCarousel slides={bannerCarousel?.slides} />
 
-    <!-- Simulador de ahorro -->
+    <!-- Simulador de ahorro: dark like the hero, so the two read as one opening -->
     <SavingsSimulator
       title={savingsSimulator?.title}
       intro={savingsSimulator?.intro}
@@ -43,38 +42,25 @@ const socialImage = firstSlide?.image ? mediaUrl(firstSlide.image) : undefined;
       page={page?.slug ?? "inicio"}
     />
 
+    <!-- Nuestros Clientes: a light trust strip between the two dark bands -->
+    <ClientsShowcase id="clientes" title={clientsShowcase?.title} logos={clientsShowcase?.logos} />
+
     <!-- Contenido editorial / video de la portada -->
     {richText && <RichText title={richText.title} body={richText.body} video_url={richText.video_url} />}
-
-    <!-- Nuestros Clientes -->
-    <ClientsShowcase id="clientes" title={clientsShowcase?.title} logos={clientsShowcase?.logos} />
 
     <!-- Testimonios -->
     <Testimonials title={testimonials?.title} items={testimonials?.items} />
 
-    <!-- Contacto -->
-    <section class="section" id="contacto">
-      <div class="container">
-        <div class="contact-layout">
-          <div class="section-head">
-            <img class="contact-agent-icon" src={customerServiceIcon.src} alt="" />
-            <span class="eyebrow">Contacto</span>
-            <h2 class="section-title">{leadCaptureForm?.title ?? "Hablemos de tu proyecto de gas natural"}</h2>
-            <p class="section-subtitle">
-              {leadCaptureForm?.intro ??
-                "Déjanos tus datos y un asesor te contactará."}
-            </p>
-          </div>
-          <LeadCaptureForm
-            formId="home-lead-form"
-            title="Cotiza sin compromiso"
-            submit_label={leadCaptureForm?.submit_label ?? "Enviar mensaje"}
-            fields={leadCaptureForm?.fields}
-            source={page?.slug ?? "inicio"}
-          />
-        </div>
-      </div>
-    </section>
+    <!-- Contacto + estaciones share one band, so there's no empty gap between them -->
+    <ContactBand
+      id="contacto"
+      formId="home-lead-form"
+      title={leadCaptureForm?.title}
+      intro={leadCaptureForm?.intro}
+      submit_label={leadCaptureForm?.submit_label}
+      fields={leadCaptureForm?.fields}
+      source={page?.slug ?? "inicio"}
+    />
 
     {stationsMap?.center && (
       <StationsMap title={stationsMap.title ?? "Dónde encontrarnos"} center={stationsMap.center} zoom={stationsMap.zoom} />
