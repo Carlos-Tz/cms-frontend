@@ -32,7 +32,7 @@ const {
 } = Astro.props;
 ---
 
-<div class="card">
+<div class="card" id={`${formId}-panel`}>
   <p class="card__title" style="margin-bottom: 1rem;">{title}</p>
   {intro && <p class="card__text" style="margin-bottom: 1rem;">{intro}</p>}
   <form id={formId}>

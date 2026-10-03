@@ -1,0 +1,76 @@
+---
+// Animated number counters — the "stats strip" every one of the inspiration/
+// templates pairs with its services or clients section. Count-up triggers
+// once each stat scrolls into view (see the script below).
+interface Stat {
+  value: number;
+  suffix?: string;
+  label: string;
+}
+
+interface Props {
+  stats: Stat[];
+  cta?: { label: string; href: string } | null;
+}
+
+const { stats, cta = null } = Astro.props;
+const shown = stats.filter((stat) => stat.value > 0);
+---
+
+{shown.length > 0 && (
+  <section class="stats-band">
+    <div class="stats-band__ribbon" aria-hidden="true"></div>
+    <div class="container stats-band__inner">
+      <div class="stats-band__grid">
+        {shown.map((stat) => (
+          <div class="stats-band__item">
+            <p class="stats-band__value" data-count-to={stat.value}>
+              <span class="stats-band__number">0</span>{stat.suffix}
+            </p>
+            <p class="stats-band__label">{stat.label}</p>
+          </div>
+        ))}
+      </div>
+      {cta && (
+        <a class="btn-secondary stats-band__cta" href={cta.href}>
+          {cta.label}
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
+      )}
+    </div>
+  </section>
+)}
+
+<script>
+  document.querySelectorAll<HTMLElement>(".stats-band__value").forEach((el) => {
+    const numberEl = el.querySelector<HTMLElement>(".stats-band__number");
+    const target = Number(el.dataset.countTo ?? "0");
+    if (!numberEl || !Number.isFinite(target)) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      numberEl.textContent = target.toLocaleString("es-MX");
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        observer.disconnect();
+
+        const duration = 1400;
+        const start = performance.now();
+        function tick(now: number) {
+          const progress = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          numberEl!.textContent = Math.round(target * eased).toLocaleString("es-MX");
+          if (progress < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      },
+      { threshold: 0.4 }
+    );
+    observer.observe(el);
+  });
+</script>

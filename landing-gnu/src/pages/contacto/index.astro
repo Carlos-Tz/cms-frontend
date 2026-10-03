@@ -28,6 +28,7 @@ const sectionsAfterLead = leadIndex === -1 ? [] : sections.slice(leadIndex + 1);
     <SectionRenderer sections={sectionsBeforeLead} pageSlug={page?.slug} />
     {leadSection && (
       <ContactBand
+        formId="contacto-form"
         title={leadSection.content.title ?? "Contáctanos"}
         intro={leadSection.content.intro}
         submit_label={leadSection.content.submit_label}

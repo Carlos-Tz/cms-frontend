@@ -7,6 +7,8 @@ import SavingsSimulator from "../components/sections/SavingsSimulator.astro";
 import Testimonials from "../components/sections/Testimonials.astro";
 import HeroCarousel from "../components/sections/HeroCarousel.astro";
 import ClientsShowcase from "../components/sections/ClientsShowcase.astro";
+import TrustStrip from "../components/sections/TrustStrip.astro";
+import StatsBand from "../components/sections/StatsBand.astro";
 import { mediaUrl } from "../functions/fetch";
 import { getGlobals, getPage, sectionOf } from "../lib/cms";
 
@@ -33,8 +35,9 @@ const socialImage = firstSlide?.image ? mediaUrl(firstSlide.image) : undefined;
 <Layout image={socialImage}>
   <main id="inicio">
     <HeroCarousel slides={bannerCarousel?.slides} />
+    <TrustStrip />
 
-    <!-- Simulador de ahorro: dark like the hero, so the two read as one opening -->
+    <!-- Simulador de ahorro: the page's protagonist (see its own focus effect) -->
     <SavingsSimulator
       title={savingsSimulator?.title}
       intro={savingsSimulator?.intro}
@@ -44,6 +47,16 @@ const socialImage = firstSlide?.image ? mediaUrl(firstSlide.image) : undefined;
 
     <!-- Nuestros Clientes: a light trust strip between the two dark bands -->
     <ClientsShowcase id="clientes" title={clientsShowcase?.title} logos={clientsShowcase?.logos} />
+
+    <StatsBand
+      stats={[
+        { value: 40, suffix: "%", label: "de ahorro frente a la gasolina" },
+        { value: 120, suffix: "+", label: "estaciones en México" },
+        { value: clientsShowcase?.logos?.length ?? 0, suffix: "+", label: "empresas que confían en GNU" },
+        { value: 3, label: "soluciones: GNC, GND y GNV" },
+      ]}
+      cta={{ label: "Conoce nuestros servicios", href: "/nuestros-servicios" }}
+    />
 
     <!-- Contenido editorial / video de la portada -->
     {richText && <RichText title={richText.title} body={richText.body} video_url={richText.video_url} />}

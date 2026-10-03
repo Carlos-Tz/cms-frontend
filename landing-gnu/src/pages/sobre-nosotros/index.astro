@@ -1,6 +1,6 @@
 ---
 import CmsPage from "../../components/CmsPage.astro";
-import ChildPageCards from "../../components/ChildPageCards.astro";
+import ServiceCards from "../../components/ServiceCards.astro";
 
 const fallbackChildren = [
   { slug: "proposito-empresarial", path: "/sobre-nosotros/proposito-empresarial", title: "Propósito empresarial" },
@@ -18,7 +18,7 @@ const fallbackChildren = [
         <h2 class="section-title">Explora Sobre Nosotros</h2>
       </div>
       
-      <ChildPageCards parent="sobre-nosotros" fallback={fallbackChildren} gridClass="grid--4" />
+      <ServiceCards parent="sobre-nosotros" fallback={fallbackChildren} />
     </div>
   </section>
 </CmsPage>

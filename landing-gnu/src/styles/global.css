@@ -166,7 +166,11 @@ button {
 
 /* Layout */
 .container {
-  max-width: 75rem;
+  /* Prose/article content (.rich-text, .blog-post) and hero copy already
+     cap their own reading width independently, so widening this doesn't
+     hurt their line length — it just gives grids/cards/forms more of very
+     wide screens instead of sitting in a comparatively narrow column. */
+  max-width: 90rem;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
@@ -354,6 +358,11 @@ button {
   transform: scale(0.96);
 }
 
+/* The double pseudo-element "flip-fill": both panels sit rotated 90° (so
+   they render edge-on / invisible with the browser's default flat
+   perspective) and un-rotate to lay flat on hover, converging from the top
+   and the left into one solid brand-color fill — borrowed from the
+   TechBiz template's signature button micro-interaction (inspiration/). */
 .btn-secondary {
   display: inline-flex;
   align-items: center;
@@ -365,12 +374,47 @@ button {
   color: var(--color-text);
   border: 1px solid var(--color-border);
   background: transparent;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s var(--ease-out);
 }
 
+.btn-secondary::before,
+.btn-secondary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--gradient-brand);
+  transition: transform 0.5s ease;
+}
+
+.btn-secondary::before {
+  transform: rotateX(90deg);
+  transform-origin: top;
+}
+
+.btn-secondary::after {
+  transform: rotateY(90deg);
+  transform-origin: left;
+}
+
 .btn-secondary:hover {
-  color: var(--color-primary);
-  border-color: var(--color-border-hover);
+  color: var(--color-ink);
+  border-color: transparent;
+}
+
+.btn-secondary:hover::before,
+.btn-secondary:hover::after {
+  transform: rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-secondary::before,
+  .btn-secondary::after {
+    transition: none;
+  }
 }
 
 .btn-secondary:active {
@@ -383,7 +427,7 @@ button {
 }
 
 .btn-secondary--on-dark:hover {
-  color: var(--color-accent);
+  color: var(--color-ink);
   border-color: rgba(255, 255, 255, 0.5);
 }
 
@@ -954,18 +998,24 @@ body.nav-open {
   color: var(--color-text-on-dark-70);
 }
 
+/* Bigger than the sitewide .btn-primary default — this is the hero's one
+   headline action over a busy photo, so it needs to read as the obvious
+   next step rather than blend in at the standard button size. */
 .hero-slide__cta {
   margin-top: 1.75rem;
   width: fit-content;
+  padding: 1.0625rem 2.25rem;
+  font-size: 1.0625rem;
 }
 
 .hero__dots {
   position: absolute;
   z-index: 3;
   bottom: 1.75rem;
-  /* Left-aligned with the container's gutter. Bottom-right is where the fixed
-     WhatsApp button lives, and it would sit on top of the whole row. */
-  left: max(1.5rem, calc(50% - 37.5rem + 1.5rem));
+  /* Left-aligned with the container's gutter (half of .container's own
+     max-width, 90rem). Bottom-right is where the fixed WhatsApp button
+     lives, and it would sit on top of the whole row. */
+  left: max(1.5rem, calc(50% - 45rem + 1.5rem));
   display: flex;
   gap: 0.5rem;
 }
@@ -1014,24 +1064,32 @@ body.nav-open {
   }
 }
 
-/* Slide copy rises in, line by line, each time its slide becomes active. */
+/* Slide copy rises in, line by line, each time its slide becomes active —
+   a wider, more deliberate stagger (0.2s between lines, a taller rise and
+   heavier blur) so each line's arrival reads as its own beat instead of
+   nearly-simultaneous, closer to the layered reveal in the TechBiz
+   reference (inspiration/) than the site's original tighter version. */
 .hero-slide.is-active .hero-slide__content > * {
-  animation: hero-copy-in 0.9s var(--ease-out) both;
+  animation: hero-copy-in 1s var(--ease-out) both;
+}
+
+.hero-slide.is-active .hero-slide__content > :nth-child(1) {
+  animation-delay: 0.15s;
 }
 
 .hero-slide.is-active .hero-slide__content > :nth-child(2) {
-  animation-delay: 0.12s;
+  animation-delay: 0.35s;
 }
 
 .hero-slide.is-active .hero-slide__content > :nth-child(3) {
-  animation-delay: 0.24s;
+  animation-delay: 0.55s;
 }
 
 @keyframes hero-copy-in {
   from {
     opacity: 0;
-    transform: translateY(28px);
-    filter: blur(6px);
+    transform: translateY(40px);
+    filter: blur(8px);
   }
   to {
     opacity: 1;
@@ -1117,30 +1175,177 @@ body.nav-open {
   }
 }
 
-/* Simulador de ahorro — full-bleed white tile right under the dark hero
-   carousel, so the color change itself is the section divider (reversed
-   from the old dark-on-dark band, which barely read as a new section). */
+/* Trust strip — three cards peeking up over the hero's bottom edge (the
+   "feature strip overlapping the hero" layout from the TechBiz template).
+   The overlap is small on purpose: the hero reserves 3–5.5rem of empty
+   padding below its own content before its visual bottom edge, so a
+   1.25rem peek never covers the hero's title/CTA/dots. */
+.trust-strip {
+  position: relative;
+  z-index: 3;
+  margin-top: -1.25rem;
+  padding-bottom: 0.5rem;
+}
+
+.trust-strip__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.trust-strip__card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+
+.trust-strip__card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-float);
+}
+
+.trust-strip__icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(140deg, rgba(0, 202, 202, 0.14), rgba(39, 191, 240, 0.14));
+  color: var(--color-primary-alt);
+}
+
+.trust-strip__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.trust-strip__text {
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  color: var(--color-text-60);
+}
+
+/* Stats band — animated counters (count-up script in StatsBand.astro),
+   the pairing every inspiration/ template reaches for right after a
+   clients/logos section. The ribbon is a CSS clip-path rather than an
+   imported texture image, tinted with the site's own brand colors. */
+.stats-band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: var(--section-space) 0;
+  background: var(--color-bg-alt);
+}
+
+.stats-band__ribbon {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(120deg, rgba(0, 202, 202, 0.1), rgba(39, 191, 240, 0.1));
+  clip-path: polygon(0 0, 100% 18%, 100% 82%, 0 100%);
+}
+
+.stats-band__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.stats-band__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 2rem;
+  width: 100%;
+  text-align: center;
+}
+
+.stats-band__item {
+  position: relative;
+}
+
+.stats-band__item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 0.4rem;
+  right: -1rem;
+  width: 1px;
+  height: 2.5rem;
+  background: var(--color-border);
+}
+
+@media (max-width: 720px) {
+  .stats-band__item:not(:last-child)::after {
+    display: none;
+  }
+}
+
+.stats-band__value {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.15rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  color: var(--color-primary-alt);
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-band__label {
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--color-text-60);
+}
+
+.stats-band__cta {
+  background: #ffffff;
+}
+
+/* Simulador de ahorro — the site's main conversion moment (the savings
+   calculator), right under the dark hero carousel. It gets its own tinted,
+   extra-breathing-room treatment instead of blending into the plain white
+   sections before and after it, so it reads as the page's centerpiece
+   rather than "just another section". */
 .simulator-band {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background: var(--color-bg);
-  padding: var(--section-space) 0;
+  background:
+    radial-gradient(60rem circle at 15% -10%, rgba(0, 202, 202, 0.1), transparent 55%),
+    radial-gradient(50rem circle at 100% 110%, rgba(39, 191, 240, 0.12), transparent 60%),
+    var(--color-bg-alt);
+  padding: calc(var(--section-space) * 1.4) 0;
   scroll-margin-top: var(--header-height);
+}
+
+.simulator-band .aurora__blob {
+  opacity: 0.4;
 }
 
 .simulator {
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 2.5rem;
+  gap: 3rem;
   color: var(--color-text);
 }
 
 @media (min-width: 960px) {
   .simulator {
     grid-template-columns: 0.85fr 1.15fr;
-    gap: 3.5rem;
+    gap: 4.5rem;
     align-items: center;
   }
 }
@@ -1317,11 +1522,11 @@ body.nav-open {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transform: scale(var(--logo-zoom, 1.18));
+  transform: scale(var(--logo-zoom, 1.08));
 }
 
 .logo-card:hover .logo-card__img {
-  transform: scale(calc(var(--logo-zoom, 1.18) + 0.05));
+  transform: scale(calc(var(--logo-zoom, 1.08) + 0.05));
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1397,9 +1602,12 @@ body.nav-open {
    rise in one after the other. */
 .testimonial-tiles {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(17rem, 24rem));
+  /* A higher max than before so a handful of tiles (the common case — this
+     is one quote per client, not a big catalog) grow to fill the wider
+     .container instead of huddling in the middle of it. */
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 30rem));
   justify-content: center;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 /* 4:3 rather than the photos' own 16:10: the extra height is what lets the
@@ -1430,12 +1638,45 @@ body.nav-open {
   justify-content: center;
 }
 
-/* The photo IS the card: full bleed, no frame around it. */
+/* The photo IS the card: full bleed, no frame around it. The --contain
+   variant (ClientsShowcase's quoted clients, where "photo" is actually a
+   logo file) instead pads it on a white card — the same full-bleed crop
+   that suits a real headshot just zooms into more of a logo image's own
+   background otherwise, making the mark itself look oversized/cropped. */
 .testimonial-tile__img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
   transition: transform 0.8s var(--ease-out), filter 0.6s var(--ease-out);
+}
+
+.testimonial-tile--contain .testimonial-tile__media {
+  background: #ffffff;
+  padding: 2.5rem;
+}
+
+.testimonial-tile--contain .testimonial-tile__img {
+  transition: transform 0.4s var(--ease-out);
+}
+
+/* A one-line taste of the quote, always visible above the cue instead of
+   only after opening the panel. */
+.testimonial-tile__snippet {
+  position: absolute;
+  left: 1.25rem;
+  right: 1.25rem;
+  bottom: 3rem;
+  margin: 0;
+  font-size: 0.8125rem;
+  font-style: italic;
+  line-height: 1.4;
+  text-align: center;
+  color: #ffffff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
+}
+
+.testimonial-tile--contain .testimonial-tile__snippet {
+  color: var(--color-text-60);
+  text-shadow: none;
 }
 
 .testimonial-tile__initials {
@@ -1452,6 +1693,9 @@ body.nav-open {
   color: var(--color-primary-alt);
 }
 
+/* Same primary cyan as "Calcular ahorro"/"Enviar"/the nav CTA, so this reads
+   as clickable the same way every other action on the site does, instead of
+   a separate dark-grey pill style of its own. */
 .testimonial-tile__cue {
   position: absolute;
   bottom: 1rem;
@@ -1461,13 +1705,10 @@ body.nav-open {
   gap: 0.375rem;
   padding: 0.4rem 0.9rem;
   border-radius: var(--radius-full);
-  /* Sits on top of the photo, so it carries its own dark glass background. */
-  background: rgba(10, 10, 11, 0.62);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--color-primary);
   font-size: 0.75rem;
-  font-weight: 600;
-  color: #ffffff;
+  font-weight: 700;
+  color: var(--color-ink);
   white-space: nowrap;
   transform: translateX(-50%);
   transition: opacity 0.25s ease, transform 0.35s var(--ease-out);
@@ -1666,8 +1907,17 @@ body.nav-open {
   list-style: none;
   max-height: 24rem;
   overflow-y: auto;
-  /* Firefox thin scrollbar; the ::-webkit- rules below cover Chrome/Safari/Edge. */
+  /* Firefox thin scrollbar; the ::-webkit- rules below cover Chrome/Safari/Edge.
+     Transparent by default, tinted only on hover/focus (further down) — the
+     track stays reserved (no layout shift) but the thumb itself is invisible
+     until there's a reason to show it. */
   scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s ease;
+}
+
+.stations-list:hover,
+.stations-list:focus-within {
   scrollbar-color: var(--color-border-hover) transparent;
 }
 
@@ -1680,12 +1930,20 @@ body.nav-open {
 }
 
 .stations-list::-webkit-scrollbar-thumb {
-  background-color: var(--color-border-hover);
+  background-color: transparent;
   border-radius: var(--radius-full);
+  transition: background-color 0.2s ease;
+}
+
+.stations-list:hover::-webkit-scrollbar-thumb,
+.stations-list:focus-within::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-hover);
 }
 
 .stations-list__item {
-  border-radius: var(--radius-md);
+  /* Matches .stations-map's own radius so the card and the map read as one
+     consistent shape language. */
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
   background: var(--color-bg);
   padding: 1.25rem;
@@ -1709,16 +1967,18 @@ body.nav-open {
   align-items: center;
   gap: 0.5rem;
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.9375rem;
+  font-weight: 800;
+  font-size: 1.0625rem;
   color: var(--color-text);
 }
 
+/* Darker than the schedule/phone rows below it, so address reads as the
+   primary secondary-info line and the rest recedes behind it. */
 .stations-list__address {
   margin-top: 0.375rem;
   margin-left: 1.5rem;
   font-size: var(--text-small);
-  color: var(--color-text-60);
+  color: var(--color-text);
 }
 
 .stations-list__meta {
@@ -1964,6 +2224,166 @@ body.nav-open {
   .service-card:hover .service-card__arrow,
   .service-card:focus-visible .service-card__arrow {
     transform: none;
+  }
+}
+
+/* Service cards (ServiceCards.astro) — "Explora Nuestros Servicios" as
+   stacked poster cards: a full-width photo with a floating summary panel
+   overlapping it, alternating sides row to row (the "Projects" section
+   from inspiration/loginet), instead of tabs that hide two of the three
+   services at a time. Floats over the image from 760px up; below that the
+   panel has nowhere to float onto, so it stacks under the image instead. */
+.service-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.service-card-row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Enters from its own image's side instead of the sitewide vertical reveal,
+   so the alternating zig-zag layout also zig-zags in on scroll.
+   :not(.is-visible) scopes this to the pre-reveal state only — once
+   revealed, the shared .reveal.is-visible rule's transform:none takes over
+   untouched (it would otherwise keep losing to this rule's higher
+   specificity forever, since .is-visible never "turns this rule off" on
+   its own). */
+.service-card-row.reveal.reveal:not(.is-visible) {
+  transform: translateX(-64px);
+}
+
+.service-card-row:nth-child(even).reveal.reveal:not(.is-visible) {
+  transform: translateX(64px);
+}
+
+.service-card-row__media {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--color-bg-alt);
+  box-shadow: var(--shadow-soft);
+}
+
+.service-card-row__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.service-card-row__panel {
+  position: relative;
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-soft);
+  padding: 1.75rem;
+}
+
+.service-card-row__badge {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  background: var(--gradient-brand);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-glow);
+}
+
+.service-card-row__eyebrow {
+  display: inline-flex;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  color: var(--color-text-60);
+  border: 1px solid var(--color-border);
+  padding: 0.3rem 0.875rem;
+  border-radius: var(--radius-full);
+  margin-bottom: 1rem;
+}
+
+.service-card-row__heading {
+  max-width: calc(100% - 3.5rem);
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--color-text);
+}
+
+.service-card-row__features {
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.625rem;
+}
+
+.service-card-row__features li {
+  position: relative;
+  padding-left: 1.5rem;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+}
+
+/* Same checkmark glyph as the simulator's own perk list, for one consistent
+   "included" marker across the site. */
+.service-card-row__features li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.3em;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: var(--radius-full);
+  background: var(--color-primary)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%230a0a0b' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5'/%3E%3C/svg%3E")
+    center / 0.65rem no-repeat;
+}
+
+.service-card-row__link {
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 760px) {
+  .service-card-row {
+    display: block;
+    min-height: 28rem;
+  }
+
+  .service-card-row__media {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+  }
+
+  .service-card-row__panel {
+    position: absolute;
+    top: 50%;
+    right: 2.5rem;
+    transform: translateY(-50%);
+    width: min(26rem, calc(100% - 5rem));
+    padding: 2.25rem;
+    backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  /* Alternate sides row to row so three stacked rows don't read as one
+     repeated template. */
+  .service-card-row:nth-child(even) .service-card-row__panel {
+    right: auto;
+    left: 2.5rem;
   }
 }
 
@@ -2848,20 +3268,38 @@ a.stations-list__phone:hover {
   text-decoration: underline;
 }
 
+/* Equal-width side-by-side buttons instead of a button + a plain text link,
+   so the card's bottom edge reads as one balanced row of two actions. */
 .stations-list__actions {
   display: flex;
-  flex-wrap: wrap;
+  gap: 0.625rem;
+  margin-top: 0.875rem;
+}
+
+.stations-list__actions .stations-list__focus,
+.stations-list__actions .stations-list__link {
+  flex: 1;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem 1rem;
-  margin-top: 0.375rem;
+  justify-content: center;
+  margin: 0;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--radius-full);
+  text-align: center;
 }
 
 .stations-list__actions .stations-list__link {
-  margin-top: 0;
+  border: 1px solid var(--color-border-hover);
+  color: var(--color-primary-alt);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.stations-list__actions .stations-list__link:hover {
+  border-color: var(--color-primary-alt);
+  background: var(--color-bg-alt);
 }
 
 .stations-list__focus {
-  padding: 0.35rem 0.875rem;
   border-radius: var(--radius-full);
   border: 1px solid var(--color-border-hover);
   background: transparent;
@@ -2874,9 +3312,9 @@ a.stations-list__phone:hover {
 
 .stations-list__focus:hover,
 .stations-list__focus[aria-pressed="true"] {
-  border-color: var(--color-primary-alt);
-  background: var(--color-primary-alt);
-  color: #ffffff;
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-ink);
 }
 
 .stations-list__item {
@@ -2884,9 +3322,9 @@ a.stations-list__phone:hover {
 }
 
 .stations-list__item.is-active {
-  border-color: var(--color-primary-alt);
-  background: rgba(31, 92, 169, 0.05);
-  box-shadow: inset 3px 0 0 var(--color-primary-alt);
+  border-color: var(--color-primary);
+  background: rgba(0, 202, 202, 0.06);
+  box-shadow: inset 3px 0 0 var(--color-primary), 0 16px 32px -20px rgba(0, 202, 202, 0.5);
 }
 
 /* Contact info: address/phone/email/hours as actionable rows. */
@@ -2934,12 +3372,16 @@ a.stations-list__phone:hover {
   color: var(--color-text);
 }
 
+/* Dark by default (same as plain .contact-info__value) instead of brand
+   blue — legible first, with color reserved for hover as the "this is
+   clickable" cue rather than the resting state. */
 .contact-info__value--link {
   font-weight: 600;
-  color: var(--color-primary-alt);
+  color: var(--color-text);
 }
 
 .contact-info__value--link:hover {
+  color: var(--color-primary-alt);
   text-decoration: underline;
 }
 
@@ -3222,11 +3664,42 @@ a.stations-list__phone:hover {
 }
 
 .sim--band {
+  position: relative;
+  z-index: 1;
   padding: 1.25rem;
   border-radius: calc(var(--radius-lg) + 0.5rem);
   border: 1px solid var(--color-border);
   background: #ffffff;
-  box-shadow: var(--shadow-float);
+  box-shadow: 0 0 0 1px rgba(0, 202, 202, 0.1), 0 36px 70px -28px rgba(0, 202, 202, 0.35), var(--shadow-float);
+}
+
+/* .sim--band is also a scroll-reveal target (see Layout.astro), and once
+   revealed it keeps .is-visible forever — so its transition for
+   transform/box-shadow would otherwise still be governed by the shared
+   .reveal.reveal rule's 900ms entrance timing (equal specificity, earlier
+   in the file) instead of a snappy one of its own. Declaring the faster
+   transition on the post-reveal `.is-visible` state itself beats that on
+   specificity, without touching the entrance animation pre-reveal. */
+.sim--band.is-visible {
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+}
+
+/* Grows and lifts above the rest of the section while the visitor is
+   actually using it (any field/button inside has focus) — a click-driven
+   moment of focus instead of a scroll-driven one. :focus-within clears
+   itself the instant focus leaves the calculator (click elsewhere, tab
+   away); the script below also blurs the active field on scroll, so
+   scrolling past it "lets go" too and the visitor can keep reading. */
+.sim--band:focus-within {
+  z-index: 10;
+  transform: scale(1.1);
+  box-shadow: 0 48px 110px -30px rgba(0, 202, 202, 0.5), var(--shadow-float);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sim--band:focus-within {
+    transform: none;
+  }
 }
 
 /* The calculator's shared result/field pieces default to a dark-glass look
@@ -3756,6 +4229,10 @@ body:not(:has(.whatsapp-fab)) .sim-fab {
     linear-gradient(#ffffff, #ffffff) padding-box,
     linear-gradient(140deg, rgba(0, 202, 202, 0.6), rgba(39, 191, 240, 0.6)) border-box;
   box-shadow: 0 30px 60px -30px rgba(6, 26, 46, 0.35);
+  /* The header's "Contacto" CTA deep-links straight to this card (see
+     Layout.astro's contactCtaHref) instead of just the page/section top, so
+     it needs its own scroll offset under the fixed header. */
+  scroll-margin-top: calc(var(--header-height) + 1.5rem);
 }
 
 .lead-band .card:hover {
@@ -3809,6 +4286,12 @@ body:not(:has(.whatsapp-fab)) .sim-fab {
     var(--color-bg-alt);
 }
 
+/* A bit more breathing room than the sitewide section-head default before
+   the map/cards start. */
+.stations-band .section-head {
+  margin-bottom: 4.5rem;
+}
+
 .clients-band .logo-marquee__item {
   width: 12rem;
 }
@@ -3817,25 +4300,8 @@ body:not(:has(.whatsapp-fab)) .sim-fab {
   margin-top: 2rem;
 }
 
-/* Rich text with video: a soft brand glow behind the player. */
 .rich-text-media {
   overflow: hidden;
-}
-
-.rich-text-media__video {
-  overflow: visible;
-  isolation: isolate;
-}
-
-.rich-text-media__video::before {
-  content: "";
-  position: absolute;
-  inset: -2px;
-  z-index: -1;
-  border-radius: inherit;
-  background: var(--gradient-brand);
-  filter: blur(28px);
-  opacity: 0.45;
 }
 
 .rich-text-media__video iframe {

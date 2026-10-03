@@ -41,3 +41,30 @@ const hasComparableFuels = fuel_prices.some((fuel) => fuel.fuel !== "gas-natural
     </div>
   </section>
 )}
+
+<script>
+  // The calculator grows via plain CSS (.sim--band:focus-within, see
+  // global.css) the moment a field inside it is focused, and shrinks back
+  // the moment focus leaves it (click elsewhere, tab away) — no JS needed
+  // for that part. The one thing CSS can't do on its own is "shrink back
+  // when the visitor scrolls past it without clicking anywhere else" —
+  // focus doesn't clear itself just because the page scrolled, so this
+  // blurs the focused field once the visitor scrolls while it's expanded,
+  // which drops :focus-within and lets the section settle back down.
+  document.querySelectorAll<HTMLElement>("[data-inline-simulator] .sim--band").forEach((band) => {
+    let scrolling = false;
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (scrolling) return;
+        scrolling = true;
+        requestAnimationFrame(() => {
+          const active = document.activeElement as HTMLElement | null;
+          if (active && band.contains(active)) active.blur();
+          scrolling = false;
+        });
+      },
+      { passive: true }
+    );
+  });
+</script>

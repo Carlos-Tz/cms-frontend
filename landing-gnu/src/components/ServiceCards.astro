@@ -1,0 +1,87 @@
+---
+// A hub page's child pages (e.g. "Explora Nuestros Servicios" on
+// /nuestros-servicios, "Explora Sobre Nosotros" on /sobre-nosotros) as
+// stacked poster cards — a full-width photo with a floating summary panel
+// overlapping it, alternating sides row to row (the "Projects" section from
+// inspiration/loginet) — instead of hidden behind tabs or a click. Each card
+// still links to its own full page via "Ver página completa".
+import noImg from "../assets/images/noimg.jpg";
+import { mediaUrl } from "../functions/fetch";
+import { childrenOf, getPage, heroOf, sectionOf } from "../lib/cms";
+
+interface Props {
+  parent: string;
+  fallback: Array<{ slug: string; path: string; title: string }>;
+}
+
+const { parent, fallback } = Astro.props;
+
+const menuChildren = await childrenOf(parent);
+const children = menuChildren.length ? menuChildren : fallback;
+
+const cards = await Promise.all(
+  children.map(async (child) => {
+    const page = await getPage(child.slug);
+    const hero = heroOf(page);
+    const features = sectionOf(page, "feature_grid");
+    // DEBUG: what the CMS actually sent for this card, straight from
+    // `pages/${child.slug}` — pull once the content looks right and this
+    // whole block can go.
+    console.log(`[ServiceCards:${parent}] "${child.slug}" page_hero:`, JSON.stringify(hero, null, 2));
+    console.log(`[ServiceCards:${parent}] "${child.slug}" feature_grid:`, JSON.stringify(features, null, 2));
+    return {
+      slug: child.slug,
+      path: child.path,
+      title: child.title,
+      subtitle: hero?.subtitle ?? null,
+      image: hero?.image ? mediaUrl(hero.image) : noImg.src,
+      features: ((features?.items ?? []) as { icon: string | null; title: string; text: string }[]).slice(0, 4),
+    };
+  })
+);
+
+// DEBUG: the final per-card shape this component actually renders with.
+console.log(`[ServiceCards:${parent}] cards:`, JSON.stringify(cards, null, 2));
+---
+
+{cards.length > 0 && (
+  <div class="service-cards">
+    {cards.map((card) => {
+      // card.title is the short name the CMS gives the page (e.g. "GNV") —
+      // worth its own tag when there's a longer headline to pair it with
+      // (the hero subtitle); otherwise it IS the headline, so it only
+      // renders once.
+      const heading = card.subtitle ?? card.title;
+      const showEyebrow = Boolean(card.subtitle);
+      return (
+        <div class="service-card-row">
+          <div class="service-card-row__media">
+            <img src={card.image} alt="" loading="lazy" />
+          </div>
+          <div class="service-card-row__panel">
+            <span class="service-card-row__badge" aria-hidden="true">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12.5 9.5 17 19 7" />
+              </svg>
+            </span>
+            {showEyebrow && <span class="service-card-row__eyebrow">{card.title}</span>}
+            <h3 class="service-card-row__heading">{heading}</h3>
+            {card.features.length > 0 && (
+              <ul class="service-card-row__features">
+                {card.features.map((item) => (
+                  <li>{item.title}</li>
+                ))}
+              </ul>
+            )}
+            <a class="btn-secondary service-card-row__link" href={card.path}>
+              Ver página completa
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      );
+    })}
+  </div>
+)}

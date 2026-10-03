@@ -1,6 +1,13 @@
 ---
 import "../styles/global.css";
-import { getGlobals, getMenu, getPage, sectionOf, whatsappHref, type MenuItem } from "../lib/cms";
+import {
+  getGlobals,
+  getMenu,
+  getPage,
+  sectionOf,
+  whatsappHref,
+  type MenuItem,
+} from "../lib/cms";
 import SimulatorFab from "../components/SimulatorFab.astro";
 import { seo } from "../config/seo";
 import logo from "../assets/images/logo-blue.png";
@@ -21,13 +28,24 @@ interface Props {
   jsonLd?: Record<string, unknown> | null;
 }
 
-const { title, description, image, noindex = false, type = "website", jsonLd = null } = Astro.props;
+const {
+  title,
+  description,
+  image,
+  noindex = false,
+  type = "website",
+  jsonLd = null,
+} = Astro.props;
 
-const pageTitle = title ? `${title} ${seo.titleSeparator} ${seo.siteName}` : seo.defaultTitle;
+const pageTitle = title
+  ? `${title} ${seo.titleSeparator} ${seo.siteName}`
+  : seo.defaultTitle;
 const pageDescription = description ?? seo.defaultDescription;
 const socialImage = image ?? seo.defaultImage;
 const canonicalUrl = new URL(Astro.url.pathname, seo.siteUrl).toString();
-const socialImageUrl = socialImage ? new URL(socialImage, seo.siteUrl).toString() : null;
+const socialImageUrl = socialImage
+  ? new URL(socialImage, seo.siteUrl).toString()
+  : null;
 
 // The nav comes from `GET menu`, which the CMS derives from the page map:
 // unpublishing a page in the admin has to drop it from the nav too, which a
@@ -36,9 +54,24 @@ const socialImageUrl = socialImage ? new URL(socialImage, seo.siteUrl).toString(
 // The literal list below is the fallback for an unreachable endpoint.
 const fallbackNav: MenuItem[] = [
   { slug: "inicio", path: "/", title: "Inicio", children: [] },
-  { slug: "nuestros-servicios", path: "/nuestros-servicios", title: "Nuestros Servicios", children: [] },
-  { slug: "sobre-nosotros", path: "/sobre-nosotros", title: "Sobre Nosotros", children: [] },
-  { slug: "desarrollo-sostenible", path: "/desarrollo-sostenible", title: "Desarrollo Sostenible", children: [] },
+  {
+    slug: "nuestros-servicios",
+    path: "/nuestros-servicios",
+    title: "Nuestros Servicios",
+    children: [],
+  },
+  {
+    slug: "sobre-nosotros",
+    path: "/sobre-nosotros",
+    title: "Sobre Nosotros",
+    children: [],
+  },
+  {
+    slug: "desarrollo-sostenible",
+    path: "/desarrollo-sostenible",
+    title: "Desarrollo Sostenible",
+    children: [],
+  },
   { slug: "blog", path: "/blog", title: "Blog", children: [] },
   { slug: "contacto", path: "/contacto", title: "Contacto", children: [] },
 ];
@@ -50,22 +83,40 @@ const navItems = menu.length ? menu : fallbackNav;
 // for everything else so /sobre-nosotros/valores lights up "Sobre nosotros".
 const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/";
 const isCurrent = (path: string) =>
-  path === "/" ? currentPath === "/" : currentPath === path || currentPath.startsWith(`${path}/`);
+  path === "/"
+    ? currentPath === "/"
+    : currentPath === path || currentPath.startsWith(`${path}/`);
 
 // Footer "Servicios" lists the real service pages from the same tree, each
 // linking to its own page rather than all of them to the hub.
-const services = navItems.find((item) => item.slug === "nuestros-servicios")?.children ?? [];
+const services =
+  navItems.find((item) => item.slug === "nuestros-servicios")?.children ?? [];
 const serviceLinks = services.length
   ? services.map((item) => ({ href: item.path, label: item.title }))
   : [
-      { href: "/nuestros-servicios/gnc", label: "Gas Natural Comprimido (GNC)" },
-      { href: "/nuestros-servicios/gnd", label: "Gas Natural Domiciliario (GND)" },
       { href: "/nuestros-servicios/gnv", label: "Gas Natural Vehicular (GNV)" },
+      {
+        href: "/nuestros-servicios/gnc",
+        label: "Gas Natural Comprimido (GNC)",
+      },
+      {
+        href: "/nuestros-servicios/gnd",
+        label: "Gas Natural Domiciliario (GND)",
+      },
     ];
 
-// Where the "Cotiza aquí" CTA goes: the contact page when the CMS publishes
+// Where the "Contacto" CTA goes: the contact page when the CMS publishes
 // one, otherwise the home page's own contact block.
-const contactPath = navItems.find((item) => item.slug === "contacto")?.path ?? "/#contacto";
+const contactPageItem = navItems.find((item) => item.slug === "contacto");
+const contactPath = contactPageItem?.path ?? "/#contacto";
+
+// The CTA button's job is "go fill out the quote form", not just "go to the
+// contact page" — so unlike the plain "Contacto" nav link (which lands at
+// the page top like every other nav item), this deep-links straight to the
+// form card (see LeadCaptureForm.astro's id and .lead-band .card's
+// scroll-margin-top) so the visitor never has to scroll past the hero image
+// and contact-details column to find it.
+const contactCtaHref = contactPageItem ? `${contactPath}#contacto-form-panel` : "/#home-lead-form-panel";
 
 // Footer contact info, social links and the WhatsApp button are all editable
 // from the CMS admin (home page → Datos de contacto / Redes sociales / Botón
@@ -109,9 +160,9 @@ const fallbackNetworks = [
   { network: "linkedin", url: "#" },
   { network: "youtube", url: "#" },
 ];
-const socialNetworks = (socialIcons?.networks?.length ? socialIcons.networks : fallbackNetworks).filter(
-  (item) => SOCIAL_ICON_MARKUP[item.network]
-);
+const socialNetworks = (
+  socialIcons?.networks?.length ? socialIcons.networks : fallbackNetworks
+).filter((item) => SOCIAL_ICON_MARKUP[item.network]);
 
 // No number in the CMS means no button (see `whatsappHref`). `phone` is
 // required by the section schema, so this only bites when `/globals` failed
@@ -142,7 +193,9 @@ const organizationJsonLd = JSON.stringify({
   }),
   ...(contactInfo?.address && { address: contactInfo.address }),
   ...(socialIcons?.networks?.length && {
-    sameAs: socialIcons.networks.map((item) => item.url).filter((url) => url && url !== "#"),
+    sameAs: socialIcons.networks
+      .map((item) => item.url)
+      .filter((url) => url && url !== "#"),
   }),
 });
 ---
@@ -169,7 +222,11 @@ const organizationJsonLd = JSON.stringify({
     {socialImageUrl && <meta property="og:image" content={socialImageUrl} />}
 
     <meta name="twitter:card" content={seo.twitterCard} />
-    {seo.twitterHandle && <meta name="twitter:site" content={seo.twitterHandle} />}
+    {
+      seo.twitterHandle && (
+        <meta name="twitter:site" content={seo.twitterHandle} />
+      )
+    }
     <meta name="twitter:title" content={pageTitle} />
     <meta name="twitter:description" content={pageDescription} />
     {socialImageUrl && <meta name="twitter:image" content={socialImageUrl} />}
@@ -181,56 +238,102 @@ const organizationJsonLd = JSON.stringify({
       rel="stylesheet"
     />
 
-    <script is:inline type="application/ld+json" set:html={organizationJsonLd} />
-    {jsonLd && <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    <script
+      is:inline
+      type="application/ld+json"
+      set:html={organizationJsonLd}
+    />
+    {
+      jsonLd && (
+        <script
+          is:inline
+          type="application/ld+json"
+          set:html={JSON.stringify(jsonLd)}
+        />
+      )
+    }
   </head>
   <body>
     <header class="site-header" id="site-header">
-      <div class="scroll-progress" aria-hidden="true"><span class="scroll-progress__bar"></span></div>
+      <div class="scroll-progress" aria-hidden="true">
+        <span class="scroll-progress__bar"></span>
+      </div>
       <div class="container site-header__inner">
         <a href="/" class="brand">
-          <img class="brand__logo" src={logo.src} width={logo.width} height={logo.height} alt="GNU Gas Natural" />
+          <img
+            class="brand__logo"
+            src={logo.src}
+            width={logo.width}
+            height={logo.height}
+            alt="GNU Gas Natural"
+          />
         </a>
         <nav class="nav" aria-label="Principal">
-          {navItems.map((item) =>
-            item.children?.length ? (
-              <div class="nav-item nav-item--has-menu">
+          {
+            navItems.map((item) =>
+              item.children?.length ? (
+                <div class="nav-item nav-item--has-menu">
+                  <a
+                    class:list={[
+                      "nav-link",
+                      { "is-current": isCurrent(item.path) },
+                    ]}
+                    href={item.path}
+                    aria-current={isCurrent(item.path) ? "page" : undefined}
+                    aria-haspopup="true"
+                  >
+                    {item.title}
+                    <svg
+                      class="nav-link__caret"
+                      width="10"
+                      height="10"
+                      viewBox="0 0 10 10"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M2 3.5 5 6.5 8 3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </a>
+                  <div class="nav-menu">
+                    {item.children.map((child) => (
+                      <a
+                        class:list={[
+                          "nav-menu__link",
+                          { "is-current": isCurrent(child.path) },
+                        ]}
+                        href={child.path}
+                        aria-current={
+                          isCurrent(child.path) ? "page" : undefined
+                        }
+                      >
+                        {child.title}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              ) : (
                 <a
-                  class:list={["nav-link", { "is-current": isCurrent(item.path) }]}
+                  class:list={[
+                    "nav-link",
+                    { "is-current": isCurrent(item.path) },
+                  ]}
                   href={item.path}
                   aria-current={isCurrent(item.path) ? "page" : undefined}
-                  aria-haspopup="true"
                 >
                   {item.title}
-                  <svg class="nav-link__caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true">
-                    <path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                  </svg>
                 </a>
-                <div class="nav-menu">
-                  {item.children.map((child) => (
-                    <a
-                      class:list={["nav-menu__link", { "is-current": isCurrent(child.path) }]}
-                      href={child.path}
-                      aria-current={isCurrent(child.path) ? "page" : undefined}
-                    >
-                      {child.title}
-                    </a>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <a
-                class:list={["nav-link", { "is-current": isCurrent(item.path) }]}
-                href={item.path}
-                aria-current={isCurrent(item.path) ? "page" : undefined}
-              >
-                {item.title}
-              </a>
+              ),
             )
-          )}
+          }
         </nav>
         <div class="header-actions">
-          <a class="btn-primary" href={contactPath}>Cotiza aquí</a>
+          <a class="btn-primary" href={contactCtaHref}>Contacto</a>
           <button
             type="button"
             class="nav-toggle"
@@ -251,47 +354,84 @@ const organizationJsonLd = JSON.stringify({
       <div class="mobile-nav__inner">
         <div class="mobile-nav__header">
           <a href="/" class="brand">
-            <img class="brand__logo" src={logo.src} width={logo.width} height={logo.height} alt="GNU Gas Natural" />
+            <img
+              class="brand__logo"
+              src={logo.src}
+              width={logo.width}
+              height={logo.height}
+              alt="GNU Gas Natural"
+            />
           </a>
-          <button type="button" class="mobile-nav__close" id="mobile-nav-close" aria-label="Cerrar menú">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <path d="M5 5l14 14M19 5L5 19" />
+          <button
+            type="button"
+            class="mobile-nav__close"
+            id="mobile-nav-close"
+            aria-label="Cerrar menú"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M5 5l14 14M19 5L5 19"></path>
             </svg>
           </button>
         </div>
         <nav class="mobile-nav__links" aria-label="Principal (móvil)">
-          {navItems.map((item) => (
-            <>
-              <a
-                class:list={["mobile-nav__link", { "is-current": isCurrent(item.path) }]}
-                href={item.path}
-                aria-current={isCurrent(item.path) ? "page" : undefined}
-              >
-                {item.title}
-              </a>
-              {item.children?.length > 0 && (
-                <div class="mobile-nav__sublinks">
-                  {item.children.map((child) => (
-                    <a
-                      class:list={["mobile-nav__sublink", { "is-current": isCurrent(child.path) }]}
-                      href={child.path}
-                      aria-current={isCurrent(child.path) ? "page" : undefined}
-                    >
-                      {child.title}
-                    </a>
-                  ))}
-                </div>
-              )}
-            </>
-          ))}
+          {
+            navItems.map((item) => (
+              <>
+                <a
+                  class:list={[
+                    "mobile-nav__link",
+                    { "is-current": isCurrent(item.path) },
+                  ]}
+                  href={item.path}
+                  aria-current={isCurrent(item.path) ? "page" : undefined}
+                >
+                  {item.title}
+                </a>
+                {item.children?.length > 0 && (
+                  <div class="mobile-nav__sublinks">
+                    {item.children.map((child) => (
+                      <a
+                        class:list={[
+                          "mobile-nav__sublink",
+                          { "is-current": isCurrent(child.path) },
+                        ]}
+                        href={child.path}
+                        aria-current={
+                          isCurrent(child.path) ? "page" : undefined
+                        }
+                      >
+                        {child.title}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </>
+            ))
+          }
         </nav>
-        <a class="btn-primary mobile-nav__cta" href={contactPath}>Cotiza aquí</a>
+        <a class="btn-primary mobile-nav__cta" href={contactCtaHref}>Contacto</a>
         <div class="social-row mobile-nav__social" aria-label="Redes sociales">
-          {socialNetworks.map((item) => (
-            <a class="social-icon" href={item.url || "#"} target="_blank" rel="noopener noreferrer" aria-label={item.network}>
-              <Fragment set:html={SOCIAL_ICON_MARKUP[item.network]} />
-            </a>
-          ))}
+          {
+            socialNetworks.map((item) => (
+              <a
+                class="social-icon"
+                href={item.url || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={item.network}
+              >
+                <Fragment set:html={SOCIAL_ICON_MARKUP[item.network]} />
+              </a>
+            ))
+          }
         </div>
       </div>
     </div>
@@ -304,64 +444,110 @@ const organizationJsonLd = JSON.stringify({
         <div class="footer-grid">
           <div>
             <a href="/" class="brand">
-              <img class="brand__logo brand__logo--footer" src={logo.src} width={logo.width} height={logo.height} alt="GNU Gas Natural" />
+              <img
+                class="brand__logo brand__logo--footer"
+                src={logo.src}
+                width={logo.width}
+                height={logo.height}
+                alt="GNU Gas Natural"
+              />
             </a>
             <p style="margin-top: 1rem; font-size: 0.875rem; max-width: 20rem;">
-              Energía limpia y ahorro real para hogares, negocios y flotillas vehiculares en todo México.
+              Energía limpia y ahorro real para hogares, negocios y flotillas
+              vehiculares en todo México.
             </p>
             <div class="social-row">
-              {socialNetworks.map((item) => (
-                <a class="social-icon" href={item.url || "#"} target="_blank" rel="noopener noreferrer" aria-label={item.network}>
-                  <Fragment set:html={SOCIAL_ICON_MARKUP[item.network]} />
-                </a>
-              ))}
+              {
+                socialNetworks.map((item) => (
+                  <a
+                    class="social-icon"
+                    href={item.url || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={item.network}
+                  >
+                    <Fragment set:html={SOCIAL_ICON_MARKUP[item.network]} />
+                  </a>
+                ))
+              }
             </div>
           </div>
           <div>
             <p class="footer-heading">Navegación</p>
-            {navItems.map((item) => (
-              <a class="footer-link" href={item.path}>{item.title}</a>
-            ))}
+            {
+              navItems.map((item) => (
+                <a class="footer-link" href={item.path}>
+                  {item.title}
+                </a>
+              ))
+            }
           </div>
           <div>
             <p class="footer-heading">Servicios</p>
-            {serviceLinks.map((link) => (
-              <a class="footer-link" href={link.href}>{link.label}</a>
-            ))}
+            {
+              serviceLinks.map((link) => (
+                <a class="footer-link" href={link.href}>
+                  {link.label}
+                </a>
+              ))
+            }
           </div>
           <address class="footer-contact">
             <p class="footer-heading">Contacto</p>
-            {footerAddress && footerAddressHref && (
-              <a class="footer-link" href={footerAddressHref} target="_blank" rel="noopener noreferrer">{footerAddress}</a>
-            )}
-            <a class="footer-link" href={`mailto:${footerEmail}`}>{footerEmail}</a>
+            {
+              footerAddress && footerAddressHref && (
+                <a
+                  class="footer-link"
+                  href={footerAddressHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {footerAddress}
+                </a>
+              )
+            }
+            <a class="footer-link" href={`mailto:${footerEmail}`}
+              >{footerEmail}</a
+            >
             <a class="footer-link" href={footerPhoneHref}>{footerPhone}</a>
             <p class="footer-link">{footerSchedule}</p>
-            {footerAdditionalInfo && <p class="footer-link">{footerAdditionalInfo}</p>}
+            {
+              footerAdditionalInfo && (
+                <p class="footer-link">{footerAdditionalInfo}</p>
+              )
+            }
           </address>
         </div>
         <div class="footer-bottom">
-          <span>© {currentYear} GNU Gas Natural. Todos los derechos reservados.</span>
+          <span
+            >© {currentYear} GNU Gas Natural. Todos los derechos reservados.</span
+          >
           <span>Aviso de privacidad · Términos y condiciones</span>
         </div>
       </div>
     </footer>
 
-    <SimulatorFab title={homeSimulator?.title} fuel_prices={homeSimulator?.fuel_prices} page="inicio" />
+    <SimulatorFab
+      title={homeSimulator?.title}
+      fuel_prices={homeSimulator?.fuel_prices}
+      page="inicio"
+    />
 
-    {whatsappLink && (
-    <a
-      class="whatsapp-fab"
-      href={whatsappLink}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Escríbenos por WhatsApp"
-    >
-      <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.05-1.35A10 10 0 1 0 12 2zm0 18.1a8.06 8.06 0 0 1-4.1-1.12l-.3-.18-3 .8.8-2.93-.19-.3A8.1 8.1 0 1 1 12 20.1zm4.44-6.06c-.24-.12-1.43-.7-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.53.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.35-1.67-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02 0 1.19.87 2.34 1 2.5.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/>
-      </svg>
-    </a>
-    )}
+    {
+      whatsappLink && (
+        <a
+          class="whatsapp-fab"
+          href={whatsappLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Escríbenos por WhatsApp"
+        >
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.05-1.35A10 10 0 1 0 12 2zm0 18.1a8.06 8.06 0 0 1-4.1-1.12l-.3-.18-3 .8.8-2.93-.19-.3A8.1 8.1 0 1 1 12 20.1zm4.44-6.06c-.24-.12-1.43-.7-1.65-.79-.22-.08-.38-.12-.55.12-.16.24-.63.79-.77.95-.14.16-.28.18-.53.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.35-1.67-.14-.24-.02-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.55-1.33-.76-1.82-.2-.48-.4-.41-.55-.42h-.47c-.16 0-.42.06-.64.3-.22.24-.85.83-.85 2.02 0 1.19.87 2.34 1 2.5.12.16 1.7 2.6 4.13 3.64.58.25 1.03.4 1.38.51.58.18 1.11.16 1.53.1.47-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z" />
+          </svg>
+        </a>
+      )
+    }
 
     <script>
       const navToggle = document.getElementById("nav-toggle");
@@ -386,12 +572,15 @@ const organizationJsonLd = JSON.stringify({
         };
 
         navToggle.addEventListener("click", () => {
-          if (navToggle.getAttribute("aria-expanded") === "true") closeMobileNav();
+          if (navToggle.getAttribute("aria-expanded") === "true")
+            closeMobileNav();
           else openMobileNav();
         });
 
         mobileNavClose?.addEventListener("click", closeMobileNav);
-        mobileNav.querySelectorAll("a").forEach((link) => link.addEventListener("click", closeMobileNav));
+        mobileNav
+          .querySelectorAll("a")
+          .forEach((link) => link.addEventListener("click", closeMobileNav));
 
         document.addEventListener("keydown", (event) => {
           if (event.key === "Escape") closeMobileNav();
@@ -404,12 +593,13 @@ const organizationJsonLd = JSON.stringify({
 
       const revealTargets = Array.from(
         document.querySelectorAll(
-          ".section-head, .card, .logo-card, .simulator__intro, .sim--band, .prose, .testimonial-tile, .stations-map, .stations-list__item, .rich-text-media__video, .contact-info__item, .gallery__item, .lead-band__aside"
-        )
+          ".section-head, .card, .logo-card, .simulator__intro, .sim--band, .prose, .testimonial-tile, .stations-map, .stations-list__item, .rich-text-media__video, .contact-info__item, .gallery__item, .lead-band__aside, .trust-strip__card, .stats-band__item, .service-card-row",
+        ),
       );
 
       if (revealTargets.length) {
-        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const viewportHeight =
+          window.innerHeight || document.documentElement.clientHeight;
 
         // Anything already inside the viewport at load (a short page, or a
         // scroll position the browser restored on refresh) would have the
@@ -425,15 +615,26 @@ const organizationJsonLd = JSON.stringify({
         const belowFold: Element[] = [];
         revealTargets.forEach((el) => {
           const rect = el.getBoundingClientRect();
-          (rect.top < viewportHeight && rect.bottom > 0 ? alreadyVisible : belowFold).push(el);
+          (rect.top < viewportHeight && rect.bottom > 0
+            ? alreadyVisible
+            : belowFold
+          ).push(el);
         });
 
         // Siblings that reveal together (a row of cards, a list of stations)
         // cascade in one after another instead of landing as one block.
         revealTargets.forEach((el) => {
-          const siblings = el.parentElement ? Array.from(el.parentElement.children) : [];
-          const index = siblings.filter((node) => revealTargets.includes(node)).indexOf(el);
-          if (index > 0) (el as HTMLElement).style.setProperty("--reveal-delay", `${Math.min(index, 6) * 90}ms`);
+          const siblings = el.parentElement
+            ? Array.from(el.parentElement.children)
+            : [];
+          const index = siblings
+            .filter((node) => revealTargets.includes(node))
+            .indexOf(el);
+          if (index > 0)
+            (el as HTMLElement).style.setProperty(
+              "--reveal-delay",
+              `${Math.min(index, 6) * 90}ms`,
+            );
         });
 
         alreadyVisible.forEach((el) => el.classList.add("reveal-instant"));
@@ -448,11 +649,14 @@ const organizationJsonLd = JSON.stringify({
                   observer.unobserve(target);
                   // The delay is for the entrance only — dropped afterwards so
                   // hover transitions on the same element aren't held back.
-                  window.setTimeout(() => target.style.removeProperty("--reveal-delay"), 1600);
+                  window.setTimeout(
+                    () => target.style.removeProperty("--reveal-delay"),
+                    1600,
+                  );
                 }
               });
             },
-            { threshold: 0.15, rootMargin: "0px 0px -40px 0px" }
+            { threshold: 0.15, rootMargin: "0px 0px -40px 0px" },
           );
 
           belowFold.forEach((el) => {
@@ -466,12 +670,17 @@ const organizationJsonLd = JSON.stringify({
 
       // Header: solid once the page scrolls, plus a thin reading-progress bar.
       const header = document.getElementById("site-header");
-      const progressBar = header?.querySelector<HTMLElement>(".scroll-progress__bar");
+      const progressBar = header?.querySelector<HTMLElement>(
+        ".scroll-progress__bar",
+      );
       let headerTicking = false;
       const updateHeader = () => {
         const max = document.documentElement.scrollHeight - window.innerHeight;
         header?.classList.toggle("is-scrolled", window.scrollY > 8);
-        progressBar?.style.setProperty("--progress", String(max > 0 ? Math.min(1, window.scrollY / max) : 0));
+        progressBar?.style.setProperty(
+          "--progress",
+          String(max > 0 ? Math.min(1, window.scrollY / max) : 0),
+        );
         headerTicking = false;
       };
       updateHeader();
@@ -483,22 +692,62 @@ const organizationJsonLd = JSON.stringify({
             requestAnimationFrame(updateHeader);
           }
         },
-        { passive: true }
+        { passive: true },
       );
+
+      // Deep-link anchors (the header's "Contacto" CTA) land on a form card
+      // shorter than the viewport — a plain top-aligned jump (scroll-margin-top
+      // alone, or the browser's native hash-jump) leaves a slab of empty page
+      // below it, so these center the target instead, both on a fresh page
+      // load (the hash is already in the URL) and when clicked while already
+      // on the destination page.
+      const CENTER_TARGETS = ["contacto-form-panel", "home-lead-form-panel"];
+
+      const centerTarget = (id: string, smooth: boolean) => {
+        const el = document.getElementById(id);
+        el?.scrollIntoView({ behavior: smooth ? "smooth" : "instant", block: "center" });
+      };
+
+      const initialHash = location.hash.slice(1);
+      if (CENTER_TARGETS.includes(initialHash)) {
+        centerTarget(initialHash, false);
+        // Images/iframes below the target (the map, the hero photo) still
+        // resizing as they load can shift layout enough that the browser
+        // re-applies its own native "scroll to fragment" afterwards, undoing
+        // the centering above — so it's reapplied once everything has
+        // settled too.
+        window.addEventListener("load", () => centerTarget(initialHash, false));
+      }
+
+      document.querySelectorAll<HTMLAnchorElement>('a[href*="#"]').forEach((link) => {
+        const [linkPath, linkHash] = link.href.split("#");
+        if (!linkHash || !CENTER_TARGETS.includes(linkHash)) return;
+        link.addEventListener("click", (event) => {
+          // A different page: let the browser navigate normally — the hash
+          // in the URL triggers the instant centering above once it loads.
+          if (linkPath.replace(/\/$/, "") !== location.href.split("#")[0].replace(/\/$/, "")) return;
+          event.preventDefault();
+          centerTarget(linkHash, true);
+          history.pushState(null, "", `#${linkHash}`);
+        });
+      });
 
       // Spotlight: cards light up under the pointer (the CSS reads --mx/--my).
       if (window.matchMedia("(hover: hover)").matches) {
         document.addEventListener(
           "pointermove",
           (event) => {
-            const target = event.target instanceof Element ? event.target : null;
-            const card = target?.closest<HTMLElement>(".card, .logo-card, .blog-card, .stations-list__item, .simulator__result");
+            const target =
+              event.target instanceof Element ? event.target : null;
+            const card = target?.closest<HTMLElement>(
+              ".card, .logo-card, .blog-card, .stations-list__item, .simulator__result",
+            );
             if (!card) return;
             const rect = card.getBoundingClientRect();
             card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
             card.style.setProperty("--my", `${event.clientY - rect.top}px`);
           },
-          { passive: true }
+          { passive: true },
         );
       }
     </script>

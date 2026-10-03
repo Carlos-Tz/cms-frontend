@@ -4,6 +4,7 @@
 // quote, embedded under its logo) — same visual, same behavior, wherever a
 // list of quotes needs to render.
 import { mediaUrl } from "../../functions/fetch";
+import { cleanClientLogoUrl } from "../../lib/clientLogos";
 
 interface Testimonial {
   quote: string;
@@ -14,9 +15,16 @@ interface Testimonial {
 
 interface Props {
   items?: Testimonial[];
+  // "cover": the photo fills the whole tile (real headshots — the default,
+  // unchanged behavior). "contain": the image sits padded on a white card
+  // instead of being cropped full-bleed — for when `photo` is actually a
+  // client logo (ClientsShowcase's quoted clients), where a tight zoomed
+  // crop just shows more of the logo file's own background instead of
+  // more of the mark.
+  imageFit?: "cover" | "contain";
 }
 
-const { items = [] } = Astro.props;
+const { items = [], imageFit = "cover" } = Astro.props;
 
 // CMS authors sometimes type their own quote marks into the text. The tile
 // already adds a decorative one, so strip any the author included to avoid
@@ -28,6 +36,14 @@ const stripQuotes = (quote: string) =>
     .replace(/^["“”'‘’]+/, "")
     .replace(/["“”'‘’]+(?=[.!?]?\s*$)/, "")
     .trim();
+
+// A one-line taste of the quote, always visible on the tile (not just after
+// hovering/opening it), so there's some context before asking for the click.
+const SNIPPET_LENGTH = 72;
+const snippetOf = (quote: string) => {
+  const clean = stripQuotes(quote);
+  return clean.length > SNIPPET_LENGTH ? `${clean.slice(0, SNIPPET_LENGTH).trimEnd()}…` : clean;
+};
 
 // Without a photo the tile shows the author's initials instead, so every
 // tile has something to show before it is hovered.
@@ -45,13 +61,14 @@ const initials = (name?: string | null) =>
     {items.map((item) => (
       // Focusable so the quote also opens from the keyboard and, on touch
       // screens, with a tap (see the script below).
-      <figure class="testimonial-tile" tabindex="0" aria-label={item.author ? `Testimonio de ${item.author}` : "Testimonio"}>
+      <figure class:list={["testimonial-tile", `testimonial-tile--${imageFit}`]} tabindex="0" aria-label={item.author ? `Testimonio de ${item.author}` : "Testimonio"}>
         <div class="testimonial-tile__media" aria-hidden="true">
           {item.photo ? (
-            <img class="testimonial-tile__img" src={mediaUrl(item.photo)} alt="" loading="lazy" />
+            <img class="testimonial-tile__img" src={cleanClientLogoUrl(mediaUrl(item.photo))} alt="" loading="lazy" style={`object-fit: ${imageFit};`} />
           ) : (
             <span class="testimonial-tile__initials">{initials(item.author)}</span>
           )}
+          <p class="testimonial-tile__snippet">{snippetOf(item.quote)}</p>
           <span class="testimonial-tile__cue">
             Leer testimonio
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

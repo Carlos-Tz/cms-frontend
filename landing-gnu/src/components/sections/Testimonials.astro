@@ -23,7 +23,10 @@ const { title, items = [] } = Astro.props;
         <span class="eyebrow">Testimonios</span>
         <h2 class="section-title">{title ?? "Lo que dicen nuestros clientes"}</h2>
       </div>
-      <TestimonialTiles items={items} />
+      {/* GNU's testimonials are attributed by client logo, not a personal
+          headshot (same convention as ClientsShowcase's quoted clients) —
+          "contain" so the logo shows whole, padded, instead of cropped. */}
+      <TestimonialTiles items={items} imageFit="contain" />
     </div>
   </section>
 )}

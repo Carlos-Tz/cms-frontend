@@ -1,22 +1,27 @@
 ---
 import CmsPage from "../../components/CmsPage.astro";
-import ChildPageCards from "../../components/ChildPageCards.astro";
+import ServiceCards from "../../components/ServiceCards.astro";
 
 const fallbackChildren = [
+  { slug: "gnv", path: "/nuestros-servicios/gnv", title: "GNV" },
   { slug: "gnc", path: "/nuestros-servicios/gnc", title: "GNC" },
   { slug: "gnd", path: "/nuestros-servicios/gnd", title: "GND" },
-  { slug: "gnv", path: "/nuestros-servicios/gnv", title: "GNV" },
 ];
 ---
 
-<CmsPage slug="nuestros-servicios" fallbackTitle="Nuestros Servicios" fallbackSubtitle="Soluciones de gas natural para tu operación.">
+<CmsPage
+  slug="nuestros-servicios"
+  fallbackTitle="Nuestros Servicios"
+  fallbackSubtitle="Soluciones de gas natural para tu operación."
+  excludeTypes={["clients_showcase"]}
+>
   <section class="section">
     <div class="container">
       <div class="section-head section-head--center">
         <span class="eyebrow">Conoce más</span>
         <h2 class="section-title">Explora Nuestros Servicios</h2>
       </div>
-      <ChildPageCards parent="nuestros-servicios" fallback={fallbackChildren} gridClass="grid--3" />
+      <ServiceCards parent="nuestros-servicios" fallback={fallbackChildren} />
     </div>
   </section>
 </CmsPage>

@@ -1,5 +1,6 @@
 ---
 import { mediaUrl } from "../../functions/fetch";
+import { cleanClientLogoUrl } from "../../lib/clientLogos";
 import TestimonialTiles from "./TestimonialTiles.astro";
 
 interface Logo {
@@ -21,7 +22,7 @@ interface Props {
 }
 
 const { title, logos = [], id } = Astro.props;
-const shown = logos.map((logo) => ({ ...logo, image: mediaUrl(logo.image) }));
+const shown = logos.map((logo) => ({ ...logo, image: cleanClientLogoUrl(mediaUrl(logo.image)) }));
 const useMarquee = shown.length >= 4;
 const marqueeLogos = useMarquee ? [...shown, ...shown] : shown;
 // Reuses the same tile component as the home page's "Lo que dicen nuestros
@@ -84,7 +85,7 @@ const quotedItems = shown
 
       {quotedItems.length > 0 && (
         <div class="client-quotes">
-          <TestimonialTiles items={quotedItems} />
+          <TestimonialTiles items={quotedItems} imageFit="contain" />
         </div>
       )}
     </div>
@@ -100,7 +101,10 @@ const quotedItems = shown
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReducedMotion) return;
 
-    const ZOOM_MAX = 1.18;
+    // Several uploaded client logos carry their own baked-in background
+    // vignette (not transparent), so zooming in shows more of that instead
+    // of more of the mark — kept modest for exactly that reason.
+    const ZOOM_MAX = 1.08;
     const ZOOM_MIN = 1;
     let ticking = false;
 

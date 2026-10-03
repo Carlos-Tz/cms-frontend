@@ -14,12 +14,17 @@ interface Props {
   // Shown only when the CMS is unreachable at build time.
   fallbackTitle: string;
   fallbackSubtitle?: string;
+  // Section types from the CMS to skip, e.g. when a page already shows the
+  // same section elsewhere (so the editor doesn't have to remove it from
+  // the CMS just to keep one specific page from duplicating it).
+  excludeTypes?: string[];
 }
 
-const { slug, fallbackTitle, fallbackSubtitle } = Astro.props;
+const { slug, fallbackTitle, fallbackSubtitle, excludeTypes = [] } = Astro.props;
 
 const page = await getPage(slug);
 const hero = heroOf(page);
+const sections = (page?.sections ?? []).filter((section) => !excludeTypes.includes(section.type));
 ---
 
 <Layout
@@ -29,7 +34,7 @@ const hero = heroOf(page);
 >
   <main>
     {!page && <PageHero title={fallbackTitle} subtitle={fallbackSubtitle} />}
-    <SectionRenderer sections={page?.sections ?? []} pageSlug={page?.slug} />
+    <SectionRenderer sections={sections} pageSlug={page?.slug} />
     <slot />
   </main>
 </Layout>
