@@ -57,6 +57,7 @@ const config = JSON.stringify({ comparableFuels, gasNaturalPrice, apiBase: BASE_
             step="any"
             inputmode="decimal"
             placeholder="Ej. 4500"
+            value="20000"
             required
           />
         </div>
@@ -199,11 +200,8 @@ const config = JSON.stringify({ comparableFuels, gasNaturalPrice, apiBase: BASE_
       }
     }
 
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const spend = Number(input?.value ?? 0);
-      if (!Number.isFinite(spend) || spend <= 0) return;
-
+    async function runCalculation(spend: number, { animate = true } = {}) {
+      if (!valueEl) return;
       const fuel = config.comparableFuels.find((item) => item.fuel === fuelSelect?.value);
       root.classList.add("is-loading");
       if (submit) submit.disabled = true;
@@ -214,7 +212,7 @@ const config = JSON.stringify({ comparableFuels, gasNaturalPrice, apiBase: BASE_
       showBreakdown(serverResult);
       const monthly = serverResult ? Math.max(0, Math.round(serverResult.savings)) : localSavings(config, fuel, spend);
 
-      animateCount(valueEl, currentMonthly, monthly, 650);
+      animateCount(valueEl, animate ? currentMonthly : monthly, monthly, animate ? 650 : 0);
       currentMonthly = monthly;
       valueEl.classList.remove("is-updated");
       void valueEl.offsetWidth;
@@ -222,6 +220,22 @@ const config = JSON.stringify({ comparableFuels, gasNaturalPrice, apiBase: BASE_
       root.classList.add("has-result");
       if (annualEl) annualEl.textContent = `Ahorro anual estimado: ${money(monthly * 12)}`;
       if (meterEl) meterEl.style.setProperty("--fill", `${Math.min(100, (monthly / spend) * 100)}%`);
+    }
+
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const spend = Number(input?.value ?? 0);
+      if (!Number.isFinite(spend) || spend <= 0) return;
+      void runCalculation(spend);
     });
+
+    // The inline band (not the collapsed FAB popover) shows a worked example
+    // on arrival instead of a static "$0 MXN" — the input's own prefilled
+    // value, calculated immediately so the tool doesn't read as broken
+    // before anyone's touched it.
+    if (root.classList.contains("sim--band")) {
+      const initialSpend = Number(input?.value ?? 0);
+      if (Number.isFinite(initialSpend) && initialSpend > 0) void runCalculation(initialSpend, { animate: false });
+    }
   });
 </script>

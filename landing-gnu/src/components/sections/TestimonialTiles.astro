@@ -90,6 +90,15 @@ const initials = (name?: string | null) =>
             </figcaption>
           )}
         </div>
+        {/* The bottom cue fades away once the panel opens (it would overlap
+            the author meta otherwise) — this corner badge is what keeps SOME
+            interactive affordance on screen for the whole open state instead
+            of the "clickable" signal vanishing entirely. */}
+        <span class="testimonial-tile__indicator" aria-hidden="true">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M6 9.5V2.5M3 5.5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </span>
       </figure>
     ))}
   </div>

@@ -14,10 +14,15 @@ const heroImage = image ? mediaUrl(image) : null;
 <section class:list={["page-hero", "texture-grain", { "page-hero--image": heroImage }]}>
   {heroImage && <img class="page-hero__img" src={heroImage} alt="" />}
   {heroImage && <div class="page-hero__scrim" aria-hidden="true"></div>}
-  <div class="aurora aurora--soft" aria-hidden="true">
-    <span class="aurora__blob aurora__blob--1"></span>
-    <span class="aurora__blob aurora__blob--2"></span>
-  </div>
+  {/* The blurred color blobs are a nice wash over a plain background, but
+      over a real photo they just read as a smoky haze obscuring it — only
+      rendered when there's no image underneath. */}
+  {!heroImage && (
+    <div class="aurora aurora--soft" aria-hidden="true">
+      <span class="aurora__blob aurora__blob--1"></span>
+      <span class="aurora__blob aurora__blob--2"></span>
+    </div>
+  )}
   <div class="container page-hero__content">
     <span class="page-hero__rule" aria-hidden="true"></span>
     <h1 class="page-hero__title">{title}</h1>
