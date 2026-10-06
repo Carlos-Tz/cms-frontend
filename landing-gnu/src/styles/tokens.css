@@ -29,12 +29,12 @@
 
   /* Brand — per the identity manual's primary palette (p.11): blue + light/sky
      blue are the only colors stated as "always primary," alongside gray and
-     white. --color-primary keeps its existing role as the small-accent/icon
-     color (eyebrows, quote marks, highlights) but now uses the manual's
-     documented Teal secondary instead of an off-brand mint-green — the
-     manual explicitly scopes secondary colors to exactly that kind of UI
-     highlight, "never used in very large areas" (p.13). */
-  --color-primary: #00caca; /* Teal, Pantone 7709 — secondary/UI-accent only */
+     white. The off-brand teal that used to live here (Pantone 7709) has been
+     retired site-wide — --color-primary is now the same primary brand blue
+     as --color-primary-alt, so every button/badge/icon that used to be teal
+     reads as on-brand blue instead, and any faded/tinted wash derives from
+     this blue rather than from an invented accent color. */
+  --color-primary: #1f5ca9; /* Blue, Pantone 286 — primary brand blue */
   --color-primary-alt: #1f5ca9; /* Blue, Pantone 286 — primary brand blue */
   --color-primary-light: #a9e3ff; /* Light blue, Pantone 2905 — secondary */
   --color-accent: #27bff0; /* Light/sky blue, Pantone 298 — primary brand accent */

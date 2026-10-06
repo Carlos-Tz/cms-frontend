@@ -1,0 +1,48 @@
+---
+// "Nuestras redes sociales" — reuses the exact same site-wide social icons
+// and WhatsApp link the footer and the floating WhatsApp button already use
+// (src/lib/social.ts + whatsappHref), instead of a separate copy of them.
+import { getGlobals, whatsappHref } from "../../lib/cms";
+import { SOCIAL_ICON_MARKUP, WHATSAPP_ICON_MARKUP, resolveSocialNetworks } from "../../lib/social";
+
+interface Props {
+  title?: string | null;
+  id?: string;
+}
+
+const { title, id } = Astro.props;
+
+const globals = await getGlobals();
+const socialNetworks = resolveSocialNetworks(globals.social_icons);
+const whatsappLink = whatsappHref(globals);
+---
+
+{(socialNetworks.length > 0 || whatsappLink) && (
+  <section class="section section--alt texture-dots social-band" id={id}>
+    <div class="container">
+      <div class="section-head section-head--center">
+        <span class="eyebrow">Redes sociales</span>
+        <h2 class="section-title">{title ?? "Nuestras redes sociales"}</h2>
+      </div>
+      <div class="social-band__row">
+        {socialNetworks.map((item) => (
+          <a
+            class="social-icon social-band__icon"
+            href={item.url || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={item.network}
+          >
+            <Fragment set:html={SOCIAL_ICON_MARKUP[item.network]} />
+          </a>
+        ))}
+        {whatsappLink && (
+          <a class="social-band__whatsapp" href={whatsappLink} target="_blank" rel="noopener noreferrer">
+            <Fragment set:html={WHATSAPP_ICON_MARKUP} />
+            Escríbenos por WhatsApp
+          </a>
+        )}
+      </div>
+    </div>
+  </section>
+)}

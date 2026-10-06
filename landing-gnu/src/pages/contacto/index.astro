@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import SectionRenderer from "../../components/SectionRenderer.astro";
 import PageHero from "../../components/sections/PageHero.astro";
 import ContactBand from "../../components/sections/ContactBand.astro";
+import SocialBand from "../../components/sections/SocialBand.astro";
 import { mediaUrl } from "../../functions/fetch";
 import { getPage, heroOf } from "../../lib/cms";
 
@@ -37,5 +38,6 @@ const sectionsAfterLead = leadIndex === -1 ? [] : sections.slice(leadIndex + 1);
       />
     )}
     <SectionRenderer sections={sectionsAfterLead} pageSlug={page?.slug} />
+    <SocialBand />
   </main>
 </Layout>

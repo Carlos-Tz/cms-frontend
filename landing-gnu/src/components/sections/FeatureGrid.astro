@@ -9,14 +9,22 @@ interface FeatureItem {
 
 interface Props {
   title?: string | null;
+  // Optional 16:9 banner above the title (see NEW-FIELDS.md — not a CMS
+  // field yet). The content guide's reference size is 1024x576.
+  image?: string | null;
   items: FeatureItem[];
 }
 
-const { title, items } = Astro.props;
+const { title, image, items } = Astro.props;
 ---
 
 <section class="section section--alt texture-grid">
   <div class="container">
+    {image && (
+      <div class="feature-grid__banner">
+        <img src={mediaUrl(image)} alt="" loading="lazy" />
+      </div>
+    )}
     {title && (
       <div class="section-head section-head--center">
         <h2 class="section-title">{title}</h2>

@@ -13,7 +13,6 @@ const heroImage = image ? mediaUrl(image) : null;
 
 <section class:list={["page-hero", "texture-grain", { "page-hero--image": heroImage }]}>
   {heroImage && <img class="page-hero__img" src={heroImage} alt="" />}
-  {heroImage && <div class="page-hero__scrim" aria-hidden="true"></div>}
   {/* The blurred color blobs are a nice wash over a plain background, but
       over a real photo they just read as a smoky haze obscuring it — only
       rendered when there's no image underneath. */}

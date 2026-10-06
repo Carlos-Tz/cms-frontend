@@ -1,8 +1,10 @@
 ---
-// The interactive photo/quote tiles shared by Testimonials.astro (site-wide
-// "Lo que dicen nuestros clientes") and ClientsShowcase.astro (a client's own
-// quote, embedded under its logo) — same visual, same behavior, wherever a
-// list of quotes needs to render.
+// The testimonial quote cards shared by Testimonials.astro (site-wide "Lo
+// que dicen nuestros clientes") and ClientsShowcase.astro (a client's own
+// quote, embedded under its logo) — same visual, same markup, wherever a
+// list of quotes needs to render. A sober, always-visible card: the full
+// quote is on screen from the start (no hover-to-reveal), so there's no
+// separate "open" state or touch/keyboard affordance to wire up.
 import { mediaUrl } from "../../functions/fetch";
 import { cleanClientLogoUrl } from "../../lib/clientLogos";
 
@@ -15,16 +17,9 @@ interface Testimonial {
 
 interface Props {
   items?: Testimonial[];
-  // "cover": the photo fills the whole tile (real headshots — the default,
-  // unchanged behavior). "contain": the image sits padded on a white card
-  // instead of being cropped full-bleed — for when `photo` is actually a
-  // client logo (ClientsShowcase's quoted clients), where a tight zoomed
-  // crop just shows more of the logo file's own background instead of
-  // more of the mark.
-  imageFit?: "cover" | "contain";
 }
 
-const { items = [], imageFit = "cover" } = Astro.props;
+const { items = [] } = Astro.props;
 
 // CMS authors sometimes type their own quote marks into the text. The tile
 // already adds a decorative one, so strip any the author included to avoid
@@ -37,16 +32,7 @@ const stripQuotes = (quote: string) =>
     .replace(/["“”'‘’]+(?=[.!?]?\s*$)/, "")
     .trim();
 
-// A one-line taste of the quote, always visible on the tile (not just after
-// hovering/opening it), so there's some context before asking for the click.
-const SNIPPET_LENGTH = 72;
-const snippetOf = (quote: string) => {
-  const clean = stripQuotes(quote);
-  return clean.length > SNIPPET_LENGTH ? `${clean.slice(0, SNIPPET_LENGTH).trimEnd()}…` : clean;
-};
-
-// Without a photo the tile shows the author's initials instead, so every
-// tile has something to show before it is hovered.
+// Without a photo the tile shows the author's initials instead.
 const initials = (name?: string | null) =>
   (name ?? "")
     .split(/\s+/)
@@ -59,70 +45,27 @@ const initials = (name?: string | null) =>
 {items.length > 0 && (
   <div class="testimonial-tiles">
     {items.map((item) => (
-      // Focusable so the quote also opens from the keyboard and, on touch
-      // screens, with a tap (see the script below).
-      <figure class:list={["testimonial-tile", `testimonial-tile--${imageFit}`]} tabindex="0" aria-label={item.author ? `Testimonio de ${item.author}` : "Testimonio"}>
+      <figure class="testimonial-tile" aria-label={item.author ? `Testimonio de ${item.author}` : "Testimonio"}>
         <div class="testimonial-tile__media" aria-hidden="true">
           {item.photo ? (
-            <img class="testimonial-tile__img" src={cleanClientLogoUrl(mediaUrl(item.photo))} alt="" loading="lazy" style={`object-fit: ${imageFit};`} />
+            <img class="testimonial-tile__img" src={cleanClientLogoUrl(mediaUrl(item.photo))} alt="" loading="lazy" />
           ) : (
             <span class="testimonial-tile__initials">{initials(item.author)}</span>
           )}
-          <p class="testimonial-tile__snippet">{snippetOf(item.quote)}</p>
-          <span class="testimonial-tile__cue">
-            Leer testimonio
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M6 9.5V2.5M3 5.5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </span>
         </div>
-        <div class="testimonial-tile__panel">
-          <svg class="testimonial-tile__mark" width="28" height="22" viewBox="0 0 34 26" fill="none" aria-hidden="true">
-            <path d="M14.4 0 8 12.2h5.6V26H0V13.6L6.4 0h8Zm19.6 0-6.4 12.2H33V26H19.6V13.6L26 0h8Z" fill="currentColor" />
-          </svg>
-          <blockquote class="testimonial-tile__quote">
-            <p>{stripQuotes(item.quote)}</p>
-          </blockquote>
-          {(item.author || item.role) && (
-            <figcaption class="testimonial-tile__meta">
-              {item.author && <span class="testimonial-tile__author">{item.author}</span>}
-              {item.role && <span class="testimonial-tile__role">{item.role}</span>}
-            </figcaption>
-          )}
-        </div>
-        {/* The bottom cue fades away once the panel opens (it would overlap
-            the author meta otherwise) — this corner badge is what keeps SOME
-            interactive affordance on screen for the whole open state instead
-            of the "clickable" signal vanishing entirely. */}
-        <span class="testimonial-tile__indicator" aria-hidden="true">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M6 9.5V2.5M3 5.5l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </span>
+        <svg class="testimonial-tile__mark" width="28" height="22" viewBox="0 0 34 26" fill="none" aria-hidden="true">
+          <path d="M14.4 0 8 12.2h5.6V26H0V13.6L6.4 0h8Zm19.6 0-6.4 12.2H33V26H19.6V13.6L26 0h8Z" fill="currentColor" />
+        </svg>
+        <blockquote class="testimonial-tile__quote">
+          <p>{stripQuotes(item.quote)}</p>
+        </blockquote>
+        {(item.author || item.role) && (
+          <figcaption class="testimonial-tile__meta">
+            {item.author && <span class="testimonial-tile__author">{item.author}</span>}
+            {item.role && <span class="testimonial-tile__role">{item.role}</span>}
+          </figcaption>
+        )}
       </figure>
     ))}
   </div>
 )}
-
-<script>
-  // Touch screens have no hover: a tap toggles the tile open (and closes the
-  // others), so the quote is reachable there too. Mouse users keep hover.
-  // Scoped per `.testimonial-tiles` grid so more than one instance on a page
-  // (e.g. the home page's own section plus one embedded in a client card)
-  // toggle independently instead of one tile closing another grid's tile.
-  const touch = window.matchMedia("(hover: none)");
-  document.querySelectorAll<HTMLElement>(".testimonial-tiles").forEach((grid) => {
-    const tiles = Array.from(grid.querySelectorAll<HTMLElement>(".testimonial-tile"));
-    tiles.forEach((tile) => {
-      tile.addEventListener("click", () => {
-        if (!touch.matches) return;
-        const open = tile.classList.contains("is-open");
-        tiles.forEach((other) => other.classList.remove("is-open"));
-        if (!open) tile.classList.add("is-open");
-      });
-      tile.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") tile.blur();
-      });
-    });
-  });
-</script>
