@@ -19,9 +19,11 @@ interface Props {
   // same section elsewhere (so the editor doesn't have to remove it from
   // the CMS just to keep one specific page from duplicating it).
   excludeTypes?: string[];
+  // Show feature_grid cards with their titles only, dropping the text.
+  featureTitlesOnly?: boolean;
 }
 
-const { slug, fallbackTitle, fallbackSubtitle, excludeTypes = [] } = Astro.props;
+const { slug, fallbackTitle, fallbackSubtitle, excludeTypes = [], featureTitlesOnly = false } = Astro.props;
 
 const page = await getPage(slug);
 const hero = heroOf(page);
@@ -35,7 +37,7 @@ const sections = (page?.sections ?? []).filter((section) => !excludeTypes.includ
 >
   <main>
     {!page && <PageHero title={fallbackTitle} subtitle={fallbackSubtitle} />}
-    <SectionRenderer sections={sections} pageSlug={page?.slug} />
+    <SectionRenderer sections={sections} pageSlug={page?.slug} featureTitlesOnly={featureTitlesOnly} />
     <slot />
   </main>
 </Layout>

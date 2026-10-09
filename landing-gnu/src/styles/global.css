@@ -571,6 +571,11 @@ button {
   color: var(--color-text);
 }
 
+/* Title-only feature cards (no text below) center their lone title. */
+.card--title-only .card__title {
+  text-align: center;
+}
+
 .card__text {
   margin-top: 0.625rem;
   font-size: 0.9375rem;

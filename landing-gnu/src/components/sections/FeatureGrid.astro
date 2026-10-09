@@ -13,9 +13,11 @@ interface Props {
   // field yet). The content guide's reference size is 1024x576.
   image?: string | null;
   items: FeatureItem[];
+  // Show only each card's title, dropping its text.
+  titlesOnly?: boolean;
 }
 
-const { title, image, items } = Astro.props;
+const { title, image, items, titlesOnly = false } = Astro.props;
 ---
 
 <section class="section section--alt texture-grid">
@@ -32,7 +34,7 @@ const { title, image, items } = Astro.props;
     )}
     <div class="grid grid--3">
       {items.map((item) => (
-        <div class="card card--feature">
+        <div class:list={["card card--feature", { "card--title-only": titlesOnly }]}>
           {item.icon ? (
             // CMS icons here are full square photos (1254×1254), not line
             // art — shown as a real image banner, not squeezed into the
@@ -52,7 +54,7 @@ const { title, image, items } = Astro.props;
             </div>
           )}
           <p class="card__title">{item.title}</p>
-          <p class="card__text">{item.text}</p>
+          {!titlesOnly && <p class="card__text">{item.text}</p>}
         </div>
       ))}
     </div>
