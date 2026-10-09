@@ -1,0 +1,150 @@
+# Certificaciones: campos que necesitamos del backend
+
+La página `/sobre-nosotros/certificaciones` muestra hoy su contenido escrito
+directamente en el frontend (`src/components/CertificacionesContent.astro`),
+con las imágenes de esta carpeta. Para que el equipo pueda editarlo desde el
+administrador, el endpoint `GET pages/certificaciones` debe devolver las
+secciones descritas abajo.
+
+El `page_hero` ya existe y no cambia. El `feature_grid` actual
+("CERTIFICACIONES ACTUALES", con una sola tarjeta ISO 9001) se oculta en el
+frontend y lo sustituyen las tres secciones siguientes.
+
+Todas las imágenes se envían como en el resto del CMS: una ruta de media o una
+URL absoluta.
+
+---
+
+## 1. `certifications`: certificaciones vigentes (sección nueva)
+
+Bloque destacado con el sello de cada certificación junto a su descripción.
+Hoy hay una (ISO 9001), pero debe aceptar varias.
+
+```json
+{
+  "type": "certifications",
+  "content": {
+    "eyebrow": "Certificación vigente",
+    "items": [
+      {
+        "badge": "media/iso-9001.png",
+        "badge_alt": "Sello de certificación ISO 9001",
+        "title": "ISO 9001: calidad en cada proceso",
+        "body": "<p>En GNU Gas Natural contamos con la certificación ISO 9001…</p><p>Este respaldo abarca…</p>",
+        "points": [
+          "Procesos documentados y controlados",
+          "Mejora continua en cada etapa",
+          "Enfoque en la satisfacción del cliente"
+        ],
+        "issuer": null,
+        "certificate_number": null,
+        "valid_from": null,
+        "valid_until": null,
+        "document": null
+      }
+    ]
+  }
+}
+```
+
+| Campo                        | Tipo                    | Requerido | Notas |
+| ---------------------------- | ----------------------- | --------- | ----- |
+| `eyebrow`                    | string o null           | No        | Etiqueta pequeña sobre el título. |
+| `items[]`                    | array                   | Sí        | Una entrada por certificación, en el orden en que se muestran. |
+| `items[].badge`              | media                   | Sí        | Sello o logo. Imagen cuadrada, de al menos 640×640 px. Se muestra recortada en círculo. |
+| `items[].badge_alt`          | string                  | Sí        | Texto alternativo del sello, por accesibilidad. |
+| `items[].title`              | string                  | Sí        | Título del bloque. |
+| `items[].body`               | HTML (texto enriquecido) | Sí       | Uno o más párrafos. |
+| `items[].points`             | string[]                | No        | Puntos clave que se muestran como etiquetas. Se recomiendan de 2 a 4. |
+| `items[].issuer`             | string o null           | No        | Organismo certificador. **No lo conocemos todavía.** |
+| `items[].certificate_number` | string o null           | No        | Número de certificado. **No lo conocemos todavía.** |
+| `items[].valid_from`         | fecha (YYYY-MM-DD) o null | No      | Fecha de emisión. **No la conocemos todavía.** |
+| `items[].valid_until`        | fecha (YYYY-MM-DD) o null | No      | Fecha de vigencia. Si ya pasó, la certificación no debería mostrarse como "vigente". |
+| `items[].document`           | media (PDF) o null      | No        | Certificado descargable. |
+
+El frontend todavía no muestra `issuer`, `certificate_number`, las fechas ni
+`document`. Se incluyen porque una certificación gana credibilidad cuando los
+muestra; en cuanto lleguen, se añaden al diseño.
+
+---
+
+## 2. `feature_grid`: "Calidad aplicada a la conversión GNV"
+
+Se puede reutilizar la sección `feature_grid` que ya existe, pero le faltan
+dos campos.
+
+```json
+{
+  "type": "feature_grid",
+  "content": {
+    "title": "Calidad aplicada a la conversión GNV",
+    "subtitle": "Nuestro sistema de gestión de la calidad se refleja en cada vehículo que convertimos a Gas Natural Vehicular.",
+    "image": null,
+    "items": [
+      { "icon": "media/sistema-bi-fuel.png",            "title": "Sistema bi-fuel",            "text": "La conversión conserva el uso de gasolina además del GNV…" },
+      { "icon": "media/combustion-mas-limpia.png",      "title": "Combustión más limpia",      "text": "El gas natural genera menos residuos de combustión…" },
+      { "icon": "media/seguridad-conversion.png",       "title": "Seguridad al convertir",     "text": "Instalamos kits con componentes especializados…" },
+      { "icon": "media/caracteristicas-favorables.png", "title": "Características favorables", "text": "El gas natural es más ligero que el aire…" }
+    ]
+  }
+}
+```
+
+| Campo      | Tipo          | Requerido | Notas |
+| ---------- | ------------- | --------- | ----- |
+| `subtitle` | string o null | No        | **Campo nuevo.** Una línea bajo el título. |
+| `image`    | media o null  | No        | Ya está documentado en `NEW-FIELDS.md` (banner 16:9). Esta página no lo usa. |
+| `items[].icon` | media     | No        | Ya existe. Foto cuadrada de al menos 800×800 px. |
+
+Los textos completos están en `src/components/CertificacionesContent.astro`
+(arreglo `gnvItems`).
+
+---
+
+## 3. `cta_band`: llamada a la acción (sección nueva)
+
+Cierre de la página con dos botones.
+
+```json
+{
+  "type": "cta_band",
+  "content": {
+    "title": "¿Quieres convertir tu vehículo o flotilla a GNV?",
+    "subtitle": "Un asesor te ayuda a evaluar tu unidad y tu patrón de consumo.",
+    "primary_label": "Contáctanos",
+    "primary_url": "/contacto",
+    "secondary_label": "Conoce GNV",
+    "secondary_url": "/nuestros-servicios/gnv"
+  }
+}
+```
+
+| Campo             | Tipo          | Requerido | Notas |
+| ----------------- | ------------- | --------- | ----- |
+| `title`           | string        | Sí        | |
+| `subtitle`        | string o null | No        | |
+| `primary_label`   | string        | Sí        | Texto del botón principal. |
+| `primary_url`     | string        | Sí        | Ruta interna o URL absoluta. |
+| `secondary_label` | string o null | No        | El botón secundario se oculta si falta este campo o `secondary_url`. |
+| `secondary_url`   | string o null | No        | |
+
+Esta sección sirve para cualquier página, no solo para Certificaciones.
+
+---
+
+## Orden de las secciones en `pages/certificaciones`
+
+1. `page_hero` (ya existe)
+2. `certifications`
+3. `feature_grid`
+4. `cta_band`
+
+## Cuando el backend esté listo
+
+En el frontend habrá que:
+
+- crear los componentes `Certifications.astro` y `CtaBand.astro`, y
+  registrarlos en `SectionRenderer.astro`;
+- leer `subtitle` en `FeatureGrid.astro`;
+- quitar `CertificacionesContent` y `excludeTypes={["feature_grid"]}` de
+  `src/pages/sobre-nosotros/certificaciones/index.astro`.

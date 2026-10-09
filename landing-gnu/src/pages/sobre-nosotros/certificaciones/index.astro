@@ -1,5 +1,11 @@
 ---
 import CmsPage from "../../../components/CmsPage.astro";
+import CertificacionesContent from "../../../components/CertificacionesContent.astro";
+
+// The CMS feature_grid (a single ISO 9001 card) is replaced by the
+// client-side content below; the CMS hero still renders.
 ---
 
-<CmsPage slug="certificaciones" fallbackTitle="Certificaciones" fallbackSubtitle="Contenido en preparación." />
+<CmsPage slug="certificaciones" fallbackTitle="Certificaciones" fallbackSubtitle="Contenido en preparación." excludeTypes={["feature_grid"]}>
+  <CertificacionesContent />
+</CmsPage>

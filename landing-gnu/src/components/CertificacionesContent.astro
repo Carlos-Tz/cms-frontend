@@ -1,0 +1,173 @@
+---
+// /sobre-nosotros/certificaciones body, written client-side until the CMS
+// has fields for it (see certificaciones_images/CAMPOS-BACKEND.md). The CMS
+// still provides the page hero; everything below it lives here.
+import { Image } from "astro:assets";
+import isoBadge from "../assets/images/certificaciones/iso-9001.png";
+import biFuel from "../assets/images/certificaciones/sistema-bi-fuel.png";
+import cleanerCombustion from "../assets/images/certificaciones/combustion-mas-limpia.png";
+import safeConversion from "../assets/images/certificaciones/seguridad-conversion.png";
+import favorableTraits from "../assets/images/certificaciones/caracteristicas-favorables.png";
+
+const isoPoints = [
+  "Procesos documentados y controlados",
+  "Mejora continua en cada etapa",
+  "Enfoque en la satisfacción del cliente",
+];
+
+const gnvItems = [
+  {
+    image: biFuel,
+    title: "Sistema bi-fuel",
+    text: "La conversión conserva el uso de gasolina además del GNV, para que cada unidad se adapte a distintos recorridos aun lejos de una estación de carga.",
+  },
+  {
+    image: cleanerCombustion,
+    title: "Combustión más limpia",
+    text: "El gas natural genera menos residuos de combustión y menores cantidades de determinados contaminantes, favoreciendo una movilidad con menor impacto ambiental.",
+  },
+  {
+    image: safeConversion,
+    title: "Seguridad al convertir",
+    text: "Instalamos kits con componentes especializados para almacenar, regular y suministrar el gas, siguiendo procedimientos técnicos y verificaciones de seguridad.",
+  },
+  {
+    image: favorableTraits,
+    title: "Características favorables",
+    text: "El gas natural es más ligero que el aire: ante una liberación en un espacio abierto y ventilado, tiende a ascender y dispersarse rápidamente.",
+  },
+];
+---
+
+<section class="section certs-iso">
+  <div class="container certs-iso__layout">
+    <div class="certs-iso__badge">
+      <Image src={isoBadge} alt="Sello de certificación ISO 9001" widths={[320, 640]} sizes="(min-width: 860px) 20rem, 70vw" />
+    </div>
+    <div class="certs-iso__content">
+      <span class="eyebrow">Certificación vigente</span>
+      <h2 class="section-title">ISO 9001: calidad en cada proceso</h2>
+      <div class="prose certs-iso__prose">
+        <p>
+          En GNU Gas Natural contamos con la certificación ISO 9001, la norma internacional que establece los
+          requisitos de un sistema de gestión de la calidad orientado a procesos, mejora continua y satisfacción del
+          cliente.
+        </p>
+        <p>
+          Este respaldo abarca la forma en que trabajamos: desde el análisis inicial de cada proyecto hasta el
+          suministro de GNC, GND y GNV, la conversión vehicular y el soporte posterior, siempre bajo altos estándares
+          de seguridad y confiabilidad.
+        </p>
+      </div>
+      <ul class="certs-iso__points">
+        {isoPoints.map((point) => <li>{point}</li>)}
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="section section--alt texture-grid">
+  <div class="container">
+    <div class="section-head section-head--center">
+      <h2 class="section-title">Calidad aplicada a la conversión GNV</h2>
+      <p class="section-subtitle">
+        Nuestro sistema de gestión de la calidad se refleja en cada vehículo que convertimos a Gas Natural Vehicular.
+      </p>
+    </div>
+    <div class="grid grid--4">
+      {gnvItems.map((item) => (
+        <div class="card card--feature">
+          <div class="card__media">
+            <Image class="card__media-img" src={item.image} alt="" widths={[400, 800]} sizes="18rem" />
+          </div>
+          <p class="card__title">{item.title}</p>
+          <p class="card__text">{item.text}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<section class="section certs-cta">
+  <div class="container certs-cta__inner">
+    <h2 class="section-title">¿Quieres convertir tu vehículo o flotilla a GNV?</h2>
+    <p class="section-subtitle">Un asesor te ayuda a evaluar tu unidad y tu patrón de consumo.</p>
+    <div class="certs-cta__actions">
+      <a class="btn-primary" href="/contacto">Contáctanos</a>
+      <a class="btn-secondary" href="/nuestros-servicios/gnv">Conoce GNV</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .certs-iso__layout {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+  }
+
+  @media (min-width: 860px) {
+    .certs-iso__layout {
+      grid-template-columns: minmax(0, 20rem) 1fr;
+      gap: 4rem;
+    }
+  }
+
+  .certs-iso__badge {
+    justify-self: center;
+    width: min(100%, 20rem);
+  }
+
+  .certs-iso__badge img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 50%;
+    box-shadow: var(--shadow-float);
+  }
+
+  .certs-iso__content .section-title {
+    margin-top: 0.75rem;
+  }
+
+  .certs-iso__prose {
+    margin-top: 1.25rem;
+    color: var(--color-text-60);
+  }
+
+  .certs-iso__prose p + p {
+    margin-top: 1rem;
+  }
+
+  .certs-iso__points {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .certs-iso__points li {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-bg-alt);
+    color: var(--color-primary);
+    font-size: 0.9375rem;
+    font-weight: 600;
+  }
+
+  .certs-cta__inner {
+    max-width: 44rem;
+    text-align: center;
+  }
+
+  .certs-cta__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+</style>
