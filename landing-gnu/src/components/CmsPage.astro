@@ -8,6 +8,7 @@ import SectionRenderer from "./SectionRenderer.astro";
 import PageHero from "./sections/PageHero.astro";
 import { mediaUrl } from "../functions/fetch";
 import { getPage, heroOf } from "../lib/cms";
+import { NAV_LABEL_OVERRIDES } from "../config/labelOverrides";
 
 interface Props {
   slug: string;
@@ -28,7 +29,7 @@ const sections = (page?.sections ?? []).filter((section) => !excludeTypes.includ
 ---
 
 <Layout
-  title={page?.title ?? fallbackTitle}
+  title={NAV_LABEL_OVERRIDES[slug] ?? page?.title ?? fallbackTitle}
   description={hero?.subtitle ?? fallbackSubtitle}
   image={hero?.image ? mediaUrl(hero.image) : undefined}
 >

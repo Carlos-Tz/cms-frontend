@@ -3,6 +3,11 @@ import { Link, useNavigate } from 'react-router'
 
 const PAGES = [
   {
+    title: 'Portada',
+    subtitle: 'Encabezado general de "Nuestros servicios"',
+    path: '/gas-natural/nuestros-servicios/portada',
+  },
+  {
     title: 'Instala tu equipo de GNV',
     subtitle: 'Conversión certificada para tu vehículo',
     path: '/gas-natural/nuestros-servicios/instala-tu-equipo-de-gnv',

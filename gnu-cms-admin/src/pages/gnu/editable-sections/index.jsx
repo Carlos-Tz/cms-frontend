@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router'
 import { fetchData, updateSection } from '../../../functions/fetch'
-import { GlobalSectionsFields } from '../../../components/page-sections-editor'
+import { GlobalSectionsFields, RichTextEditor } from '../../../components/page-sections-editor'
 import {
   inputClass,
   fieldError,
@@ -434,43 +434,6 @@ function LeadCaptureFormEditor({ content, onChange, errors }) {
           Campos del formulario (bloqueado): {content.fields.join(', ')}
         </p>
       )}
-    </div>
-  )
-}
-
-function RichTextEditor({ content, onChange, errors }) {
-  return (
-    <div className="space-y-4">
-      <Field label="Título" error={fieldError(errors, 'content.title')}>
-        <input
-          type="text"
-          value={content.title ?? ''}
-          onChange={(e) => onChange({ ...content, title: e.target.value || null })}
-          className={inputClass}
-        />
-        <CharHint value={content.title} recommended={50} max={70} />
-      </Field>
-      <Field
-        label="Contenido (HTML)"
-        hint="Se guarda tal como se escribe. Recomendado 300-1500 caracteres (1-4 párrafos); el contenedor tiene un ancho máximo de ~736 px."
-        error={fieldError(errors, 'content.body')}
-      >
-        <textarea
-          rows={15}
-          value={content.body ?? ''}
-          onChange={(e) => onChange({ ...content, body: e.target.value })}
-          className={inputClass}
-        />
-      </Field>
-      <Field label="Video (URL)" error={fieldError(errors, 'content.video_url')}>
-        <input
-          type="text"
-          placeholder="https://…"
-          value={content.video_url ?? ''}
-          onChange={(e) => onChange({ ...content, video_url: e.target.value || null })}
-          className={inputClass}
-        />
-      </Field>
     </div>
   )
 }

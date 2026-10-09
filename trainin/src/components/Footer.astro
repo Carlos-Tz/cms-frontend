@@ -1,4 +1,5 @@
 ---
+import Logo from "./Logo.astro";
 import type { ContactInfo } from "../types/globals";
 
 interface Social {
@@ -52,10 +53,7 @@ const year = new Date().getFullYear();
 <footer class="site-footer">
 	<div class="container footer-grid">
 		<div class="footer-brand">
-			<div class="logo">
-				<span class="logo-part logo-part--red">TRAN</span><span class="logo-part logo-part--light">INN</span>
-				<span class="logo-part logo-part--gray">LOGISTIC</span>
-			</div>
+			<Logo onDark />
 			<p class="footer-text">Transporte de GNC, logística y carga pesada con cobertura nacional.</p>
 			<div class="socials">
 				{socials.map((s) => (
@@ -80,13 +78,47 @@ const year = new Date().getFullYear();
 		<div class="footer-col">
 			<h3 class="footer-col-title">Contacto</h3>
 			<ul>
-				{contact?.address && <li class="footer-contact-text">{contact.address}</li>}
-				{contact?.email && <li><a href={`mailto:${contact.email}`}>{contact.email}</a></li>}
-				{contact?.phone && <li><a href={`tel:${contact.phone.replace(/\s/g, "")}`}>{contact.phone}</a></li>}
-				{contact?.schedule && <li class="footer-contact-text">{contact.schedule}</li>}
-				{contact?.additional_info && <li class="footer-contact-text">{contact.additional_info}</li>}
+				{contact?.address && (
+					<li class="footer-contact-text">
+						<i class="fa-solid fa-location-dot footer-icon" aria-hidden="true" />
+						<span>{contact.address}</span>
+					</li>
+				)}
+				{contact?.email && (
+					<li>
+						<a href={`mailto:${contact.email}`}>
+							<i class="fa-solid fa-envelope footer-icon" aria-hidden="true" />
+							<span>{contact.email}</span>
+						</a>
+					</li>
+				)}
+				{contact?.phone && (
+					<li>
+						<a href={`tel:${contact.phone.replace(/\s/g, "")}`}>
+							<i class="fa-solid fa-phone footer-icon" aria-hidden="true" />
+							<span>{contact.phone}</span>
+						</a>
+					</li>
+				)}
+				{contact?.schedule && (
+					<li class="footer-contact-text">
+						<i class="fa-regular fa-clock footer-icon" aria-hidden="true" />
+						<span>{contact.schedule}</span>
+					</li>
+				)}
+				{contact?.additional_info && (
+					<li class="footer-contact-text">
+						<i class="fa-solid fa-circle-info footer-icon" aria-hidden="true" />
+						<span>{contact.additional_info}</span>
+					</li>
+				)}
 				{whatsappUrl && (
-					<li><a href={whatsappUrl} target="_blank" rel="noopener noreferrer">WhatsApp directo</a></li>
+					<li>
+						<a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+							<i class="fa-brands fa-whatsapp footer-icon" aria-hidden="true" />
+							<span>WhatsApp directo</span>
+						</a>
+					</li>
 				)}
 			</ul>
 		</div>
@@ -99,9 +131,21 @@ const year = new Date().getFullYear();
 
 <style>
 	.site-footer {
+		position: relative;
+		overflow: hidden;
+		isolation: isolate;
 		background: var(--color-dark);
 		color: var(--color-text-on-dark-60);
-		padding-top: 3.5rem;
+		padding-top: 4rem;
+	}
+	.site-footer::before {
+		content: "";
+		position: absolute;
+		inset: -40% 60% 40% -20%;
+		z-index: -1;
+		background: linear-gradient(115deg, rgba(200, 16, 46, 0.35) 0%, rgba(200, 16, 46, 0) 70%);
+		transform: skewX(-14deg);
+		pointer-events: none;
 	}
 
 	.footer-grid {
@@ -112,13 +156,6 @@ const year = new Date().getFullYear();
 		border-bottom: 1px solid var(--color-border-on-dark);
 	}
 
-	.logo {
-		font-size: 1.1rem;
-		font-weight: 800;
-	}
-	.logo-part--red { color: var(--color-red); }
-	.logo-part--light { color: #fff; }
-	.logo-part--gray { color: var(--color-gray); margin-left: 0.3rem; }
 
 	.footer-text {
 		margin-top: 0.85rem;
@@ -148,7 +185,8 @@ const year = new Date().getFullYear();
 	}
 
 	.footer-col-title {
-		font-size: 0.8rem;
+		font-family: var(--font-title);
+		font-size: 0.82rem;
 		font-weight: 700;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
@@ -169,11 +207,42 @@ const year = new Date().getFullYear();
 	   list gap, so the column's rhythm is unchanged. */
 	.footer-col a,
 	.footer-contact-text {
-		display: block;
+		display: flex;
+		align-items: flex-start;
+		gap: 0.6rem;
 		padding: 0.35rem 0;
+	}
+
+	.footer-icon {
+		flex-shrink: 0;
+		width: 1rem;
+		margin-top: 0.45rem;
+		font-size: 0.8rem;
+		color: var(--color-red);
+	}
+	.footer-col a {
+		position: relative;
+		width: fit-content;
+		transition: color 0.25s ease, transform 0.25s var(--ease-out);
+	}
+	.footer-col a::before {
+		content: "";
+		position: absolute;
+		left: -0.9rem;
+		top: 50%;
+		width: 0.4rem;
+		height: 1px;
+		background: var(--color-red);
+		opacity: 0;
+		transition: opacity 0.25s ease, width 0.25s var(--ease-out);
 	}
 	.footer-col a:hover {
 		color: #fff;
+		transform: translateX(0.55rem);
+	}
+	.footer-col a:hover::before {
+		opacity: 1;
+		width: 0.7rem;
 	}
 	/* Contact details that aren't links (address, schedule) */
 	.footer-contact-text {

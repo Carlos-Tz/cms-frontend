@@ -46,11 +46,19 @@ const median = (values: number[]) => {
   return sorted[Math.floor(sorted.length / 2)] ?? 0;
 };
 
+// A word hyphenated across the break ("ener-\ngía") is rejoined whole.
+const joinWrapped = (acc: string, line: string) =>
+  /[a-záéíóúñ]-$/i.test(acc) && /^[a-záéíóúñ]/.test(line) ? acc.slice(0, -1) + line : `${acc} ${line}`;
+
+const NUMBERED_ITEM = /^(\d+)[.)]\s+(.+)$/;
+
 /**
  * Rebuilds one PDF-wrapped <p>: joins the wrapped lines back into sentences,
  * breaks a paragraph where a line ends a sentence well short of the column
- * width (a paragraph's last line), and promotes short unpunctuated lines that
- * follow a finished sentence to headings.
+ * width (a paragraph's last line), promotes short unpunctuated lines that
+ * follow a finished sentence to headings, and lifts a run of "1. …" / "2. …"
+ * lines (a pasted numbered list, its markers flattened to plain text like
+ * everything else in the paragraph) into a real <ol>.
  */
 function unwrapParagraph(inner: string, headingTag: string): string {
   const lines = inner
@@ -61,20 +69,41 @@ function unwrapParagraph(inner: string, headingTag: string): string {
 
   const blocks: string[] = [];
   let current: string[] = [];
+  let listItems: string[] = [];
+
   const flush = () => {
     if (!current.length) return;
-    const text = current.reduce((acc, line) =>
-      // A word hyphenated across the break ("ener-\ngía") is rejoined whole.
-      /[a-záéíóúñ]-$/i.test(acc) && /^[a-záéíóúñ]/.test(line) ? acc.slice(0, -1) + line : `${acc} ${line}`,
-    );
-    blocks.push(`<p>${text}</p>`);
+    blocks.push(`<p>${current.reduce(joinWrapped)}</p>`);
     current = [];
+  };
+  const flushList = () => {
+    if (!listItems.length) return;
+    blocks.push(`<ol>${listItems.map((item) => `<li>${item}</li>`).join("")}</ol>`);
+    listItems = [];
   };
 
   lines.forEach((line, index) => {
     const plain = stripTags(line);
     const previous = index > 0 ? stripTags(lines[index - 1]) : "";
     const next = index < lines.length - 1 ? lines[index + 1] : "";
+
+    const numberedMatch = line.match(NUMBERED_ITEM);
+    if (numberedMatch && Number(numberedMatch[1]) === listItems.length + 1) {
+      flush();
+      listItems.push(numberedMatch[2]);
+      return;
+    }
+    if (listItems.length > 0) {
+      // Not the next number in sequence: either this item's text wrapped
+      // onto another source line (its last line isn't sentence-final yet),
+      // or the list is simply over.
+      if (!SENTENCE_END.test(stripTags(listItems[listItems.length - 1]))) {
+        listItems[listItems.length - 1] = joinWrapped(listItems[listItems.length - 1], line);
+        return;
+      }
+      flushList();
+    }
+
     // A heading sits between a finished sentence and a new one: the line
     // before ends in punctuation and the line after starts with a capital.
     // A wrapped paragraph line, by contrast, runs on mid-sentence into a
@@ -100,6 +129,7 @@ function unwrapParagraph(inner: string, headingTag: string): string {
     if (SENTENCE_END.test(plain) && plain.length < typical * 0.8) flush();
   });
   flush();
+  flushList();
 
   return blocks.join("\n");
 }
@@ -114,6 +144,31 @@ export function normalizeRichText(input: string | null | undefined, options: Opt
     .replace(/^(\s*<br\s*\/?>\s*)+/i, "")
     .replace(/(\s*<br\s*\/?>\s*)+$/i, "")
     .replace(/<p>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, "");
+
+  // A whole article pasted into a section's body ("<article><header><h1>…
+  // <time>…</header><p>…</p>…</article>") carries its own headline/byline —
+  // but the section already has those (its `title` prop, the page's own
+  // <section>). Left in place, the nesting defeats every "first thing in the
+  // body" rule below (the label+headline pairing, the lead-in paragraph),
+  // since the actual first element becomes <article> or <header>, not the
+  // heading/paragraph those rules look for. <header> is unwrapped wherever it
+  // appears; a root <article> wrapping the entire body is unwrapped too —
+  // both keep their content, only the wrapper tag goes.
+  html = html.replace(/<\/?header(\s[^>]*)?>/gi, "");
+  for (let guard = 0; guard < 5; guard++) {
+    const unwrapped = html.replace(/^<article(\s[^>]*)?>([\s\S]*)<\/article>\s*$/i, "$2");
+    if (unwrapped === html) break;
+    html = unwrapped.trim();
+  }
+
+  // A body pasted with no HTML at all — not even a wrapping <p> — is the
+  // same PDF-wrapped shape the rule below recovers, just missing the tag
+  // that rule looks inside of. Recovered the same way, once, up front: the
+  // alternative is one continuous run of text with no paragraph breaks at
+  // all (newlines collapse in HTML), numbered lines included.
+  if (/\n/.test(html) && !/<(p|div|article|section|ul|ol|table|h[1-6])(\s|>)/i.test(html)) {
+    html = unwrapParagraph(html, recoveredHeading);
+  }
 
   // A PDF-wrapped paragraph carries several hard line breaks; normal ones
   // (one per source-code line at most) are left alone.

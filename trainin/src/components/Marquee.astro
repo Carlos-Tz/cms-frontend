@@ -1,0 +1,124 @@
+---
+// Scrolling keyword band, borrowed from the Loginet template's marquee.
+// It carries no copy of its own: the words are the service pages the CMS
+// menu declares, so adding or renaming a service updates the band too.
+import { fetchData } from "../functions/fetch";
+
+type MenuItem = { slug: string; path: string; title: string; children?: MenuItem[] };
+type MenuResponse = { status: string; data: MenuItem[] };
+
+interface Props {
+	// Overrides the menu lookup when a page already knows what to show.
+	items?: string[];
+}
+
+const { items } = Astro.props;
+
+let words = items ?? [];
+
+if (!words.length) {
+	const menuResponse: MenuResponse | undefined = await fetchData("menu");
+	// The first branch with sub-pages is the services column; its children are
+	// the site's offering, which is what the band is advertising.
+	const branch = (menuResponse?.data ?? []).find((entry) => entry.children?.length);
+	words = (branch?.children ?? []).map((child) => child.title);
+}
+---
+
+{
+	words.length > 0 && (
+		<div class="marquee-band" aria-hidden="true">
+			{/* Two identical tracks slide as one loop: when the first has fully
+			    left, the second is exactly where it started. */}
+			{[0, 1].map(() => (
+				<div class="marquee-track">
+					{words.map((word) => (
+						<span class="marquee-item">
+							<svg class="marquee-mark" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+								<path
+									d="M12 2v20M2 12h20M5 5l14 14M19 5L5 19"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+								/>
+							</svg>
+							{word}
+						</span>
+					))}
+				</div>
+			))}
+		</div>
+	)
+}
+
+<style>
+	.marquee-band {
+		display: flex;
+		overflow: hidden;
+		user-select: none;
+		background: var(--color-red);
+		color: #fff;
+		padding: 1.1rem 0;
+	}
+
+	.marquee-track {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		gap: 3.5rem;
+		padding-right: 3.5rem;
+		min-width: 100%;
+		animation: marquee-scroll 28s linear infinite;
+	}
+
+	.marquee-band:hover .marquee-track {
+		animation-play-state: paused;
+	}
+
+	.marquee-item {
+		display: inline-flex;
+		align-items: center;
+		gap: 1.5rem;
+		white-space: nowrap;
+		font-family: var(--font-title);
+		font-size: clamp(1.1rem, 2.2vw, 1.75rem);
+		font-weight: 600;
+		letter-spacing: 0.02em;
+		text-transform: uppercase;
+	}
+
+	.marquee-mark {
+		flex-shrink: 0;
+		opacity: 0.85;
+		animation: marquee-spin 18s linear infinite;
+	}
+
+	@keyframes marquee-scroll {
+		from {
+			transform: translateX(0);
+		}
+		to {
+			transform: translateX(-100%);
+		}
+	}
+
+	@keyframes marquee-spin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.marquee-track,
+		.marquee-mark {
+			animation: none;
+		}
+		.marquee-band {
+			overflow-x: auto;
+		}
+	}
+</style>

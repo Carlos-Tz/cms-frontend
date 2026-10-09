@@ -1,13 +1,17 @@
 ---
 import { normalizeRichText } from "../../lib/richText";
+import { mediaUrl } from "../../functions/fetch";
 
 interface Props {
   title?: string | null;
   body: string;
   video_url?: string | null;
+  // Shown in the same media slot when there's no video — both are optional,
+  // and a section with neither falls back to the plain (no-media) layout.
+  image_video_url?: string | null;
 }
 
-const { title, body: rawBody, video_url } = Astro.props;
+const { title, body: rawBody, video_url, image_video_url } = Astro.props;
 
 // Rebuilds pasted (PDF-wrapped) copy into real paragraphs/headings and tidies
 // editor residue — see lib/richText.ts.
@@ -77,21 +81,29 @@ function withAutoplay(url: string) {
 }
 
 const embedUrl = video_url ? withAutoplay(toEmbedUrl(video_url)) : null;
+// Only consulted when there's no video — video wins when a section somehow
+// has both (e.g. an image left over from before a video was added).
+const fallbackImage = !embedUrl && image_video_url ? mediaUrl(image_video_url) : null;
+const hasMedia = Boolean(embedUrl || fallbackImage);
 ---
 
-{embedUrl ? (
+{hasMedia ? (
   <>
   <section class="section rich-text-media">
     <div class="container">
       <div class="rich-text-media__layout">
         <div class="rich-text-media__video">
-          <iframe
-            src={embedUrl}
-            title={title ?? "Video"}
-            loading="lazy"
-            allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-            allowfullscreen
-          ></iframe>
+          {embedUrl ? (
+            <iframe
+              src={embedUrl}
+              title={title ?? "Video"}
+              loading="lazy"
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          ) : (
+            <img src={fallbackImage} alt="" loading="lazy" />
+          )}
         </div>
         <div class="rich-text-media__content">
           {title && (isLabelTitle ? <span class="eyebrow">{title}</span> : <h2 class="section-title">{title}</h2>)}
@@ -158,7 +170,15 @@ const embedUrl = video_url ? withAutoplay(toEmbedUrl(video_url)) : null;
   </script>
   </>
 ) : (
-  <section class="section">
+  <section class="section rich-text-plain texture-dots">
+    {/* A page-text-only section (no video, no image) otherwise leaves the
+        whole right side of the wide container as flat white — this is the
+        same soft brand-color wash used on PageHero/the hero band, so the
+        space reads as "intentionally spacious", not empty. */}
+    <div class="aurora aurora--soft" aria-hidden="true">
+      <span class="aurora__blob aurora__blob--1"></span>
+      <span class="aurora__blob aurora__blob--2"></span>
+    </div>
     <div class="container rich-text">
       {title && (isLabelTitle ? <span class="eyebrow">{title}</span> : <h2 class="section-title">{title}</h2>)}
       <div class:list={["prose", "prose--section", { "prose--after-label": isLabelTitle }]} set:html={body} />

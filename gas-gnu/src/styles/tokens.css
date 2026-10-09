@@ -1,7 +1,7 @@
 :root {
   /* Fonts — swap the family names to rebrand; keep a system-ui fallback */
-  --font-display: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* Type scale — clamp(min, preferred, max) so headings stay fluid across viewports.
      --text-h1 drives every page's main heading (hero, page hero, blog post title). */
@@ -13,29 +13,33 @@
   --heading-font-weight: 700;
   --heading-letter-spacing: -0.01em;
 
-  /* Backgrounds — white canvas, alternating with a light-blue tinted tile */
+  /* Backgrounds — white canvas, alternating with a light slate tinted tile */
   --color-bg: #ffffff;
-  --color-bg-alt: #f2f7fd;
-  --color-ink: #0b2b5c;
-  --color-ink-2: #123a73;
-  --color-ink-3: #163f80;
+  --color-bg-alt: #f8fafc;
+  --color-ink: #0b2545;
+  --color-ink-2: #304662;
+  --color-ink-3: #485c74;
 
-  /* Brand (from GNU GNV site map) */
-  --color-primary: #1657c4;
-  --color-primary-alt: #0d3a85;
-  --color-primary-light: #bcd8f7;
-  --color-accent: #4fa3e3;
-  --color-primary-tint: #e8f1fb;
-  --color-primary-soft: rgba(22, 87, 196, 0.08);
+  /* Brand (Blue Gas UI guidelines palette) */
+  --color-primary: #0082ca;
+  --color-primary-alt: #0068a2;
+  --color-primary-light: #b3daef;
+  --color-accent: #2b9cdb;
+  --color-primary-tint: #e6f3fa;
+  --color-primary-soft: rgba(0, 130, 202, 0.08);
+
+  /* Secondary / functional accents */
+  --color-amber: #f5b025;
+  --color-purple: #5c2d83;
 
   /* Status */
-  --color-status-active: #22a06b;
+  --color-status-active: #44b77b;
   --color-status-error: #e0483f;
 
   /* Text on light backgrounds */
-  --color-text: #12213f;
-  --color-text-60: rgba(18, 33, 63, 0.64);
-  --color-text-40: rgba(18, 33, 63, 0.44);
+  --color-text: #0f172a;
+  --color-text-60: rgba(15, 23, 42, 0.64);
+  --color-text-40: rgba(15, 23, 42, 0.44);
 
   /* Text on dark backgrounds */
   --color-text-on-dark: #ffffff;
@@ -43,8 +47,8 @@
   --color-text-on-dark-45: rgba(255, 255, 255, 0.45);
 
   /* Borders / surfaces */
-  --color-border: rgba(11, 43, 92, 0.12);
-  --color-border-hover: rgba(11, 43, 92, 0.28);
+  --color-border: rgba(11, 37, 69, 0.12);
+  --color-border-hover: rgba(11, 37, 69, 0.28);
   --color-border-on-dark: rgba(255, 255, 255, 0.14);
   --color-surface-on-dark: rgba(255, 255, 255, 0.06);
   --color-surface: #ffffff;
@@ -57,9 +61,11 @@
   --radius-full: 999px;
 
   /* Shadows */
-  --shadow-float: 0 20px 45px -18px rgba(11, 43, 92, 0.35);
-  --shadow-cta: 0 10px 30px -8px rgba(13, 58, 133, 0.45);
-  --shadow-card: 0 4px 20px -6px rgba(11, 43, 92, 0.12);
+  --shadow-float: 0 20px 45px -18px rgba(11, 37, 69, 0.35);
+  --shadow-cta: 0 10px 30px -8px rgba(0, 104, 162, 0.45);
+  --shadow-card: 0 4px 20px -6px rgba(11, 37, 69, 0.12);
+  --shadow-glow-primary: 0 0 20px rgba(0, 130, 202, 0.25);
+  --shadow-glow-success: 0 0 20px rgba(68, 183, 123, 0.25);
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

@@ -27,6 +27,7 @@ import GnuSelectPage from './pages/gnu/select-page'
 import GasNaturalSelectPage from './pages/gas-natural/select-page'
 import GasNaturalInicio from './pages/gas-natural/inicio'
 import GasNaturalNuestrosServicios from './pages/gas-natural/nuestros-servicios'
+import GasNaturalNuestrosServiciosPortada from './pages/gas-natural/nuestros-servicios/portada'
 import GasNaturalInstalaTuEquipoDeGnv from './pages/gas-natural/nuestros-servicios/instala-tu-equipo-de-gnv'
 import GasNaturalCotizaTuEquipo from './pages/gas-natural/nuestros-servicios/cotiza-tu-equipo'
 import GasNaturalFinanciamiento from './pages/gas-natural/nuestros-servicios/financiamiento'
@@ -183,6 +184,7 @@ export default function App() {
       <Route path="/gas-natural/select-page" element={<GasNaturalSelectPage />} />
       <Route path="/gas-natural/inicio" element={<GasNaturalInicio />} />
       <Route path="/gas-natural/nuestros-servicios" element={<GasNaturalNuestrosServicios />} />
+      <Route path="/gas-natural/nuestros-servicios/portada" element={<GasNaturalNuestrosServiciosPortada />} />
       <Route
         path="/gas-natural/nuestros-servicios/instala-tu-equipo-de-gnv"
         element={<GasNaturalInstalaTuEquipoDeGnv />}

@@ -69,8 +69,8 @@ const fallbackLocations = [
 
     <div class="hero-stats">
       <div class="container hero-stats__inner">
-        <div class="hero-stats__item"><strong>+5,000</strong><span>equipos instalados</span></div>
-        <div class="hero-stats__item"><strong>60%</strong><span>ahorro promedio</span></div>
+        <div class="hero-stats__item"><strong class="count-up" data-target="5000" data-prefix="+">+5,000</strong><span>equipos instalados</span></div>
+        <div class="hero-stats__item"><strong class="count-up" data-target="60" data-suffix="%">60%</strong><span>ahorro promedio</span></div>
         <div class="hero-stats__item"><strong>24/7</strong><span>estaciones activas</span></div>
       </div>
     </div>
@@ -84,13 +84,13 @@ const fallbackLocations = [
     />
 
     <!-- Nuestros Servicios: the real service pages, each card from its own hero -->
-    <section class="section section--alt" id="servicios">
+    <section class="section zebra" id="servicios">
       <div class="container">
         <div class="section-head section-head--center">
           <span class="eyebrow">Nuestros servicios</span>
           <h2 class="section-title">Todo lo que necesitas para moverte con GNV</h2>
         </div>
-        <ChildPageCards parent="nuestros-servicios" fallback={fallbackServices} gridClass="grid--3" />
+        <ChildPageCards parent="nuestros-servicios" fallback={fallbackServices} variant="accordion" />
       </div>
     </section>
 
@@ -121,7 +121,7 @@ const fallbackLocations = [
     <BlogTeaser posts={latestPosts} />
 
     <!-- Contacto -->
-    <section class="section" id="contacto">
+    <section class="section zebra" id="contacto">
       <div class="container contacto-grid">
         <div>
           <span class="eyebrow">Contacto</span>

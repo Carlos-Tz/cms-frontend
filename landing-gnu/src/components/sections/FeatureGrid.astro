@@ -33,18 +33,24 @@ const { title, image, items } = Astro.props;
     <div class="grid grid--3">
       {items.map((item) => (
         <div class="card card--feature">
-          <div class="card__icon" aria-hidden="true">
-            {item.icon ? (
-              <img class="card__icon-img" src={mediaUrl(item.icon)} alt="" />
-            ) : (
+          {item.icon ? (
+            // CMS icons here are full square photos (1254×1254), not line
+            // art — shown as a real image banner, not squeezed into the
+            // small tinted icon tile below (which only suits the SVG
+            // fallback: flat color, reads fine at that size).
+            <div class="card__media">
+              <img class="card__media-img" src={mediaUrl(item.icon)} alt="" loading="lazy" />
+            </div>
+          ) : (
+            <div class="card__icon" aria-hidden="true">
               <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.5-2-1-2 1 3-1 4-2 4a2 2 0 0 1-2-2c0-2 2-3 1-6-2 1-4 3-4 6a5 5 0 0 0 5 5 5 5 0 0 0 5-5c0-4-3-6-3-9-3 1-5 4-5 7"
                   fill="currentColor"
                 />
               </svg>
-            )}
-          </div>
+            </div>
+          )}
           <p class="card__title">{item.title}</p>
           <p class="card__text">{item.text}</p>
         </div>

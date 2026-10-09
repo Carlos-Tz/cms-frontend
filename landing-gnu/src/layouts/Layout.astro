@@ -12,6 +12,7 @@ import SimulatorFab from "../components/SimulatorFab.astro";
 import { seo } from "../config/seo";
 import logo from "../assets/images/logo-blue.png";
 import { SOCIAL_ICON_MARKUP, resolveSocialNetworks } from "../lib/social";
+import { NAV_LABEL_OVERRIDES } from "../config/labelOverrides";
 
 interface Props {
   // Page-specific title, WITHOUT the site name — Layout appends
@@ -78,7 +79,13 @@ const fallbackNav: MenuItem[] = [
 ];
 
 const menu = await getMenu();
-const navItems = menu.length ? menu : fallbackNav;
+const navItems = (menu.length ? menu : fallbackNav).map((item) => ({
+  ...item,
+  children: (item.children ?? []).map((child) => ({
+    ...child,
+    title: NAV_LABEL_OVERRIDES[child.slug] ?? child.title,
+  })),
+}));
 
 // Marks the current section in the nav: exact match for "/", prefix match
 // for everything else so /sobre-nosotros/valores lights up "Sobre nosotros".

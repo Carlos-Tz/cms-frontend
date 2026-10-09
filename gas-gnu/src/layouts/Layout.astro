@@ -3,8 +3,9 @@ import "../styles/global.css";
 import { seo } from "../config/seo";
 import NavItem from "../components/nav/NavItem.astro";
 import NavItemMobile from "../components/nav/NavItemMobile.astro";
+import SavingsSimulator from "../components/sections/SavingsSimulator.astro";
 import type { MenuItem } from "../types/menu";
-import { getGlobals, getMenu, whatsappHref } from "../lib/cms";
+import { getGlobals, getMenu, getPage, sectionOf, whatsappHref } from "../lib/cms";
 
 interface Props {
   // Page-specific title, WITHOUT the site name — Layout appends
@@ -69,6 +70,13 @@ const serviceLinks = serviceItems.length
       { href: "/nuestros-servicios/instala-tu-equipo-de-gnv/financiamiento", label: "Financiamiento" },
       { href: "/nuestros-servicios/flotillas-empresariales", label: "Flotillas empresariales" },
     ];
+
+// The floating "Calcula tu ahorro" panel recycles the homepage's own
+// savings_simulator section, available from any page. `getPage("inicio")` is
+// memoized, so this is the same request the home page itself already makes
+// (or the only one, on every other page) — never a second fetch.
+const homePage = await getPage("inicio");
+const savingsSimulator = sectionOf(homePage, "savings_simulator");
 
 // Footer contact info, social links and the WhatsApp button are all editable
 // from the CMS admin (Landing Page → Datos de contacto / Redes sociales /
@@ -148,6 +156,13 @@ const organizationJsonLd = JSON.stringify({
     <link rel="apple-touch-icon" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="generator" content={Astro.generator} />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+    />
 
     <title>{pageTitle}</title>
     <meta name="description" content={pageDescription} />
@@ -265,6 +280,39 @@ const organizationJsonLd = JSON.stringify({
       </div>
     </footer>
 
+    <div class="simulator-backdrop" id="simulator-backdrop"></div>
+
+    <SavingsSimulator
+      title={savingsSimulator?.title}
+      intro={savingsSimulator?.intro}
+      fuel_prices={savingsSimulator?.fuel_prices}
+      page="inicio"
+      variant="panel"
+    />
+
+    <button
+      type="button"
+      class="simulator-fab"
+      aria-label="Calcula tu ahorro"
+      aria-haspopup="true"
+      aria-expanded="false"
+      aria-controls="simulator-panel"
+    >
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="2" width="16" height="20" rx="2" />
+        <line x1="8" y1="6" x2="16" y2="6" />
+        <circle cx="8" cy="11" r="0.75" fill="currentColor" stroke="none" />
+        <circle cx="12" cy="11" r="0.75" fill="currentColor" stroke="none" />
+        <circle cx="16" cy="11" r="0.75" fill="currentColor" stroke="none" />
+        <circle cx="8" cy="15" r="0.75" fill="currentColor" stroke="none" />
+        <circle cx="12" cy="15" r="0.75" fill="currentColor" stroke="none" />
+        <circle cx="16" cy="15" r="0.75" fill="currentColor" stroke="none" />
+        <circle cx="8" cy="19" r="0.75" fill="currentColor" stroke="none" />
+        <circle cx="12" cy="19" r="0.75" fill="currentColor" stroke="none" />
+        <circle cx="16" cy="19" r="0.75" fill="currentColor" stroke="none" />
+      </svg>
+    </button>
+
     {whatsappLink && (
     <a
       class="whatsapp-fab"
@@ -280,6 +328,26 @@ const organizationJsonLd = JSON.stringify({
     )}
 
     <script>
+      // Card pointer-spotlight: one delegated listener sets --mx/--my on
+      // whichever card the pointer is over, read by each card's own
+      // background gradient in global.css. Touch devices skip this (no
+      // hover to spotlight, and it would just burn a listener on scroll).
+      if (window.matchMedia("(hover: hover)").matches) {
+        document.addEventListener(
+          "pointermove",
+          (event) => {
+            const card = (event.target as HTMLElement).closest<HTMLElement>(
+              ".card, .blog-card, .testimonial-card, .stations-list__item"
+            );
+            if (!card) return;
+            const rect = card.getBoundingClientRect();
+            card.style.setProperty("--mx", `${event.clientX - rect.left}px`);
+            card.style.setProperty("--my", `${event.clientY - rect.top}px`);
+          },
+          { passive: true }
+        );
+      }
+
       const toggle = document.getElementById("nav-toggle");
       const mobileNav = document.getElementById("nav-mobile");
 
@@ -332,17 +400,67 @@ const organizationJsonLd = JSON.stringify({
         });
       });
 
+      // The floating "Calcula tu ahorro" panel: the FAB toggles it, its own
+      // close button, the backdrop, an outside click and Escape all dismiss
+      // it. Below 640px it presents as a full-width bottom sheet instead of
+      // a popover (see global.css) — same markup and open/close state, only
+      // the CSS presentation differs. The panel markup (and its form's
+      // behavior) comes from SavingsSimulator.astro; this only owns
+      // open/closed state.
+      const simulatorFab = document.querySelector<HTMLButtonElement>(".simulator-fab");
+      const simulatorPanel = document.getElementById("simulator-panel");
+      const simulatorBackdrop = document.getElementById("simulator-backdrop");
+      const simulatorClose = simulatorPanel?.querySelector<HTMLButtonElement>(".simulator-panel__close");
+      const simulatorMobileSheet = window.matchMedia("(max-width: 640px)");
+
+      function openSimulatorPanel() {
+        if (!simulatorPanel) return;
+        simulatorPanel.classList.add("is-open");
+        simulatorBackdrop?.classList.add("is-open");
+        simulatorFab?.setAttribute("aria-expanded", "true");
+        document.body.classList.toggle("simulator-sheet-open", simulatorMobileSheet.matches);
+      }
+
+      function closeSimulatorPanel() {
+        if (!simulatorPanel?.classList.contains("is-open")) return;
+        simulatorPanel.classList.remove("is-open");
+        simulatorBackdrop?.classList.remove("is-open");
+        simulatorFab?.setAttribute("aria-expanded", "false");
+        document.body.classList.remove("simulator-sheet-open");
+      }
+
+      simulatorFab?.addEventListener("click", () => {
+        if (simulatorPanel?.classList.contains("is-open")) closeSimulatorPanel();
+        else openSimulatorPanel();
+      });
+
+      simulatorClose?.addEventListener("click", closeSimulatorPanel);
+      simulatorBackdrop?.addEventListener("click", closeSimulatorPanel);
+
+      document.addEventListener("click", (event) => {
+        if (!(event.target instanceof Node) || !simulatorPanel?.classList.contains("is-open")) return;
+        if (!simulatorPanel.contains(event.target) && !simulatorFab?.contains(event.target)) {
+          closeSimulatorPanel();
+        }
+      });
+
       document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") navItems.forEach(closeNavItem);
+        if (event.key === "Escape") {
+          navItems.forEach(closeNavItem);
+          closeSimulatorPanel();
+        }
       });
 
       // .blog-card is deliberately absent: it runs its own staggered bounce-in
       // on load (see global.css) and would fight the reveal for opacity/transform.
+      // The floating simulator panel is also excluded: it starts `hidden`, so
+      // the scroll-triggered reveal below would never fire for it — it should
+      // just appear the instant the FAB opens it, not fade in on scroll.
       const revealTargets = Array.from(
         document.querySelectorAll(
           ".section-head, .card, .clients-grid__logo, .testimonial-card, .simulator, .prose, .stations-map, .scheduler, .rewards__inner"
         )
-      );
+      ).filter((el) => !el.closest("#simulator-panel"));
 
       // Siblings inside these containers ease in one after another rather than
       // as one block; --i is the child's position among its revealing siblings.
@@ -398,6 +516,53 @@ const organizationJsonLd = JSON.stringify({
           });
         } else {
           belowFold.forEach((el) => el.classList.add("reveal", "is-visible"));
+        }
+      }
+
+      // Count-up stats: counts from 0 to data-target the first time the
+      // element scrolls into view. Reduced motion just shows the final
+      // number immediately instead of animating toward it.
+      const countTargets = Array.from(document.querySelectorAll<HTMLElement>(".count-up"));
+      const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      function runCountUp(el: HTMLElement) {
+        const target = Number(el.dataset.target ?? 0);
+        const prefix = el.dataset.prefix ?? "";
+        const suffix = el.dataset.suffix ?? "";
+        const format = (value: number) => `${prefix}${value.toLocaleString("es-MX")}${suffix}`;
+
+        if (prefersReducedMotion || !Number.isFinite(target)) {
+          el.textContent = format(target);
+          return;
+        }
+
+        const duration = 1400;
+        const start = performance.now();
+        function tick(now: number) {
+          const progress = Math.min(1, (now - start) / duration);
+          const eased = 1 - Math.pow(1 - progress, 3);
+          el.textContent = format(Math.round(target * eased));
+          if (progress < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      }
+
+      if (countTargets.length) {
+        if ("IntersectionObserver" in window) {
+          const countObserver = new IntersectionObserver(
+            (entries) => {
+              entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                  runCountUp(entry.target as HTMLElement);
+                  countObserver.unobserve(entry.target);
+                }
+              });
+            },
+            { threshold: 0.4 }
+          );
+          countTargets.forEach((el) => countObserver.observe(el));
+        } else {
+          countTargets.forEach(runCountUp);
         }
       }
     </script>

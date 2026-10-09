@@ -65,10 +65,21 @@ const markers = stations.map((station) => ({
 						<span class="station-dot"></span>
 						<div>
 							<h3 class="station-name">{station.name}</h3>
-							{station.address && <p class="station-line">{station.address}</p>}
-							{station.schedule && <p class="station-line">{station.schedule}</p>}
+							{station.address && (
+								<p class="station-line">
+									<i class="fa-solid fa-location-dot station-icon" aria-hidden="true" />
+									<span>{station.address}</span>
+								</p>
+							)}
+							{station.schedule && (
+								<p class="station-line">
+									<i class="fa-regular fa-clock station-icon" aria-hidden="true" />
+									<span>{station.schedule}</span>
+								</p>
+							)}
 							{station.phone && (
 								<p class="station-line">
+									<i class="fa-solid fa-phone station-icon" aria-hidden="true" />
 									<a href={`tel:${station.phone.replace(/[^\d+]/g, "")}`}>{station.phone}</a>
 								</p>
 							)}
@@ -170,11 +181,22 @@ const markers = stations.map((station) => ({
 	}
 
 	.station-line {
-		margin-top: 0.25rem;
+		display: flex;
+		align-items: flex-start;
+		gap: 0.55rem;
+		margin-top: 0.35rem;
 		font-size: 0.92rem;
 		color: var(--color-text-60);
 		line-height: 1.6;
 	}
+	.station-icon {
+		flex-shrink: 0;
+		width: 1rem;
+		margin-top: 0.35rem;
+		font-size: 0.8rem;
+		color: var(--color-red);
+	}
+
 	.station-line a:hover {
 		color: var(--color-red);
 	}

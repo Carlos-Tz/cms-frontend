@@ -20,11 +20,20 @@
 
   --color-whatsapp: #25d366;
 
+  /* Outfit for headings, Noto Sans for body — the pairing the Loginet
+     transport template uses; loaded from Google Fonts in Layout.astro. */
+  --font-title: "Outfit", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-text: "Noto Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --radius-xl: 1.25rem;
   --radius-lg: 1rem;
   --radius-md: 0.5rem;
   --radius-full: 999px;
   --shadow-cta: 0 10px 30px -8px rgba(200, 16, 46, 0.45);
   --shadow-card: 0 12px 30px -12px rgba(32, 29, 30, 0.25);
+  --shadow-card-hover: 0 22px 50px -18px rgba(32, 29, 30, 0.35);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
   --container-max: 72rem;
 }
@@ -39,15 +48,19 @@ html {
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: var(--font-text);
+  font-size: 1rem;
   color: var(--color-text);
   background: var(--color-bg);
-  line-height: 1.5;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4 {
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-family: var(--font-title);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.15;
   margin: 0;
 }
 
@@ -65,6 +78,16 @@ a {
   text-decoration: none;
 }
 
+::selection {
+  background: var(--color-red);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-red);
+  outline-offset: 3px;
+}
+
 .container {
   max-width: var(--container-max);
   margin: 0 auto;
@@ -72,56 +95,115 @@ a {
 }
 
 .eyebrow {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-title);
   border-radius: var(--radius-full);
   border: 1px solid rgba(200, 16, 46, 0.35);
   background: rgba(200, 16, 46, 0.08);
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-red);
 }
-
-.btn-primary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  border: none;
-  cursor: pointer;
+.eyebrow::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
   border-radius: var(--radius-full);
-  padding: 0.75rem 1.75rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: #fff;
-  background: var(--color-red);
-  box-shadow: var(--shadow-cta);
-  transition: filter 0.15s ease, transform 0.15s ease;
-}
-.btn-primary:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
+  background: currentColor;
 }
 
+/* Buttons — the template's fill sweep: a skewed layer grows from the left
+   and straightens out, instead of a flat colour swap. */
+.btn-primary,
 .btn-secondary {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  isolation: isolate;
   border-radius: var(--radius-full);
-  padding: 0.75rem 1.75rem;
-  font-size: 0.9rem;
-  font-weight: 700;
+  padding: 0.85rem 1.9rem;
+  font-family: var(--font-title);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.2;
+  transition: color 0.4s var(--ease-out), transform 0.3s var(--ease-out),
+    box-shadow 0.3s var(--ease-out), border-color 0.3s var(--ease-out);
+}
+.btn-primary::before,
+.btn-secondary::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 -15%;
+  width: 0;
+  z-index: -1;
+  transform: skewX(45deg);
+  transition: width 0.45s var(--ease-out), transform 0.45s var(--ease-out),
+    left 0.45s var(--ease-out);
+}
+.btn-primary:hover::before,
+.btn-secondary:hover::before {
+  width: 130%;
+  left: 0;
+  transform: skewX(0deg);
+}
+.btn-primary:hover,
+.btn-secondary:hover {
+  transform: translateY(-2px);
+}
+
+.btn-primary {
+  border: none;
+  color: #fff;
+  background: var(--color-red);
+  box-shadow: var(--shadow-cta);
+}
+.btn-primary::before {
+  background: var(--color-dark);
+}
+
+.btn-secondary {
   color: var(--color-text);
+  background: transparent;
   border: 1px solid var(--color-border);
-  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.btn-secondary::before {
+  background: var(--color-red);
 }
 .btn-secondary:hover {
-  border-color: var(--color-dark);
+  color: #fff;
+  border-color: var(--color-red);
+}
+
+/* Inline "read more" link with an arrow that slides on hover. */
+.link-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-title);
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--color-red);
+}
+.link-arrow svg,
+.link-arrow .arrow {
+  transition: transform 0.3s var(--ease-out);
+}
+.link-arrow:hover svg,
+.link-arrow:hover .arrow {
+  transform: translateX(0.3rem);
 }
 
 .section {
-  padding: 5rem 0;
+  padding: clamp(3.5rem, 7vw, 7rem) 0;
 }
 
 .section--alt {
@@ -134,13 +216,15 @@ a {
 }
 
 .section-head {
-  max-width: 40rem;
-  margin-bottom: 3rem;
+  max-width: 42rem;
+  margin-bottom: clamp(2rem, 4vw, 3.5rem);
 }
 
 .section-title {
-  font-size: 2rem;
-  margin-top: 0.75rem;
+  font-size: clamp(1.9rem, 3.6vw, 3.125rem);
+  font-weight: 600;
+  line-height: 1.12;
+  margin-top: 0.9rem;
 }
 
 .section-title .accent {
@@ -148,9 +232,170 @@ a {
 }
 
 .card {
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--color-border);
   background: #fff;
   box-shadow: var(--shadow-card);
   overflow: hidden;
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+}
+
+/* Diagonal light sweep across an image when its card is hovered. */
+.shine {
+  position: relative;
+  overflow: hidden;
+}
+.shine::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200%;
+  height: 0;
+  background: rgba(255, 255, 255, 0.28);
+  transform: translate(-50%, -50%) rotate(-45deg);
+  pointer-events: none;
+  z-index: 2;
+}
+.shine:hover::after,
+.card:hover .shine::after,
+a:hover > .shine::after {
+  height: 250%;
+  background: transparent;
+  transition: height 650ms linear, background 650ms linear;
+}
+
+/* ---------------------------------------------------------------------------
+   Section bands — PageSections wraps every CMS section in one of these so the
+   page alternates light / tinted down the column (zebra), regardless of which
+   section types the CMS happens to return. Textures are pure CSS gradients,
+   so they cost no requests and tint themselves from the brand colours.
+   --------------------------------------------------------------------------- */
+.band {
+  position: relative;
+  background: var(--color-bg);
+}
+
+/* Faint dot grid on the plain bands. */
+.band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(32, 29, 30, 0.07) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+  -webkit-mask-image: linear-gradient(180deg, transparent, #000 18%, #000 82%, transparent);
+}
+
+/* Every other band: tinted, with diagonal hatching instead of dots. */
+.band--tint {
+  background: var(--color-bg-alt);
+}
+.band--tint::before {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(32, 29, 30, 0.035) 0,
+    rgba(32, 29, 30, 0.035) 1px,
+    transparent 1px,
+    transparent 11px
+  );
+  background-size: auto;
+}
+
+/* The band's own children sit above its texture. */
+.band > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* A section that paints its own dark background (the lead form) covers the
+   band underneath, so it gets the texture treatment on its own terms. */
+.section--dark {
+  position: relative;
+  isolation: isolate;
+}
+.section--dark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Icon chips — Font Awesome glyphs in a round brand plate, used wherever a
+   label would otherwise sit alone against empty space. */
+.icon-chip {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  background: rgba(200, 16, 46, 0.1);
+  color: var(--color-red);
+  font-size: 0.95rem;
+}
+.icon-chip--lg {
+  width: 3.25rem;
+  height: 3.25rem;
+  font-size: 1.2rem;
+}
+.icon-chip--on-dark {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* ---------------------------------------------------------------------------
+   Brand cursor (PUNTERO traininn.png, resized — browsers ignore cursor images
+   over 128px). Only on devices with a real pointer: a touch screen has no
+   cursor, and a coarse pointer gets nothing from a 28px dot.
+   --------------------------------------------------------------------------- */
+@media (hover: hover) and (pointer: fine) {
+  body {
+    cursor: url("/cursor.png") 14 14, auto;
+  }
+
+  /* Anything clickable gets the larger dot, so the pointer still grows over
+     interactive elements the way the system hand would. */
+  a,
+  button,
+  summary,
+  label,
+  [role="button"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="checkbox"],
+  input[type="radio"],
+  select,
+  .hero-dot,
+  .hero-arrow {
+    cursor: url("/cursor-pointer.png") 20 20, pointer;
+  }
+
+  /* Text entry keeps the I-beam — a dot there hides where the caret will land. */
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="search"],
+  input[type="password"],
+  textarea {
+    cursor: text;
+  }
+
+  /* Leaflet sets its own grab/grabbing cursors on the map canvas; a dot over a
+     draggable map would hide which mode it is in. */
+  .leaflet-container,
+  .leaflet-container * {
+    cursor: revert;
+  }
+
+  :disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }

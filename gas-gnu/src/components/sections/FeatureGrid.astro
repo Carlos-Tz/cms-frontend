@@ -16,7 +16,7 @@ interface Props {
 const { title, items, id } = Astro.props;
 ---
 
-<section class="section section--alt" id={id}>
+<section class="section zebra" id={id}>
   <div class="container">
     {title && (
       <div class="section-head section-head--center">
@@ -25,7 +25,7 @@ const { title, items, id } = Astro.props;
     )}
     <div class="grid grid--3">
       {items.map((item) => (
-        <div class="card">
+        <div class="card card--feature">
           <div class="card__icon" aria-hidden="true">
             {item.icon ? (
               <img class="card__icon-img" src={mediaUrl(item.icon)} alt="" />

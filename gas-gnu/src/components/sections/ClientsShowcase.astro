@@ -21,6 +21,9 @@ interface Props {
 const { title, logos = [] } = Astro.props;
 const shown = logos.map((logo) => ({ ...logo, image: mediaUrl(logo.image) }));
 const quoted = shown.filter((logo) => logo.quote);
+// A scrolling marquee only reads well with enough logos to loop; fewer than
+// that, the static wrapped row (below) looks better than a mostly-empty belt.
+const asMarquee = shown.length >= 6;
 
 const stripQuotes = (quote: string) =>
   quote
@@ -31,22 +34,42 @@ const stripQuotes = (quote: string) =>
 ---
 
 {shown.length > 0 && (
-  <section class="section section--alt" id="clientes">
+  <section class="section zebra" id="clientes">
     <div class="container">
       <div class="section-head section-head--center">
         <h2 class="section-title">{title ?? "Nuestros clientes"}</h2>
       </div>
-      <div class="clients-grid">
-        {shown.map((logo) =>
-          logo.url ? (
-            <a class="clients-grid__link" href={logo.url} target="_blank" rel="noopener noreferrer" title={logo.description ?? logo.name}>
-              <img class="clients-grid__logo" src={logo.image} alt={logo.name} loading="lazy" />
-            </a>
-          ) : (
-            <img class="clients-grid__logo" src={logo.image} alt={logo.name} title={logo.description ?? undefined} loading="lazy" />
-          )
-        )}
-      </div>
+      {asMarquee ? (
+        <div class="clients-marquee">
+          <div class="clients-marquee__track">
+            {[0, 1].map((copy) => (
+              <div class="clients-marquee__set" aria-hidden={copy === 1 ? "true" : undefined}>
+                {shown.map((logo) =>
+                  logo.url ? (
+                    <a class="clients-grid__link" href={logo.url} target="_blank" rel="noopener noreferrer" title={logo.description ?? logo.name} tabindex={copy === 1 ? -1 : undefined}>
+                      <img class="clients-grid__logo" src={logo.image} alt={logo.name} loading="lazy" />
+                    </a>
+                  ) : (
+                    <img class="clients-grid__logo" src={logo.image} alt={logo.name} title={logo.description ?? undefined} loading="lazy" />
+                  )
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div class="clients-grid">
+          {shown.map((logo) =>
+            logo.url ? (
+              <a class="clients-grid__link" href={logo.url} target="_blank" rel="noopener noreferrer" title={logo.description ?? logo.name}>
+                <img class="clients-grid__logo" src={logo.image} alt={logo.name} loading="lazy" />
+              </a>
+            ) : (
+              <img class="clients-grid__logo" src={logo.image} alt={logo.name} title={logo.description ?? undefined} loading="lazy" />
+            )
+          )}
+        </div>
+      )}
 
       {quoted.length > 0 && (
         <div class="grid grid--3 client-quotes">

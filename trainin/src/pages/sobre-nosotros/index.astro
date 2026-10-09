@@ -1,6 +1,7 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import PageSections from "../../components/PageSections.astro";
+import ChildPageCards from "../../components/ChildPageCards.astro";
 import { fetchData } from "../../functions/fetch";
 
 type PageResponse = {
@@ -17,4 +18,5 @@ const sections = page?.sections ?? [];
 
 <Layout title={page?.title}>
   <PageSections sections={sections} slug={page?.slug} />
+  <ChildPageCards title="Conoce Traninn Logistic" tint={false} />
 </Layout>

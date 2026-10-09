@@ -1,11 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { fetchData, updateSection } from '../functions/fetch'
+import MapPicker, { DEFAULT_MAP_CENTER } from './map-picker'
+import StationsEditor from './stations-editor'
 import {
   inputClass,
   fieldError,
@@ -16,15 +13,6 @@ import {
   AddButton,
   updateArrayItem,
 } from './form-fields'
-
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-})
-
-const DEFAULT_MAP_CENTER = { lat: 25.6714, lng: -100.3094 }
 
 const SECTION_LABELS = {
   page_hero: 'Encabezado de página',
@@ -238,7 +226,7 @@ function PageHeroEditor({ content, onChange, errors }) {
   )
 }
 
-function RichTextEditor({ content, onChange, errors }) {
+export function RichTextEditor({ content, onChange, errors }) {
   return (
     <div className="space-y-4">
       <Field label="Título" error={fieldError(errors, 'content.title')}>
@@ -271,50 +259,18 @@ function RichTextEditor({ content, onChange, errors }) {
           className={inputClass}
         />
       </Field>
+      <ImageField
+        label="Portada del video"
+        hint="Imagen que se muestra antes de reproducir el video. 1280×720 px (16:9) · JPG · máx. 5 MB, ideal menos de 500 KB."
+        value={content.image_video_url}
+        onChange={(value) => onChange({ ...content, image_video_url: value || null })}
+        error={fieldError(errors, 'content.image_video_url')}
+      />
     </div>
   )
 }
 
-function StationsMapPicker({ latitude, longitude, onPick }) {
-  const containerRef = useRef(null)
-  const mapRef = useRef(null)
-  const markerRef = useRef(null)
-
-  useEffect(() => {
-    const map = L.map(containerRef.current).setView([latitude, longitude], 12)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(map)
-
-    map.on('click', (event) => {
-      onPick(event.latlng.lat, event.latlng.lng)
-    })
-
-    mapRef.current = map
-
-    return () => {
-      map.remove()
-      mapRef.current = null
-      markerRef.current = null
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map) return
-
-    if (markerRef.current) {
-      markerRef.current.setLatLng([latitude, longitude])
-    } else {
-      markerRef.current = L.marker([latitude, longitude]).addTo(map)
-    }
-  }, [latitude, longitude])
-
-  return <div ref={containerRef} className="h-64 w-full rounded-xl" />
-}
-
-function StationsMapEditor({ content, onChange, errors }) {
+export function StationsMapEditor({ content, onChange, errors }) {
   const parsed = parseCenter(content.center) ?? DEFAULT_MAP_CENTER
 
   function handlePick(lat, lng) {
@@ -339,7 +295,7 @@ function StationsMapEditor({ content, onChange, errors }) {
       <div className="grid gap-4 sm:grid-cols-2">
         <Field
           label="Centro del mapa"
-          hint="Dirección o coordenadas 'lat,lng'. Puedes escribirlo o hacer clic en el mapa de abajo."
+          hint="Coordenadas 'latitud,longitud'. Puedes escribirlas o hacer clic en el mapa de abajo."
           error={fieldError(errors, 'content.center')}
         >
           <input
@@ -353,8 +309,8 @@ function StationsMapEditor({ content, onChange, errors }) {
         <Field label="Zoom" hint="10-14 es un buen valor para una ciudad" error={fieldError(errors, 'content.zoom')}>
           <input
             type="number"
-            min="1"
-            max="20"
+            min="0"
+            max="22"
             value={content.zoom ?? ''}
             onChange={(e) => onChange({ ...content, zoom: e.target.value })}
             className={inputClass}
@@ -365,7 +321,7 @@ function StationsMapEditor({ content, onChange, errors }) {
         <span className="mb-1 block text-sm text-white/70">
           Haz clic en el mapa para ubicar el centro
         </span>
-        <StationsMapPicker latitude={parsed.lat} longitude={parsed.lng} onPick={handlePick} />
+        <MapPicker latitude={parsed.lat} longitude={parsed.lng} onPick={handlePick} />
       </div>
       {embedSrc && (
         <div>
@@ -924,7 +880,7 @@ const SECTION_EDITORS = {
   testimonials: TestimonialsEditor,
 }
 
-function SectionCard({ section, onUpdated }) {
+function SectionCard({ section, site, onUpdated }) {
   const [content, setContent] = useState(section.content ?? {})
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
@@ -985,6 +941,8 @@ function SectionCard({ section, onUpdated }) {
           {JSON.stringify(content, null, 2)}
         </pre>
       )}
+
+      {section.type === 'stations_map' && <StationsEditor site={site} siteId={section.site_id} />}
     </div>
   )
 }
@@ -1093,7 +1051,7 @@ export function SectionsFields({ site = 'gnu', page, includeGlobals = false, onT
     <div className="space-y-4">
       {sections.length === 0 && <p className="text-sm text-white/50">No hay secciones para esta página.</p>}
       {sections.map((section) => (
-        <SectionCard key={section.id} section={section} onUpdated={handleUpdated} />
+        <SectionCard key={section.id} section={section} site={site} onUpdated={handleUpdated} />
       ))}
     </div>
   )
@@ -1148,7 +1106,7 @@ export function GlobalSectionsFields({ site = 'gnu' }) {
         </p>
       </header>
       {sections.map((section) => (
-        <SectionCard key={section.id} section={section} onUpdated={handleUpdated} />
+        <SectionCard key={section.id} section={section} site={site} onUpdated={handleUpdated} />
       ))}
     </section>
   )

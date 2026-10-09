@@ -1,0 +1,101 @@
+---
+// The site's single logo source. Header and Footer both render this, so the
+// brand mark is swapped in one place.
+//
+// The mark is the TL monogram in public/logo.png. It carries no company name,
+// so it is locked up with the wordmark; pass `markOnly` for the symbol alone.
+const LOGO_SRC = "/logo.png";
+
+interface Props {
+	// The footer sits on the dark band. The monogram's swoosh is near-black,
+	// so there it rides on a light plate instead of vanishing.
+	onDark?: boolean;
+	// The header's mark links home; the footer's does not.
+	href?: string | null;
+	// Symbol without the wordmark beside it.
+	markOnly?: boolean;
+	// Rendered height of the symbol.
+	height?: string;
+}
+
+const { onDark = false, href = null, markOnly = false, height = "2.4rem" } = Astro.props;
+
+const Tag = href ? "a" : "div";
+---
+
+<Tag
+	class:list={["logo", { "logo--on-dark": onDark }]}
+	href={href ?? undefined}
+	aria-label={href ? "Traninn Logistic — Inicio" : undefined}
+>
+	<span class="logo-mark" style={`--logo-height: ${height}`}>
+		<img src={LOGO_SRC} alt={markOnly ? "Traninn Logistic" : ""} width="421" height="367" />
+	</span>
+
+	{
+		!markOnly && (
+			<span class="logo-word">
+				{/* Per the brand manual: TRAN in black, INN in red, LOGISTIC in grey. */}
+				<span class="logo-part logo-part--ink">TRAN</span><span class="logo-part logo-part--red">INN</span>
+				<span class="logo-part logo-part--gray">LOGISTIC</span>
+			</span>
+		)
+	}
+</Tag>
+
+<style>
+	.logo {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.65rem;
+		font-family: var(--font-title);
+		font-size: 1.2rem;
+		font-weight: 800;
+		letter-spacing: 0.01em;
+		white-space: nowrap;
+	}
+
+	.logo-mark {
+		display: grid;
+		place-items: center;
+		height: var(--logo-height);
+	}
+	.logo-mark img {
+		height: 100%;
+		width: auto;
+		object-fit: contain;
+		transition: transform 0.4s var(--ease-out);
+	}
+	.logo:hover .logo-mark img {
+		transform: scale(1.06);
+	}
+
+	/* On the dark footer the monogram's dark swoosh would disappear, so the
+	   symbol sits on a light plate that keeps its brand colours intact. */
+	.logo--on-dark .logo-mark {
+		padding: 0.4rem 0.5rem;
+		border-radius: var(--radius-md);
+		background: #fff;
+	}
+
+	.logo-part--red {
+		color: var(--color-red);
+	}
+	.logo-part--ink {
+		color: var(--color-dark);
+	}
+	.logo--on-dark .logo-part--ink {
+		color: #fff;
+	}
+	.logo-part--gray {
+		color: var(--color-gray);
+		margin-left: 0.3rem;
+	}
+
+	@media (max-width: 420px) {
+		.logo {
+			font-size: 1rem;
+			gap: 0.5rem;
+		}
+	}
+</style>

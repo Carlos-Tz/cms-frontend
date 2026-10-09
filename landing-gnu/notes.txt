@@ -1,0 +1,7 @@
+sobre-nosotros/proposito empresarial recycles sobre nosotros/valores images
+
+Overrides:
+Distintivo ESR -> Reconocimientos
+Ecovadis -> Compromiso sostenible
+Voluntariado -> Voluntariado corporativo
+Iniciativas de RSE -> Iniciativas y programas

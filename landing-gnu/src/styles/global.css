@@ -14,8 +14,9 @@ body {
   margin: 0;
   /* Read by .site-header (own height) and .hero (fills what's left of the
      viewport below it) — declared here, not on .site-header, since .hero is
-     its sibling and wouldn't otherwise inherit it. */
-  --header-height: 3.8125rem;
+     its sibling and wouldn't otherwise inherit it. Bumped slightly from
+     3.8125rem to fit the bigger navbar logo without clipping it. */
+  --header-height: 4.25rem;
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
@@ -209,7 +210,11 @@ button {
   text-wrap: balance;
 }
 
-/* A short gradient rule under centered headings — the recurring brand mark. */
+/* A short gradient rule under centered headings — the recurring brand mark.
+   Grows from its own center, not its left edge: with a left origin, the
+   mid-animation frames show a short bar hugging the left side of where the
+   final centered bar will land, reading as "the rule is misaligned" to
+   anyone who sees that frame (e.g. a screenshot) instead of the brief grow-in. */
 .section-head--center .section-title::after {
   content: "";
   display: block;
@@ -218,7 +223,7 @@ button {
   margin: 1rem auto 0;
   border-radius: var(--radius-full);
   background: var(--gradient-brand);
-  transform-origin: left;
+  transform-origin: center;
 }
 
 .section-head--center.is-visible .section-title::after,
@@ -244,14 +249,23 @@ button {
 .grid {
   display: grid;
   gap: 1.5rem;
+  /* With fewer cards than columns (e.g. a single feature_grid item), the
+     leftover track space centers as margin instead of stretching the last
+     card — see the capped track size below. */
+  justify-content: center;
 }
 
 .grid--3 {
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  /* Capped, not `1fr`: `1fr` would let a sparse row (down to a single card)
+     grow to fill the whole container — fine at 3-up, but a lone card's
+     1:1 media (card--feature) blows up to the full container width and
+     towers over its own text. The cap matches what a full 3-up row already
+     settles to, so normal rows look unchanged. */
+  grid-template-columns: repeat(auto-fit, minmax(240px, 20rem));
 }
 
 .grid--4 {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 18rem));
 }
 
 /* FeatureGrid's optional banner (1024x576 / 16:9 per the content guide),
@@ -506,6 +520,27 @@ button {
   transform: rotate(-6deg) scale(1.08);
 }
 
+/* A real uploaded photo (square, 1254×1254) gets shown as one — a banner
+   bled to the card's own edges, not forced into the small tinted icon tile
+   above (which only reads at that size as a flat-color SVG). */
+.card--feature .card__media {
+  margin: -1.75rem -1.75rem 1.25rem;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.card--feature .card__media-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease-out);
+}
+
+.card--feature:hover .card__media-img {
+  transform: scale(1.04);
+}
+
 .card--surface {
   background: var(--color-bg-alt);
 }
@@ -540,6 +575,41 @@ button {
   margin-top: 0.625rem;
   font-size: 0.9375rem;
   color: var(--color-text-60);
+}
+
+/* A small brand mark in the lead-capture form's corner (LeadCaptureForm.astro)
+   — a trust signal right where a visitor is about to hand over their details.
+   Pinned top-right instead of sitting inline above the title, which left an
+   empty line's worth of dead space next to it. */
+.card__brand-logo {
+  position: absolute;
+  top: 1.75rem;
+  right: 2rem;
+  height: 2.75rem;
+  width: auto;
+}
+
+/* A little attention-getting wiggle: once when the card scrolls into view
+   (.is-visible is added once by the reveal IntersectionObserver and never
+   removed, so this plays exactly once per load), and again any time a
+   visitor focuses into the form — a small "hey, look at who's asking"
+   touch rather than a static logo nobody notices. */
+@keyframes brand-logo-shake {
+  10%, 90% { transform: translateX(-1px) rotate(-2deg); }
+  20%, 80% { transform: translateX(2px) rotate(2deg); }
+  30%, 50%, 70% { transform: translateX(-4px) rotate(-4deg); }
+  40%, 60% { transform: translateX(4px) rotate(4deg); }
+}
+
+.card.is-visible .card__brand-logo,
+.card:focus-within .card__brand-logo {
+  animation: brand-logo-shake 0.6s var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card__brand-logo {
+    animation: none !important;
+  }
 }
 
 /* Header */
@@ -598,7 +668,7 @@ button {
 
 .brand__logo {
   display: block;
-  height: 2.25rem;
+  height: 2.75rem;
   width: auto;
 }
 
@@ -1527,7 +1597,7 @@ body.nav-open {
 
 .logo-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
   gap: 2rem;
   align-items: start;
 }
@@ -1548,7 +1618,10 @@ body.nav-open {
   align-items: center;
   justify-content: center;
   width: 100%;
-  aspect-ratio: 16 / 9;
+  /* Matches the 800x400px upload size the content guide now asks for —
+     logos sized to that ratio fill the box instead of leaving vertical
+     padding inside a taller 16:9 one. */
+  aspect-ratio: 2 / 1;
 }
 
 .logo-card__img {
@@ -1608,7 +1681,7 @@ body.nav-open {
 
 .logo-marquee__item {
   flex: 0 0 auto;
-  width: 13rem;
+  width: 14rem;
 }
 
 @keyframes logo-marquee-scroll {
@@ -2535,6 +2608,15 @@ body.nav-open {
   text-wrap: pretty;
 }
 
+/* A paragraph whose only content is a <time> — the byline left over from a
+   pasted article's <header> (lib/richText.ts unwraps the <header> itself but
+   leaves its content in place) — reads as metadata, not body copy. */
+.prose p:has(> time:only-child) {
+  margin-top: 0.375rem;
+  font-size: var(--text-small);
+  color: var(--color-text-40);
+}
+
 .prose :is(h1, h2, h3, h4) {
   color: var(--color-text);
   text-wrap: balance;
@@ -2662,9 +2744,29 @@ body.nav-open {
   border-bottom: 0;
 }
 
-/* rich_text section: its column, and the first paragraph as a lead-in. */
+/* rich_text section: its column, and the first paragraph as a lead-in. A
+   touch wider than before — on the wide .container this still reads as one
+   comfortable reading column, it just doesn't strand quite so much of the
+   wide container as flat space beside it. */
 .rich-text {
-  max-width: 46rem;
+  max-width: 52rem;
+}
+
+/* The text-only rich_text section (no image/video) — clips its own aurora
+   wash and keeps the copy above it. */
+.rich-text-plain {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.rich-text-plain .aurora {
+  z-index: 0;
+}
+
+.rich-text-plain .container {
+  position: relative;
+  z-index: 1;
 }
 
 .rich-text > .section-title + .prose,
@@ -2825,12 +2927,16 @@ body.nav-open {
   box-shadow: var(--shadow-float);
 }
 
-.rich-text-media__video iframe {
+.rich-text-media__video :is(iframe, img) {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   border: none;
+}
+
+.rich-text-media__video img {
+  object-fit: cover;
 }
 
 /* Footer */
@@ -3658,6 +3764,29 @@ a.stations-list__phone:hover {
   color: var(--color-text);
 }
 
+/* A small brand mark above "Combustible actual" — in normal flow (not
+   absolutely positioned over the card) so it reserves its own real space
+   instead of guessing at how much blank space .sim__form's vertical
+   centering happens to leave above the field. That guess was wrong as soon
+   as the result panel's height differed from whatever state this was built
+   against (no breakdown rows, a different fuel, etc.), and the logo ended
+   up floating on top of the label instead of above it. */
+.sim__brand-logo {
+  /* .sim__form is a flex column, which stretches block children to its
+     full width by default — without this, "width: auto" resolves to that
+     stretched width instead of the image's own intrinsic width, squashing
+     the square logo into a wide, distorted smear. */
+  align-self: flex-start;
+  display: block;
+  height: 2.5rem;
+  width: auto;
+  margin-bottom: 1.25rem;
+}
+
+/* The shake now lives on the submit button (see .sim__submit) instead — a
+   static logo reads better than one that visibly collided with the label
+   in production. */
+
 @media (min-width: 640px) {
   .sim--band {
     grid-template-columns: 1fr 1fr;
@@ -3706,6 +3835,29 @@ a.stations-list__phone:hover {
 
 .sim__submit:hover svg {
   transform: translateX(4px);
+}
+
+/* The attention-getting wiggle moved here from the logo (see .sim__brand-logo)
+   — a wide pill button reads better with a plain horizontal shake than the
+   rotate+shift used elsewhere, which looks exaggerated on something this
+   wide. Same triggers: once on reveal, again whenever the card is focused
+   into. */
+@keyframes cta-attention-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.sim--band.is-visible .sim__submit,
+.sim--band:focus-within .sim__submit {
+  animation: cta-attention-shake 0.6s var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sim__submit {
+    animation: none !important;
+  }
 }
 
 .sim.is-loading .simulator__result-value {
@@ -3963,6 +4115,20 @@ body:not(:has(.whatsapp-fab)) .sim-fab {
   color: #ffffff;
 }
 
+/* The actual brand mark (not the generic calculator icon) — a white tile
+   instead of the gradient fill, since the logo itself is already blue and
+   would wash out against a blue/sky-blue background. */
+.sim-fab__badge--brand {
+  background: #ffffff;
+  padding: 0.25rem;
+}
+
+.sim-fab__badge--brand img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .sim-fab__title {
   font-family: var(--font-display);
   font-weight: 800;
@@ -4005,6 +4171,14 @@ body:not(:has(.whatsapp-fab)) .sim-fab {
   .sim-fab {
     right: 1rem;
     bottom: 5.75rem;
+  }
+
+  /* Matches .sim-fab's own mobile `right` above — without this the two FABs
+     sit 0.5rem out of line with each other (1rem vs. the desktop 1.5rem),
+     which reads as a visible horizontal misalignment between the two
+     stacked buttons on a phone screen. */
+  .whatsapp-fab {
+    right: 1rem;
   }
 
   .sim-fab__panel {
@@ -4221,7 +4395,7 @@ body:not(:has(.whatsapp-fab)) .sim-fab {
 }
 
 .clients-band .logo-marquee__item {
-  width: 12rem;
+  width: 14rem;
 }
 
 .client-quotes {
@@ -4232,7 +4406,7 @@ body:not(:has(.whatsapp-fab)) .sim-fab {
   overflow: hidden;
 }
 
-.rich-text-media__video iframe {
+.rich-text-media__video :is(iframe, img) {
   border-radius: inherit;
 }
 

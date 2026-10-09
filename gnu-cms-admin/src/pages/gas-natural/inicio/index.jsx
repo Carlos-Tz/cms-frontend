@@ -1,12 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router'
-import L from 'leaflet'
-import 'leaflet/dist/leaflet.css'
-import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
-import markerIcon from 'leaflet/dist/images/marker-icon.png'
-import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import { fetchData, updateSection } from '../../../functions/fetch'
-import { GlobalSectionsFields } from '../../../components/page-sections-editor'
+import { GlobalSectionsFields, StationsMapEditor } from '../../../components/page-sections-editor'
+import StationsEditor from '../../../components/stations-editor'
 import {
   inputClass,
   fieldError,
@@ -18,15 +14,6 @@ import {
   updateArrayItem,
 } from '../../../components/form-fields'
 
-delete L.Icon.Default.prototype._getIconUrl
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-})
-
-const DEFAULT_MAP_CENTER = { lat: 25.6714, lng: -100.3094 }
-
 const SECTION_LABELS = {
   banner_carousel: 'Carrusel de banners',
   savings_simulator: 'Simulador de ahorro',
@@ -34,12 +21,6 @@ const SECTION_LABELS = {
   testimonials: 'Testimonios',
   stations_map: 'Mapa de estaciones',
   lead_capture_form: 'Formulario de contacto',
-}
-
-function parseCenter(center) {
-  const match = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/.exec(center ?? '')
-  if (!match) return null
-  return { lat: Number(match[1]), lng: Number(match[2]) }
 }
 
 function BannerCarouselEditor({ content, onChange, errors }) {
@@ -356,113 +337,6 @@ function TestimonialsEditor({ content, onChange, errors }) {
   )
 }
 
-function StationsMapPicker({ latitude, longitude, onPick }) {
-  const containerRef = useRef(null)
-  const mapRef = useRef(null)
-  const markerRef = useRef(null)
-
-  useEffect(() => {
-    const map = L.map(containerRef.current).setView([latitude, longitude], 12)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
-    }).addTo(map)
-
-    map.on('click', (event) => {
-      onPick(event.latlng.lat, event.latlng.lng)
-    })
-
-    mapRef.current = map
-
-    return () => {
-      map.remove()
-      mapRef.current = null
-      markerRef.current = null
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    const map = mapRef.current
-    if (!map) return
-
-    if (markerRef.current) {
-      markerRef.current.setLatLng([latitude, longitude])
-    } else {
-      markerRef.current = L.marker([latitude, longitude]).addTo(map)
-    }
-  }, [latitude, longitude])
-
-  return <div ref={containerRef} className="h-64 w-full rounded-xl" />
-}
-
-function StationsMapEditor({ content, onChange, errors }) {
-  const parsed = parseCenter(content.center) ?? DEFAULT_MAP_CENTER
-
-  function handlePick(lat, lng) {
-    onChange({ ...content, center: `${lat.toFixed(6)},${lng.toFixed(6)}` })
-  }
-
-  const embedSrc = content.center
-    ? `https://www.google.com/maps?q=${encodeURIComponent(content.center)}&z=${content.zoom || 12}&output=embed`
-    : null
-
-  return (
-    <div className="space-y-4">
-      <Field label="Título" error={fieldError(errors, 'content.title')}>
-        <input
-          type="text"
-          value={content.title ?? ''}
-          onChange={(e) => onChange({ ...content, title: e.target.value })}
-          className={inputClass}
-        />
-        <CharHint value={content.title} recommended={40} max={60} />
-      </Field>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field
-          label="Centro del mapa"
-          hint="Dirección o coordenadas 'lat,lng'. Puedes escribirlo o hacer clic en el mapa de abajo."
-          error={fieldError(errors, 'content.center')}
-        >
-          <input
-            type="text"
-            placeholder="25.671400,-100.309400"
-            value={content.center ?? ''}
-            onChange={(e) => onChange({ ...content, center: e.target.value })}
-            className={inputClass}
-          />
-        </Field>
-        <Field label="Zoom" hint="10-14 es un buen valor para una ciudad" error={fieldError(errors, 'content.zoom')}>
-          <input
-            type="number"
-            min="1"
-            max="20"
-            value={content.zoom ?? ''}
-            onChange={(e) => onChange({ ...content, zoom: e.target.value })}
-            className={inputClass}
-          />
-        </Field>
-      </div>
-      <div>
-        <span className="mb-1 block text-sm text-white/70">
-          Haz clic en el mapa para ubicar el centro
-        </span>
-        <StationsMapPicker latitude={parsed.lat} longitude={parsed.lng} onPick={handlePick} />
-      </div>
-      {embedSrc && (
-        <div>
-          <span className="mb-1 block text-sm text-white/70">Vista previa (como se ve en el sitio)</span>
-          <iframe
-            src={embedSrc}
-            loading="lazy"
-            title="Vista previa del mapa"
-            className="h-56 w-full rounded-xl border border-white/10"
-          />
-        </div>
-      )}
-    </div>
-  )
-}
-
 function LeadCaptureFormEditor({ content, onChange, errors }) {
   return (
     <div className="space-y-4">
@@ -573,6 +447,8 @@ function SectionCard({ section, onUpdated }) {
           {JSON.stringify(content, null, 2)}
         </pre>
       )}
+
+      {section.type === 'stations_map' && <StationsEditor site="gnu-vehicular" siteId={section.site_id} />}
     </div>
   )
 }

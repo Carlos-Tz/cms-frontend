@@ -1,0 +1,122 @@
+---
+// Cards for the sub-pages of whichever CMS menu branch matches the current
+// URL. Parent pages like /nuestros-servicios carry only a hero and a short
+// paragraph, which leaves the page looking unfinished; their own children are
+// the most useful thing to put in that space, and they come from the menu, so
+// nothing here is invented.
+import { fetchData } from "../functions/fetch";
+
+type MenuItem = { slug: string; path: string; title: string; children?: MenuItem[] };
+type MenuResponse = { status: string; data: MenuItem[] };
+
+interface Props {
+	title?: string;
+	// This block renders outside PageSections, so the page says whether it
+	// continues the zebra on a tinted band or a plain one.
+	tint?: boolean;
+}
+
+const { title = "Explora esta sección", tint = true } = Astro.props;
+
+const normalize = (path: string) => (path !== "/" && path.endsWith("/") ? path.slice(0, -1) : path);
+const currentPath = normalize(Astro.url.pathname);
+
+const menuResponse: MenuResponse | undefined = await fetchData("menu");
+
+const findBranch = (items: MenuItem[]): MenuItem | undefined => {
+	for (const item of items) {
+		if (normalize(item.path) === currentPath && item.children?.length) return item;
+		const nested = findBranch(item.children ?? []);
+		if (nested) return nested;
+	}
+	return undefined;
+};
+
+const children = findBranch(menuResponse?.data ?? [])?.children ?? [];
+
+// Font Awesome glyph per child, chosen from words in its slug so a new CMS
+// page still lands on something sensible instead of a blank tile.
+const ICON_BY_KEYWORD: [RegExp, string][] = [
+	[/gnc|gas|combustible/, "fa-gas-pump"],
+	[/logistic|ruta|route/, "fa-route"],
+	[/carga|pesad|tonelaje/, "fa-truck-ramp-box"],
+	[/transport|flota|unidad/, "fa-truck-fast"],
+	[/hacemos|servicio/, "fa-boxes-stacked"],
+	[/proposito|mision|valor/, "fa-bullseye"],
+	[/historia|trayectoria/, "fa-clock-rotate-left"],
+	[/ubicacion|base|mapa/, "fa-location-dot"],
+	[/contacto|asesor/, "fa-headset"],
+];
+
+const iconFor = (slug: string) =>
+	ICON_BY_KEYWORD.find(([pattern]) => pattern.test(slug))?.[1] ?? "fa-circle-chevron-right";
+---
+
+{
+	children.length > 0 && (
+		<div class:list={["band", { "band--tint": tint }]}>
+		<section class="section child-pages">
+			<div class="container">
+				<div class="section-head">
+					<h2 class="section-title">{title}</h2>
+				</div>
+
+				<div class="child-grid">
+					{children.map((child) => (
+						<a class="card child-card" href={child.path}>
+							<span class="icon-chip icon-chip--lg child-icon" aria-hidden="true">
+								<i class={`fa-solid ${iconFor(child.slug)}`} />
+							</span>
+
+							<h3 class="child-title">{child.title}</h3>
+
+							<span class="link-arrow child-link">
+								Ver más
+								<i class="fa-solid fa-arrow-right-long arrow" aria-hidden="true" />
+							</span>
+						</a>
+					))}
+				</div>
+			</div>
+		</section>
+		</div>
+	)
+}
+
+<style>
+	.child-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+		gap: 1.5rem;
+	}
+
+	.child-card {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 1rem;
+		padding: 2rem 1.9rem;
+	}
+
+	.child-icon {
+		transition: background 0.35s var(--ease-out), color 0.35s var(--ease-out),
+			transform 0.35s var(--ease-out);
+	}
+	.child-card:hover .child-icon {
+		background: var(--color-red);
+		color: #fff;
+		transform: translateY(-3px);
+	}
+
+	.child-title {
+		font-size: 1.25rem;
+		transition: color 0.3s ease;
+	}
+	.child-card:hover .child-title {
+		color: var(--color-red);
+	}
+
+	.child-link {
+		margin-top: auto;
+	}
+</style>

@@ -12,6 +12,8 @@ const { title, subtitle, image } = Astro.props;
 
 <section class:list={["page-hero", { "page-hero--image": !!image }]}>
 	{image && <img src={image} alt="" class="page-hero-img" />}
+	<span class="page-hero-glow" aria-hidden="true"></span>
+
 	<div class="container page-hero-content">
 		<h1 class="page-hero-title">{title}</h1>
 		{subtitle && <p class="page-hero-subtitle">{subtitle}</p>}
@@ -23,8 +25,9 @@ const { title, subtitle, image } = Astro.props;
 		position: relative;
 		background: var(--color-dark);
 		color: var(--color-text-on-dark);
-		padding: 5rem 0;
+		padding: clamp(4rem, 8vw, 7rem) 0;
 		overflow: hidden;
+		isolation: isolate;
 	}
 
 	.page-hero-img {
@@ -34,6 +37,20 @@ const { title, subtitle, image } = Astro.props;
 		height: 100%;
 		object-fit: cover;
 		opacity: 0.35;
+		z-index: -2;
+		/* Slow drift, so a static banner image still feels alive. */
+		animation: page-hero-drift 24s ease-in-out infinite alternate;
+	}
+
+	/* Angled brand wash sweeping in from the right, echoing the diagonal
+	   accents the reference template uses on its inner banners. */
+	.page-hero-glow {
+		position: absolute;
+		inset: -30% -20% -30% 45%;
+		z-index: -1;
+		background: linear-gradient(115deg, rgba(200, 16, 46, 0) 0%, rgba(200, 16, 46, 0.55) 100%);
+		transform: skewX(-14deg);
+		pointer-events: none;
 	}
 
 	.page-hero-content {
@@ -42,14 +59,66 @@ const { title, subtitle, image } = Astro.props;
 	}
 
 	.page-hero-title {
-		font-size: clamp(2rem, 4vw, 2.75rem);
-		line-height: 1.15;
+		font-size: clamp(2.25rem, 5vw, 3.75rem);
+		line-height: 1.08;
+		animation: page-hero-in 0.8s var(--ease-out) both;
 	}
 
 	.page-hero-subtitle {
-		margin-top: 1rem;
+		margin-top: 1.1rem;
 		max-width: 34rem;
 		font-size: 1.05rem;
 		color: var(--color-text-on-dark-60);
+		animation: page-hero-in 0.8s 0.12s var(--ease-out) both;
+	}
+
+	/* The title sits above a rule that widens once the banner has settled. */
+	.page-hero-title::after {
+		content: "";
+		display: block;
+		width: 0;
+		height: 4px;
+		margin-top: 1.25rem;
+		border-radius: var(--radius-full);
+		background: #fff;
+		animation: page-hero-rule 0.9s 0.35s var(--ease-out) forwards;
+	}
+
+	@keyframes page-hero-in {
+		from {
+			opacity: 0;
+			transform: translateY(1.5rem);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+
+	@keyframes page-hero-rule {
+		to {
+			width: 4.5rem;
+		}
+	}
+
+	@keyframes page-hero-drift {
+		from {
+			transform: scale(1.06) translate3d(0, 0, 0);
+		}
+		to {
+			transform: scale(1.14) translate3d(-1.5%, -1%, 0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.page-hero-img,
+		.page-hero-title,
+		.page-hero-subtitle {
+			animation: none;
+		}
+		.page-hero-title::after {
+			width: 4.5rem;
+			animation: none;
+		}
 	}
 </style>

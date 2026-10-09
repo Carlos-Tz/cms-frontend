@@ -68,7 +68,7 @@ function withAutoplay(url: string) {
 const embedUrl = video_url ? withAutoplay(toEmbedUrl(video_url)) : null;
 ---
 
-<section class="section">
+<section class="section zebra">
   <div class="container" style="max-width: 46rem;">
     {title && <h2 class="section-title">{title}</h2>}
     <div class="prose" set:html={body} />

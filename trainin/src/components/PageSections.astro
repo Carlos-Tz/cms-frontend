@@ -9,6 +9,7 @@ import RichText from "./RichText.astro";
 import FeatureGrid from "./FeatureGrid.astro";
 import ImageGallery from "./ImageGallery.astro";
 import StationsMap from "./StationsMap.astro";
+import Marquee from "./Marquee.astro";
 import Clientes from "./Clientes.astro";
 import Contacto from "./Contacto.astro";
 import { mediaUrl } from "../functions/fetch";
@@ -58,19 +59,44 @@ interface Props {
 }
 
 const { sections, slug } = Astro.props;
+
+// Full-bleed banners own their background and sit outside the zebra; every
+// other section is wrapped in a band that alternates plain / tinted down the
+// page, so the rhythm holds whatever mix of sections the CMS returns.
+const FULL_BLEED = new Set(["banner_carousel", "page_hero"]);
+let bandIndex = 0;
+const bandTint: (boolean | null)[] = sections.map((section) =>
+	FULL_BLEED.has(section.type) ? null : bandIndex++ % 2 === 1
+);
 ---
 
 {
 	sections.map((section, index) => {
-		switch (section.type) {
+		const tint = bandTint[index];
+
+		const rendered = (() => {
+			switch (section.type) {
 			case "banner_carousel": {
 				const { slides = [] } = section.content as BannerCarousel;
-				return slides.length ? (
+				if (!slides.length) return null;
+
+				const hero = (
 					<Hero
 						slides={slides.map((slide) => ({ ...slide, image: mediaUrl(slide.image) }))}
 						compact={index > 0}
 					/>
-				) : null;
+				);
+
+				// The keyword band belongs directly under a full-height opening
+				// banner, the way the reference template places it.
+				return index === 0 ? (
+					<>
+						{hero}
+						<Marquee />
+					</>
+				) : (
+					hero
+				);
 			}
 
 			case "page_hero": {
@@ -124,8 +150,14 @@ const { sections, slug } = Astro.props;
 				);
 			}
 
-			default:
-				return null;
-		}
+				default:
+					return null;
+			}
+		})();
+
+		if (!rendered) return null;
+		if (tint === null) return rendered;
+
+		return <div class:list={["band", { "band--tint": tint }]}>{rendered}</div>;
 	})
 }

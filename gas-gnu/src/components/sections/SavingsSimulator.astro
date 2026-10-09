@@ -18,56 +18,76 @@ interface Props {
   // needs this to pick the right one — without it it silently answers with
   // the site's first.
   page?: string | null;
+  // "section": the full-bleed block embedded in a page's own flow (the
+  // homepage). "panel": the same functionality recycled as a closable
+  // floating panel, available site-wide from the FAB in the layout.
+  variant?: "section" | "panel";
 }
 
-const { title, intro, fuel_prices = [], page = null } = Astro.props;
+const { title, intro, fuel_prices = [], page = null, variant = "section" } = Astro.props;
 
 const gasNaturalPrice = fuel_prices.find((fuel) => fuel.fuel === "gas-natural");
 const comparableFuels = fuel_prices.filter((fuel) => fuel.fuel !== "gas-natural");
+const isPanel = variant === "panel";
 ---
 
 {comparableFuels.length > 0 && (
-  <section class="simulator-band" id="simulador">
-    <div class="container simulator">
-      <div>
-        <span class="eyebrow eyebrow--on-dark">Simulador de ahorro</span>
-        <h2 class="simulator__heading">{title ?? "Descubre cuánto te ahorras al cambiar a GNV"}</h2>
-        <p class="simulator__lead">
-          {intro ?? "Ingresa tu gasto mensual actual en gasolina y descubre tu ahorro estimado al cambiarte a gas natural vehicular."}
-        </p>
-        <form class="savings-simulator-form" style="margin-top: 1.5rem;">
-          <div class="field field--on-dark">
-            <label for="current-fuel">Combustible que usas actualmente</label>
-            <select class="savings-simulator-fuel" id="current-fuel" name="current-fuel">
-              {comparableFuels.map((fuel) => (
-                <option value={fuel.fuel}>{fuel.label}</option>
-              ))}
-            </select>
-          </div>
-          <div class="field field--on-dark">
-            <label for="monthly-spend">Gasto mensual actual (MXN)</label>
-            <input type="number" class="savings-simulator-spend" id="monthly-spend" name="monthly-spend" min="0" placeholder="Ej. 3000" required />
-          </div>
-          <button type="submit" class="btn-primary">Calcular mi ahorro</button>
-        </form>
-      </div>
-      <div class="simulator__result">
-        <p class="simulator__result-value savings-simulator-value">$0 MXN</p>
-        <p class="simulator__result-label">Ahorro mensual estimado</p>
-        <p class="simulator__result-label savings-simulator-annual" style="margin-top: 0.75rem;">
-          Ahorro anual estimado: $0 MXN
-        </p>
-        <p class="simulator__percent savings-simulator-percent" hidden></p>
-        <dl class="simulator__breakdown savings-simulator-breakdown" hidden>
+  <section
+    class:list={["simulator-band", { "simulator-band--panel": isPanel }]}
+    id={isPanel ? "simulator-panel" : "simulador"}
+  >
+    {isPanel && (
+      <button type="button" class="simulator-panel__close" aria-label="Cerrar simulador">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="6" y1="6" x2="18" y2="18" />
+          <line x1="18" y1="6" x2="6" y2="18" />
+        </svg>
+      </button>
+    )}
+    <div class="container">
+      <div class="simulator-card">
+        <div class="simulator">
           <div>
-            <dt class="savings-simulator-current-label">Hoy pagas</dt>
-            <dd class="savings-simulator-current-cost"></dd>
+            <span class="eyebrow eyebrow--on-dark">Simulador de ahorro</span>
+            <h2 class="simulator__heading">{title ?? "Descubre cuánto te ahorras al cambiar a GNV"}</h2>
+            <p class="simulator__lead">
+              {intro ?? "Ingresa tu gasto mensual actual en gasolina y descubre tu ahorro estimado al cambiarte a gas natural vehicular."}
+            </p>
+            <form class="savings-simulator-form" style="margin-top: 1.5rem;">
+              <div class="field field--on-dark">
+                <label for="current-fuel">Combustible que usas actualmente</label>
+                <select class="savings-simulator-fuel" id="current-fuel" name="current-fuel">
+                  {comparableFuels.map((fuel) => (
+                    <option value={fuel.fuel}>{fuel.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div class="field field--on-dark">
+                <label for="monthly-spend">Gasto mensual actual (MXN)</label>
+                <input type="number" class="savings-simulator-spend" id="monthly-spend" name="monthly-spend" min="0" placeholder="Ej. 3000" required />
+              </div>
+              <button type="submit" class="btn-primary">Calcular mi ahorro</button>
+            </form>
           </div>
-          <div>
-            <dt>Con gas natural</dt>
-            <dd class="savings-simulator-gas-cost"></dd>
+          <div class="simulator__result">
+            <p class="simulator__result-value savings-simulator-value">$0 MXN</p>
+            <p class="simulator__result-label">Ahorro mensual estimado</p>
+            <p class="simulator__result-label savings-simulator-annual" style="margin-top: 0.75rem;">
+              Ahorro anual estimado: $0 MXN
+            </p>
+            <p class="simulator__percent savings-simulator-percent" hidden></p>
+            <dl class="simulator__breakdown savings-simulator-breakdown" hidden>
+              <div>
+                <dt class="savings-simulator-current-label">Hoy pagas</dt>
+                <dd class="savings-simulator-current-cost"></dd>
+              </div>
+              <div>
+                <dt>Con gas natural</dt>
+                <dd class="savings-simulator-gas-cost"></dd>
+              </div>
+            </dl>
           </div>
-        </dl>
+        </div>
       </div>
     </div>
   </section>

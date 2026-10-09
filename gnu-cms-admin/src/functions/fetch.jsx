@@ -331,6 +331,89 @@ export async function deleteProduct(id) {
     }
 }
 
+export async function createStation(payload) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/stations`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        })
+
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error creating station:', error)
+        return { status: 'error', meta: { message: 'No se pudo crear la estación' } }
+    }
+}
+
+export async function updateStation(id, payload) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/stations/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        })
+
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error updating station:', error)
+        return { status: 'error', meta: { message: 'No se pudo actualizar la estación' } }
+    }
+}
+
+export async function deleteStation(id) {
+    const tenantDomain = useSessionStore.getState().tenantDomain
+    const accessToken = useSessionStore.getState().accessToken
+
+    try {
+        const response = await fetch(`${tenantDomain}/api/admin/stations/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Accept': 'application/json',
+            },
+        })
+
+        if (response.status === 401) {
+            handleUnauthorized()
+            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+        }
+
+        if (response.status === 204) {
+            return { status: 'success' }
+        }
+
+        return await response.json()
+    } catch (error) {
+        console.error('Error deleting station:', error)
+        return { status: 'error', meta: { message: 'No se pudo eliminar la estación' } }
+    }
+}
+
 export async function deleteAppointment(id) {
     const tenantDomain = useSessionStore.getState().tenantDomain
     const accessToken = useSessionStore.getState().accessToken

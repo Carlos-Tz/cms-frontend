@@ -16,7 +16,7 @@ const { title, intro, locations, center, zoom = "12" } = Astro.props;
 const embedSrc = center ? `https://www.google.com/maps?q=${encodeURIComponent(center)}&z=${zoom}&output=embed` : null;
 ---
 
-<section class="section" id="ubicaciones">
+<section class="section zebra" id="ubicaciones">
   <div class="container locations">
     <div>
       <span class="eyebrow">Ubicaciones</span>

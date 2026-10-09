@@ -12,6 +12,7 @@ const posts = await fetchBlogPosts();
 <Layout title="Blog">
   <PageHero title="Blog" />
 
+  <div class="band band--tint">
   <section class="section blog-list-section">
     <div class="container">
       {posts.length ? (
@@ -22,17 +23,17 @@ const posts = await fetchBlogPosts();
               <article class="card blog-card">
                 <a class="blog-card-link" href={`/blog/${post.slug}`}>
                   {post.cover_image && (
-                    <div class="blog-card-image">
+                    <div class="blog-card-image shine">
                       <img src={mediaUrl(post.cover_image)} alt="" loading="lazy" />
+                      {published && (
+                        <time class="blog-card-date" datetime={post.published_at}>{published}</time>
+                      )}
                     </div>
                   )}
                   <div class="blog-card-body">
-                    {published && (
-                      <time class="blog-card-date" datetime={post.published_at}>{published}</time>
-                    )}
                     <h2 class="blog-card-title">{post.title}</h2>
                     {post.excerpt && <p class="blog-card-excerpt">{post.excerpt}</p>}
-                    <span class="blog-card-more">Leer más →</span>
+                    <span class="blog-card-more link-arrow">Leer más<span class="arrow" aria-hidden="true">→</span></span>
                   </div>
                 </a>
               </article>
@@ -44,6 +45,7 @@ const posts = await fetchBlogPosts();
       )}
     </div>
   </section>
+  </div>
 </Layout>
 
 <style>
@@ -63,6 +65,7 @@ const posts = await fetchBlogPosts();
   }
 
   .blog-card-image {
+    position: relative;
     aspect-ratio: 16 / 10;
     overflow: hidden;
   }
@@ -84,11 +87,20 @@ const posts = await fetchBlogPosts();
   }
 
   .blog-card-date {
-    font-size: 0.8rem;
+    position: absolute;
+    left: 1rem;
+    bottom: 1rem;
+    z-index: 3;
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-full);
+    background: var(--color-red);
+    color: #fff;
+    font-family: var(--font-title);
+    font-size: 0.78rem;
     font-weight: 600;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.03em;
     text-transform: uppercase;
-    color: var(--color-gray);
+    box-shadow: var(--shadow-cta);
   }
 
   .blog-card-title {

@@ -46,7 +46,7 @@ const articleJsonLd = post
   <main>
     {post ? (
       <>
-        <article class="section">
+        <article class="section zebra">
           <div class="container blog-post">
             <a class="blog-post__back" href="/blog">← Volver al blog</a>
             <p class="blog-card__tag"><time datetime={post.published_at}>{formatDate(post.published_at)}</time></p>
@@ -58,7 +58,7 @@ const articleJsonLd = post
         </article>
 
         {morePosts.length > 0 && (
-          <section class="section section--alt">
+          <section class="section zebra">
             <div class="container">
               <div class="section-head section-head--center">
                 <span class="eyebrow">Sigue leyendo</span>
