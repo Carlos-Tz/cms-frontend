@@ -996,12 +996,14 @@ body.nav-open {
   }
 }
 
-/* Hero — full-bleed, CMS-driven carousel. Fills exactly what's left of the
-   viewport below the sticky header (100dvh accounts for mobile browser
-   chrome), so there's never a gap of bare background under the fold. */
+/* Hero — full-bleed, CMS-driven carousel. Sized to the banner media's own
+   ratio so it shows whole: 40vw is 5:2, the common GIF size (800x320); the
+   2048x768 (8:3) photos crop only a sliver under cover. Never taller than
+   what's left of the viewport below the sticky header (100dvh accounts for
+   mobile browser chrome). */
 .hero {
   position: relative;
-  height: calc(100dvh - var(--header-height));
+  height: min(40vw, calc(100dvh - var(--header-height)));
   min-height: 28rem;
   overflow: hidden;
   background: var(--color-ink);
@@ -1062,6 +1064,26 @@ body.nav-open {
   animation:
     hero-slide-img-in 1.4s var(--ease-out) both,
     hero-slide-img-zoom 24s ease-in-out infinite;
+}
+
+/* Animated GIF slides: shown whole (contain, not cropped) and fade in only,
+   no zoom. A blurred copy behind fills the leftover strips (see
+   HeroCarousel.astro). */
+.hero-slide__img--gif {
+  object-fit: contain;
+  animation: hero-slide-img-in 1.4s var(--ease-out) both;
+}
+
+.hero-slide__img-fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  /* Scaled up so the blur's soft edges stay outside the hero. */
+  transform: scale(1.1);
+  filter: blur(24px) brightness(0.7);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2385,12 +2407,17 @@ body.nav-open {
    carousel had) — `max()` also fills what's left of the viewport, same fix,
    same --header-height var. */
 .page-hero--image {
-  /* Capped so an interior page opens on its content, not on a whole screen
-     of photo with nothing to read below it. */
-  min-height: clamp(22rem, 37.5vw, 34rem);
+  /* Matches the media's ratio so it shows whole: 37.5vw is 8:3 (the common
+     2048x768 photo), 40vw on --gif is 5:2 (the common 800x320 GIF). Capped
+     at what's left of the viewport below the header. */
+  min-height: clamp(22rem, 37.5vw, calc(100dvh - var(--header-height)));
   display: flex;
   align-items: center;
   padding: 5rem 0;
+}
+
+.page-hero--gif {
+  min-height: clamp(22rem, 40vw, calc(100dvh - var(--header-height)));
 }
 
 .page-hero--image .page-hero__content {
@@ -2425,6 +2452,13 @@ body.nav-open {
      pages only ever have one static background image (no slides to crossfade
      between), so they just get the continuous zoom, not the one-shot fade-in. */
   animation: hero-slide-img-zoom 24s ease-in-out infinite;
+}
+
+/* GIF heroes match the home carousel's GIF slides: whole image, no zoom,
+   over the blurred .hero-slide__img-fill copy. */
+.page-hero__img--gif {
+  object-fit: contain;
+  animation: none;
 }
 
 .page-hero__content {

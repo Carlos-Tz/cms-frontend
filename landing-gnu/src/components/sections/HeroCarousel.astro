@@ -3,6 +3,7 @@
 // SectionRenderer, not only the home page.
 import noImg from "../../assets/images/noimg.jpg";
 import { mediaUrl } from "../../functions/fetch";
+import { isGif } from "../../lib/media";
 
 interface Slide {
   image: string;
@@ -41,7 +42,13 @@ const isExternal = (url: string) => /^https?:\/\//i.test(url);
         aria-label={`${index + 1} de ${shown.length}`}
         aria-hidden={index === 0 ? undefined : "true"}
       >
-        <img class="hero-slide__img" src={slide.image} alt="" fetchpriority={index === 0 ? "high" : undefined} loading={index === 0 ? "eager" : "lazy"} />
+        {isGif(slide.image) && (
+          // Blurred copy filling the strips left around the GIF, which is
+          // shown whole (contain) instead of cropped. Same URL, so the
+          // browser fetches it once.
+          <img class="hero-slide__img-fill" src={slide.image} alt="" aria-hidden="true" loading={index === 0 ? "eager" : "lazy"} />
+        )}
+        <img class:list={["hero-slide__img", { "hero-slide__img--gif": isGif(slide.image) }]} src={slide.image} alt="" fetchpriority={index === 0 ? "high" : undefined} loading={index === 0 ? "eager" : "lazy"} />
         <div class="hero-slide__scrim" aria-hidden="true" />
         <div class="container hero-slide__content">
           {slide.title && (index === 0 ? <h1 class="hero-slide__title">{slide.title}</h1> : <p class="hero-slide__title">{slide.title}</p>)}
