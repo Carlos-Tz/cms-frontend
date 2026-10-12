@@ -8,7 +8,7 @@ secciones descritas abajo.
 
 El `page_hero` ya existe y no cambia. El `feature_grid` actual
 ("CERTIFICACIONES ACTUALES", con una sola tarjeta ISO 9001) se oculta en el
-frontend y lo sustituyen las tres secciones siguientes.
+frontend y lo sustituyen las dos secciones siguientes.
 
 Todas las imágenes se envían como en el resto del CMS: una ruta de media o una
 URL absoluta.
@@ -68,40 +68,7 @@ muestra; en cuanto lleguen, se añaden al diseño.
 
 ---
 
-## 2. `feature_grid`: "Calidad aplicada a la conversión GNV"
-
-Se puede reutilizar la sección `feature_grid` que ya existe, pero le faltan
-dos campos.
-
-```json
-{
-  "type": "feature_grid",
-  "content": {
-    "title": "Calidad aplicada a la conversión GNV",
-    "subtitle": "Nuestro sistema de gestión de la calidad se refleja en cada vehículo que convertimos a Gas Natural Vehicular.",
-    "image": null,
-    "items": [
-      { "icon": "media/sistema-bi-fuel.png",            "title": "Sistema bi-fuel",            "text": "La conversión conserva el uso de gasolina además del GNV…" },
-      { "icon": "media/combustion-mas-limpia.png",      "title": "Combustión más limpia",      "text": "El gas natural genera menos residuos de combustión…" },
-      { "icon": "media/seguridad-conversion.png",       "title": "Seguridad al convertir",     "text": "Instalamos kits con componentes especializados…" },
-      { "icon": "media/caracteristicas-favorables.png", "title": "Características favorables", "text": "El gas natural es más ligero que el aire…" }
-    ]
-  }
-}
-```
-
-| Campo      | Tipo          | Requerido | Notas |
-| ---------- | ------------- | --------- | ----- |
-| `subtitle` | string o null | No        | **Campo nuevo.** Una línea bajo el título. |
-| `image`    | media o null  | No        | Ya está documentado en `NEW-FIELDS.md` (banner 16:9). Esta página no lo usa. |
-| `items[].icon` | media     | No        | Ya existe. Foto cuadrada de al menos 800×800 px. |
-
-Los textos completos están en `src/components/CertificacionesContent.astro`
-(arreglo `gnvItems`).
-
----
-
-## 3. `cta_band`: llamada a la acción (sección nueva)
+## 2. `cta_band`: llamada a la acción (sección nueva)
 
 Cierre de la página con dos botones.
 
@@ -136,8 +103,7 @@ Esta sección sirve para cualquier página, no solo para Certificaciones.
 
 1. `page_hero` (ya existe)
 2. `certifications`
-3. `feature_grid`
-4. `cta_band`
+3. `cta_band`
 
 ## Cuando el backend esté listo
 
@@ -145,6 +111,5 @@ En el frontend habrá que:
 
 - crear los componentes `Certifications.astro` y `CtaBand.astro`, y
   registrarlos en `SectionRenderer.astro`;
-- leer `subtitle` en `FeatureGrid.astro`;
 - quitar `CertificacionesContent` y `excludeTypes={["feature_grid"]}` de
   `src/pages/sobre-nosotros/certificaciones/index.astro`.

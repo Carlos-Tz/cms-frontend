@@ -6,7 +6,10 @@
 // simulators on the same page (the section plus the FAB) never answer with
 // each other's numbers.
 import { BASE_URL } from "../functions/fetch";
-import logo from "../assets/images/logo-blue.png";
+// High-res blue logo (the white 560x530 logo recolored to the brand blue);
+// logo-blue.png is only 94px and turns soft at this size.
+import { Image } from "astro:assets";
+import logo from "../assets/images/logo-blue-hd.png";
 
 export interface FuelPrice {
   fuel: string;
@@ -38,7 +41,7 @@ const config = JSON.stringify({ comparableFuels, gasNaturalPrice, apiBase: BASE_
   <div class:list={["sim", `sim--${variant}`]} data-savings-simulator data-sim={config}>
     <form class="sim__form savings-simulator-form">
       {variant === "band" && (
-        <img class="sim__brand-logo" src={logo.src} width={logo.width} height={logo.height} alt="GNU Gas Natural" />
+        <Image class="sim__brand-logo" src={logo} alt="GNU Gas Natural" widths={[80, 160]} sizes="5rem" />
       )}
       <div class:list={["field", { "field--on-dark": variant === "compact" }]}>
         <label for={`${idPrefix}-fuel`}>Combustible actual</label>

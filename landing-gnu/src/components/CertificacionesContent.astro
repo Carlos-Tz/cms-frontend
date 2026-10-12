@@ -4,38 +4,11 @@
 // still provides the page hero; everything below it lives here.
 import { Image } from "astro:assets";
 import isoBadge from "../assets/images/certificaciones/iso-9001.png";
-import biFuel from "../assets/images/certificaciones/sistema-bi-fuel.png";
-import cleanerCombustion from "../assets/images/certificaciones/combustion-mas-limpia.png";
-import safeConversion from "../assets/images/certificaciones/seguridad-conversion.png";
-import favorableTraits from "../assets/images/certificaciones/caracteristicas-favorables.png";
 
 const isoPoints = [
   "Procesos documentados y controlados",
   "Mejora continua en cada etapa",
   "Enfoque en la satisfacción del cliente",
-];
-
-const gnvItems = [
-  {
-    image: biFuel,
-    title: "Sistema bi-fuel",
-    text: "La conversión conserva el uso de gasolina además del GNV, para que cada unidad se adapte a distintos recorridos aun lejos de una estación de carga.",
-  },
-  {
-    image: cleanerCombustion,
-    title: "Combustión más limpia",
-    text: "El gas natural genera menos residuos de combustión y menores cantidades de determinados contaminantes, favoreciendo una movilidad con menor impacto ambiental.",
-  },
-  {
-    image: safeConversion,
-    title: "Seguridad al convertir",
-    text: "Instalamos kits con componentes especializados para almacenar, regular y suministrar el gas, siguiendo procedimientos técnicos y verificaciones de seguridad.",
-  },
-  {
-    image: favorableTraits,
-    title: "Características favorables",
-    text: "El gas natural es más ligero que el aire: ante una liberación en un espacio abierto y ventilado, tiende a ascender y dispersarse rápidamente.",
-  },
 ];
 ---
 
@@ -62,28 +35,6 @@ const gnvItems = [
       <ul class="certs-iso__points">
         {isoPoints.map((point) => <li>{point}</li>)}
       </ul>
-    </div>
-  </div>
-</section>
-
-<section class="section section--alt texture-grid">
-  <div class="container">
-    <div class="section-head section-head--center">
-      <h2 class="section-title">Calidad aplicada a la conversión GNV</h2>
-      <p class="section-subtitle">
-        Nuestro sistema de gestión de la calidad se refleja en cada vehículo que convertimos a Gas Natural Vehicular.
-      </p>
-    </div>
-    <div class="grid grid--4">
-      {gnvItems.map((item) => (
-        <div class="card card--feature">
-          <div class="card__media">
-            <Image class="card__media-img" src={item.image} alt="" widths={[400, 800]} sizes="18rem" />
-          </div>
-          <p class="card__title">{item.title}</p>
-          <p class="card__text">{item.text}</p>
-        </div>
-      ))}
     </div>
   </div>
 </section>

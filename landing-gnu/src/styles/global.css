@@ -541,6 +541,57 @@ button {
   transform: scale(1.04);
 }
 
+/* Photo cards (Gaseco-style, inspiration/Gaseco): a rounded photo with the
+   copy in a white panel overlapping its bottom edge, inset from its sides.
+   The card box itself goes transparent so only the photo and panel show. */
+.card--photo {
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+}
+
+.card--photo:hover {
+  border-color: transparent;
+  transform: none;
+  box-shadow: none;
+}
+
+.card--photo::before {
+  display: none;
+}
+
+.card--photo .card__media {
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-lg);
+}
+
+.card--photo:hover .card__media-img {
+  transform: scale(1.12);
+}
+
+.card--photo .card__panel {
+  position: relative;
+  margin: -5rem 1.25rem 0;
+  padding: 1.75rem;
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+  transition: box-shadow 0.3s ease;
+}
+
+.card--photo:hover .card__panel {
+  box-shadow: 0 24px 44px -24px rgba(6, 26, 46, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card--photo:hover .card__media-img {
+    transform: none;
+  }
+}
+
 .card--surface {
   background: var(--color-bg-alt);
 }
@@ -677,8 +728,72 @@ button {
   width: auto;
 }
 
+/* White logo on the blue footer, as large as its column allows (capped to
+   the tagline width below it). */
+.site-footer .brand {
+  display: block;
+}
+
 .brand__logo--footer {
-  height: 2.75rem;
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Logo and the ISO 9001 / ESR seals as one balanced block: the logo
+   (560x530, ~8.5rem tall at 9rem wide) matches the height of the two
+   stacked 4rem seals, with a hairline divider between them. */
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.footer-brand .brand {
+  flex: 0 0 9rem;
+}
+
+.footer-seals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 1.5rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* White discs so the black/gold ESR mark and the ISO badge read on blue. */
+.footer-seal {
+  display: block;
+  width: 4rem;
+  height: 4rem;
+  padding: 0.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 10px 24px -12px rgba(6, 26, 46, 0.5);
+  transition: transform 0.25s var(--ease-out);
+}
+
+.footer-seal:hover {
+  transform: translateY(-3px);
+}
+
+.footer-seal img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* The ISO artwork sits on a gray square: fill the disc with it and crop to
+   the badge's own circle so the gray corners never show. */
+.footer-seal--iso {
+  padding: 0;
+}
+
+.footer-seal--iso img {
+  object-fit: cover;
+  transform: scale(1.2);
 }
 
 .nav {
@@ -2226,6 +2341,97 @@ body.nav-open {
   }
 }
 
+/* Linked image cards (blog posts, child pages) in the same Gaseco style as
+   .card--photo: rounded cover, white body panel overlapping its bottom edge,
+   and a round arrow badge on the panel's top corner. Overrides the plain
+   bordered blog-card box above. */
+.service-card {
+  border: none;
+  background: transparent;
+  overflow: visible;
+}
+
+.service-card:hover,
+.service-card:focus-visible {
+  transform: none;
+  box-shadow: none;
+}
+
+.service-card__media {
+  border-radius: var(--radius-lg);
+}
+
+.service-card__media::after {
+  display: none;
+}
+
+.service-card .blog-card__cover {
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
+.service-card:hover .blog-card__cover,
+.service-card:focus-visible .blog-card__cover {
+  transform: scale(1.12);
+}
+
+.service-card .blog-card__body {
+  position: relative;
+  flex: 1;
+  margin: -5rem 1.25rem 0;
+  padding: 1.75rem;
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+  transition: box-shadow 0.3s ease;
+}
+
+.service-card:hover .blog-card__body,
+.service-card:focus-visible .blog-card__body {
+  box-shadow: 0 24px 44px -24px rgba(6, 26, 46, 0.4);
+}
+
+/* Room for the badge so a long tag/title never runs under it. */
+.service-card .blog-card__body > :nth-child(2) {
+  padding-right: 3rem;
+}
+
+.card-badge {
+  position: absolute;
+  top: -1.75rem;
+  right: 1.5rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  box-shadow: 0 10px 24px -10px rgba(31, 92, 169, 0.6);
+  transition: transform 0.3s var(--ease-out);
+}
+
+/* Room for the badge so a long title never runs under it. */
+.card--photo .card__title {
+  padding-right: 3rem;
+}
+
+/* Centered title-only panels (Valores) pad both sides so the title stays
+   centered in the card. */
+.card--photo.card--title-only .card__title {
+  padding-left: 3rem;
+}
+
+.service-card:hover .card-badge,
+.service-card:focus-visible .card-badge,
+.card--photo:hover .card-badge {
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-card:hover .card-badge,
+  .service-card:focus-visible .card-badge,
+  .card--photo:hover .card-badge {
+    transform: none;
+  }
+}
+
 /* Service cards (ServiceCards.astro) — "Explora Nuestros Servicios" as
    stacked poster cards: a full-width photo with a floating summary panel
    overlapping it, alternating sides row to row (the "Projects" section
@@ -2983,9 +3189,37 @@ body.nav-open {
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background: var(--color-bg-alt);
-  color: var(--color-text-60);
+  background: var(--color-primary);
+  color: rgba(255, 255, 255, 0.82);
   padding: 4rem 0 2rem;
+}
+
+/* Footer text, links and icons in white tints over the primary blue. */
+.site-footer .footer-heading {
+  color: #ffffff;
+}
+
+.site-footer .footer-link {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.site-footer a.footer-link:hover {
+  color: #ffffff;
+}
+
+.site-footer .social-icon {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+
+.site-footer .social-icon:hover {
+  background: #ffffff;
+  color: var(--color-primary);
+}
+
+.site-footer .footer-bottom {
+  border-top-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .site-footer::before {
@@ -3011,12 +3245,20 @@ body.nav-open {
 .footer-grid {
   display: grid;
   gap: 2.5rem;
-  grid-template-columns: 1.3fr repeat(3, 1fr);
+  /* The logo + seals block needs ~16rem; never squeeze its column below it. */
+  grid-template-columns: minmax(16rem, 1.3fr) repeat(3, 1fr);
 }
 
 @media (max-width: 800px) {
   .footer-grid {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  /* Phones: the brand block and the contact details (long address and
+     email) each take a full row; Navegación and Servicios share one. */
+  .footer-grid > :first-child,
+  .footer-grid > .footer-contact {
+    grid-column: 1 / -1;
   }
 }
 
@@ -3033,6 +3275,8 @@ body.nav-open {
   display: block;
   font-size: 0.875rem;
   padding: 0.3rem 0;
+  /* A long email address breaks instead of running off a phone screen. */
+  overflow-wrap: anywhere;
   color: var(--color-text-60);
   transition: color 0.15s ease, transform 0.25s var(--ease-out);
 }
@@ -3610,7 +3854,9 @@ a.stations-list__phone:hover {
 }
 
 .site-footer.texture-dots {
-  --band-fade: var(--color-bg-alt);
+  --band-fade: var(--color-primary);
+  /* White dots instead of the blue lattice, which vanishes on the blue. */
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1.2px);
 }
 
 .section--alt.texture-grid {
@@ -3817,9 +4063,9 @@ a.stations-list__phone:hover {
      the square logo into a wide, distorted smear. */
   align-self: flex-start;
   display: block;
-  height: 2.5rem;
+  height: 4.75rem;
   width: auto;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
 }
 
 /* The shake now lives on the submit button (see .sim__submit) instead — a

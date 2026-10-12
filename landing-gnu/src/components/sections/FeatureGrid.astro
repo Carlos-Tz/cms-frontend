@@ -1,5 +1,6 @@
 ---
 import { mediaUrl } from "../../functions/fetch";
+import CardBadge from "../CardBadge.astro";
 
 interface FeatureItem {
   icon: string | null;
@@ -34,7 +35,7 @@ const { title, image, items, titlesOnly = false } = Astro.props;
     )}
     <div class="grid grid--3">
       {items.map((item) => (
-        <div class:list={["card card--feature", { "card--title-only": titlesOnly }]}>
+        <div class:list={["card card--feature", { "card--photo": item.icon, "card--title-only": titlesOnly }]}>
           {item.icon ? (
             // CMS icons here are full square photos (1254×1254), not line
             // art — shown as a real image banner, not squeezed into the
@@ -53,8 +54,13 @@ const { title, image, items, titlesOnly = false } = Astro.props;
               </svg>
             </div>
           )}
-          <p class="card__title">{item.title}</p>
-          {!titlesOnly && <p class="card__text">{item.text}</p>}
+          {/* With a photo, the copy sits in a white panel overlapping the
+              photo's bottom edge (card--photo, Gaseco-style). */}
+          <div class="card__panel">
+            {item.icon && <CardBadge />}
+            <p class="card__title">{item.title}</p>
+            {!titlesOnly && <p class="card__text">{item.text}</p>}
+          </div>
         </div>
       ))}
     </div>

@@ -11,6 +11,10 @@ import {
 import SimulatorFab from "../components/SimulatorFab.astro";
 import { seo } from "../config/seo";
 import logo from "../assets/images/logo-blue.png";
+import logoWhite from "../assets/images/logo.png";
+import { Image } from "astro:assets";
+import esrSeal from "../assets/images/ESR1-min-1024x1024-1.png";
+import isoSeal from "../assets/images/certificaciones/iso-9001.png";
 import { SOCIAL_ICON_MARKUP, resolveSocialNetworks } from "../lib/social";
 import { NAV_LABEL_OVERRIDES } from "../config/labelOverrides";
 
@@ -443,16 +447,26 @@ const organizationJsonLd = JSON.stringify({
       <div class="container">
         <div class="footer-grid">
           <div>
-            <a href="/" class="brand">
-              <img
-                class="brand__logo brand__logo--footer"
-                src={logo.src}
-                width={logo.width}
-                height={logo.height}
-                alt="GNU Gas Natural"
-              />
-            </a>
-            <p style="margin-top: 1rem; font-size: 0.875rem; max-width: 20rem;">
+            <div class="footer-brand">
+              <a href="/" class="brand">
+                <img
+                  class="brand__logo brand__logo--footer"
+                  src={logoWhite.src}
+                  width={logoWhite.width}
+                  height={logoWhite.height}
+                  alt="GNU Gas Natural"
+                />
+              </a>
+              <div class="footer-seals">
+                <a class="footer-seal footer-seal--iso" href="/sobre-nosotros/certificaciones">
+                  <Image src={isoSeal} alt="Certificación ISO 9001" widths={[64, 128]} sizes="4rem" />
+                </a>
+                <a class="footer-seal" href="/desarrollo-sostenible/distintivo-esr">
+                  <Image src={esrSeal} alt="Distintivo ESR" widths={[64, 128]} sizes="4rem" />
+                </a>
+              </div>
+            </div>
+            <p style="margin-top: 1.5rem; font-size: 0.875rem; max-width: 16rem;">
               Energía limpia y ahorro real para hogares, negocios y flotillas
               vehiculares en todo México.
             </p>

@@ -1,4 +1,5 @@
 ---
+import CardBadge from "./CardBadge.astro";
 // One page of the blog listing. The site is built statically, so a `?page=`
 // query string never reaches the build — each page of `GET blog` gets its own
 // route instead: /blog for the first, /blog/pagina/{n} for the rest.
@@ -63,6 +64,7 @@ const heroImage = hero?.image ? mediaUrl(hero.image) : null;
                     />
                   </div>
                   <div class="blog-card__body">
+                    <CardBadge />
                     <p class="blog-card__tag"><time datetime={post.published_at}>{formatDate(post.published_at)}</time></p>
                     <p class="blog-card__title">{post.title}</p>
                     {post.excerpt && <p class="blog-card__excerpt">{post.excerpt}</p>}
