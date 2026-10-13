@@ -3,10 +3,10 @@ import CmsPage from "../../components/CmsPage.astro";
 import ServiceCards from "../../components/ServiceCards.astro";
 
 const fallbackChildren = [
+  { slug: "nuestra-historia", path: "/sobre-nosotros/nuestra-historia", title: "Nuestra historia" },
   { slug: "proposito-empresarial", path: "/sobre-nosotros/proposito-empresarial", title: "Propósito empresarial" },
   { slug: "valores", path: "/sobre-nosotros/valores", title: "Valores" },
   { slug: "certificaciones", path: "/sobre-nosotros/certificaciones", title: "Certificaciones" },
-  { slug: "nuestra-historia", path: "/sobre-nosotros/nuestra-historia", title: "Nuestra historia" },
 ];
 ---
 
@@ -15,7 +15,11 @@ const fallbackChildren = [
     <div class="container">
       <div class="section-head section-head--center">
         <span class="eyebrow">Conoce más</span>
-        <h2 class="section-title">Explora Sobre Nosotros</h2>
+        <h2 class="section-title">El respaldo detrás de nuestra energía</h2>
+        <p class="section-subtitle">
+          Nuestra historia, propósito, valores y certificaciones: la experiencia y el compromiso con los que impulsamos
+          a la industria y al transporte con energía confiable.
+        </p>
       </div>
       
       <ServiceCards parent="sobre-nosotros" fallback={fallbackChildren} />

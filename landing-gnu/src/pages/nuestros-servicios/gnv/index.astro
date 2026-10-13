@@ -1,5 +1,17 @@
 ---
 import CmsPage from "../../../components/CmsPage.astro";
+import { getPage, sectionOf } from "../../../lib/cms";
+
+// The savings simulator is edited on the GNC page in the CMS but shown only
+// here, after "Beneficios". GNV's own CMS section wins if it ever gets one.
+// `page: "gnc"` keeps the live price lookup on GNC's simulator — the
+// endpoint has no GNV one and would silently answer with the site's first.
+const gnv = await getPage("gnv");
+const gncSimulator = sectionOf(await getPage("gnc"), "savings_simulator");
+const insertSection =
+  !sectionOf(gnv, "savings_simulator") && gncSimulator
+    ? { after: "feature_grid", section: { type: "savings_simulator", content: { ...gncSimulator, page: "gnc" } } }
+    : undefined;
 ---
 
-<CmsPage slug="gnv" fallbackTitle="GNV" fallbackSubtitle="Gas natural vehicular" />
+<CmsPage slug="gnv" fallbackTitle="GNV" fallbackSubtitle="Gas natural vehicular" insertSection={insertSection} />

@@ -6,6 +6,7 @@
 // every caller the same shapes instead of re-declaring them in each page.
 import { fetchData } from "../functions/fetch";
 import type { Globals } from "../types/globals";
+import { MENU_ORDER_OVERRIDES } from "../config/menuOrder";
 
 export type Section = { type: string; content: Record<string, any> };
 
@@ -58,7 +59,19 @@ async function data<T>(suffix: string): Promise<T | null> {
   return res?.status === "success" ? res.data : null;
 }
 
-export const getMenu = async () => (await data<MenuItem[]>("menu")) ?? [];
+/** Children re-sorted per MENU_ORDER_OVERRIDES; unlisted ones keep CMS order, last. */
+function applyMenuOrder(items: MenuItem[]): MenuItem[] {
+  return items.map((item) => {
+    const children = applyMenuOrder(item.children ?? []);
+    const order = MENU_ORDER_OVERRIDES[item.slug];
+    if (!order) return { ...item, children };
+    const rank = (slug: string) => (order.includes(slug) ? order.indexOf(slug) : order.length);
+    // Array.prototype.sort is stable, so unlisted children keep their CMS order.
+    return { ...item, children: [...children].sort((a, b) => rank(a.slug) - rank(b.slug)) };
+  });
+}
+
+export const getMenu = async () => applyMenuOrder((await data<MenuItem[]>("menu")) ?? []);
 export const getGlobals = async () => (await data<Globals>("globals")) ?? {};
 export const getPage = (slug: string) => data<Page>(`pages/${slug}`);
 

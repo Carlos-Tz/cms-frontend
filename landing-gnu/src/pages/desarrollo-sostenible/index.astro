@@ -3,10 +3,10 @@ import CmsPage from "../../components/CmsPage.astro";
 import ChildPageCards from "../../components/ChildPageCards.astro";
 
 const fallbackChildren = [
-  { slug: "distintivo-esr", path: "/desarrollo-sostenible/distintivo-esr", title: "Distintivo ESR" },
   { slug: "ecovadis", path: "/desarrollo-sostenible/ecovadis", title: "EcoVadis" },
-  { slug: "voluntariado", path: "/desarrollo-sostenible/voluntariado", title: "Voluntariado" },
   { slug: "iniciativas-rse", path: "/desarrollo-sostenible/iniciativas-rse", title: "Iniciativas RSE" },
+  { slug: "voluntariado", path: "/desarrollo-sostenible/voluntariado", title: "Voluntariado" },
+  { slug: "distintivo-esr", path: "/desarrollo-sostenible/distintivo-esr", title: "Distintivo ESR" },
 ];
 ---
 
@@ -15,7 +15,11 @@ const fallbackChildren = [
     <div class="container">
       <div class="section-head section-head--center">
         <span class="eyebrow">Conoce más</span>
-        <h2 class="section-title">Explora Desarrollo Sostenible</h2>
+        <h2 class="section-title">Nuestro compromiso, llevado a la acción</h2>
+        <p class="section-subtitle">
+          Descubre las evaluaciones, iniciativas, voluntariado y reconocimientos que forman parte de nuestra estrategia
+          de sostenibilidad.
+        </p>
       </div>
       <ChildPageCards parent="desarrollo-sostenible" fallback={fallbackChildren} gridClass="grid--4" />
     </div>

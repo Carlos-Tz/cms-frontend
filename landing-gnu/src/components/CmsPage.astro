@@ -7,7 +7,7 @@ import Layout from "../layouts/Layout.astro";
 import SectionRenderer from "./SectionRenderer.astro";
 import PageHero from "./sections/PageHero.astro";
 import { mediaUrl } from "../functions/fetch";
-import { getPage, heroOf } from "../lib/cms";
+import { getPage, heroOf, type Section } from "../lib/cms";
 import { NAV_LABEL_OVERRIDES } from "../config/labelOverrides";
 
 interface Props {
@@ -19,15 +19,23 @@ interface Props {
   // same section elsewhere (so the editor doesn't have to remove it from
   // the CMS just to keep one specific page from duplicating it).
   excludeTypes?: string[];
+  // A section borrowed from another page, rendered right after this page's
+  // first section of type `after` (or last, when there is none) — e.g. the
+  // GNC simulator shown on GNV.
+  insertSection?: { after: string; section: Section };
   // Show feature_grid cards with their titles only, dropping the text.
   featureTitlesOnly?: boolean;
 }
 
-const { slug, fallbackTitle, fallbackSubtitle, excludeTypes = [], featureTitlesOnly = false } = Astro.props;
+const { slug, fallbackTitle, fallbackSubtitle, excludeTypes = [], featureTitlesOnly = false, insertSection } = Astro.props;
 
 const page = await getPage(slug);
 const hero = heroOf(page);
 const sections = (page?.sections ?? []).filter((section) => !excludeTypes.includes(section.type));
+if (insertSection) {
+  const anchor = sections.findIndex((section) => section.type === insertSection.after);
+  sections.splice(anchor === -1 ? sections.length : anchor + 1, 0, insertSection.section);
+}
 ---
 
 <Layout

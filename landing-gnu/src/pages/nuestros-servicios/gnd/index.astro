@@ -1,5 +1,7 @@
 ---
 import CmsPage from "../../../components/CmsPage.astro";
+
+// The savings simulator lives only on GNV (see ../gnv/index.astro).
 ---
 
-<CmsPage slug="gnd" fallbackTitle="GND" fallbackSubtitle="Gas natural distribuido" />
+<CmsPage slug="gnd" fallbackTitle="GND" fallbackSubtitle="Gas natural distribuido" excludeTypes={["savings_simulator"]} />
