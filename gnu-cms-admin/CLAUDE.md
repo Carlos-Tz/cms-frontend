@@ -4,32 +4,32 @@ React + Vite app using Tailwind CSS v4 (`@tailwindcss/vite`, no config file — 
 
 ## Server layout (production)
 
-All sites are static files served from `/var/www/html/sitios-cms/`:
+Each public site lives as two **independent** directories on the server — not nested, no shared parent folder:
 
 ```
-/var/www/html/sitios-cms/
-├── administracion-cms/   ← this admin (vite build output)
-├── gnu/                  ← landing-gnu
-│   ├── code/             ← the Astro project itself (package.json, src/, node_modules/ installed)
-│   ├── _astro/           ┐
-│   ├── blog/ contacto/…  │ contents of code/dist/ after `npm run build`
-│   ├── index.html        │ (index.html, _astro/, one folder per route)
-│   └── favicon.*         ┘
-├── gnu-gas-natural/      ← gas-gnu            (same layout: code/ + build output)
-├── tectuus/              ← tectuus            (same layout)
-└── traninn-logistic/     ← trainin            (same layout)
+<CODE_PATH>/              ← the Astro project (package.json, src/, node_modules/ installed) — the build runs here
+└── dist/                   produced by `npm run build`
+
+<PUBLIC_PATH>/            ← what the web server actually serves
+├── _astro/                ┐
+├── blog/ contacto/…       │ fully replaced with the contents of <CODE_PATH>/dist/ after a rebuild
+└── index.html             ┘
 ```
 
-Each site folder holds the build output **directly** (not inside a `dist/` folder), next to a `code/` folder that is the Astro project as in this repo, with `node_modules` already installed. A rebuild runs `npm run build` in `<site>/code` and replaces everything in `<site>/` **except `code/`** with the contents of `<site>/code/dist/`.
+`administracion-cms` (this admin's own Vite build output) and `build-server` are deployed separately and aren't part of this per-site CODE_PATH/PUBLIC_PATH pair.
 
-Admin route prefix → repo project → server folder:
+Admin route prefix → repo project (`CODE_PATH`) → CMS slug (the names don't match — see `build-server/README.md`):
 
-| Admin route | Repo project (= `code/` on the server) | Server folder |
+| Admin route | Repo project | CMS slug |
 | :-- | :-- | :-- |
 | `/gnu` | `landing-gnu` | `gnu` |
-| `/gas-natural` | `gas-gnu` | `gnu-gas-natural` |
+| `/gas-natural` | `gas-gnu` | `gnu-vehicular` |
 | `/trainin` | `trainin` | `traninn-logistic` |
 | `/tectuus` | `tectuus` | `tectuus` |
+
+## "Reconstruir sitio"
+
+`src/components/rebuild-site-button.jsx` (on each site's `select-page.jsx`) publishes saved CMS edits. The browser can't run `npm run build` or touch the server's filesystem, so the button calls the separate `build-server/` service (`VITE_BUILD_SERVER_URL`, see `src/functions/fetch.jsx` → `rebuildSite` / `getRebuildStatus`) — only that URL belongs in this admin's `.env`; the actual `CODE_PATH`/`PUBLIC_PATH` filesystem paths live in `build-server`'s own `.env` (`VITE_<SITE>_CODE_PATH` / `VITE_<SITE>_PUBLIC_PATH`), never shipped to the browser. The service runs `npm run build` in `CODE_PATH`, then fully replaces the contents of `PUBLIC_PATH` with `CODE_PATH/dist/`. See `../build-server/README.md`.
 
 ## Routing
 

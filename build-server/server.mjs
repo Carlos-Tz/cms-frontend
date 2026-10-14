@@ -5,8 +5,8 @@
 // SPA and cannot run `npm run build` itself — it calls this service instead.
 //
 //   GET  /builds/:site   → current/last build status for that site
-//   POST /builds/:site   → run `npm run build`, then publish dist/ into the
-//                          site's folder under PUBLISH_ROOT
+//   POST /builds/:site   → run `npm run build` in that site's CODE_PATH, then
+//                          replace the contents of its PUBLIC_PATH with dist/
 //
 // `:site` is the admin route prefix (gnu, gas-natural, trainin, tectuus).
 // Every request must carry the admin's bearer token; it is validated by
@@ -28,22 +28,32 @@ const PORT = Number(process.env.PORT ?? 4400)
 const CMS_BASE_URL = (process.env.CMS_BASE_URL ?? 'https://gnu-headless-cms.165.227.59.215.sslip.io').replace(/\/+$/, '')
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173')
     .split(',').map((s) => s.trim()).filter(Boolean)
-// Folder the web server serves the sites from (production:
-// /var/www/html/sitios-cms). Each site folder there holds the published build
-// plus the Astro project itself in `code/`, so that is where the build runs.
-// Unset (local dev) → build the repo's projects under SITES_ROOT, don't publish.
-const PUBLISH_ROOT = process.env.PUBLISH_ROOT ? path.resolve(process.env.PUBLISH_ROOT) : null
-const SITES_ROOT = path.resolve(HERE, process.env.SITES_ROOT ?? '..')
-const CODE_DIR = 'code'
 const LOG_LINES = 200
 
-// Admin route prefix → repo project folder, published folder under
-// PUBLISH_ROOT, and CMS slug (see DEVOPS.md §1 — the names do not match).
+// Admin route prefix → Astro project dir (CODE_PATH, where `npm run build`
+// runs) + web root (PUBLIC_PATH, fully replaced with CODE_PATH/dist/ after a
+// successful build) + CMS slug (see DEVOPS.md §1 — the names do not match).
+// CODE_PATH and PUBLIC_PATH are two independent directories (not nested —
+// there is no shared parent folder to carve a `code/` subfolder out of
+// anymore), each read straight from its own env var so every site can be
+// configured independently and a site with no real paths yet just fails
+// closed instead of touching anything.
 const SITES = {
-    'gnu':         { folder: 'landing-gnu', publish: 'gnu',              slug: 'gnu' },
-    'gas-natural': { folder: 'gas-gnu',     publish: 'gnu-gas-natural',  slug: 'gnu-vehicular' },
-    'trainin':     { folder: 'trainin',     publish: 'traninn-logistic', slug: 'traninn-logistic' },
-    'tectuus':     { folder: 'tectuus',     publish: 'tectuus',          slug: 'tectuus' },
+    'gnu':         { codePath: process.env.VITE_GNU_CODE_PATH,         publicPath: process.env.VITE_GNU_PUBLIC_PATH,         slug: 'gnu' },
+    'gas-natural': { codePath: process.env.VITE_GAS_NATURAL_CODE_PATH, publicPath: process.env.VITE_GAS_NATURAL_PUBLIC_PATH, slug: 'gnu-vehicular' },
+    'trainin':     { codePath: process.env.VITE_TRANINN_CODE_PATH,     publicPath: process.env.VITE_TRANINN_PUBLIC_PATH,     slug: 'traninn-logistic' },
+    'tectuus':     { codePath: process.env.VITE_TECTUUS_CODE_PATH,     publicPath: process.env.VITE_TECTUUS_PUBLIC_PATH,     slug: 'tectuus' },
+}
+
+// Guards against the obvious catastrophic case: an unset/placeholder path
+// (empty, ".", or "/" — exactly what the example .env ships before someone
+// fills in the real one) resolving to the filesystem root and `publish()`
+// then wiping it. Doesn't try to be a general sandbox, just refuses the
+// degenerate inputs that would otherwise nuke the server.
+function isConfiguredPath(value) {
+    if (!value || !value.trim()) return false
+    const resolved = path.resolve(value.trim())
+    return resolved !== path.parse(resolved).root
 }
 
 // In-memory state, one entry per site. Lost on restart, which is fine: it only
@@ -83,16 +93,13 @@ function run(command, cwd, state) {
     })
 }
 
-// The published folders hold the build output directly (index.html, _astro/,
-// one folder per route), so replace their contents with dist/'s — everything
-// except `code/`, which is the project being built.
+// CODE_PATH and PUBLIC_PATH are independent directories now (no shared parent
+// to carve a `code/` subfolder out of), so publishing is a full replace:
+// wipe PUBLIC_PATH's contents and copy dist/ straight in.
 function publish(dist, target, state) {
-    if (fs.existsSync(path.join(dist, CODE_DIR))) {
-        throw new Error(`dist/ contiene "${CODE_DIR}/", que choca con la carpeta del proyecto`)
-    }
     appendLog(state, `Publicando dist/ en ${target}`)
+    fs.mkdirSync(target, { recursive: true })
     for (const entry of fs.readdirSync(target)) {
-        if (entry === CODE_DIR) continue
         fs.rmSync(path.join(target, entry), { recursive: true, force: true })
     }
     fs.cpSync(dist, target, { recursive: true })
@@ -103,8 +110,16 @@ async function startBuild(key) {
     const state = { ...idleState(), status: 'running', startedAt: new Date().toISOString() }
     builds[key] = state
 
-    const target = PUBLISH_ROOT && path.join(PUBLISH_ROOT, site.publish)
-    const cwd = target ? path.join(target, CODE_DIR) : path.join(SITES_ROOT, site.folder)
+    if (!isConfiguredPath(site.codePath) || !isConfiguredPath(site.publicPath)) {
+        state.status = 'error'
+        state.error = `Rutas no configuradas para "${key}": define sus VITE_..._CODE_PATH y VITE_..._PUBLIC_PATH en build-server/.env.`
+        state.finishedAt = new Date().toISOString()
+        appendLog(state, state.error)
+        return
+    }
+
+    const cwd = path.resolve(site.codePath)
+    const target = path.resolve(site.publicPath)
     try {
         await run('npm run build', cwd, state)
 
@@ -117,7 +132,7 @@ async function startBuild(key) {
             throw new Error('La compilación no generó dist/index.html')
         }
 
-        if (target) publish(dist, target, state)
+        publish(dist, target, state)
 
         state.status = 'success'
     } catch (error) {
@@ -188,8 +203,12 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
     console.log(`build-server escuchando en http://localhost:${PORT}`)
-    console.log(PUBLISH_ROOT
-        ? `  compilando <sitio>/${CODE_DIR} y publicando en ${PUBLISH_ROOT}`
-        : `  compilando en ${SITES_ROOT} (sin publicar)`)
+    for (const [key, site] of Object.entries(SITES)) {
+        console.log(
+            isConfiguredPath(site.codePath) && isConfiguredPath(site.publicPath)
+                ? `  ${key}: ${site.codePath} → ${site.publicPath}`
+                : `  ${key}: sin configurar (faltan VITE_..._CODE_PATH/PUBLIC_PATH)`
+        )
+    }
     console.log(`  orígenes permitidos: ${ALLOWED_ORIGINS.join(', ')}`)
 })

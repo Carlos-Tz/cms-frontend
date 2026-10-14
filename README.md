@@ -1,90 +1,126 @@
 # GNU CMS Frontend — Monorepo
 
-This repo holds the frontend half of the GNU headless CMS system: one **admin panel** that content editors log into, and a set of **public marketing sites** that read whatever the admin publishes. There is no backend code here — everything below talks to the same external headless CMS API over REST.
+This repo holds the frontend half of the GNU headless CMS system: one **admin panel** that content editors log into, a set of **public marketing sites** that read whatever the admin publishes, and a small **build service** that rebuilds those sites on demand. Everything talks to the same Laravel headless CMS API over REST.
 
 ```
 cms-frontend/
-├── gnu-cms-admin/   # React + Vite admin panel (login required) — editors manage content here
-├── landing-gnu/     # Astro public site — GNU Gas Natural (gnugas.mx) — LIVE, fully built out
-├── gas-gnu/         # Astro public site — Gas natural vehicular — scaffold, not yet built
-├── tectuus/         # Astro public site — Tectuus — scaffold, not yet built
-└── trainin/         # Astro public site — Trainnin Logistic — scaffold, not yet built
+├── gnu-cms-admin/   # React + Vite admin panel (login required) — editors manage all four sites here
+├── landing-gnu/     # Astro public site — GNU corporate (gnugas.mx)          — CMS slug `gnu`
+├── gas-gnu/         # Astro public site — GNU Vehicular (gas natural vehicular) — CMS slug `gnu-vehicular`
+├── tectuus/         # Astro public site — Tectuus (industrial equipment + product catalog) — CMS slug `tectuus`
+├── trainin/         # Astro public site — Trainin Logistic                       — CMS slug `traninn-logistic`
+├── build-server/    # Zero-dependency Node service behind the admin's "Reconstruir sitio" button
+└── cms-backend/     # Laravel + SQLite headless CMS — a separate git repo (gitlink), not part of this repo's history
 ```
 
 ## How the pieces fit together
 
 ```
-┌────────────────┐   editors log in, edit    ┌──────────────────┐
-│  gnu-cms-admin  │ ────────────────────────▶ │  External headless│
-│  (React SPA)    │   REST + bearer token     │  CMS backend       │
-└────────────────┘                            └─────────┬────────┘
-                                                          │ REST, no auth,
-                                                          │ read-only, at BUILD time
-                                                          ▼
-                                                ┌───────────────────┐
-                                                │  Astro sites       │
-                                                │  (landing-gnu, …)  │
-                                                │  → static dist/    │
-                                                └───────────────────┘
-                                                          │
-                                                          ▼
-                                              published to the public,
-                                              no login, no password
+┌────────────────┐   editors log in, edit    ┌────────────────────┐
+│  gnu-cms-admin  │ ────────────────────────▶ │  cms-backend        │
+│  (React SPA)    │   REST + bearer token     │  (Laravel headless) │
+└───────┬────────┘                            └─────────┬──────────┘
+        │ "Reconstruir sitio"                           │ REST, no auth,
+        ▼ (bearer token)                                │ read-only, at BUILD time
+┌────────────────┐   runs `npm run build`     ┌─────────▼──────────┐
+│  build-server   │ ────────────────────────▶ │  Astro sites        │
+│  (Node)         │   then copies dist/ to    │  landing-gnu,       │
+└────────────────┘   the served folder       │  gas-gnu, tectuus,  │
+                                              │  trainin → dist/    │
+                                              └─────────┬──────────┘
+                                                        ▼
+                                            published to the public,
+                                            no login, no password
 ```
 
-- **`gnu-cms-admin`** is a password-protected React SPA. Editors log in, and every request carries a bearer token (see [`gnu-cms-admin/README.md`](./gnu-cms-admin/README.md)). This is the **only** part of the system that requires authentication.
-- **The Astro sites** (`landing-gnu`, `gas-gnu`, `tectuus`, `trainin`) are **fully public, unauthenticated static sites**. They fetch content from the same CMS backend, but only **at build time** (`npm run build`), and only public/published data — there is no login, no admin UI, and no session on these sites. Treat anything an editor saves in the admin as something that will become visible to the world on the next rebuild; there is no "private preview" or draft gate on the public side.
-- Because the Astro sites are static (no SSR adapter), **a content edit in the admin does not appear on the live site until someone rebuilds and redeploys that site.** This is the single most important operational fact for both developers and the webmaster — see [Publishing a content change](#publishing-a-content-change).
+- **`gnu-cms-admin`** is a password-protected React SPA. Editors log in once and manage page sections, blog posts, contact leads, stations, verification appointments and (Tectuus only) a product catalog for all four sites. Every request carries a bearer token; a `401` sends the editor back to `/login`. This is the **only** part of the system that requires authentication.
+- **The Astro sites** are **fully public, unauthenticated static sites**. Each reads its own site's public API (`/api/public/<cms-slug>/`) **only at build time** (`npm run build`). There is no login, admin UI or session on these sites, and no draft gate: anything an editor saves becomes visible to the world on the next rebuild.
+- Because the Astro sites are static (no SSR adapter), **a content edit in the admin does not appear on the live site until that site is rebuilt and redeployed.** This is the single most important operational fact for both developers and the webmaster — see [Publishing a content change](#publishing-a-content-change).
+- **`build-server`** is the bridge: the admin can't run `npm run build` from a browser, so it asks this service to do it on the machine that serves the sites.
+
+## Site identifiers — four names for the same four sites
+
+The same site is addressed differently depending on the layer. Getting this wrong is the most common cause of a page that silently shows nothing.
+
+| Site | Astro project | Admin route prefix | CMS `site` slug (API + `CMS_API_URL`) | `build-server` `:site` |
+| :-- | :-- | :-- | :-- | :-- |
+| GNU corporate | `landing-gnu` | `gnu` | `gnu` | `gnu` |
+| GNU Vehicular | `gas-gnu` | `gas-natural` | `gnu-vehicular` | `gas-natural` |
+| Trainin Logistic | `trainin` | `trainin` | `traninn-logistic` | `trainin` |
+| Tectuus | `tectuus` | `tectuus` | `tectuus` | `tectuus` |
+
+See [`gnu-cms-admin/README.md#site-identifiers--four-names-for-the-same-four-sites`](./gnu-cms-admin/README.md#site-identifiers--four-names-for-the-same-four-sites) for the admin-side details (`pageUrls` store keys, `build-server` env var prefixes).
 
 ## Project status
 
 | Project | Role | Status |
 | :--- | :--- | :--- |
-| [`gnu-cms-admin`](./gnu-cms-admin/README.md) | Admin panel (all sites, one login) | Active — manages the `gnu` site today; other sites scaffolded in `src/pages/gas-natural/` |
-| [`landing-gnu`](./landing-gnu/README.md) | Public site — GNU Gas Natural | Fully built (pages, sections, CMS integration) |
-| `gas-gnu` | Public site — Gas natural vehicular | Astro scaffold only — no CMS wiring yet |
-| `tectuus` | Public site — Tectuus | Astro scaffold only — no CMS wiring yet |
-| `trainin` | Public site — Trainnin Logistic | Astro scaffold only — no CMS wiring yet |
+| [`gnu-cms-admin`](./gnu-cms-admin/README.md) | Admin panel (all four sites, one login) | Active — section editors, blog, leads, stations, appointments, Tectuus catalog |
+| [`landing-gnu`](./landing-gnu/README.md) | Public site — GNU corporate | Live, fully built — the **reference implementation** for the other Astro sites |
+| `gas-gnu` | Public site — GNU Vehicular | CMS-wired (`CmsPage`/`SectionRenderer`, blog, contacto, nuestros-servicios, ubicaciones + agenda tu verificación) |
+| `tectuus` | Public site — Tectuus | CMS-wired (inicio, sobre-nosotros, contacto, product catalog with `productos/[slug]`). No blog |
+| `trainin` | Public site — Trainin Logistic | CMS-wired (inicio, nuestros-servicios, sobre-nosotros, ubicaciones, blog, contacto). Uses its own component layout (no `SectionRenderer`) |
+| [`build-server`](./build-server/README.md) | Rebuild service for the "Reconstruir sitio" button | Active |
+| `cms-backend` | Laravel headless CMS | Separate repo, checked out here for convenience |
 
-When building out `gas-gnu`, `tectuus`, or `trainin`, copy the pattern already working in `landing-gnu` (`src/functions/fetch.ts`, `SectionRenderer.astro`, the `Layout.astro` global-content fetch) rather than reinventing it — see [`landing-gnu/README.md`](./landing-gnu/README.md), which is the up-to-date reference implementation. All four Astro projects share one visual design language with the admin, documented once in each project's `GUIDELINES.md` (identical copy in all four repos — token colors, buttons, cards, form fields).
+When extending `gas-gnu`, `tectuus`, or `trainin`, follow the pattern already working in `landing-gnu` (`src/functions/fetch.ts`, `src/lib/cms.ts`, `CmsPage.astro` + `SectionRenderer.astro`, the `Layout.astro` global-content fetch) rather than reinventing it — [`landing-gnu/README.md`](./landing-gnu/README.md) is the up-to-date reference. All five frontend projects share one visual design language documented in their `GUIDELINES.md` (identical copy in each — token colors, buttons, cards, form fields).
 
 ## For developers
 
-Each project is independent (its own `package.json`, `.env`, `node_modules`) — there is no workspace/monorepo tooling (no Lerna/Turborepo/pnpm workspaces), so `cd` into a project before running any npm command.
+Each project is independent (its own `package.json`, `.env`, `node_modules`) — there is no workspace tooling (no Lerna/Turborepo/pnpm workspaces), so `cd` into a project before running any npm command. The Astro projects require Node `>=22.12.0`.
 
-| Project | Dev command | Env var | Build output |
+| Project | Dev command | Env var(s) | Build output |
 | :--- | :--- | :--- | :--- |
-| `gnu-cms-admin` | `npm run dev` → `localhost:5173` | `VITE_BASE_URL` (backend origin, no trailing slash) | `dist/` — SPA, needs a rewrite-to-`index.html` fallback when deployed |
-| `landing-gnu` | `npm run dev` (or `astro dev --background` for automated/agent use) → `localhost:4321` | `CMS_API_URL` (backend origin, trailing slash) | `dist/` — plain static HTML/CSS/JS |
-| `gas-gnu` / `tectuus` / `trainin` | same as `landing-gnu`, once CMS wiring is added | — not yet configured | `dist/` |
+| `gnu-cms-admin` | `npm run dev` → `localhost:5173` | `VITE_BASE_URL` (CMS origin, no trailing slash), `VITE_BUILD_SERVER_URL` (build-server origin) | `dist/` — SPA, needs a rewrite-to-`index.html` fallback when deployed |
+| `landing-gnu`, `gas-gnu`, `tectuus`, `trainin` | `npm run dev` → `localhost:4321` (`astro dev --background` for automated/agent use) | `CMS_API_URL` = `<CMS origin>/api/public/<cms-slug>/` (trailing slash) | `dist/` — plain static HTML/CSS/JS, one folder + `index.html` per route |
+| `build-server` | `npm start` → `localhost:4400` | its own `.env` (per-site `CODE_PATH`/`PUBLIC_PATH`, `ALLOWED_ORIGINS`) — see `.env.example` | — |
 
-Full dev/build/deploy instructions (including Nginx/S3/CloudFront/Azure Static Web Apps configs) live in each project's own README — this file only covers what's shared:
+Example `.env` for an Astro site:
 
-- [`gnu-cms-admin/README.md`](./gnu-cms-admin/README.md) — REST client, session/auth store, folder structure, Nginx + S3/CloudFront deploy recipes
-- [`landing-gnu/README.md`](./landing-gnu/README.md) — CMS section rendering, env config, Astro gotchas, Nginx/VPS + serverless deploy recipes
+```env
+CMS_API_URL=https://gnu-headless-cms.165.227.59.215.sslip.io/api/public/gnu-vehicular/
+```
 
-**Shared gotchas across all Astro projects** (see `landing-gnu/README.md#notes--gotchas` for the full writeup):
-- Never name a custom `.env` var `BASE_URL` (or `MODE`, `DEV`, `PROD`, `SSR`, `SITE`, `ASSETS_PREFIX`) — Astro/Vite reserve those names and will silently override them.
-- Keep reusable non-UI logic (API clients, formatters) in plain `.ts` files under `src/functions/`, never inside a `.astro` file's frontmatter as an exported function — Astro scopes top-level `const`/`let` per-component in a way that breaks this.
-- All four Astro repos and the admin use `astro dev --background` / equivalent when a dev server is needed for an automated or background task, not a foreground blocking process.
+Full dev/build/deploy instructions (Nginx/VPS, S3 + CloudFront, Azure Blob / Static Web Apps, Vercel/Netlify/Cloudflare Pages) live in each project's own README — this file only covers what's shared:
+
+- [`gnu-cms-admin/README.md`](./gnu-cms-admin/README.md) — REST client (`src/functions/fetch.jsx`), session/auth store, `PageSectionsEditor` and section-editing semantics, per-site content map, known limitations, deploy recipes
+- [`landing-gnu/README.md`](./landing-gnu/README.md) — CMS access layer, `SectionRenderer`, frontend-side overrides, Astro gotchas, deploy recipes (these apply to `gas-gnu`, `tectuus` and `trainin` too, swapping the domain and `CMS_API_URL`)
+- [`build-server/README.md`](./build-server/README.md) — setup, API, `CODE_PATH`/`PUBLIC_PATH` layout and safety notes
+
+**Shared gotchas** (see [`landing-gnu/README.md#notes--gotchas`](./landing-gnu/README.md#notes--gotchas) for the full writeup):
+
+- **Env vars are build-time everywhere.** Changing `CMS_API_URL` or `VITE_*` does nothing until you rebuild (or restart the dev server).
+- **Anything `VITE_`-prefixed ships in the admin's public JS bundle.** Never put a secret or a server filesystem path in `gnu-cms-admin/.env` — that's why build paths live in `build-server/.env`. The admin's `.env` is tracked on purpose (it only holds public URLs); the Astro sites' `.env` files are not committed.
+- **Reserved env var names**: never name a custom Astro var `BASE_URL` (or `MODE`, `DEV`, `PROD`, `SSR`, `SITE`, `ASSETS_PREFIX`) — Astro/Vite silently override them.
+- **No shared logic in `.astro` files**: keep reusable non-UI code (API clients, formatters, config) in plain `.ts` files under `src/functions/`, `src/lib/` or `src/config/`.
+- **Restart the Astro dev server to see CMS edits** — `src/lib/cms.ts` memoizes responses for the life of the process. Code changes still hot-reload.
+- **Admin `site=` props use the CMS slug**, not the route prefix (see the identifiers table above) — a mismatch silently empty-states the page.
 
 ## For the webmaster
 
 If you only edit content through `gnu-cms-admin` and don't touch code, here's what you need to know:
 
-1. **Log in to `gnu-cms-admin`** and edit the section, page, or blog post you need to change. Saving in the admin updates the backend immediately.
-2. **The public site does not update by itself.** Because the public sites (`landing-gnu`, etc.) are static, a saved change only becomes visible on the live site after a developer (or an automated job, if one is set up) **rebuilds and redeploys** that specific site. Once you are done editing, open that site in the admin and press **Reconstruir página** at the top of its page list; the button shows when the rebuild finishes (or fails, with details). If the button reports the service is unreachable, ask a developer to run the deploy.
-3. **Follow the image/text size limits.** The admin does **not** validate image dimensions or text length before saving — it will let you save an oversized image or an overly long headline, but the live site's layout will look broken (cropped image, overflowing text). See [`DOCUMENTACION-CONTENIDO-LANDING-GNU.txt`](./DOCUMENTACION-CONTENIDO-LANDING-GNU.txt) for the per-section recommended image sizes and text lengths for `landing-gnu`.
-4. **Images**: max 5 MB per file (hard server limit, no warning in the UI beforehand); JPG for photos, PNG for logos/icons with transparency; keep files well under 1 MB where possible since nothing is compressed automatically.
-5. **Nothing you edit is private.** The public sites have no login — anything saved and published is visible to anyone who visits the site once it's rebuilt. Don't use the admin to stage content you don't want the public to eventually see.
+1. **Log in to `gnu-cms-admin`**, pick the site, and edit the section, page, or blog post you need. Saving updates the backend immediately.
+2. **The public site does not update by itself.** When you're done editing, press **Reconstruir sitio** at the top of that site's page list. The button shows when the rebuild finishes (or fails, with details). If it reports the service is unreachable or not configured, ask a developer to rebuild and deploy that site.
+3. **Follow the image/text size guides.** The admin blocks images over 5 MB and shows each image's measured size, and some text fields show a recommended-length hint — but it won't stop you from saving an oversized headline or an image with the wrong proportions, which can look broken on the live site. Per-section recommended image sizes and text lengths are in:
+   - [`DOCUMENTACION-CONTENIDO-LANDING-GNU.txt`](./DOCUMENTACION-CONTENIDO-LANDING-GNU.txt) — GNU corporate
+   - [`DOCUMENTACION-CONTENIDO-GAS-GNU.txt`](./DOCUMENTACION-CONTENIDO-GAS-GNU.txt) — GNU Vehicular
+   - [`DOCUMENTACION-CONTENIDO-TECTUUS.txt`](./DOCUMENTACION-CONTENIDO-TECTUUS.txt) — Tectuus
+   - [`DOCUMENTACION-CONTENIDO-TRAININ.txt`](./DOCUMENTACION-CONTENIDO-TRAININ.txt) — Trainin Logistic
+4. **Images**: JPG for photos, PNG for logos/icons with transparency; keep files well under 1 MB where possible since nothing is compressed automatically. Page hero images on `landing-gnu` are expected at 2048×768 (GIFs at 800×320).
+5. **Some things aren't editable from the admin**: page titles/menu labels, adding new sections to a page, and browsing/deleting previously uploaded media. A few labels and orderings are also fixed in the site's code (see `landing-gnu/README.md#frontend-side-overrides`). Ask a developer for those.
+6. **Nothing you edit is private.** The public sites have no login — anything saved is visible to anyone once the site is rebuilt. Don't use the admin to stage content you don't want the public to eventually see.
 
 ## Publishing a content change
 
 End-to-end, for any of the public sites:
 
 1. Editor saves changes in `gnu-cms-admin` → stored in the CMS backend immediately.
-2. A developer (or CI job) runs `npm run build` in the affected Astro project — this is the moment the new content is actually fetched and baked into static HTML.
-3. The resulting `dist/` is deployed (copied to the server, synced to S3, or redeployed on the hosting platform) — see that project's README for the exact steps.
+2. The affected Astro project is rebuilt with `npm run build` — this is the moment the new content is actually fetched and baked into static HTML.
+3. The resulting `dist/` is deployed (copied to the served folder, synced to S3/Azure, or redeployed on the hosting platform) — see that project's README.
 4. Only after step 3 is the change visible to site visitors.
 
-There is no automatic webhook from the CMS. Editors trigger a rebuild with the **Reconstruir página** button on each site's page list in the admin, which calls [`build-server/`](./build-server/README.md) — a small Node service that runs `npm run build` (and an optional deploy command) for that site.
+There is no automatic webhook from the CMS. Steps 2–3 happen either:
+
+- **From the admin**: the **Reconstruir sitio** button calls [`build-server`](./build-server/README.md), which runs `npm run build` in that site's `CODE_PATH` and replaces the contents of its `PUBLIC_PATH` with `dist/`. This works when the sites are served from the same machine that runs `build-server`; a site with unset/placeholder paths fails closed with a clear error.
+- **Manually or via CI**, for any other host (S3/CloudFront, Azure, Vercel, …) — remember to invalidate CDN caches for HTML afterwards.
