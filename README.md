@@ -1,4 +1,4 @@
-# GNU CMS Frontend — Monorepo
+# GNU CMS Frontend — Monorepo doc
 
 This repo holds the frontend half of the GNU headless CMS system: one **admin panel** that content editors log into, a set of **public marketing sites** that read whatever the admin publishes, and a small **build service** that rebuilds those sites on demand. Everything talks to the same Laravel headless CMS API over REST.
 
