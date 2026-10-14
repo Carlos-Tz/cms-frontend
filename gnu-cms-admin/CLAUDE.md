@@ -31,10 +31,6 @@ Admin route prefix → repo project → server folder:
 | `/trainin` | `trainin` | `traninn-logistic` |
 | `/tectuus` | `tectuus` | `tectuus` |
 
-## "Reconstruir página"
-
-`src/components/rebuild-site-button.jsx` (on each site's `select-page.jsx`) publishes saved CMS edits. The browser can't run `npm run build`, so the button calls `build-server/` (`VITE_BUILD_SERVER_URL`, see `src/functions/fetch.jsx` → `rebuildSite` / `getRebuildStatus`). The service runs `npm run build` in `PUBLISH_ROOT/<server folder>/code` and then replaces everything in `PUBLISH_ROOT/<server folder>` except `code/` with `code/dist/`. See `../build-server/README.md`.
-
 ## Routing
 
 - `src/App.jsx` owns the top-level `<Routes>` and renders the landing page directly.

@@ -1,6 +1,5 @@
 import React from 'react'
 import { Link, useNavigate } from 'react-router'
-import RebuildSiteButton from '../../components/rebuild-site-button'
 import SiteUrlLink from '../../components/site-url-link'
 
 const PAGES = [
@@ -26,8 +25,6 @@ export default function SelectPage() {
         </header>
 
         <SiteUrlLink site="tectuus" />
-
-        <RebuildSiteButton site="tectuus" />
 
         <div className="grid gap-4 sm:grid-cols-2">
           {PAGES.map((page) => (
