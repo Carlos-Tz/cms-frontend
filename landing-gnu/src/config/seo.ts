@@ -11,7 +11,7 @@ export const seo = {
   titleSeparator: "—",
 
   // Used for the homepage <title> and as a fallback when a page has no title.
-  defaultTitle: "GNU Gas Natural — Energía limpia para tu hogar, negocio y flotilla",
+  defaultTitle: "GNU Gas Natural — Energía limpia para negocios y flotillas",
 
   // Fallback <meta name="description"> when a page doesn't provide its own.
   defaultDescription:

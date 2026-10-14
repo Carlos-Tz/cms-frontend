@@ -1,4 +1,5 @@
 ---
+import BalancedGrid from "./BalancedGrid.astro";
 import CardBadge from "./CardBadge.astro";
 // One page of the blog listing. The site is built statically, so a `?page=`
 // query string never reaches the build — each page of `GET blog` gets its own
@@ -48,7 +49,7 @@ const heroImage = hero?.image ? mediaUrl(hero.image) : null;
                 {meta.last_page > 1 && ` · Página ${meta.page} de ${meta.last_page}`}
               </p>
             )}
-            <div class="grid grid--3">
+            <BalancedGrid count={posts.length}>
               {posts.map((post, index) => (
                 <a
                   href={`/blog/${post.slug}`}
@@ -72,7 +73,7 @@ const heroImage = hero?.image ? mediaUrl(hero.image) : null;
                   </div>
                 </a>
               ))}
-            </div>
+            </BalancedGrid>
 
             {meta.last_page > 1 && (
               <nav class="pagination" aria-label="Páginas del blog">

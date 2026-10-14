@@ -1,6 +1,7 @@
 ---
 import { mediaUrl } from "../../functions/fetch";
 import CardBadge from "../CardBadge.astro";
+import BalancedGrid from "../BalancedGrid.astro";
 
 interface FeatureItem {
   icon: string | null;
@@ -33,7 +34,7 @@ const { title, image, items, titlesOnly = false } = Astro.props;
         <h2 class="section-title">{title}</h2>
       </div>
     )}
-    <div class="grid grid--3">
+    <BalancedGrid count={items.length}>
       {items.map((item) => (
         <div class:list={["card card--feature", { "card--photo": item.icon, "card--title-only": titlesOnly }]}>
           {item.icon ? (
@@ -54,15 +55,15 @@ const { title, image, items, titlesOnly = false } = Astro.props;
               </svg>
             </div>
           )}
-          {/* With a photo, the copy sits in a white panel overlapping the
-              photo's bottom edge (card--photo, Gaseco-style). */}
+          {/* With a photo, the copy sits in a white body overlapping the
+              photo's bottom edge (card--photo). */}
           <div class="card__panel">
-            {item.icon && <CardBadge />}
+            {item.icon && <CardBadge variant="small" />}
             <p class="card__title">{item.title}</p>
             {!titlesOnly && <p class="card__text">{item.text}</p>}
           </div>
         </div>
       ))}
-    </div>
+    </BalancedGrid>
   </div>
 </section>

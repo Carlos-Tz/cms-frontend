@@ -1,0 +1,48 @@
+---
+// Card grid shared by the feature cards (FeatureGrid) and the blog / child
+// page cards. Rows come out balanced instead of leaving a stray last row:
+// the fewest rows at up to `max` per row, spread evenly — 6 cards are 3+3
+// (not 4+2), 7 are 4+3, 5 are 3+2. Cards span the full container width, a
+// shorter last row centers under the full ones, and every white panel
+// matches the tallest one (see the script below). Styles: .balanced-grid in
+// global.css.
+interface Props {
+  count: number;
+  max?: number;
+}
+
+const { count, max = 4 } = Astro.props;
+
+const rows = Math.max(1, Math.ceil(count / max));
+const columns = Math.max(1, Math.ceil(count / rows));
+---
+
+<div class="balanced-grid" style={`--columns: ${columns}`}>
+  <slot />
+</div>
+
+<script>
+  // Every white panel in a grid takes the height of the tallest one, across
+  // rows too (CSS alone only evens out panels within the same row). Measured
+  // with the grid in .is-measuring, where panels take their natural height.
+  const PANELS = ".card--photo .card__panel, .service-card .blog-card__body";
+
+  function equalizePanels(grid: HTMLElement) {
+    grid.classList.add("is-measuring");
+    const panels = Array.from(grid.querySelectorAll<HTMLElement>(PANELS));
+    const tallest = Math.max(0, ...panels.map((panel) => panel.offsetHeight));
+    grid.classList.remove("is-measuring");
+    // One card per row (phones): no neighbors to match, so no forced height.
+    const cards = Array.from(grid.children) as HTMLElement[];
+    // offsetTop, not getBoundingClientRect: the reveal animation's staggered
+    // translateY would make same-row cards look misaligned mid-entrance.
+    const sideBySide = cards.length > 1 && cards[0].offsetTop === cards[1].offsetTop;
+    grid.style.setProperty("--panel-height", sideBySide ? `${tallest}px` : "auto");
+  }
+
+  const grids = document.querySelectorAll<HTMLElement>(".balanced-grid");
+  const run = () => grids.forEach(equalizePanels);
+  run();
+  document.fonts?.ready.then(run);
+  window.addEventListener("resize", run);
+</script>

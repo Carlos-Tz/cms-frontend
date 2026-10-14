@@ -268,6 +268,47 @@ button {
   grid-template-columns: repeat(auto-fit, minmax(220px, 18rem));
 }
 
+/* BalancedGrid.astro (feature, blog and child-page cards): wrapping rows of
+   --columns (set per card count so rows come out balanced), spanning the
+   full container width. Cards don't grow or shrink, so a shorter last row
+   keeps the same card width and centers under the full ones. On narrower
+   screens cards wrap at their 15rem minimum, still centered. */
+.balanced-grid {
+  --gap: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.5rem var(--gap);
+}
+
+.balanced-grid > * {
+  flex: 0 0 calc((100% - (var(--columns) - 1) * var(--gap)) / var(--columns));
+  min-width: min(100%, 15rem);
+}
+
+/* Equal white panels: within a row by stretching (no-JS fallback), across
+   rows via --panel-height, the tallest panel's height, set by the script in
+   BalancedGrid.astro. .is-measuring drops both for a moment so it can read
+   each panel's natural height. */
+.balanced-grid .card--photo {
+  display: flex;
+  flex-direction: column;
+}
+
+.balanced-grid :is(.card--photo .card__panel, .service-card .blog-card__body) {
+  flex: 1;
+  min-height: var(--panel-height, auto);
+}
+
+.balanced-grid.is-measuring {
+  align-items: flex-start;
+}
+
+.balanced-grid.is-measuring :is(.card--photo .card__panel, .service-card .blog-card__body) {
+  flex: none;
+  min-height: 0;
+}
+
 /* FeatureGrid's optional banner (1024x576 / 16:9 per the content guide),
    above the title and the icon cards. */
 .feature-grid__banner {
@@ -541,21 +582,22 @@ button {
   transform: scale(1.04);
 }
 
-/* Photo cards (Gaseco-style, inspiration/Gaseco): a rounded photo with the
-   copy in a white panel overlapping its bottom edge, inset from its sides.
-   The card box itself goes transparent so only the photo and panel show. */
+/* Photo cards: one white card with a 16:9 photo on top and the copy in a
+   full-width body whose rounded top corners overlap the photo's bottom
+   edge, with a small square arrow badge on the seam. */
 .card--photo {
   padding: 0;
+  overflow: hidden;
   border: none;
-  background: transparent;
-  box-shadow: none;
-  overflow: visible;
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s ease;
 }
 
 .card--photo:hover {
   border-color: transparent;
-  transform: none;
-  box-shadow: none;
+  transform: translateY(-4px);
+  box-shadow: 0 24px 44px -24px rgba(6, 26, 46, 0.4);
 }
 
 .card--photo::before {
@@ -564,29 +606,76 @@ button {
 
 .card--photo .card__media {
   margin: 0;
-  aspect-ratio: 4 / 3;
-  border-radius: var(--radius-lg);
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
 }
 
 .card--photo:hover .card__media-img {
-  transform: scale(1.12);
+  transform: scale(1.08);
 }
 
 .card--photo .card__panel {
   position: relative;
-  margin: -5rem 1.25rem 0;
-  padding: 1.75rem;
-  border-radius: var(--radius-lg);
+  margin-top: -1rem;
+  padding: 1.5rem 1.5rem 1.75rem;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   background: #ffffff;
-  box-shadow: var(--shadow-soft);
-  transition: box-shadow 0.3s ease;
 }
 
-.card--photo:hover .card__panel {
-  box-shadow: 0 24px 44px -24px rgba(6, 26, 46, 0.4);
+.card--photo .card__title {
+  color: var(--color-navy);
+  font-size: 1.125rem;
+  line-height: 1.3;
+}
+
+.card--photo .card__text {
+  margin-top: 0.875rem;
+  line-height: 1.6;
+}
+
+/* Small round badge centered on the photo/body seam. */
+.card--photo .card-badge--small {
+  top: -1.125rem;
+  right: 1.25rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 8px 18px -8px rgba(31, 92, 169, 0.7);
+  transition: border-radius 0.3s var(--ease-out);
+}
+
+/* On hover the circle morphs into a rounded square and only the arrow
+   turns (↗ to →), so the badge never tilts into a diamond. */
+.card--photo .card-badge--small svg {
+  transition: transform 0.3s var(--ease-out);
+}
+
+.card--photo:hover .card-badge--small {
+  border-radius: 0.625rem;
+}
+
+.card--photo:hover .card-badge.card-badge--small {
+  transform: none;
+}
+
+.card--photo:hover .card-badge--small svg {
+  transform: rotate(45deg);
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .card--photo .card-badge--small,
+  .card--photo .card-badge--small svg {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card--photo:hover,
   .card--photo:hover .card__media-img {
     transform: none;
   }
@@ -2881,11 +2970,11 @@ body.nav-open {
   line-height: 1.3;
 }
 
+/* Shown in the editor's own casing (sentence case), not forced to caps. */
 .prose h4 {
   margin-top: 1.75rem;
   font-size: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  line-height: 1.35;
 }
 
 /* A heading sits closer to the copy it introduces than to the copy above it. */

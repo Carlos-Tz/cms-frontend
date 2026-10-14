@@ -1,4 +1,5 @@
 ---
+import BalancedGrid from "./BalancedGrid.astro";
 import CardBadge from "./CardBadge.astro";
 import noImg from "../assets/images/noimg.jpg";
 import { mediaUrl } from "../functions/fetch";
@@ -9,10 +10,9 @@ interface Props {
   parent: string;
   // Used only when `GET menu` is unreachable at build time.
   fallback: Array<{ slug: string; path: string; title: string }>;
-  gridClass?: string;
 }
 
-const { parent, fallback, gridClass = "grid--3" } = Astro.props;
+const { parent, fallback } = Astro.props;
 
 // The children come from the CMS menu, so a page unpublished in the admin
 // drops its card too instead of linking to a 404.
@@ -35,7 +35,7 @@ const cards = await Promise.all(
 ---
 
 {cards.length > 0 && (
-  <div class:list={["grid", gridClass]}>
+  <BalancedGrid count={cards.length}>
     {cards.map((card) => (
       <a class="blog-card service-card" href={card.path}>
         <div class="service-card__media">
@@ -49,5 +49,5 @@ const cards = await Promise.all(
         </div>
       </a>
     ))}
-  </div>
+  </BalancedGrid>
 )}

@@ -8,7 +8,7 @@ secciones descritas abajo.
 
 El `page_hero` ya existe y no cambia. El `feature_grid` actual
 ("CERTIFICACIONES ACTUALES", con una sola tarjeta ISO 9001) se oculta en el
-frontend y lo sustituyen las dos secciones siguientes.
+frontend y lo sustituye la sección siguiente.
 
 Todas las imágenes se envían como en el resto del CMS: una ruta de media o una
 URL absoluta.
@@ -68,48 +68,16 @@ muestra; en cuanto lleguen, se añaden al diseño.
 
 ---
 
-## 2. `cta_band`: llamada a la acción (sección nueva)
-
-Cierre de la página con dos botones.
-
-```json
-{
-  "type": "cta_band",
-  "content": {
-    "title": "¿Quieres convertir tu vehículo o flotilla a GNV?",
-    "subtitle": "Un asesor te ayuda a evaluar tu unidad y tu patrón de consumo.",
-    "primary_label": "Contáctanos",
-    "primary_url": "/contacto",
-    "secondary_label": "Conoce GNV",
-    "secondary_url": "/nuestros-servicios/gnv"
-  }
-}
-```
-
-| Campo             | Tipo          | Requerido | Notas |
-| ----------------- | ------------- | --------- | ----- |
-| `title`           | string        | Sí        | |
-| `subtitle`        | string o null | No        | |
-| `primary_label`   | string        | Sí        | Texto del botón principal. |
-| `primary_url`     | string        | Sí        | Ruta interna o URL absoluta. |
-| `secondary_label` | string o null | No        | El botón secundario se oculta si falta este campo o `secondary_url`. |
-| `secondary_url`   | string o null | No        | |
-
-Esta sección sirve para cualquier página, no solo para Certificaciones.
-
----
-
 ## Orden de las secciones en `pages/certificaciones`
 
 1. `page_hero` (ya existe)
 2. `certifications`
-3. `cta_band`
 
 ## Cuando el backend esté listo
 
 En el frontend habrá que:
 
-- crear los componentes `Certifications.astro` y `CtaBand.astro`, y
-  registrarlos en `SectionRenderer.astro`;
+- crear el componente `Certifications.astro` y
+  registrarlo en `SectionRenderer.astro`;
 - quitar `CertificacionesContent` y `excludeTypes={["feature_grid"]}` de
   `src/pages/sobre-nosotros/certificaciones/index.astro`.
