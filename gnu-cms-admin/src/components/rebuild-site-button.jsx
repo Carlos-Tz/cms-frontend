@@ -9,11 +9,28 @@ function formatTime(iso) {
   return new Date(iso).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })
 }
 
+// Compact one-liner for a failed BuildState's `error` (step/exitCode/signal/
+// code) — the full message and output already get their own spots below.
+function summarizeBuildError(error) {
+  if (!error) return ''
+  const parts = []
+  if (error.step) parts.push(`paso: ${error.step}`)
+  if (error.exitCode != null) parts.push(`código de salida: ${error.exitCode}`)
+  if (error.signal) parts.push(`señal: ${error.signal}`)
+  if (error.code) parts.push(`código: ${error.code}`) // fs/spawn errors: EACCES, EBUSY, ENOENT…
+  return parts.join(' · ')
+}
+
 // Rebuilds the public Astro site for `site` (admin route prefix: gnu,
 // gas-natural, trainin, tectuus) so edits saved in the panel go live.
 export default function RebuildSiteButton({ site }) {
   const [build, setBuild] = useState(null)
   const [message, setMessage] = useState('')
+  // Envelope-level `error` (502 CMS-probe failure, 500 internal exception,
+  // etc.) — distinct from `build.error`, which is a *build's* failure detail.
+  // `message` already shows the friendly `meta.message` for these; this just
+  // keeps the raw object around so "Ver detalles" can show the full picture.
+  const [requestError, setRequestError] = useState(null)
   const [showLog, setShowLog] = useState(false)
   const timer = useRef(null)
 
@@ -21,10 +38,12 @@ export default function RebuildSiteButton({ site }) {
     const res = await getRebuildStatus(site)
     if (res.status !== 'success') {
       setMessage(res.meta?.message ?? 'No se pudo obtener el estado de la reconstrucción.')
+      setRequestError(res.error ?? null)
       return
     }
     setBuild(res.data)
     setMessage('')
+    setRequestError(null)
   }, [site])
 
   useEffect(() => {
@@ -45,6 +64,7 @@ export default function RebuildSiteButton({ site }) {
     const res = await rebuildSite(site)
     if (res.data) setBuild(res.data)
     setMessage(res.status === 'success' ? '' : (res.meta?.message ?? 'No se pudo iniciar la reconstrucción.'))
+    setRequestError(res.status === 'success' ? null : (res.error ?? null))
   }
 
   let statusLine = null
@@ -56,6 +76,18 @@ export default function RebuildSiteButton({ site }) {
     statusLine = <span className="text-rose-300">Falló la reconstrucción · {formatTime(build.finishedAt)}</span>
   }
 
+  const buildErrorSummary = build?.status === 'error' ? summarizeBuildError(build.error) : ''
+
+  // build-server keeps the failing command's full output in `error.output`;
+  // `log` is only the trimmed progress tail, so prefer the full output. When
+  // the failure wasn't a build at all but the request itself (502/500/etc.),
+  // fall back to the full envelope-level error so nothing gets lost.
+  const errorDetails = build?.status === 'error'
+    ? (build.error?.output || build.log?.join('\n') || '')
+    : requestError
+      ? JSON.stringify(requestError, null, 2)
+      : ''
+
   return (
     <section className="mb-8 rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur-sm">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -65,6 +97,10 @@ export default function RebuildSiteButton({ site }) {
             Los cambios guardados no aparecen en el sitio público hasta reconstruirlo.
           </p>
           {statusLine && <p className="mt-2 text-sm">{statusLine}</p>}
+          {build?.status === 'error' && build.error?.message && (
+            <p className="mt-1 text-sm text-rose-300/90">{build.error.message}</p>
+          )}
+          {buildErrorSummary && <p className="mt-1 text-xs text-white/40">{buildErrorSummary}</p>}
           {message && <p className="mt-2 text-sm text-rose-300">{message}</p>}
         </div>
 
@@ -81,7 +117,7 @@ export default function RebuildSiteButton({ site }) {
         </button>
       </div>
 
-      {build?.status === 'error' && build.log?.length > 0 && (
+      {errorDetails && (
         <div className="mt-4">
           <button
             type="button"
@@ -91,8 +127,8 @@ export default function RebuildSiteButton({ site }) {
             {showLog ? 'Ocultar detalles' : 'Ver detalles'}
           </button>
           {showLog && (
-            <pre className="mt-2 max-h-64 overflow-auto rounded-lg border border-white/10 bg-black/40 p-3 text-xs text-white/70">
-              {build.log.join('\n')}
+            <pre className="mt-2 max-h-96 overflow-auto whitespace-pre-wrap rounded-lg border border-white/10 bg-black/40 p-3 text-xs text-white/70">
+              {errorDetails}
             </pre>
           )}
         </div>

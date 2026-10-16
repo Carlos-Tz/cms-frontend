@@ -12,6 +12,11 @@
 // Every request must carry the admin's bearer token; it is validated by
 // forwarding it to the CMS, so no extra secret has to be shared with editors.
 //
+// When a build fails, `data.error` carries everything known about it (the
+// step that broke, message, exit code/signal, fs/spawn error fields, stack and
+// the failing command's full stdout/stderr), and `meta.message` repeats the
+// message, so the admin can show exactly what went wrong.
+//
 // Zero dependencies — run with `node server.mjs` (Node >= 22).
 
 import http from 'node:http'
@@ -29,6 +34,10 @@ const CMS_BASE_URL = (process.env.CMS_BASE_URL ?? 'https://gnu-headless-cms.165.
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? 'http://localhost:5173')
     .split(',').map((s) => s.trim()).filter(Boolean)
 const LOG_LINES = 200
+// The rolling `log` above is trimmed for the progress view; the failing
+// command's full output is kept separately (up to this size) so the client
+// gets the whole error, not just its tail.
+const MAX_OUTPUT_CHARS = 2 * 1024 * 1024
 
 // Admin route prefix → Astro project dir (CODE_PATH, where `npm run build`
 // runs) + web root (PUBLIC_PATH, fully replaced with CODE_PATH/dist/ after a
@@ -61,7 +70,7 @@ function isConfiguredPath(value) {
 const builds = Object.fromEntries(Object.keys(SITES).map((key) => [key, idleState()]))
 
 function idleState() {
-    return { status: 'idle', startedAt: null, finishedAt: null, error: null, log: [] }
+    return { status: 'idle', startedAt: null, finishedAt: null, step: null, error: null, log: [] }
 }
 
 function loadEnvFile(file) {
@@ -74,9 +83,34 @@ function loadEnvFile(file) {
     }
 }
 
+// Strip ANSI colors: logs are shown as plain text in the admin.
+const stripAnsi = (text) => text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '')
+
+function capOutput(text) {
+    return text.length > MAX_OUTPUT_CHARS
+        ? `[... ${text.length - MAX_OUTPUT_CHARS} caracteres omitidos ...]\n` + text.slice(-MAX_OUTPUT_CHARS)
+        : text
+}
+
+// Everything we know about a failure, as plain JSON for the admin: which step
+// broke, the message, process exit info, Node's fs/spawn error fields (code,
+// syscall, path) and the failing command's full output.
+function describeError(error, step) {
+    const details = {
+        step,
+        message: error?.message ?? String(error),
+        name: error?.name ?? null,
+    }
+    for (const field of ['code', 'errno', 'syscall', 'path', 'dest', 'command', 'cwd', 'exitCode', 'signal', 'stdout', 'stderr', 'output']) {
+        if (error?.[field] !== undefined) details[field] = error[field]
+    }
+    if (error?.cause) details.cause = describeError(error.cause, step)
+    details.stack = error?.stack ?? null
+    return details
+}
+
 function appendLog(state, chunk) {
-    // Strip ANSI colors: the log is shown as plain text in the admin.
-    const lines = chunk.toString().replace(/\x1b\[[0-9;]*m/g, '').split(/\r?\n/).filter((l) => l.trim() !== '')
+    const lines = stripAnsi(chunk.toString()).split(/\r?\n/).filter((l) => l.trim() !== '')
     state.log.push(...lines)
     if (state.log.length > LOG_LINES) state.log.splice(0, state.log.length - LOG_LINES)
 }
@@ -84,12 +118,32 @@ function appendLog(state, chunk) {
 function run(command, cwd, state) {
     return new Promise((resolve, reject) => {
         appendLog(state, `$ ${command}`)
+        let stdout = ''
+        let stderr = ''
+        let output = ''
         const child = spawn(command, { cwd, shell: true, env: process.env })
-        child.stdout.on('data', (d) => appendLog(state, d))
-        child.stderr.on('data', (d) => appendLog(state, d))
-        child.on('error', reject)
-        child.on('close', (code) =>
-            code === 0 ? resolve() : reject(new Error(`"${command}" terminó con código ${code}`)))
+        child.stdout.on('data', (d) => {
+            const text = stripAnsi(d.toString())
+            stdout = capOutput(stdout + text)
+            output = capOutput(output + text)
+            appendLog(state, d)
+        })
+        child.stderr.on('data', (d) => {
+            const text = stripAnsi(d.toString())
+            stderr = capOutput(stderr + text)
+            output = capOutput(output + text)
+            appendLog(state, d)
+        })
+        child.on('error', (error) => {
+            reject(Object.assign(error, { command, cwd, stdout, stderr, output }))
+        })
+        child.on('close', (code, signal) => {
+            if (code === 0) return resolve()
+            const error = new Error(signal
+                ? `"${command}" fue terminado por la señal ${signal}`
+                : `"${command}" terminó con código ${code}`)
+            reject(Object.assign(error, { command, cwd, exitCode: code, signal, stdout, stderr, output }))
+        })
     })
 }
 
@@ -110,52 +164,89 @@ async function startBuild(key) {
     const state = { ...idleState(), status: 'running', startedAt: new Date().toISOString() }
     builds[key] = state
 
-    if (!isConfiguredPath(site.codePath) || !isConfiguredPath(site.publicPath)) {
-        state.status = 'error'
-        state.error = `Rutas no configuradas para "${key}": define sus VITE_..._CODE_PATH y VITE_..._PUBLIC_PATH en build-server/.env.`
-        state.finishedAt = new Date().toISOString()
-        appendLog(state, state.error)
-        return
-    }
-
-    const cwd = path.resolve(site.codePath)
-    const target = path.resolve(site.publicPath)
     try {
+        state.step = 'config'
+        if (!isConfiguredPath(site.codePath) || !isConfiguredPath(site.publicPath)) {
+            throw new Error(`Rutas no configuradas para "${key}": define sus VITE_..._CODE_PATH y VITE_..._PUBLIC_PATH en build-server/.env.`)
+        }
+
+        const cwd = path.resolve(site.codePath)
+        const target = path.resolve(site.publicPath)
+
+        // With `shell: true` a missing cwd surfaces as a misleading
+        // "spawn cmd.exe ENOENT", so check it up front and say what's wrong.
+        if (!fs.existsSync(cwd) || !fs.statSync(cwd).isDirectory()) {
+            throw Object.assign(new Error(`CODE_PATH no existe o no es una carpeta: ${cwd}`), { path: cwd })
+        }
+        if (!fs.existsSync(path.join(cwd, 'package.json'))) {
+            throw Object.assign(new Error(`CODE_PATH no contiene package.json: ${cwd}`), { path: cwd })
+        }
+
+        state.step = 'build'
         await run('npm run build', cwd, state)
 
         // `npm run build` exits 0 even when the CMS is unreachable (fetchData
         // swallows the error), so at least make sure something was emitted
         // before it replaces the live site.
+        state.step = 'verify'
         const dist = path.join(cwd, 'dist')
         const index = path.join(dist, 'index.html')
         if (!fs.existsSync(index) || fs.statSync(index).size === 0) {
-            throw new Error('La compilación no generó dist/index.html')
+            throw Object.assign(new Error('La compilación no generó dist/index.html'), { path: index })
         }
 
+        state.step = 'publish'
         publish(dist, target, state)
 
+        state.step = null
         state.status = 'success'
     } catch (error) {
         state.status = 'error'
-        state.error = error.message
-        appendLog(state, error.message)
+        state.error = describeError(error, state.step)
+        appendLog(state, `Error en el paso "${state.step}": ${state.error.message}`)
+        console.error(`[${key}] la reconstrucción falló en "${state.step}":`, error)
     } finally {
         state.finishedAt = new Date().toISOString()
     }
 }
 
+const SESSION_EXPIRED = { status: 401, body: { status: 'error', meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } } }
+
 // A token is accepted if the CMS accepts it for an admin read on that site.
-async function isAuthorized(req, site) {
+// Returns null when authorized, otherwise the {status, body} to reply with —
+// a CMS that is down or misbehaving is reported as such (502), not as an
+// expired session, so the admin doesn't log the editor out for no reason.
+async function checkAuthorization(req, site) {
     const auth = req.headers.authorization
-    if (!auth?.startsWith('Bearer ')) return false
+    if (!auth?.startsWith('Bearer ')) return SESSION_EXPIRED
+
+    const url = `${CMS_BASE_URL}/api/admin/sections?site=${encodeURIComponent(site.slug)}`
+    let res
     try {
-        const res = await fetch(`${CMS_BASE_URL}/api/admin/sections?site=${encodeURIComponent(site.slug)}`, {
-            headers: { Authorization: auth, Accept: 'application/json' },
-        })
-        return res.ok
+        res = await fetch(url, { headers: { Authorization: auth, Accept: 'application/json' } })
     } catch (error) {
         console.error('No se pudo validar el token con el CMS:', error)
-        return false
+        return {
+            status: 502,
+            body: {
+                status: 'error',
+                meta: { message: `No se pudo contactar al CMS para validar la sesión (${CMS_BASE_URL}): ${error.message}` },
+                error: describeError(error, 'auth'),
+            },
+        }
+    }
+
+    if (res.ok) return null
+    if (res.status === 401 || res.status === 403) return SESSION_EXPIRED
+
+    const responseBody = await res.text().catch(() => '')
+    return {
+        status: 502,
+        body: {
+            status: 'error',
+            meta: { message: `El CMS respondió HTTP ${res.status} al validar la sesión.` },
+            error: { step: 'auth', message: `HTTP ${res.status} ${res.statusText}`, url, httpStatus: res.status, responseBody: capOutput(responseBody) },
+        },
     }
 }
 
@@ -164,7 +255,16 @@ function send(res, status, body) {
     res.end(JSON.stringify(body))
 }
 
-const server = http.createServer(async (req, res) => {
+// Build state as returned to the admin. A failed build also gets its message
+// in `meta.message`, so callers that only read the envelope still see it.
+function buildBody(key) {
+    const data = builds[key]
+    return data.status === 'error'
+        ? { status: 'success', data, meta: { message: data.error?.message ?? 'La reconstrucción falló.' } }
+        : { status: 'success', data }
+}
+
+async function handle(req, res) {
     const origin = req.headers.origin
     if (origin && ALLOWED_ORIGINS.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin)
@@ -180,25 +280,42 @@ const server = http.createServer(async (req, res) => {
     const match = req.url.match(/^\/builds\/([a-z-]+)\/?(?:\?.*)?$/)
     const key = match?.[1]
     const site = key && SITES[key]
-    if (!site) return send(res, 404, { status: 'error', meta: { message: 'Sitio no encontrado' } })
+    if (!site) return send(res, 404, { status: 'error', meta: { message: `Sitio no encontrado: ${req.url}` } })
 
-    if (!(await isAuthorized(req, site))) {
-        return send(res, 401, { status: 'error', meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } })
-    }
+    const denied = await checkAuthorization(req, site)
+    if (denied) return send(res, denied.status, denied.body)
 
     if (req.method === 'GET') {
-        return send(res, 200, { status: 'success', data: builds[key] })
+        return send(res, 200, buildBody(key))
     }
 
     if (req.method === 'POST') {
         if (builds[key].status === 'running') {
             return send(res, 409, { status: 'error', data: builds[key], meta: { message: 'Ya hay una reconstrucción en curso para este sitio.' } })
         }
-        startBuild(key)
-        return send(res, 202, { status: 'success', data: builds[key] })
+        startBuild(key).catch((error) => {
+            // startBuild handles its own errors; this only fires on a bug in it.
+            console.error(`[${key}] error inesperado:`, error)
+            Object.assign(builds[key], { status: 'error', error: describeError(error, 'internal'), finishedAt: new Date().toISOString() })
+        })
+        return send(res, 202, buildBody(key))
     }
 
-    send(res, 405, { status: 'error', meta: { message: 'Método no permitido' } })
+    send(res, 405, { status: 'error', meta: { message: `Método no permitido: ${req.method}` } })
+}
+
+// Any unexpected exception in a request still answers with a JSON error
+// instead of leaving the connection hanging or crashing the process.
+const server = http.createServer((req, res) => {
+    handle(req, res).catch((error) => {
+        console.error(`${req.method} ${req.url} falló:`, error)
+        if (res.headersSent) return res.end()
+        send(res, 500, {
+            status: 'error',
+            meta: { message: `Error interno del servicio de reconstrucción: ${error.message}` },
+            error: describeError(error, 'internal'),
+        })
+    })
 })
 
 server.listen(PORT, () => {

@@ -526,30 +526,63 @@ const BUILD_SERVER_URL = import.meta.env.VITE_BUILD_SERVER_URL
 
 async function buildRequest(site, method) {
     const accessToken = useSessionStore.getState().accessToken
+    const label = `[build-server] ${method} /builds/${site}`
 
     if (!BUILD_SERVER_URL) {
-        return { status: 'error', data: null, meta: { message: 'El servicio de reconstrucción no está configurado (VITE_BUILD_SERVER_URL).' } }
+        const message = 'El servicio de reconstrucción no está configurado (VITE_BUILD_SERVER_URL).'
+        console.error(`${label}:`, message)
+        return { status: 'error', data: null, meta: { message } }
     }
 
+    // Split the network call from the JSON parse so each failure mode gets
+    // its own message instead of being lumped into one generic catch:
+    // "never got a response" (service down, wrong URL, CORS, DNS) and
+    // "got a response that isn't the JSON envelope every caller expects"
+    // (e.g. a reverse proxy/platform error page in front of build-server,
+    // or the process crashing mid-response) are different problems to fix.
+    let response
     try {
-        const response = await fetch(`${BUILD_SERVER_URL}/builds/${site}`, {
+        response = await fetch(`${BUILD_SERVER_URL}/builds/${site}`, {
             method,
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
                 'Accept': 'application/json',
             },
         })
-
-        if (response.status === 401) {
-            handleUnauthorized()
-            return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
-        }
-
-        return await response.json()
     } catch (error) {
-        console.error('Error contacting build server:', site, error)
+        console.error(`${label}: no se pudo contactar`, error)
         return { status: 'error', data: null, meta: { message: 'No se pudo contactar al servicio de reconstrucción.' } }
     }
+
+    console.log(`${label} → HTTP ${response.status}`)
+
+    if (response.status === 401) {
+        handleUnauthorized()
+        return { status: 'error', data: null, meta: { message: 'Tu sesión expiró. Inicia sesión de nuevo.' } }
+    }
+
+    let body
+    try {
+        body = await response.json()
+    } catch (error) {
+        console.error(`${label}: HTTP ${response.status} no trajo JSON válido`, error)
+        return {
+            status: 'error',
+            data: null,
+            meta: { message: `El servicio de reconstrucción respondió con un error inesperado (HTTP ${response.status}).` },
+        }
+    }
+
+    if (response.ok) {
+        console.log(`${label}:`, body)
+    } else {
+        // Still a structured {status, data, meta} error from build-server itself
+        // (401 already handled above; this covers 404/405/409/etc.) — log it at
+        // error level so it's not missed among routine success logs.
+        console.error(`${label}: HTTP ${response.status}`, body)
+    }
+
+    return body
 }
 
 export function rebuildSite(site) {
