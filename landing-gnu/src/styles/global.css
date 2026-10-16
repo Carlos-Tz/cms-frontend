@@ -896,7 +896,7 @@ button {
   font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: var(--color-text-60);
+  color: var(--color-text-75);
   transition: color 0.15s ease;
 }
 
@@ -1027,7 +1027,7 @@ button {
   border-radius: var(--radius-sm);
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--color-text-60);
+  color: var(--color-text-75);
   white-space: nowrap;
   transition: background 0.15s ease, color 0.15s ease;
 }
@@ -1201,13 +1201,15 @@ body.nav-open {
 }
 
 /* Hero — full-bleed, CMS-driven carousel. Sized to the banner media's own
-   ratio so it shows whole: 40vw is 5:2, the common GIF size (800x320); the
-   2048x768 (8:3) photos crop only a sliver under cover. Never taller than
-   what's left of the viewport below the sticky header (100dvh accounts for
-   mobile browser chrome). */
+   ratio so it shows whole: 1138:474, the common banner GIF size.
+   An 800x340 GIF is a hair taller and shows thin blurred side
+   strips; wider media crops a sliver under cover. Never taller than what's
+   left of the viewport below the sticky header (100dvh accounts for mobile
+   browser chrome). */
 .hero {
   position: relative;
-  height: min(40vw, calc(100dvh - var(--header-height)));
+  aspect-ratio: 1138 / 474;
+  max-height: calc(100dvh - var(--header-height));
   min-height: 28rem;
   overflow: hidden;
   background: var(--color-ink);
@@ -1344,11 +1346,61 @@ body.nav-open {
 /* Bigger than the sitewide .btn-primary default — this is the hero's one
    headline action over a busy photo, so it needs to read as the obvious
    next step rather than blend in at the standard button size. */
-.hero-slide__cta {
+/* CTA, then a hairline divider and the white logo. */
+.hero-slide__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
   margin-top: 1.75rem;
+}
+
+/* Pill with the label and a white arrow disc on its right end. */
+.hero-slide__cta {
   width: fit-content;
-  padding: 1.0625rem 2.25rem;
+  gap: 1.25rem;
+  padding: 0.5rem 0.5rem 0.5rem 2rem;
   font-size: 1.0625rem;
+}
+
+.hero-slide__cta-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--color-primary);
+  transition: transform 0.3s var(--ease-out);
+}
+
+.hero-slide__cta:hover .hero-slide__cta-arrow {
+  transform: translateX(3px);
+}
+
+.hero-slide__brand img {
+  display: block;
+  height: 4.5rem;
+  width: auto;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
+
+.hero-slide__cta + .hero-slide__brand {
+  padding-left: 1.5rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+@media (max-width: 480px) {
+  .hero-slide__brand img {
+    height: 3.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide__cta:hover .hero-slide__cta-arrow {
+    transform: none;
+  }
 }
 
 .hero__dots {
@@ -1527,7 +1579,7 @@ body.nav-open {
   position: relative;
   z-index: 3;
   margin-top: -1.25rem;
-  padding-bottom: 0.5rem;
+  padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
 }
 
 .trust-strip__grid {
@@ -1536,11 +1588,14 @@ body.nav-open {
   gap: 1.25rem;
 }
 
+/* Cards stretch to the tallest one; content centers vertically so a shorter
+   card splits its spare space above and below instead of leaving it all at
+   the bottom. */
 .trust-strip__card {
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  padding: 1.5rem;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.75rem 2rem;
   border-radius: var(--radius-lg);
   background: #ffffff;
   border: 1px solid var(--color-border);
@@ -1565,17 +1620,29 @@ body.nav-open {
   color: var(--color-primary-alt);
 }
 
+.trust-strip__body {
+  flex: 1;
+  min-width: 0;
+}
+
 .trust-strip__title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.0625rem;
+  line-height: 1.3;
   color: var(--color-text);
+  text-wrap: balance;
 }
 
+/* These paragraphs are the card's substance, not a caption: 14px at 62% ink
+   was both small and thin against white, so they read at 15px/75% (6.7:1)
+   with more leading. */
 .trust-strip__text {
-  margin-top: 0.25rem;
-  font-size: 0.875rem;
-  color: var(--color-text-60);
+  margin-top: 0.45rem;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--color-text-75);
+  text-wrap: pretty;
 }
 
 /* Stats band — animated counters (count-up script in StatsBand.astro),
@@ -1757,7 +1824,7 @@ body.nav-open {
   margin-bottom: 0.375rem;
   font-size: 0.875rem;
   font-weight: 500;
-  color: var(--color-text-60);
+  color: var(--color-text-75);
 }
 
 .field input,
@@ -2049,7 +2116,7 @@ body.nav-open {
 .testimonial-tile__role {
   margin-top: 0.125rem;
   font-size: 0.8125rem;
-  color: var(--color-text-40);
+  color: var(--color-text-60);
 }
 
 /* Map / stations */
@@ -2097,7 +2164,7 @@ body.nav-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-40);
+  color: var(--color-text-60);
   font-size: 0.875rem;
 }
 
@@ -2220,7 +2287,7 @@ body.nav-open {
   margin-top: 0.875rem;
   font-size: 0.875rem;
   min-height: 1.25rem;
-  color: var(--color-text-60);
+  color: var(--color-text-75);
 }
 
 .lead-form__status--success {
@@ -2336,8 +2403,9 @@ body.nav-open {
 
 .blog-card__excerpt {
   margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--color-text-60);
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--color-text-75);
 }
 
 .blog-card__link {
@@ -2828,7 +2896,7 @@ body.nav-open {
 
 .pagination__status {
   font-size: 0.875rem;
-  color: var(--color-text-60);
+  color: var(--color-text-75);
 }
 
 /* Blog post detail */
@@ -3279,7 +3347,7 @@ body.nav-open {
   overflow: hidden;
   isolation: isolate;
   background: var(--color-primary);
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.9);
   padding: 4rem 0 2rem;
 }
 
@@ -3289,7 +3357,7 @@ body.nav-open {
 }
 
 .site-footer .footer-link {
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .site-footer a.footer-link:hover {
@@ -3366,7 +3434,7 @@ body.nav-open {
   padding: 0.3rem 0;
   /* A long email address breaks instead of running off a phone screen. */
   overflow-wrap: anywhere;
-  color: var(--color-text-60);
+  color: var(--color-text-75);
   transition: color 0.15s ease, transform 0.25s var(--ease-out);
 }
 
@@ -3606,8 +3674,8 @@ label {
 
 .logo-card__desc {
   margin-top: -0.375rem;
-  font-size: 0.75rem;
-  color: var(--color-text-40);
+  font-size: 0.8125rem;
+  color: var(--color-text-60);
   text-align: center;
 }
 
@@ -4048,9 +4116,9 @@ a.stations-list__phone:hover {
   border-radius: var(--radius-full);
   border: 1px solid var(--color-border);
   background: var(--color-bg-alt);
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
-  color: var(--color-text-60);
+  color: var(--color-text-75);
 }
 
 .simulator__perks li::before {

@@ -51,6 +51,9 @@ const contactLines = [
 		href: contact?.email ? `mailto:${contact.email}` : null,
 	},
 	{ icon: "fa-regular fa-clock", label: contact?.schedule, href: null },
+	// contact_info.additional_info is part of the same CMS section; the footer
+	// already shows it, so the form column should not quietly drop it.
+	{ icon: "fa-solid fa-circle-info", label: contact?.additional_info, href: null },
 ].filter((line) => Boolean(line.label));
 ---
 

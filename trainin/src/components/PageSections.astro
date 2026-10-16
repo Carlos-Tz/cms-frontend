@@ -4,7 +4,8 @@
 // types are skipped, so a new CMS section type never breaks a page.
 import Hero from "./Hero.astro";
 import PageHero from "./PageHero.astro";
-import Simulador from "./Simulador.astro";
+// Kept for the hidden savings_simulator case further down.
+// import Simulador from "./Simulador.astro";
 import RichText from "./RichText.astro";
 import FeatureGrid from "./FeatureGrid.astro";
 import ImageGallery from "./ImageGallery.astro";
@@ -21,13 +22,8 @@ type Slide = {
 	link_url: string | null;
 	link_label: string | null;
 };
-type FuelPrice = {
-	fuel: string;
-	label: string;
-	price_per_unit: number;
-	unit: string;
-	equivalence_factor: number;
-};
+// type FuelPrice = { fuel; label; price_per_unit; unit; equivalence_factor }
+//   — only used by the hidden savings_simulator case.
 type Logo = {
 	name: string;
 	image: string;
@@ -41,8 +37,14 @@ type FeatureItem = { icon: string | null; title: string; text: string | null };
 
 type BannerCarousel = { slides?: Slide[] };
 type PageHeroContent = { title?: string | null; subtitle?: string | null; image?: string | null };
-type SavingsSimulator = { title?: string; intro?: string; fuel_prices?: FuelPrice[] };
-type RichTextContent = { title: string | null; body: string; video_url: string | null };
+// type SavingsSimulator = { title?: string; intro?: string; fuel_prices?: FuelPrice[] };
+type RichTextContent = {
+	title: string | null;
+	body: string;
+	video_url: string | null;
+	// Poster frame for video_url; a media path despite the `_url` name.
+	image_video_url?: string | null;
+};
 type FeatureGridContent = { title?: string | null; items?: FeatureItem[] };
 type ImageGalleryContent = { title?: string | null; images?: GalleryImage[] };
 type StationsMapContent = { title?: string | null; center?: string | null; zoom?: string | number | null };
@@ -64,9 +66,12 @@ const { sections, slug } = Astro.props;
 // other section is wrapped in a band that alternates plain / tinted down the
 // page, so the rhythm holds whatever mix of sections the CMS returns.
 const FULL_BLEED = new Set(["banner_carousel", "page_hero"]);
+// Section types the site does not render at all. They must not take a turn in
+// the zebra either, or hiding one would flip every band below it.
+const HIDDEN = new Set(["savings_simulator"]);
 let bandIndex = 0;
 const bandTint: (boolean | null)[] = sections.map((section) =>
-	FULL_BLEED.has(section.type) ? null : bandIndex++ % 2 === 1
+	FULL_BLEED.has(section.type) || HIDDEN.has(section.type) ? null : bandIndex++ % 2 === 1
 );
 ---
 
@@ -104,14 +109,22 @@ const bandTint: (boolean | null)[] = sections.map((section) =>
 				return title ? <PageHero title={title} subtitle={subtitle} image={image ? mediaUrl(image) : null} /> : null;
 			}
 
-			case "savings_simulator": {
-				const { title, intro, fuel_prices = [] } = section.content as SavingsSimulator;
-				return <Simulador title={title} intro={intro} fuelPrices={fuel_prices} page={slug} />;
-			}
+			// Hidden site-wide by request: the CMS still serves the section and
+			// Simulador.astro is still here, so restoring it is a matter of
+			// returning the component below instead of null.
+			case "savings_simulator":
+				return null;
 
 			case "rich_text": {
-				const { title, body, video_url } = section.content as RichTextContent;
-				return <RichText title={title} body={body ?? ""} videoUrl={video_url} />;
+				const { title, body, video_url, image_video_url } = section.content as RichTextContent;
+				return (
+					<RichText
+						title={title}
+						body={body ?? ""}
+						videoUrl={video_url}
+						poster={image_video_url ? mediaUrl(image_video_url) : null}
+					/>
+				);
 			}
 
 			case "feature_grid": {

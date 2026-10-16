@@ -1,13 +1,21 @@
 ---
-// Cards for the sub-pages of whichever CMS menu branch matches the current
-// URL. Parent pages like /nuestros-servicios carry only a hero and a short
-// paragraph, which leaves the page looking unfinished; their own children are
-// the most useful thing to put in that space, and they come from the menu, so
-// nothing here is invented.
+// Sub-pages of whichever CMS menu branch matches the current URL, rendered as
+// alternating image bands with an overlapping summary card.
+//
+// Everything on a card comes from that child page's own sections, because the
+// menu endpoint serves only slug/path/title/children (MenuController) and the
+// `pages` table has no description column:
+//   badge     → the page title
+//   headline  → page_hero.subtitle
+//   bullets   → feature_grid item titles
+//   image     → page_hero.image (a brand panel stands in when it is null)
 import { fetchData } from "../functions/fetch";
+import { mediaUrl } from "../functions/fetch";
 
 type MenuItem = { slug: string; path: string; title: string; children?: MenuItem[] };
 type MenuResponse = { status: string; data: MenuItem[] };
+type PageSection = { type: string; content: Record<string, any> };
+type PageResponse = { status: string; data: { sections: PageSection[] } };
 
 interface Props {
 	title?: string;
@@ -34,8 +42,32 @@ const findBranch = (items: MenuItem[]): MenuItem | undefined => {
 
 const children = findBranch(menuResponse?.data ?? [])?.children ?? [];
 
+const entries = await Promise.all(
+	children.map(async (child) => {
+		const page: PageResponse | undefined = await fetchData(`pages/${child.slug}`);
+		const sections = page?.data?.sections ?? [];
+
+		const hero = sections.find((section) => section.type === "page_hero")?.content;
+		const features = sections.find((section) => section.type === "feature_grid")?.content;
+
+		const subtitle = hero?.subtitle;
+		const image = hero?.image;
+
+		return {
+			...child,
+			headline: typeof subtitle === "string" && subtitle.trim() ? subtitle : null,
+			image: typeof image === "string" && image.trim() ? mediaUrl(image) : null,
+			points: ((features?.items ?? []) as { title?: string }[])
+				.map((item) => item.title)
+				.filter((text): text is string => Boolean(text))
+				.slice(0, 4),
+		};
+	})
+);
+
 // Font Awesome glyph per child, chosen from words in its slug so a new CMS
-// page still lands on something sensible instead of a blank tile.
+// page still lands on something sensible — it watermarks the stand-in panel
+// when a page has no hero image.
 const ICON_BY_KEYWORD: [RegExp, string][] = [
 	[/gnc|gas|combustible/, "fa-gas-pump"],
 	[/logistic|ruta|route/, "fa-route"],
@@ -53,70 +85,238 @@ const iconFor = (slug: string) =>
 ---
 
 {
-	children.length > 0 && (
+	entries.length > 0 && (
 		<div class:list={["band", { "band--tint": tint }]}>
-		<section class="section child-pages">
-			<div class="container">
-				<div class="section-head">
-					<h2 class="section-title">{title}</h2>
+			<section class="section child-pages">
+				<div class="container">
+					<div class="section-head">
+						<h2 class="section-title">{title}</h2>
+					</div>
+
+					<div class="service-rows">
+						{entries.map((child, index) => (
+							<article class:list={["service-row", { "service-row--flip": index % 2 === 1 }]}>
+								<div class="service-media">
+									{child.image ? (
+										<img src={child.image} alt="" loading="lazy" />
+									) : (
+										<span class="service-media-fallback" aria-hidden="true">
+											<i class={`fa-solid ${iconFor(child.slug)}`} />
+										</span>
+									)}
+								</div>
+
+								<div class="service-card">
+									<div class="service-card-top">
+										<span class="service-badge">{child.title}</span>
+										<span class="service-seal" aria-hidden="true">
+											<i class="fa-solid fa-check" />
+										</span>
+									</div>
+
+									<h3 class="service-headline">{child.headline ?? child.title}</h3>
+
+									{child.points.length > 0 && (
+										<ul class="service-points">
+											{child.points.map((point) => (
+												<li>
+													<i class="fa-solid fa-circle-check" aria-hidden="true" />
+													<span>{point}</span>
+												</li>
+											))}
+										</ul>
+									)}
+
+									<a class="service-link" href={child.path}>
+										Ver página completa
+										<i class="fa-solid fa-arrow-right-long" aria-hidden="true" />
+									</a>
+								</div>
+							</article>
+						))}
+					</div>
 				</div>
-
-				<div class="child-grid">
-					{children.map((child) => (
-						<a class="card child-card" href={child.path}>
-							<span class="icon-chip icon-chip--lg child-icon" aria-hidden="true">
-								<i class={`fa-solid ${iconFor(child.slug)}`} />
-							</span>
-
-							<h3 class="child-title">{child.title}</h3>
-
-							<span class="link-arrow child-link">
-								Ver más
-								<i class="fa-solid fa-arrow-right-long arrow" aria-hidden="true" />
-							</span>
-						</a>
-					))}
-				</div>
-			</div>
-		</section>
+			</section>
 		</div>
 	)
 }
 
 <style>
-	.child-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
-		gap: 1.5rem;
-	}
-
-	.child-card {
+	.service-rows {
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
-		gap: 1rem;
-		padding: 2rem 1.9rem;
+		gap: clamp(2.5rem, 5vw, 4rem);
 	}
 
-	.child-icon {
-		transition: background 0.35s var(--ease-out), color 0.35s var(--ease-out),
-			transform 0.35s var(--ease-out);
+	/* The card overlaps the image band: both occupy the same grid row, the
+	   card taking five of twelve columns on one side or the other. */
+	.service-row {
+		display: grid;
+		grid-template-columns: repeat(12, 1fr);
+		align-items: center;
 	}
-	.child-card:hover .child-icon {
+
+	.service-media {
+		grid-area: 1 / 1 / 2 / -1;
+		height: clamp(20rem, 34vw, 27rem);
+		border-radius: var(--radius-xl);
+		overflow: hidden;
+		background: var(--color-dark);
+	}
+	.service-media img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.8s var(--ease-out);
+	}
+	.service-row:hover .service-media img {
+		transform: scale(1.04);
+	}
+
+	/* Stand-in for a page whose hero carries no image yet. */
+	.service-media-fallback {
+		display: grid;
+		place-items: center;
+		width: 100%;
+		height: 100%;
+		background: linear-gradient(130deg, var(--color-dark) 0%, var(--color-red-dark) 120%);
+		color: rgba(255, 255, 255, 0.22);
+		font-size: clamp(5rem, 12vw, 9rem);
+	}
+
+	.service-card {
+		grid-area: 1 / 2 / 2 / 7;
+		z-index: 2;
+		display: flex;
+		flex-direction: column;
+		gap: 1.1rem;
+		padding: clamp(1.75rem, 2.5vw, 2.5rem);
+		border-radius: var(--radius-xl);
+		background: var(--color-bg);
+		box-shadow: 0 26px 60px -24px rgba(32, 29, 30, 0.55);
+	}
+	.service-row--flip .service-card {
+		grid-area: 1 / 7 / 2 / 12;
+	}
+
+	.service-card-top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+
+	.service-badge {
+		display: inline-block;
+		padding: 0.4rem 1rem;
+		border-radius: var(--radius-full);
+		background: var(--color-bg-alt);
+		font-family: var(--font-title);
+		font-size: 0.78rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-text-60);
+	}
+
+	.service-seal {
+		flex-shrink: 0;
+		display: grid;
+		place-items: center;
+		width: 2.6rem;
+		height: 2.6rem;
+		border-radius: var(--radius-full);
 		background: var(--color-red);
 		color: #fff;
-		transform: translateY(-3px);
+		font-size: 0.95rem;
+		box-shadow: var(--shadow-cta);
 	}
 
-	.child-title {
-		font-size: 1.25rem;
-		transition: color 0.3s ease;
+	.service-headline {
+		font-size: clamp(1.25rem, 1.8vw, 1.6rem);
+		line-height: 1.25;
+		text-wrap: pretty;
 	}
-	.child-card:hover .child-title {
+
+	.service-points {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+	}
+	.service-points li {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.65rem;
+		font-size: 0.95rem;
+		line-height: 1.5;
+		color: var(--color-text-60);
+	}
+	.service-points i {
+		flex-shrink: 0;
+		margin-top: 0.2rem;
 		color: var(--color-red);
 	}
 
-	.child-link {
-		margin-top: auto;
+	.service-link {
+		align-self: flex-start;
+		margin-top: 0.35rem;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.7rem;
+		padding: 0.7rem 1.5rem;
+		border-radius: var(--radius-full);
+		border: 1px solid var(--color-border);
+		font-family: var(--font-title);
+		font-size: 0.92rem;
+		font-weight: 600;
+		position: relative;
+		z-index: 1;
+		overflow: hidden;
+		transition: color 0.35s var(--ease-out), border-color 0.35s var(--ease-out);
+	}
+	.service-link::before {
+		content: "";
+		position: absolute;
+		inset: 0 auto 0 -15%;
+		width: 0;
+		z-index: -1;
+		background: var(--color-red);
+		transform: skewX(45deg);
+		transition: width 0.45s var(--ease-out), transform 0.45s var(--ease-out), left 0.45s var(--ease-out);
+	}
+	.service-link:hover {
+		color: #fff;
+		border-color: var(--color-red);
+	}
+	.service-link:hover::before {
+		width: 130%;
+		left: 0;
+		transform: skewX(0deg);
+	}
+	.service-link i {
+		transition: transform 0.3s var(--ease-out);
+	}
+	.service-link:hover i {
+		transform: translateX(0.3rem);
+	}
+
+	/* Below the overlap breakpoint the card stops floating over the image and
+	   sits under it, pulled up just enough to keep the two reading as one. */
+	@media (max-width: 900px) {
+		.service-row,
+		.service-row--flip {
+			display: block;
+		}
+		.service-media {
+			height: clamp(13rem, 42vw, 18rem);
+		}
+		.service-card,
+		.service-row--flip .service-card {
+			width: calc(100% - 2rem);
+			margin: -2.5rem auto 0;
+		}
 	}
 </style>

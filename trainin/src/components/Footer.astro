@@ -5,7 +5,8 @@ import type { ContactInfo } from "../types/globals";
 interface Social {
 	label: string;
 	href: string;
-	path: string;
+	// Font Awesome brand class, e.g. "fa-tiktok" (see Layout.astro).
+	icon: string;
 }
 
 export interface MenuItem {
@@ -27,9 +28,9 @@ interface Props {
 }
 
 const fallbackSocials: Social[] = [
-	{ label: "facebook", href: "#", path: "M13.5 9H15V6.5h-1.75C11.6 6.5 10.5 7.6 10.5 9.25V11H9v2.5h1.5V19h2.5v-5.5H15l.5-2.5h-2v-1.25c0-.4.1-.75.5-.75Z" },
-	{ label: "instagram", href: "#", path: "M12 8.2a3.8 3.8 0 1 0 0 7.6 3.8 3.8 0 0 0 0-7.6Zm0 6.27a2.47 2.47 0 1 1 0-4.94 2.47 2.47 0 0 1 0 4.94ZM16.2 5H7.8A2.8 2.8 0 0 0 5 7.8v8.4A2.8 2.8 0 0 0 7.8 19h8.4a2.8 2.8 0 0 0 2.8-2.8V7.8A2.8 2.8 0 0 0 16.2 5Zm1.5 11.2c0 .83-.67 1.5-1.5 1.5H7.8c-.83 0-1.5-.67-1.5-1.5V7.8c0-.83.67-1.5 1.5-1.5h8.4c.83 0 1.5.67 1.5 1.5v8.4ZM16.4 7.6a.9.9 0 1 1 0 1.8.9.9 0 0 1 0-1.8Z" },
-	{ label: "linkedin", href: "#", path: "M6.94 8.5H4.56V19h2.38V8.5ZM5.75 4.9a1.38 1.38 0 1 0 0 2.76 1.38 1.38 0 0 0 0-2.76ZM19.44 19h-2.38v-5.37c0-1.28-.46-2.15-1.6-2.15-.87 0-1.39.59-1.62 1.15-.08.2-.1.49-.1.77V19H11.4s.03-9.44 0-10.5h2.34v1.49c.31-.48 .87-1.16 2.12-1.16 1.55 0 2.71 1.01 2.71 3.18V19Z" },
+	{ label: "facebook", href: "#", icon: "fa-facebook-f" },
+	{ label: "instagram", href: "#", icon: "fa-instagram" },
+	{ label: "linkedin", href: "#", icon: "fa-linkedin-in" },
 ];
 
 const { menu, socials = fallbackSocials, whatsappUrl = null, contact } = Astro.props;
@@ -58,7 +59,7 @@ const year = new Date().getFullYear();
 			<div class="socials">
 				{socials.map((s) => (
 					<a href={s.href} aria-label={s.label} class="social-icon">
-						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d={s.path}></path></svg>
+						<i class={`fa-brands ${s.icon}`} aria-hidden="true" />
 					</a>
 				))}
 			</div>

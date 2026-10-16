@@ -267,5 +267,5 @@ Without the `Cache-Control` header on HTML, browsers guess how long to keep page
 - **Reserved env var names**: never use `BASE_URL` (or `MODE`, `DEV`, `PROD`, `SSR`, `SITE`, `ASSETS_PREFIX`) for a custom `.env` value.
 - **No shared logic in `.astro` files**: keep reusable, non-UI functions in `.ts` files (`src/lib/`, `src/functions/`, `src/config/`). Astro scopes top-level `const`/`let` in a component's frontmatter differently from `export function` in the same frontmatter, so a plain constant can be `undefined` inside an exported function at runtime.
 - **Media URLs**: CMS-relative media paths are resolved through `mediaUrl()` against the CMS origin under `/storage/<path>`. Don't hardcode the CMS host elsewhere.
-- **Page heroes**: images are expected at 2048×768 and GIFs at 800×320. GIFs are shown whole (no crop, no zoom) over a blurred copy of themselves.
+- **Hero media sizes**: the home carousel is sized for 1138×474 banners (800×340 also fits, with thin side strips). Inner page heroes expect 2048×768 images and 800×320 GIFs. GIFs are always shown whole (no crop, no zoom) over a blurred copy of themselves.
 - **Missing CMS fields**: fields the frontend already supports but the CMS doesn't expose yet are listed in `NEW-FIELDS.md` and `certificaciones_images/CAMPOS-BACKEND.md`.

@@ -71,8 +71,12 @@
   --color-status-active: #029640;
   --color-status-error: #fa0032;
 
-  /* Text on light backgrounds */
+  /* Text on light backgrounds. --color-text-60 clears AA at 4.74:1, which is
+     thin for small copy, so body text that carries meaning (card paragraphs,
+     list descriptions) uses --color-text-75 at 6.7:1 instead; -60 and -40 stay
+     for labels, captions and other supporting type. */
   --color-text: #1d1d1f;
+  --color-text-75: rgba(29, 29, 31, 0.75);
   --color-text-60: rgba(29, 29, 31, 0.62);
   --color-text-40: rgba(29, 29, 31, 0.42);
 

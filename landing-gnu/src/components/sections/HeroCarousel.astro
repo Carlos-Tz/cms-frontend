@@ -4,6 +4,8 @@
 import noImg from "../../assets/images/noimg.jpg";
 import { mediaUrl } from "../../functions/fetch";
 import { isGif } from "../../lib/media";
+import { Image } from "astro:assets";
+import logoWhite from "../../assets/images/logo.png";
 
 interface Slide {
   image: string;
@@ -53,15 +55,27 @@ const isExternal = (url: string) => /^https?:\/\//i.test(url);
         <div class="container hero-slide__content">
           {slide.title && (index === 0 ? <h1 class="hero-slide__title">{slide.title}</h1> : <p class="hero-slide__title">{slide.title}</p>)}
           {slide.subtitle && <p class="hero-slide__subtitle">{slide.subtitle}</p>}
-          {slide.link_url && slide.link_label && (
-            <a
-              class="btn-primary hero-slide__cta"
-              href={slide.link_url}
-              {...(isExternal(slide.link_url) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            >
-              {slide.link_label}
-            </a>
-          )}
+          {/* CTA (when the slide has one) with the white logo beside it, past a
+              divider; the logo shows on every slide in the same spot. */}
+          <div class="hero-slide__actions">
+            {slide.link_url && slide.link_label && (
+              <a
+                class="btn-primary hero-slide__cta"
+                href={slide.link_url}
+                {...(isExternal(slide.link_url) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              >
+                {slide.link_label}
+                <span class="hero-slide__cta-arrow" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </span>
+              </a>
+            )}
+            <span class="hero-slide__brand">
+              <Image src={logoWhite} alt="" widths={[96, 192]} sizes="6rem" loading={index === 0 ? "eager" : "lazy"} />
+            </span>
+          </div>
         </div>
       </div>
     ))}

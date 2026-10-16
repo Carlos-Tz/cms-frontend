@@ -7,10 +7,14 @@ interface Props {
 	body: string;
 	videoUrl?: string | null;
 	image?: string | null;
+	// rich_text.image_video_url — the poster frame for `videoUrl`. With one,
+	// the video renders as a click-to-play still instead of loading (and
+	// autoplaying) a third-party iframe on arrival.
+	poster?: string | null;
 	id?: string;
 }
 
-const { title, body, videoUrl, image, id } = Astro.props;
+const { title, body, videoUrl, image, poster, id } = Astro.props;
 
 function toEmbedUrl(url: string) {
 	try {
@@ -71,13 +75,16 @@ function withAutoplay(url: string) {
 }
 
 const embedUrl = videoUrl ? withAutoplay(toEmbedUrl(videoUrl)) : null;
+
+// A poster with no video of its own is just an image for the side column.
+const sideImage = image ?? (!embedUrl ? poster : null) ?? null;
 ---
 
 <section id={id} class="section rich-text">
-	<div class:list={["container", "rich-text-grid", { "rich-text-grid--single": !image }]}>
-		{image && (
+	<div class:list={["container", "rich-text-grid", { "rich-text-grid--single": !sideImage }]}>
+		{sideImage && (
 			<div class="rich-text-image">
-				<img src={image} alt={title ?? ""} />
+				<img src={sideImage} alt={title ?? ""} />
 			</div>
 		)}
 
@@ -92,13 +99,29 @@ const embedUrl = videoUrl ? withAutoplay(toEmbedUrl(videoUrl)) : null;
 
 			{embedUrl && (
 				<div class="rich-text-video">
-					<iframe
-						src={embedUrl}
-						title={title ?? "Video"}
-						loading="lazy"
-						allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-						allowfullscreen
-					></iframe>
+					{poster ? (
+						<button
+							class="rich-text-video-facade"
+							type="button"
+							data-video-facade
+							data-embed={embedUrl}
+							data-title={title ?? "Video"}
+							aria-label="Reproducir video"
+						>
+							<img src={poster} alt="" loading="lazy" />
+							<span class="rich-text-video-play" aria-hidden="true">
+								<i class="fa-solid fa-play" />
+							</span>
+						</button>
+					) : (
+						<iframe
+							src={embedUrl}
+							title={title ?? "Video"}
+							loading="lazy"
+							allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+							allowfullscreen
+						></iframe>
+					)}
 				</div>
 			)}
 		</div>
@@ -180,6 +203,48 @@ const embedUrl = videoUrl ? withAutoplay(toEmbedUrl(videoUrl)) : null;
 		overflow: hidden;
 		background: var(--color-dark);
 	}
+	.rich-text-video-facade {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		padding: 0;
+		border: none;
+		cursor: pointer;
+		background: var(--color-dark);
+		display: block;
+	}
+	.rich-text-video-facade img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+		transition: transform 0.6s var(--ease-out), opacity 0.3s ease;
+	}
+	.rich-text-video-facade:hover img {
+		transform: scale(1.04);
+		opacity: 0.85;
+	}
+	.rich-text-video-play {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		display: grid;
+		place-items: center;
+		width: 4.5rem;
+		height: 4.5rem;
+		border-radius: var(--radius-full);
+		background: var(--color-red);
+		color: #fff;
+		font-size: 1.4rem;
+		padding-left: 0.2rem;
+		box-shadow: var(--shadow-cta);
+		transition: transform 0.3s var(--ease-out);
+	}
+	.rich-text-video-facade:hover .rich-text-video-play {
+		transform: translate(-50%, -50%) scale(1.08);
+	}
+
 	.rich-text-video iframe {
 		position: absolute;
 		inset: 0;
@@ -200,3 +265,23 @@ const embedUrl = videoUrl ? withAutoplay(toEmbedUrl(videoUrl)) : null;
 	  max-width: 100%;
 	}
 </style>
+
+<script>
+	// The poster is a facade: the embed (already carrying autoplay params) is
+	// only created once someone asks for it, so a page with a video does not
+	// pull a third-party player on load.
+	document.querySelectorAll("[data-video-facade]").forEach((facade) => {
+		facade.addEventListener("click", () => {
+			const embed = facade.getAttribute("data-embed");
+			if (!embed) return;
+
+			const iframe = document.createElement("iframe");
+			iframe.src = embed;
+			iframe.title = facade.getAttribute("data-title") ?? "Video";
+			iframe.allow = "autoplay; fullscreen; encrypted-media; picture-in-picture";
+			iframe.allowFullscreen = true;
+
+			facade.replaceWith(iframe);
+		});
+	});
+</script>
