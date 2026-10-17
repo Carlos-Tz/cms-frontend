@@ -3,6 +3,7 @@
 // It carries no copy of its own: the words are the service pages the CMS
 // menu declares, so adding or renaming a service updates the band too.
 import { fetchData } from "../functions/fetch";
+import { applyTitleOverrides } from "../functions/labels";
 
 type MenuItem = { slug: string; path: string; title: string; children?: MenuItem[] };
 type MenuResponse = { status: string; data: MenuItem[] };
@@ -21,7 +22,7 @@ if (!words.length) {
 	// The first branch with sub-pages is the services column; its children are
 	// the site's offering, which is what the band is advertising.
 	const branch = (menuResponse?.data ?? []).find((entry) => entry.children?.length);
-	words = (branch?.children ?? []).map((child) => child.title);
+	words = applyTitleOverrides(branch?.children ?? []).map((child) => child.title);
 }
 ---
 

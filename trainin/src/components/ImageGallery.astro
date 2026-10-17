@@ -1,4 +1,5 @@
 ---
+import { titleLines } from "../functions/labels";
 // Content shape matches the CMS's "image_gallery" section: an optional title
 // plus a list of images, each with an optional caption and alt text.
 interface GalleryImage {
@@ -19,7 +20,7 @@ const { title, images } = Astro.props;
 	<div class="container">
 		{title && (
 			<div class="section-head">
-				<h2 class="section-title">{title}</h2>
+				<h2 class="section-title">{titleLines(title).map((line) => <span class="title-line">{line}</span>)}</h2>
 			</div>
 		)}
 

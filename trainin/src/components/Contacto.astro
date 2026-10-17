@@ -1,4 +1,5 @@
 ---
+import { titleLines } from "../functions/labels";
 import { BASE_URL } from "../functions/fetch";
 import { fetchGlobals, whatsappHref } from "../functions/globals";
 
@@ -60,7 +61,7 @@ const contactLines = [
 <section id="contacto" class="section section--dark contacto">
 	<div class="container contacto-grid">
 		<div class="section-head contacto-copy">
-			{title && <h2 class="section-title">{title}</h2>}
+			{title && <h2 class="section-title">{titleLines(title).map((line) => <span class="title-line">{line}</span>)}</h2>}
 			{intro && <p class="contacto-text">{intro}</p>}
 
 			{ctaHref && (

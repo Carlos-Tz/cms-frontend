@@ -1,4 +1,5 @@
 ---
+import { titleLines } from "../functions/labels";
 // Content shape matches the CMS's "page_hero" section: the banner at the top
 // of an interior page (title, optional subtitle, optional background image).
 interface Props {
@@ -15,7 +16,7 @@ const { title, subtitle, image } = Astro.props;
 	<span class="page-hero-glow" aria-hidden="true"></span>
 
 	<div class="container page-hero-content">
-		<h1 class="page-hero-title">{title}</h1>
+		<h1 class="page-hero-title">{titleLines(title).map((line) => <span class="title-line">{line}</span>)}</h1>
 		{subtitle && <p class="page-hero-subtitle">{subtitle}</p>}
 	</div>
 </section>

@@ -2,6 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import PageSections from "../../components/PageSections.astro";
 import { fetchData } from "../../functions/fetch";
+import { pageTitle } from "../../functions/labels";
 
 type PageResponse = {
   status: string;
@@ -16,6 +17,6 @@ const page = pageResponse?.data;
 const sections = page?.sections ?? [];
 ---
 
-<Layout title={page?.title}>
+<Layout title={pageTitle(page?.slug, page?.title ?? "")}>
   <PageSections sections={sections} slug={page?.slug} />
 </Layout>

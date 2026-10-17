@@ -11,9 +11,11 @@ import FeatureGrid from "./FeatureGrid.astro";
 import ImageGallery from "./ImageGallery.astro";
 import StationsMap from "./StationsMap.astro";
 import Marquee from "./Marquee.astro";
-import Clientes from "./Clientes.astro";
+// Kept for the hidden clients_showcase case further down.
+// import Clientes from "./Clientes.astro";
 import Contacto from "./Contacto.astro";
 import { mediaUrl } from "../functions/fetch";
+import { pageTitle } from "../functions/labels";
 
 type Slide = {
 	image: string;
@@ -24,14 +26,8 @@ type Slide = {
 };
 // type FuelPrice = { fuel; label; price_per_unit; unit; equivalence_factor }
 //   — only used by the hidden savings_simulator case.
-type Logo = {
-	name: string;
-	image: string;
-	url: string | null;
-	description?: string | null;
-	quote?: string | null;
-	quote_author?: string | null;
-};
+// type Logo = { name; image; url; description?; quote?; quote_author? }
+//   — only used by the hidden clients_showcase case.
 type GalleryImage = { image: string; caption: string | null; alt: string | null };
 type FeatureItem = { icon: string | null; title: string; text: string | null };
 
@@ -48,7 +44,7 @@ type RichTextContent = {
 type FeatureGridContent = { title?: string | null; items?: FeatureItem[] };
 type ImageGalleryContent = { title?: string | null; images?: GalleryImage[] };
 type StationsMapContent = { title?: string | null; center?: string | null; zoom?: string | number | null };
-type ClientsShowcase = { title?: string | null; logos?: Logo[] };
+// type ClientsShowcase = { title?: string | null; logos?: Logo[] };
 type LeadCaptureForm = { title?: string; intro?: string; submit_label?: string; fields?: string[] };
 
 export type PageSection = { type: string; content: Record<string, any> };
@@ -66,12 +62,24 @@ const { sections, slug } = Astro.props;
 // other section is wrapped in a band that alternates plain / tinted down the
 // page, so the rhythm holds whatever mix of sections the CMS returns.
 const FULL_BLEED = new Set(["banner_carousel", "page_hero"]);
-// Section types the site does not render at all. They must not take a turn in
-// the zebra either, or hiding one would flip every band below it.
-const HIDDEN = new Set(["savings_simulator"]);
+
+// Section types hidden on every page. The CMS still serves them and their
+// components are untouched, so restoring one is a matter of removing it here.
+const HIDDEN = new Set(["savings_simulator", "clients_showcase"]);
+
+// Sections hidden on one page only, as "<page slug>:<section type>".
+const HIDDEN_ON_PAGE = new Set([
+	"transporte-de-gnc:feature_grid",
+	"carga-pesada:feature_grid",
+]);
+
+const isHidden = (type: string) => HIDDEN.has(type) || HIDDEN_ON_PAGE.has(`${slug}:${type}`);
+
+// A hidden section must not take a turn in the zebra either, or hiding one
+// would flip every band below it.
 let bandIndex = 0;
 const bandTint: (boolean | null)[] = sections.map((section) =>
-	FULL_BLEED.has(section.type) || HIDDEN.has(section.type) ? null : bandIndex++ % 2 === 1
+	FULL_BLEED.has(section.type) || isHidden(section.type) ? null : bandIndex++ % 2 === 1
 );
 ---
 
@@ -80,6 +88,8 @@ const bandTint: (boolean | null)[] = sections.map((section) =>
 		const tint = bandTint[index];
 
 		const rendered = (() => {
+			if (isHidden(section.type)) return null;
+
 			switch (section.type) {
 			case "banner_carousel": {
 				const { slides = [] } = section.content as BannerCarousel;
@@ -106,14 +116,15 @@ const bandTint: (boolean | null)[] = sections.map((section) =>
 
 			case "page_hero": {
 				const { title, subtitle, image } = section.content as PageHeroContent;
-				return title ? <PageHero title={title} subtitle={subtitle} image={image ? mediaUrl(image) : null} /> : null;
+				return title ? (
+					<PageHero
+						title={pageTitle(slug, title)}
+						subtitle={subtitle}
+						image={image ? mediaUrl(image) : null}
+					/>
+				) : null;
 			}
 
-			// Hidden site-wide by request: the CMS still serves the section and
-			// Simulador.astro is still here, so restoring it is a matter of
-			// returning the component below instead of null.
-			case "savings_simulator":
-				return null;
 
 			case "rich_text": {
 				const { title, body, video_url, image_video_url } = section.content as RichTextContent;
@@ -149,12 +160,6 @@ const bandTint: (boolean | null)[] = sections.map((section) =>
 				return <StationsMap title={title} center={center} zoom={zoom} />;
 			}
 
-			case "clients_showcase": {
-				const { title, logos = [] } = section.content as ClientsShowcase;
-				return logos.length ? (
-					<Clientes title={title} logos={logos.map((logo) => ({ ...logo, image: mediaUrl(logo.image) }))} />
-				) : null;
-			}
 
 			case "lead_capture_form": {
 				const { title, intro, submit_label, fields = [] } = section.content as LeadCaptureForm;

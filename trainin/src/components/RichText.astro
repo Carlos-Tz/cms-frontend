@@ -1,4 +1,5 @@
 ---
+import { titleLines } from "../functions/labels";
 // Content shape matches the CMS's generic "rich_text" section (shared with
 // gas-gnu's RichText.astro): a title, an HTML body, and an optional video.
 // Used on any page, so it carries no page-specific copy or id.
@@ -91,7 +92,7 @@ const sideImage = image ?? (!embedUrl ? poster : null) ?? null;
 		<div class="rich-text-content">
 			{title && (
 				<div class="section-head">
-					<h2 class="section-title">{title}</h2>
+					<h2 class="section-title">{titleLines(title).map((line) => <span class="title-line">{line}</span>)}</h2>
 				</div>
 			)}
 
@@ -183,6 +184,39 @@ const sideImage = image ?? (!embedUrl ? poster : null) ?? null;
 		hyphens: manual;
 		-webkit-hyphens: manual;
 	}
+	/* A CMS body may open with an <h1> or turn a corner with one partway
+	   through. Opening it is just a heading; arriving mid-article it is a
+	   chapter break, and only that case gets the treatment below. */
+	.prose h1 {
+		font-size: clamp(1.5rem, 2.6vw, 2rem);
+		line-height: 1.2;
+		letter-spacing: -0.01em;
+		color: var(--color-dark);
+		text-wrap: balance;
+	}
+
+	/* Chapter break: a hairline across the column, tipped with brand red,
+	   and air on both sides so the article visibly changes subject. */
+	.prose h1:not(:first-child) {
+		position: relative;
+		margin-top: 3.5rem;
+		padding-top: 2.25rem;
+		border-top: 1px solid var(--color-border);
+	}
+	.prose h1:not(:first-child)::before {
+		content: "";
+		position: absolute;
+		top: -2px;
+		left: 0;
+		width: 3.5rem;
+		height: 3px;
+		border-radius: var(--radius-full);
+		background: var(--color-red);
+	}
+	.prose h1:not(:first-child) + * {
+		margin-top: 1.25rem;
+	}
+
 	.prose :is(h2, h3) {
 		margin-top: 1.5rem;
 		color: var(--color-dark);

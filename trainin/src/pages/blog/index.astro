@@ -1,4 +1,5 @@
 ---
+import { textLines } from "../../functions/labels";
 import Layout from "../../layouts/Layout.astro";
 import PageHero from "../../components/PageHero.astro";
 import { mediaUrl } from "../../functions/fetch";
@@ -7,6 +8,14 @@ import { fetchBlogPosts, formatPublishedAt } from "../../functions/blog";
 // The blog is not part of the CMS menu, so it has no "pages/…" entry: the
 // listing comes straight from the blog endpoint.
 const posts = await fetchBlogPosts();
+
+// Cards sit on a centred flex row rather than a grid, so a last row that is
+// not full (7 posts over 3 columns leaves one) centres under the rows above
+// instead of hanging off the left edge. Same approach as landing-gnu's
+// BalancedGrid: a fixed flex-basis per card keeps the columns aligned.
+const MAX_PER_ROW = 3;
+const rows = Math.max(1, Math.ceil(posts.length / MAX_PER_ROW));
+const columns = Math.max(1, Math.ceil(posts.length / rows));
 ---
 
 <Layout title="Blog">
@@ -16,7 +25,7 @@ const posts = await fetchBlogPosts();
   <section class="section blog-list-section">
     <div class="container">
       {posts.length ? (
-        <div class="blog-grid">
+        <div class="blog-grid" style={`--columns: ${columns}`}>
           {posts.map((post) => {
             const published = formatPublishedAt(post.published_at);
             return (
@@ -32,7 +41,7 @@ const posts = await fetchBlogPosts();
                   )}
                   <div class="blog-card-body">
                     <h2 class="blog-card-title">{post.title}</h2>
-                    {post.excerpt && <p class="blog-card-excerpt">{post.excerpt}</p>}
+                    {post.excerpt && <p class="blog-card-excerpt">{textLines(post.excerpt).map((line) => <span class="text-line">{line}</span>)}</p>}
                     <span class="blog-card-more link-arrow">Leer más<span class="arrow" aria-hidden="true">→</span></span>
                   </div>
                 </a>
@@ -50,9 +59,18 @@ const posts = await fetchBlogPosts();
 
 <style>
   .blog-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
-    gap: 1.5rem;
+    --gap: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--gap);
+  }
+
+  /* Fixed basis, not 1fr: cards keep the width they would have had in a
+     grid, and an incomplete last row centres instead of left-aligning. */
+  .blog-grid > * {
+    flex: 0 0 calc((100% - (var(--columns, 3) - 1) * var(--gap)) / var(--columns, 3));
+    min-width: min(100%, 17rem);
   }
 
   .blog-card {

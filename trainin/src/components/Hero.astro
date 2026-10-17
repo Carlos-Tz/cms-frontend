@@ -1,4 +1,5 @@
 ---
+import { titleLines } from "../functions/labels";
 // Slide shape matches the CMS's generic "banner_carousel" section, shared
 // with landing-gnu and gas-gnu's Slide type (image/title/subtitle/link_url/link_label).
 interface Slide {
@@ -26,14 +27,16 @@ const { slides, id, compact = false } = Astro.props;
 			<article class="hero-slide" data-slide aria-hidden={i === 0 ? "false" : "true"}>
 				<img src={slide.image} alt="" class="hero-slide-img" />
 				<div class="hero-slide-overlay"></div>
-				<div class="container hero-slide-content">
-					<h1 class="hero-title">{slide.title}</h1>
-					{slide.subtitle && <p class="hero-text">{slide.subtitle}</p>}
-					{slide.link_url && slide.link_label && (
-						<div class="hero-actions">
-							<a class="btn-primary" href={slide.link_url}>{slide.link_label}</a>
-						</div>
-					)}
+				<div class="container hero-slide-inner">
+					<div class="hero-slide-content">
+						<h1 class="hero-title">{titleLines(slide.title).map((line) => <span class="title-line">{line}</span>)}</h1>
+						{slide.subtitle && <p class="hero-text">{slide.subtitle}</p>}
+						{slide.link_url && slide.link_label && (
+							<div class="hero-actions">
+								<a class="btn-primary" href={slide.link_url}>{slide.link_label}</a>
+							</div>
+						)}
+					</div>
 				</div>
 			</article>
 		))}
@@ -160,14 +163,21 @@ const { slides, id, compact = false } = Astro.props;
 		background: linear-gradient(100deg, rgba(32, 29, 30, 0.92) 0%, rgba(32, 29, 30, 0.75) 45%, rgba(200, 16, 46, 0.55) 100%);
 	}
 
-	.hero-slide-content {
+	/* Full page gutter: puts the copy's left edge on the same line as the
+	   header logo and every section below. */
+	.hero-slide-inner {
 		position: relative;
 		height: 100%;
 		display: flex;
+		align-items: center;
+	}
+
+	.hero-slide-content {
+		display: flex;
 		flex-direction: column;
-		justify-content: center;
 		gap: 1.1rem;
-		max-width: 40rem;
+		/* Holds the headline to a readable measure without moving its start. */
+		max-width: min(40rem, 100%);
 		color: #fff;
 	}
 
@@ -181,8 +191,8 @@ const { slides, id, compact = false } = Astro.props;
 		font-size: clamp(2rem, 4vw, 3rem);
 		line-height: 1.1;
 	}
-	.hero--compact .hero-slide-content {
-		padding-inline: 2.5rem;
+	.hero--compact .hero-slide-inner {
+		padding-inline: clamp(1.5rem, 4vw, 3rem);
 	}
 	.hero--compact .hero-title {
 		font-size: clamp(1.4rem, 2.6vw, 1.9rem);

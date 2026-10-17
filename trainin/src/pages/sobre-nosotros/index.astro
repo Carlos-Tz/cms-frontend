@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import PageSections from "../../components/PageSections.astro";
 import ChildPageCards from "../../components/ChildPageCards.astro";
 import { fetchData } from "../../functions/fetch";
+import { pageTitle } from "../../functions/labels";
 
 type PageResponse = {
   status: string;
@@ -16,7 +17,8 @@ const page = pageResponse?.data;
 const sections = page?.sections ?? [];
 ---
 
-<Layout title={page?.title}>
+<Layout title={pageTitle(page?.slug, page?.title ?? "")}>
   <PageSections sections={sections} slug={page?.slug} />
-  <ChildPageCards title="Conoce Traninn Logistic" tint={false} />
+  {/* Follows the one remaining banded section (rich_text), which is plain. */}
+  <ChildPageCards title="Conoce Traninn Logistic" />
 </Layout>

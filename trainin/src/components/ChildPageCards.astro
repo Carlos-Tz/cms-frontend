@@ -11,6 +11,7 @@
 //   image     → page_hero.image (a brand panel stands in when it is null)
 import { fetchData } from "../functions/fetch";
 import { mediaUrl } from "../functions/fetch";
+import { applyTitleOverrides, titleLines, textLines } from "../functions/labels";
 
 type MenuItem = { slug: string; path: string; title: string; children?: MenuItem[] };
 type MenuResponse = { status: string; data: MenuItem[] };
@@ -40,7 +41,7 @@ const findBranch = (items: MenuItem[]): MenuItem | undefined => {
 	return undefined;
 };
 
-const children = findBranch(menuResponse?.data ?? [])?.children ?? [];
+const children = applyTitleOverrides(findBranch(menuResponse?.data ?? [])?.children ?? []);
 
 const entries = await Promise.all(
 	children.map(async (child) => {
@@ -90,7 +91,7 @@ const iconFor = (slug: string) =>
 			<section class="section child-pages">
 				<div class="container">
 					<div class="section-head">
-						<h2 class="section-title">{title}</h2>
+						<h2 class="section-title">{titleLines(title).map((line) => <span class="title-line">{line}</span>)}</h2>
 					</div>
 
 					<div class="service-rows">
@@ -114,14 +115,14 @@ const iconFor = (slug: string) =>
 										</span>
 									</div>
 
-									<h3 class="service-headline">{child.headline ?? child.title}</h3>
+									<h3 class="service-headline">{textLines(child.headline ?? child.title).map((line) => <span class="text-line">{line}</span>)}</h3>
 
 									{child.points.length > 0 && (
 										<ul class="service-points">
 											{child.points.map((point) => (
 												<li>
 													<i class="fa-solid fa-circle-check" aria-hidden="true" />
-													<span>{point}</span>
+													<span>{textLines(point).map((line) => <span class="text-line">{line}</span>)}</span>
 												</li>
 											))}
 										</ul>
@@ -208,15 +209,30 @@ const iconFor = (slug: string) =>
 
 	.service-badge {
 		display: inline-block;
+		/* A flex item defaults to min-width: auto, so a long title (the
+		   overridden "Compromiso que mueve…") would push the card wider than
+		   a phone screen instead of wrapping inside the pill. */
+		min-width: 0;
 		padding: 0.4rem 1rem;
 		border-radius: var(--radius-full);
 		background: var(--color-bg-alt);
 		font-family: var(--font-title);
 		font-size: 0.78rem;
 		font-weight: 700;
+		line-height: 1.4;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--color-text-60);
+	}
+
+	@media (max-width: 560px) {
+		/* Once the badge wraps to two lines, top-align the seal beside it. */
+		.service-card-top {
+			align-items: flex-start;
+		}
+		.service-badge {
+			letter-spacing: 0.04em;
+		}
 	}
 
 	.service-seal {

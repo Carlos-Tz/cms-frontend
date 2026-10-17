@@ -399,3 +399,16 @@ a:hover > .shine::after {
     cursor: not-allowed;
   }
 }
+
+/* A CMS title made of two sentences renders one <span> per sentence (see
+   titleLines in functions/labels.ts) so the break lands at the full stop
+   instead of wherever the column happens to run out. */
+.title-line {
+  display: block;
+}
+
+/* Card text split on "|" renders one <span> per line (see textLines in
+   functions/labels.ts). */
+.text-line {
+  display: block;
+}

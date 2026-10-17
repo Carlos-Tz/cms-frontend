@@ -1,0 +1,74 @@
+1. Copy the folder and configure it
+
+# on the server, as the user that owns the Astro projects (e.g. frontend)
+cd /home/frontend
+git clone <repo> cms-frontend        # or git pull if it's already there
+cd cms-frontend/build-server
+cp .env.example .env
+nano .env
+In .env, set:
+
+each site's VITE_*_CODE_PATH and VITE_*_PUBLIC_PATH;
+ALLOWED_ORIGINS to the admin's real URL, e.g. https://admin.yourdomain.com, not localhost:5173.
+Also check:
+
+node -v is 22.12 or newer. The service has no dependencies, so there's no npm install for it.
+Each CODE_PATH already has its own node_modules installed (npm ci there), because the service runs npm run build inside it.
+The service user can write to both CODE_PATH and PUBLIC_PATH:
+
+sudo chown -R frontend:frontend /var/www/html/sitios-cms/gnu
+You can check it by hand first with npm start. You should see build-server escuchando en http://localhost:4400 with the gnu paths listed. Then stop it with Ctrl+C.
+
+2. Run it as a systemd service
+Create /etc/systemd/system/build-server.service:
+
+
+[Unit]
+Description=CMS build-server (Astro site rebuilds)
+After=network.target
+
+[Service]
+User=frontend
+WorkingDirectory=/home/frontend/cms-frontend/build-server
+ExecStart=/usr/bin/node server.mjs
+Restart=on-failure
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+Use the output of which node for ExecStart. If Node comes from nvm, that path is something like /home/frontend/.nvm/versions/node/v22.x/bin/node. That same bin folder must also be on the service's PATH, or npm run build won't be found:
+
+
+Environment=PATH=/home/frontend/.nvm/versions/node/v22.x/bin:/usr/bin:/bin
+Then:
+
+
+sudo systemctl daemon-reload
+sudo systemctl enable --now build-server   # start now and on every boot
+sudo systemctl status build-server
+journalctl -u build-server -f              # live logs, incl. build failures
+After editing .env or pulling new code, run sudo systemctl restart build-server.
+
+3. Make it reachable from the browser (important)
+The admin calls the build-server from the editor's browser. So VITE_BUILD_SERVER_URL=http://localhost:4400 would point at the editor's own computer, not the server. Your screenshot's ERR_CONNECTION_REFUSED is exactly what that looks like. Also, an HTTPS admin can't call a plain http:// URL, because browsers block mixed content.
+
+Put it behind the web server on HTTPS. With nginx, add this to the admin's (or any HTTPS) server { } block:
+
+
+location /build-server/ {
+    proxy_pass http://127.0.0.1:4400/;   # trailing slash strips the /build-server prefix
+    proxy_read_timeout 60s;
+}
+Then run sudo nginx -t && sudo systemctl reload nginx. Next, set this in gnu-cms-admin/.env:
+
+
+VITE_BUILD_SERVER_URL=https://admin.yourdomain.com/build-server
+That variable is read at build time, so rebuild and redeploy the admin after changing it. If the admin and the proxy share a domain, CORS doesn't come into play. Otherwise, that admin URL must be in ALLOWED_ORIGINS.
+
+Keep port 4400 closed in the firewall so it's only reachable through nginx. If the server uses Apache instead of nginx, the equivalent is ProxyPass /build-server/ http://127.0.0.1:4400/.
+
+Quick check once it's up
+
+curl -i http://127.0.0.1:4400/builds/gnu                               # on the server: expect 401 (no token)
+curl -i https://admin.yourdomain.com/build-server/builds/gnu           # from anywhere: expect 401 too
+A 401 means the service is running and reachable. The admin's button sends the real token.
