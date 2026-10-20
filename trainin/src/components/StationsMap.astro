@@ -41,14 +41,35 @@ const mapCenter =
 			: null;
 const mapZoom = Number(zoom) || 11;
 
-const markers = stations.map((station) => ({
+/**
+ * Google Maps embed for a coordinate. This keyless form takes lat/lng
+ * directly; the documented Maps Embed API cannot, without an API key — and
+ * none is configured (.env carries only CMS_API_URL). With a key, swap this
+ * for https://www.google.com/maps/embed/v1/place?key=…&q=lat,lng
+ */
+const embedUrl = (lat: number, lng: number, z: number) =>
+	`https://maps.google.com/maps?q=${lat},${lng}&hl=es&z=${z}&output=embed`;
+
+/**
+ * Directions straight to the station: this opens Maps with the route panel
+ * already pointed at it, rather than just showing the place.
+ */
+const externalUrl = (lat: number, lng: number) =>
+	`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+const points = stations.map((station) => ({
 	name: station.name,
-	address: station.address,
-	phone: station.phone,
-	schedule: station.schedule,
 	lat: Number(station.latitude),
 	lng: Number(station.longitude),
 }));
+
+// The embed opens on the first station; with several, the list switches it.
+const embedZoom = Math.max(mapZoom, 14);
+const initialSrc = points.length
+	? embedUrl(points[0].lat, points[0].lng, embedZoom)
+	: mapCenter
+		? embedUrl(mapCenter[0], mapCenter[1], mapZoom)
+		: null;
 ---
 
 <section id="ubicaciones" class="section stations-map-section">
@@ -65,7 +86,20 @@ const markers = stations.map((station) => ({
 					<article class="station-item">
 						<span class="station-dot"></span>
 						<div>
-							<h3 class="station-name">{station.name}</h3>
+							<h3 class="station-name">
+							{points.length > 1 ? (
+								<button
+									class="station-switch"
+									type="button"
+									data-station-switch
+									data-src={embedUrl(Number(station.latitude), Number(station.longitude), embedZoom)}
+								>
+									{station.name}
+								</button>
+							) : (
+								station.name
+							)}
+						</h3>
 							{station.address && (
 								<p class="station-line">
 									<i class="fa-solid fa-location-dot station-icon" aria-hidden="true" />
@@ -84,68 +118,55 @@ const markers = stations.map((station) => ({
 									<a href={`tel:${station.phone.replace(/[^\d+]/g, "")}`}>{station.phone}</a>
 								</p>
 							)}
+							
+							<a
+								class="station-directions"
+								href={externalUrl(Number(station.latitude), Number(station.longitude))}
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								<i class="fa-solid fa-diamond-turn-right" aria-hidden="true" />
+								Cómo llegar
+							</a>
 						</div>
 					</article>
 				))}
 			</div>
 
-			{mapCenter && <div class="stations-map" data-stations-map role="application" aria-label={title ?? "Mapa de ubicaciones"}></div>}
+			{initialSrc && (
+				<div class="stations-map">
+					<iframe
+						data-stations-map
+						src={initialSrc}
+						title={title ?? "Mapa de ubicaciones"}
+						loading="lazy"
+						referrerpolicy="no-referrer-when-downgrade"
+						allowfullscreen
+					></iframe>
+				</div>
+			)}
 		</div>
 	</div>
 </section>
 
 {
-	mapCenter && (
-		<>
-			<link
-				rel="stylesheet"
-				href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-				integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H"
-				crossorigin="anonymous"
-			/>
-			<script
-				src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-				integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH"
-				crossorigin="anonymous"
-				defer
-			/>
-			<script define:vars={{ mapCenter, mapZoom, markers }} is:inline defer>
-				function initStationsMap() {
-					const el = document.querySelector("[data-stations-map]");
-					if (!el || !window.L || el.dataset.ready) return;
-					el.dataset.ready = "true";
+	points.length > 1 && (
+		<script>
+			// Clicking a station re-points the embed. One iframe with a swapped
+			// src: the keyless Google embed shows a single place at a time.
+			document.querySelectorAll<HTMLButtonElement>("[data-station-switch]").forEach((button) => {
+				button.addEventListener("click", () => {
+					const frame = document.querySelector<HTMLIFrameElement>("[data-stations-map]");
+					const src = button.dataset.src;
+					if (!frame || !src) return;
 
-					const map = window.L.map(el).setView(mapCenter, mapZoom);
-					window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-						maxZoom: 19,
-						attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-					}).addTo(map);
-
-					const bounds = [];
-					for (const marker of markers) {
-						const popup = [
-							`<strong>${marker.name}</strong>`,
-							marker.address,
-							marker.schedule,
-							marker.phone,
-						]
-							.filter(Boolean)
-							.join("<br />");
-						window.L.marker([marker.lat, marker.lng]).addTo(map).bindPopup(popup);
-						bounds.push([marker.lat, marker.lng]);
-					}
-
-					if (bounds.length > 1) map.fitBounds(bounds, { padding: [40, 40] });
-				}
-
-				if (document.readyState === "loading") {
-					document.addEventListener("DOMContentLoaded", initStationsMap);
-				} else {
-					initStationsMap();
-				}
-				window.addEventListener("load", initStationsMap);
-			</script>
-		</>
+					frame.src = src;
+					document
+						.querySelectorAll("[data-station-switch]")
+						.forEach((other) => other.classList.toggle("is-active", other === button));
+				});
+			});
+		</script>
 	)
 }
 
@@ -198,6 +219,27 @@ const markers = stations.map((station) => ({
 		color: var(--color-red);
 	}
 
+	/* Opens the location in Google Maps proper, where directions live. */
+	.station-directions {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		margin-top: 0.9rem;
+		padding: 0.55rem 1.15rem;
+		border-radius: var(--radius-full);
+		border: 1px solid var(--color-border);
+		font-family: var(--font-title);
+		font-size: 0.88rem;
+		font-weight: 600;
+		color: var(--color-text);
+		transition: color 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+	}
+	.station-directions:hover {
+		color: #fff;
+		background: var(--color-red);
+		border-color: var(--color-red);
+	}
+
 	.station-line a:hover {
 		color: var(--color-red);
 	}
@@ -209,6 +251,14 @@ const markers = stations.map((station) => ({
 		overflow: hidden;
 		background: var(--color-bg-alt);
 		z-index: 0;
+	}
+	/* An iframe with no size attributes falls back to 300×150, which left the
+	   map sitting in the corner of its container. */
+	.stations-map iframe {
+		display: block;
+		width: 100%;
+		height: 100%;
+		border: 0;
 	}
 
 	@media (max-width: 860px) {

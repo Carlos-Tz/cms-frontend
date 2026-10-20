@@ -15,21 +15,32 @@ interface ClientLogo {
 
 interface Props {
   title?: string | null;
+  subtitle?: string | null;
   logos: ClientLogo[];
 }
 
-const { title, logos } = Astro.props;
+const { title, subtitle, logos } = Astro.props;
 
 const hasTestimonials = logos.some((logo) => logo.quote?.trim() || logo.description?.trim());
 
 // Keeps two or three clients from sprawling across the full 72rem container.
 const gridStyle = `--client-count: ${Math.min(logos.length, 3)}`;
+
+// The marquee scrolls one group of cards, then snaps back onto an identical
+// second group. A group has to be at least as wide as the viewport for the
+// seam to stay hidden, so a short client list is repeated within each group.
+const MIN_CARDS_PER_GROUP = 8;
+const repeats = logos.length ? Math.ceil(MIN_CARDS_PER_GROUP / logos.length) : 0;
+const marqueeGroup = Array.from({ length: repeats }, () => logos).flat();
+// Constant speed regardless of how many cards the group holds.
+const marqueeStyle = `--marquee-duration: ${marqueeGroup.length * 4.5}s`;
 ---
 
 <section class="section section--alt" id="clientes">
   <div class="container">
-    <div class="section-head">
+    <div class:list={["section-head", { "section-head--center clients-head": !hasTestimonials }]}>
       <h2 class="section-title">{title ?? "Nuestros clientes"}</h2>
+      {subtitle?.trim() && <p class="section-subtitle">{subtitle}</p>}
     </div>
 
     {hasTestimonials ? (
@@ -83,35 +94,52 @@ const gridStyle = `--client-count: ${Math.min(logos.length, 3)}`;
         })}
       </div>
     ) : (
-      <div class="clients-grid" style={gridStyle}>
-        {logos.map((logo) => {
+      <div class="clients-marquee" style={marqueeStyle}>
+        <div class="clients-marquee__viewport">
+        <div class="clients-marquee__track">
+          {[0, 1].map((copy) => (
+            <ul class="clients-marquee__group" aria-hidden={copy === 1 ? "true" : undefined}>
+              {marqueeGroup.map((logo, i) => {
           // A logo whose file is missing falls back to the client's name, not
           // to the blank plate: an ink rectangle among logos reads as broken,
           // a name reads as a client. `data-fallback` opts this image out of
           // the layout-wide plate swap so the name can take over instead.
-          const logoImg = (
-            <img
-              class="clients-grid__logo"
-              data-client-logo
-              data-fallback="1"
-              src={mediaUrl(logo.image)}
-              alt={logo.name}
-              loading="lazy"
-            />
-          );
-          return (
-            <div class="clients-grid__item">
-              {logo.url ? (
-                <a class="clients-grid__link" href={logo.url} target="_blank" rel="noopener noreferrer">
-                  {logoImg}
-                </a>
-              ) : (
-                logoImg
-              )}
-              <span class="clients-grid__name" hidden>{logo.name}</span>
-            </div>
-          );
-        })}
+                // Only the first pass through the list is announced and
+                // focusable; the repeats exist purely to fill the loop.
+                const isRepeat = copy === 1 || i >= logos.length;
+                const logoImg = (
+                  <img
+                    class="clients-grid__logo"
+                    data-client-logo
+                    data-fallback="1"
+                    src={mediaUrl(logo.image)}
+                    alt={isRepeat ? "" : logo.name}
+                    loading="lazy"
+                  />
+                );
+                return (
+                  <li class="clients-grid__item" aria-hidden={isRepeat && copy === 0 ? "true" : undefined}>
+                    {logo.url ? (
+                      <a
+                        class="clients-grid__link"
+                        href={logo.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        tabindex={isRepeat ? -1 : undefined}
+                      >
+                        {logoImg}
+                      </a>
+                    ) : (
+                      logoImg
+                    )}
+                    <span class="clients-grid__name" hidden>{logo.name}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          ))}
+        </div>
+        </div>
       </div>
     )}
   </div>

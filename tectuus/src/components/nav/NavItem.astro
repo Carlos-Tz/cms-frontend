@@ -11,8 +11,15 @@ const hasChildren = item.children?.length > 0;
 
 {hasChildren ? (
   <div class="nav-item">
-    <button class="nav-link nav-link--toggle" aria-expanded="false" aria-haspopup="true">
-      {item.title}
+    {/* The label goes to the section's own page; hover (or the caret, for
+        touch and keyboard) opens the submenu. */}
+    <a class="nav-link nav-link--parent" href={item.path}>{item.title}</a>
+    <button
+      class="nav-link--toggle"
+      aria-expanded="false"
+      aria-haspopup="true"
+      aria-label={`Mostrar submenú de ${item.title}`}
+    >
       <svg class="nav-caret" width="10" height="6" viewBox="0 0 10 6" aria-hidden="true">
         <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
       </svg>

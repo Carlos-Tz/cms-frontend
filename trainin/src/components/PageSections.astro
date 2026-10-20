@@ -11,6 +11,8 @@ import FeatureGrid from "./FeatureGrid.astro";
 import ImageGallery from "./ImageGallery.astro";
 import StationsMap from "./StationsMap.astro";
 import Marquee from "./Marquee.astro";
+// TEMPORARY, see technical_debt.md.
+import OperationHighlights from "./OperationHighlights.astro";
 // Kept for the hidden clients_showcase case further down.
 // import Clientes from "./Clientes.astro";
 import Contacto from "./Contacto.astro";
@@ -115,26 +117,37 @@ const bandTint: (boolean | null)[] = sections.map((section) =>
 			}
 
 			case "page_hero": {
-				const { title, subtitle, image } = section.content as PageHeroContent;
+				const { title, image } = section.content as PageHeroContent;
+				// page_hero.subtitle is still served by the CMS, but the banner
+				// shows the title alone, by request.
 				return title ? (
-					<PageHero
-						title={pageTitle(slug, title)}
-						subtitle={subtitle}
-						image={image ? mediaUrl(image) : null}
-					/>
+					<PageHero title={pageTitle(slug, title)} image={image ? mediaUrl(image) : null} />
 				) : null;
 			}
 
 
 			case "rich_text": {
 				const { title, body, video_url, image_video_url } = section.content as RichTextContent;
-				return (
+
+				const richText = (
 					<RichText
 						title={title}
 						body={body ?? ""}
 						videoUrl={video_url}
 						poster={image_video_url ? mediaUrl(image_video_url) : null}
 					/>
+				);
+
+				// TEMPORARY: the home page's highlight cards have no section
+				// type in the CMS, so they are appended here, directly after
+				// the rich text they belong with. See technical_debt.md.
+				return slug === "inicio" ? (
+					<>
+						{richText}
+						<OperationHighlights />
+					</>
+				) : (
+					richText
 				);
 			}
 

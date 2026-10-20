@@ -217,6 +217,67 @@ const sideImage = image ?? (!embedUrl ? poster : null) ?? null;
 		margin-top: 1.25rem;
 	}
 
+	/* Cards written inside a CMS body:
+	       <div class="card"><div class="tittle">…</div><p>…</p></div>
+	   "card" is a site-wide class (border, radius, shadow) that brings no
+	   padding of its own, so an authored one needs finishing here. The
+	   article becomes a grid only when it holds cards: they sit two-up while
+	   the prose around them keeps the full column. */
+	.prose article:has(> .card) {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+		gap: 1.25rem;
+	}
+	.prose article:has(> .card) > :not(.card) {
+		grid-column: 1 / -1;
+	}
+	/* The grid's gap already spaces the prose; keep the flow margins from
+	   stacking on top of it. */
+	.prose article:has(> .card) > p + p {
+		margin-top: 0;
+	}
+
+	.prose article.is-measuring {
+		align-items: start;
+	}
+	.prose article.is-measuring > .card {
+		min-height: 0;
+	}
+
+	.prose .card {
+		/* Set by the script below to the tallest card in the grid: CSS alone
+		   only evens out cards that share a row. */
+		min-height: var(--card-height, auto);
+		padding: 1.5rem 1.6rem;
+		text-align: left;
+		hyphens: manual;
+		-webkit-hyphens: manual;
+	}
+	/* "tittle" is the editor's spelling; accept the correct one too. */
+	.prose .card :is(.tittle, .title) {
+		display: flex;
+		align-items: baseline;
+		gap: 0.55rem;
+		margin-bottom: 0.55rem;
+		font-family: var(--font-title);
+		font-size: 1.05rem;
+		font-weight: 600;
+		line-height: 1.3;
+		color: var(--color-dark);
+	}
+	.prose .card :is(.tittle, .title)::before {
+		content: "";
+		flex-shrink: 0;
+		width: 0.45rem;
+		height: 0.45rem;
+		border-radius: var(--radius-full);
+		background: var(--color-red);
+	}
+	.prose .card p {
+		margin: 0;
+		font-size: 0.95rem;
+	}
+
 	.prose :is(h2, h3) {
 		margin-top: 1.5rem;
 		color: var(--color-dark);
@@ -318,4 +379,41 @@ const sideImage = image ?? (!embedUrl ? poster : null) ?? null;
 			facade.replaceWith(iframe);
 		});
 	});
+</script>
+
+<script>
+	// Authored cards (<div class="card"> inside a CMS body) all take the
+	// height of the tallest one. Grid stretches cards that share a row, but
+	// nothing in CSS matches heights ACROSS rows, and the article's rows hold
+	// prose as well as cards, so grid-auto-rows: 1fr would stretch those too.
+	function equalizeCards(article: HTMLElement) {
+		const cards = Array.from(article.querySelectorAll<HTMLElement>(":scope > .card"));
+		if (cards.length < 2) return;
+
+		// Measure natural heights: with the forced height still applied every
+		// card reports the same number and the tallest can never shrink back.
+		article.classList.add("is-measuring");
+
+		// A card filling the row is one-per-row (phones): nothing to match.
+		const stacked = cards[0].getBoundingClientRect().width > article.clientWidth * 0.9;
+		const tallest = stacked
+			? 0
+			: Math.max(...cards.map((card) => card.getBoundingClientRect().height));
+
+		article.classList.remove("is-measuring");
+		article.style.setProperty("--card-height", tallest ? `${Math.ceil(tallest)}px` : "auto");
+	}
+
+	const articles = Array.from(document.querySelectorAll<HTMLElement>(".prose article")).filter(
+		(article) => article.querySelector(":scope > .card")
+	);
+
+	if (articles.length) {
+		const run = () => articles.forEach(equalizeCards);
+		// After layout settles — the cards enter with a staggered reveal.
+		requestAnimationFrame(run);
+		// Web fonts change the line count, and so the height.
+		document.fonts?.ready.then(run);
+		window.addEventListener("resize", run);
+	}
 </script>

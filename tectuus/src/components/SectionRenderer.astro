@@ -59,8 +59,13 @@ const { sections, pageSlug = null } = Astro.props;
     }
 
     case "clients_showcase": {
-      const { title, logos = [] } = section.content as { title?: string | null; logos?: any[] };
-      return logos.length ? <ClientsShowcase title={title} logos={logos} /> : null;
+      const { title, subtitle, intro, logos = [] } = section.content as {
+        title?: string | null;
+        subtitle?: string | null;
+        intro?: string | null;
+        logos?: any[];
+      };
+      return logos.length ? <ClientsShowcase title={title} subtitle={subtitle ?? intro} logos={logos} /> : null;
     }
 
     case "lead_capture_form": {

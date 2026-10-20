@@ -45,6 +45,25 @@ export async function fetchProduct(slug: string): Promise<Product | undefined> {
   return response?.data;
 }
 
+// Catalog names follow a "CODE | tagline" convention ("DA300 | Potencia y
+// flexibilidad…"). Splitting them lets the code headline a card or shelf and
+// the tagline sit under it; a name without a bar is all headline.
+export function splitLabel(text: string): { head: string; tail: string | null } {
+  const [head, ...rest] = text.split("|").map((part) => part.trim());
+  const tail = rest.join(" | ").trim();
+  return { head: head.charAt(0).toUpperCase() + head.slice(1), tail: tail || null };
+}
+
+// Some categories were saved with a slug-like name ("postes",
+// "servicios-y-sistemas") and the real label in `description`. Prefer the
+// description in that case so the catalog never shows a slug.
+export function categoryLabel(category: Pick<ProductCategory, "name"> & { description?: string | null }) {
+  const name = category.name.trim();
+  const description = category.description?.trim();
+  const nameIsBare = !name.includes("|") && (/^[^\s]+$/.test(name) || description?.includes("|"));
+  return splitLabel(nameIsBare && description ? description : name);
+}
+
 const priceFormatter = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",

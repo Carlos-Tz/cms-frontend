@@ -4,11 +4,13 @@ import { titleLines } from "../functions/labels";
 // of an interior page (title, optional subtitle, optional background image).
 interface Props {
 	title: string;
-	subtitle?: string | null;
 	image?: string | null;
 }
 
-const { title, subtitle, image } = Astro.props;
+// The CMS still serves page_hero.subtitle; by request the banner shows the
+// title alone, so it is not rendered here (nor passed in by PageSections).
+
+const { title, image } = Astro.props;
 ---
 
 <section class:list={["page-hero", { "page-hero--image": !!image }]}>
@@ -17,7 +19,6 @@ const { title, subtitle, image } = Astro.props;
 
 	<div class="container page-hero-content">
 		<h1 class="page-hero-title">{titleLines(title).map((line) => <span class="title-line">{line}</span>)}</h1>
-		{subtitle && <p class="page-hero-subtitle">{subtitle}</p>}
 	</div>
 </section>
 
@@ -65,13 +66,6 @@ const { title, subtitle, image } = Astro.props;
 		animation: page-hero-in 0.8s var(--ease-out) both;
 	}
 
-	.page-hero-subtitle {
-		margin-top: 1.1rem;
-		max-width: 34rem;
-		font-size: 1.05rem;
-		color: var(--color-text-on-dark-60);
-		animation: page-hero-in 0.8s 0.12s var(--ease-out) both;
-	}
 
 	/* The title sits above a rule that widens once the banner has settled. */
 	.page-hero-title::after {
@@ -113,8 +107,7 @@ const { title, subtitle, image } = Astro.props;
 
 	@media (prefers-reduced-motion: reduce) {
 		.page-hero-img,
-		.page-hero-title,
-		.page-hero-subtitle {
+		.page-hero-title {
 			animation: none;
 		}
 		.page-hero-title::after {

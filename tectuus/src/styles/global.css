@@ -599,22 +599,32 @@ button {
 
 .nav-item {
   position: relative;
+  display: inline-flex;
+  align-items: center;
 }
 
+.nav-item .nav-link--parent {
+  padding-right: 0.2rem;
+}
+
+.nav-item .nav-link--parent::after {
+  right: 0.2rem;
+}
+
+/* Caret-only button beside the parent link; opens the submenu on click. */
 .nav-link--toggle {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
   border: none;
   background: transparent;
-  padding: 0.45rem 0.6rem;
-  font-size: var(--text-small);
-  font-weight: 500;
-  font-family: inherit;
+  padding: 0.45rem 0.6rem 0.45rem 0.2rem;
   color: var(--color-text-60);
+  cursor: pointer;
   transition: color 0.15s ease;
 }
 
+.nav-item:hover .nav-link--parent,
+.nav-item:hover .nav-link--toggle,
 .nav-link--toggle:hover {
   color: var(--color-primary);
 }
@@ -757,16 +767,15 @@ button {
   z-index: 1;
 }
 
+/* Each slide is full-bleed: the CMS image is the backdrop (editors usually
+   upload ultra-wide banners, which a framed plate would crop to a sliver) and
+   an ink scrim from the left keeps the copy legible over any photograph. */
 .hero-slide {
   grid-area: 1 / 1;
-  display: grid;
-  grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+  position: relative;
+  display: flex;
   align-items: center;
-  gap: clamp(2rem, 5vw, 4rem);
-  max-width: 72rem;
-  width: 100%;
-  margin: 0 auto;
-  padding: clamp(3.5rem, 7vw, 6rem) 1.5rem clamp(4rem, 7vw, 6rem);
+  min-height: clamp(30rem, 68vh, 42rem);
   opacity: 0;
   transition: opacity 0.6s ease;
   pointer-events: none;
@@ -782,41 +791,58 @@ button {
 }
 
 .hero-slide__media {
-  position: relative;
-  order: 2;
-  border-radius: var(--radius-plate);
+  position: absolute;
+  inset: 0;
   overflow: hidden;
   background: var(--color-ink-2);
 }
 
-/* Registration brackets, top-left and bottom-right of the plate. */
-.hero-slide__media::before,
+/* Scrim: solid ink behind the copy, clearing toward the right so the image
+   reads; a floor gradient keeps the counter and arrows legible. */
 .hero-slide__media::after {
   content: "";
   position: absolute;
-  width: 2.75rem;
-  height: 2.75rem;
-  z-index: 2;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(10, 30, 53, 0.92) 0%, rgba(10, 30, 53, 0.78) 32%, rgba(10, 30, 53, 0.25) 68%, rgba(10, 30, 53, 0.05) 100%),
+    linear-gradient(0deg, rgba(10, 30, 53, 0.55) 0%, transparent 28%);
   pointer-events: none;
 }
 
-.hero-slide__media::before {
-  top: 0;
-  left: 0;
+.hero-slide__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transform: scale(1.06);
+  transition: transform 7s linear;
+}
+
+.hero-slide.is-active .hero-slide__img {
+  transform: scale(1);
+}
+
+/* The copy lines up with the page container while the image runs edge to edge. */
+.hero-slide__copy {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: clamp(3.5rem, 7vw, 6rem) 1.5rem clamp(4.5rem, 8vw, 6.5rem);
+}
+
+/* Registration bracket opening the copy block, drawn in as the slide lands. */
+.hero-slide__copy::before {
+  content: "";
+  display: block;
+  width: 2.75rem;
+  height: 2.75rem;
+  margin-bottom: 1.5rem;
   border-top: 2px solid var(--color-line);
   border-left: 2px solid var(--color-line);
 }
 
-.hero-slide__media::after {
-  bottom: 0;
-  right: 0;
-  border-bottom: 2px solid var(--color-line);
-  border-right: 2px solid var(--color-line);
-}
-
-/* The brackets clip in from their corner as the slide takes over, the way
-   registration marks land on a plate. They sit at the end of the slide's own
-   0.6s crossfade rather than competing with it. */
 @keyframes bracket-in {
   from {
     clip-path: inset(0 100% 100% 0);
@@ -826,37 +852,12 @@ button {
   }
 }
 
-@keyframes bracket-in-reverse {
-  from {
-    clip-path: inset(100% 0 0 100%);
-  }
-  to {
-    clip-path: inset(0 0 0 0);
-  }
-}
-
-.hero-slide.is-active .hero-slide__media::before {
+.hero-slide.is-active .hero-slide__copy::before {
   animation: bracket-in 0.55s 0.35s var(--ease-out) both;
 }
 
-.hero-slide.is-active .hero-slide__media::after {
-  animation: bracket-in-reverse 0.55s 0.45s var(--ease-out) both;
-}
-
-.hero-slide__img {
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  transform: scale(1.06);
-  transition: transform 7s linear;
-}
-
-.hero-slide.is-active .hero-slide__img {
-  transform: scale(1);
-}
-
-.hero-slide__copy {
-  order: 1;
+.hero-slide__copy > * {
+  max-width: 38rem;
 }
 
 .hero-slide__title {
@@ -903,8 +904,18 @@ button {
   animation-delay: 0.2s;
 }
 
+/* The backdrop fades in under the copy; a translate would show a seam. */
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .hero-slide:first-child .hero-slide__media {
-  animation: rise 0.9s 0.08s var(--ease-out) both;
+  animation: backdrop-in 1.1s ease both;
 }
 
 .hero__arrow {
@@ -976,16 +987,18 @@ button {
 
 @media (max-width: 860px) {
   .hero-slide {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 2.5rem 1.5rem 4.5rem;
+    min-height: clamp(30rem, 80vh, 36rem);
+    align-items: flex-end;
   }
 
-  .hero-slide__media {
-    order: 1;
+  /* On a narrow screen the copy spans the full width, so the scrim rises
+     from the bottom instead of the left. */
+  .hero-slide__media::after {
+    background: linear-gradient(0deg, rgba(10, 30, 53, 0.95) 0%, rgba(10, 30, 53, 0.8) 45%, rgba(10, 30, 53, 0.3) 100%);
   }
 
   .hero-slide__copy {
-    order: 2;
+    padding: 3rem 1.5rem 4.5rem;
   }
 
   .hero__arrow {
@@ -1112,29 +1125,93 @@ button {
   border: none;
 }
 
-/* CLIENTS — a hairline mesh, the way a spec sheet tabulates. */
-.clients-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1px;
-  /* Logo-only mode: a couple of logos should not stretch the full width. */
-  max-width: calc(var(--client-count, 3) * 14rem);
-  background: var(--color-border);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-plate);
+/* CLIENTS — logo cards drifting right to left on an endless loop. The track
+ * holds two identical groups; sliding it by exactly one group (-50%) lands
+ * the second group where the first began, so the reset is invisible. */
+/* Logo-only mode reads as a quiet roll call: a centred, airy heading with no
+ * drafting rule, above a single white band the logos drift through. */
+.clients-head {
+  max-width: 44rem;
+  padding-top: 0;
+}
+
+.clients-head::before,
+.clients-head::after {
+  display: none;
+}
+
+.clients-head .section-title {
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.clients-head .section-subtitle {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.clients-marquee {
+  background: var(--color-surface);
+  padding: 2.25rem 0;
+  box-shadow: 0 18px 40px -28px rgb(0 0 0 / 0.25);
+}
+
+.clients-marquee__viewport {
   overflow: hidden;
+  /* Logos fade in and out at the band's edges instead of being clipped hard. */
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
+.clients-marquee__track {
+  display: flex;
+  width: max-content;
+  animation: clients-marquee var(--marquee-duration, 30s) linear infinite;
+}
+
+.clients-marquee:hover .clients-marquee__track,
+.clients-marquee:focus-within .clients-marquee__track {
+  animation-play-state: paused;
+}
+
+.clients-marquee__group {
+  display: flex;
+  gap: 1.25rem;
+  /* Trailing space matches the gap so the seam between groups is even. */
+  padding: 0.25rem 1.25rem 0.25rem 0;
+  margin: 0;
+  list-style: none;
+}
+
+@keyframes clients-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 
 .clients-grid__item {
-  background: var(--color-surface);
-  padding: 1.75rem 1.25rem;
+  flex: 0 0 16rem;
+  height: 7rem;
+  padding: 0 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
+@media (max-width: 640px) {
+  .clients-marquee {
+    padding: 1.5rem 0;
+  }
+
+  .clients-grid__item {
+    flex-basis: 12rem;
+    height: 5.5rem;
+  }
+}
+
 .clients-grid__logo {
-  max-height: 2.75rem;
+  max-height: 5rem;
+  max-width: 100%;
   width: auto;
   object-fit: contain;
   filter: grayscale(1);
@@ -1465,25 +1542,102 @@ button {
   text-underline-offset: 0.2em;
 }
 
-/* CATALOG — product plates */
+/* CATALOG — shelves. One horizontal row per product line, each under a
+   centred, airy heading (the same voice as the clients roll call), so the
+   catalog reads like a showroom aisle rather than a flat grid. */
+.catalog-shelf + .catalog-shelf {
+  margin-top: clamp(3rem, 6vw, 4.5rem);
+}
+
+.catalog-shelf[hidden] {
+  display: none;
+}
+
+.catalog-shelf__head {
+  max-width: 44rem;
+  margin: 0 auto 1.75rem;
+  text-align: center;
+}
+
+.catalog-shelf__title {
+  font-size: clamp(1.25rem, 2.4vw, 1.625rem);
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-60);
+}
+
+.catalog-shelf__tagline {
+  margin-top: 0.4rem;
+  font-size: var(--text-small);
+  color: var(--color-text-60);
+}
+
+.catalog-shelf__body {
+  position: relative;
+}
+
+.catalog-shelf__track {
+  --shelf-gap: 1.5rem;
+  display: flex;
+  gap: var(--shelf-gap);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  /* Matches the side padding below so snapping rests at scrollLeft 0. */
+  scroll-padding-inline: 0.25rem;
+  /* Room for the card shadow, which overflow would otherwise clip. */
+  padding: 0.5rem 0.25rem 1.25rem;
+  margin: -0.5rem -0.25rem -1.25rem;
+  scrollbar-width: none;
+}
+
+.catalog-shelf__track::-webkit-scrollbar {
+  display: none;
+}
+
+/* Arrow tabs sit over the shelf's edges, like the chevron in a store aisle. */
+.catalog-shelf__arrow {
+  position: absolute;
+  top: calc(50% - 2.5rem);
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-float);
+  cursor: pointer;
+  z-index: 2;
+  transition: color 0.15s ease, border-color 0.15s ease, transform 0.2s var(--ease-out);
+}
+
+.catalog-shelf__arrow:hover {
+  border-color: var(--color-line);
+  transform: scale(1.06);
+}
+
+.catalog-shelf__arrow[hidden] {
+  display: none;
+}
+
+.catalog-shelf__arrow--prev {
+  left: -1.375rem;
+}
+
+.catalog-shelf__arrow--next {
+  right: -1.375rem;
+}
+
+/* CATALOG — product cards: the equipment on a soft plate, then its model
+   code, tagline and price set as a small caption underneath. */
 .product-card {
+  flex: 0 0 calc((100% - 2 * var(--shelf-gap)) / 3);
+  scroll-snap-align: start;
   display: flex;
   flex-direction: column;
-  padding: 0;
-  overflow: hidden;
   color: inherit;
-}
-
-/* No registration tick here — it would land on the photograph, and the plate
-   already reads as one through its border and foot rule. */
-.product-card::before {
-  content: none;
-}
-
-.product-card:hover {
-  border-color: var(--color-border-hover);
-  box-shadow: var(--shadow-plate-raised);
-  transform: translateY(-3px);
 }
 
 /* The filter script toggles `hidden`, and an author `display` would otherwise
@@ -1494,9 +1648,12 @@ button {
 }
 
 .product-card__media {
-  background: var(--color-bg-alt);
-  border-bottom: 1px solid var(--color-border);
+  border-radius: var(--radius-plate);
+  background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-bg-alt) 100%);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-plate);
   overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s var(--ease-out);
 }
 
 .product-card__media img {
@@ -1506,48 +1663,119 @@ button {
   transition: transform 0.5s var(--ease-out);
 }
 
+.product-card:hover .product-card__media {
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-plate-raised);
+  transform: translateY(-3px);
+}
+
 .product-card:hover .product-card__media img {
-  transform: scale(1.04);
+  transform: scale(1.05);
 }
 
-.product-card .card__subtitle {
-  padding: 1.25rem 1.5rem 0;
-  color: var(--color-text-60);
+.product-card__body {
+  padding: 1rem 0.25rem 0;
 }
 
+/* Model code, struck through with a hairline like the caption rule under a
+   drawing's title block. */
 .product-card__title {
-  padding: 0 1.5rem 1.25rem;
-  margin-top: 0.3rem;
+  padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--color-border-hover);
+  font-family: var(--font-display);
+  font-stretch: 104%;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-primary);
+  transition: border-color 0.2s ease;
 }
 
-/* Price and action read as one tabulated row at the foot of the plate. */
-.product-card__foot {
-  margin-top: auto;
-  padding: 0.9rem 1.5rem;
-  border-top: 1px solid var(--color-border);
+/* A model code ("DA300") is set like a part number; a plain descriptive
+   name stays in sentence case so it doesn't shout. */
+.product-card__title--code {
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.product-card:hover .product-card__title {
+  border-color: var(--color-line);
+}
+
+.product-card__row {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  padding-top: 0.6rem;
+}
+
+.product-card__text {
+  font-size: var(--text-micro);
+  line-height: 1.45;
+  color: var(--color-text-60);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .product-card__price {
+  flex-shrink: 0;
   font-family: var(--font-display);
   font-stretch: 104%;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.125rem;
+  font-weight: 700;
   color: var(--color-primary);
 }
 
 .product-card__cta {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: var(--text-micro);
   font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--color-accent-alt);
 }
 
-.product-card:hover .product-card__cta {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
+.product-card__cta svg {
+  transition: transform 0.2s var(--ease-out);
+}
+
+.product-card:hover .product-card__cta svg {
+  transform: translateX(3px);
+}
+
+@media (max-width: 980px) {
+  .product-card {
+    flex-basis: calc((100% - var(--shelf-gap)) / 2.15);
+  }
+
+  .catalog-shelf__arrow--prev {
+    left: -0.5rem;
+  }
+
+  .catalog-shelf__arrow--next {
+    right: -0.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .catalog-shelf__track {
+    --shelf-gap: 1rem;
+  }
+
+  /* Most of one card plus a peek of the next tells the thumb it can swipe. */
+  .product-card {
+    flex-basis: 78%;
+  }
+
+  .catalog-shelf__arrow {
+    display: none;
+  }
 }
 
 /* PRODUCT DETAIL */
@@ -1846,8 +2074,7 @@ a.footer-link:hover {
     animation-delay: 0s;
   }
 
-  .hero-slide.is-active .hero-slide__media::before,
-  .hero-slide.is-active .hero-slide__media::after {
+  .hero-slide.is-active .hero-slide__copy::before {
     animation: none;
     clip-path: none;
   }
@@ -1856,6 +2083,28 @@ a.footer-link:hover {
   .gallery-item:hover img,
   .clients-grid__item:hover .clients-grid__logo {
     transform: none;
+  }
+
+  /* No drift: the first group sits still and wraps; the repeats are dropped. */
+  .clients-marquee__viewport {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .clients-marquee__track {
+    animation: none;
+    width: auto;
+  }
+
+  .clients-marquee__group {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding-right: 0;
+  }
+
+  .clients-marquee__group[aria-hidden="true"],
+  .clients-grid__item[aria-hidden="true"] {
+    display: none;
   }
 }
 

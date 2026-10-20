@@ -4,7 +4,11 @@
 // the HTML and the script below hides what doesn't match — which also keeps
 // the URL shareable (`/productos?category=edrm`), the form the Productos
 // submenu links to.
-import { formatPrice } from "../functions/catalog";
+//
+// Products are laid out as one horizontal shelf per category, each under its
+// own heading, so the catalog reads by product line rather than as one flat
+// grid of mixed equipment.
+import { categoryLabel, formatPrice, splitLabel } from "../functions/catalog";
 import { mediaUrl, FALLBACK_IMAGE } from "../functions/fetch";
 import type { ProductCategory, ProductListItem } from "../types/catalog";
 
@@ -18,15 +22,37 @@ const { categories, products } = Astro.props;
 // Every category gets a chip, including the ones with no products yet: they're
 // the client's product lines and the Productos submenu links to all of them,
 // so selecting an empty one has to show an honest empty state rather than
-// silently snapping back to "Todos".
+// silently snapping back to "Todos". Only categories with products get a shelf.
 
 // Folded once here so the browser filter compares plain ASCII: the CMS search
 // is a bare LIKE, so "medicion" never matches "medición" server-side.
 const fold = (value: string) =>
   value
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .toLowerCase();
+
+type Shelf = {
+  slug: string;
+  head: string;
+  tail: string | null;
+  image: string | null;
+  items: ProductListItem[];
+};
+
+const shelves: Shelf[] = categories
+  .map((category) => ({
+    slug: category.slug,
+    ...categoryLabel(category),
+    image: category.image ?? null,
+    items: products.filter((product) => product.category?.slug === category.slug),
+  }))
+  .filter((shelf) => shelf.items.length > 0);
+
+// A product whose category isn't in the category list still has to show up.
+const known = new Set(categories.map((category) => category.slug));
+const orphans = products.filter((product) => !known.has(product.category?.slug ?? ""));
+if (orphans.length) shelves.push({ slug: "", head: "Otros equipos", tail: null, image: null, items: orphans });
 ---
 
 <section class="section" id="catalogo" data-catalog>
@@ -46,7 +72,7 @@ const fold = (value: string) =>
             <button type="button" class="catalog-chip is-active" data-catalog-category="" aria-pressed="true">Todos</button>
             {categories.map((category) => (
               <button type="button" class="catalog-chip" data-catalog-category={category.slug} aria-pressed="false">
-                {category.name}
+                {categoryLabel(category).head}
               </button>
             ))}
           </div>
@@ -65,33 +91,66 @@ const fold = (value: string) =>
 
         <p class="catalog-count" data-catalog-count aria-live="polite"></p>
 
-        <div class="grid grid--3 catalog-grid">
-          {products.map((product) => (
-            <a
-              class="card product-card"
-              href={`/productos/${product.slug}`}
-              data-product
-              data-category={product.category?.slug ?? ""}
-              data-haystack={fold(`${product.name} ${product.category?.name ?? ""}`)}
-            >
-              <div class="product-card__media">
-                <img
-                  src={product.image ? mediaUrl(product.image) : FALLBACK_IMAGE}
-                  alt={product.name}
-                  loading="lazy"
-                  width="480"
-                  height="360"
-                />
+        {shelves.map((shelf) => (
+          <section class="catalog-shelf" data-shelf={shelf.slug} aria-label={shelf.head}>
+            <header class="catalog-shelf__head">
+              <h2 class="catalog-shelf__title">{shelf.head}</h2>
+              {shelf.tail && <p class="catalog-shelf__tagline">{shelf.tail}</p>}
+            </header>
+
+            <div class="catalog-shelf__body">
+              <div class="catalog-shelf__track catalog-grid" data-shelf-track>
+                {shelf.items.map((product) => {
+                  const { head, tail } = splitLabel(product.name);
+                  const image = product.image ?? shelf.image;
+                  const hasPrice = product.price !== null && product.price !== "";
+                  return (
+                    <a
+                      class="product-card"
+                      href={`/productos/${product.slug}`}
+                      data-product
+                      data-category={product.category?.slug ?? ""}
+                      data-haystack={fold(`${product.name} ${product.category?.name ?? ""} ${shelf.head}`)}
+                    >
+                      <div class="product-card__media">
+                        <img
+                          src={image ? mediaUrl(image) : FALLBACK_IMAGE}
+                          alt={product.name}
+                          loading="lazy"
+                          width="480"
+                          height="360"
+                        />
+                      </div>
+                      <div class="product-card__body">
+                        <p class:list={["product-card__title", { "product-card__title--code": tail }]}>{head}</p>
+                        <div class="product-card__row">
+                          {tail ? <p class="product-card__text">{tail}</p> : <span />}
+                          {hasPrice ? (
+                            <span class="product-card__price">{formatPrice(product.price)}</span>
+                          ) : (
+                            <span class="product-card__cta">
+                              Cotizar
+                              <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+                                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+                              </svg>
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </a>
+                  );
+                })}
               </div>
-              {product.category?.name && <p class="card__subtitle">{product.category.name}</p>}
-              <p class="card__title product-card__title">{product.name}</p>
-              <div class="product-card__foot">
-                <span class="product-card__price">{formatPrice(product.price)}</span>
-                <span class="product-card__cta">Ver detalle</span>
-              </div>
-            </a>
-          ))}
-        </div>
+
+              <button type="button" class="catalog-shelf__arrow catalog-shelf__arrow--prev" data-shelf-prev aria-label={`Productos anteriores de ${shelf.head}`} hidden>
+                <svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2 2 10l8 8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              </button>
+              <button type="button" class="catalog-shelf__arrow catalog-shelf__arrow--next" data-shelf-next aria-label={`Más productos de ${shelf.head}`} hidden>
+                <svg width="12" height="20" viewBox="0 0 12 20" aria-hidden="true"><path d="m2 2 8 8-8 8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              </button>
+            </div>
+          </section>
+        ))}
 
         <p class="catalog-empty-filter" data-catalog-empty hidden>
           No encontramos productos con esos criterios. Prueba con otra categoría o
@@ -109,13 +168,14 @@ const fold = (value: string) =>
     const searchInput = root.querySelector<HTMLInputElement>("[data-catalog-search]");
     const chips = Array.from(root.querySelectorAll<HTMLButtonElement>("[data-catalog-category]"));
     const cards = Array.from(root.querySelectorAll<HTMLElement>("[data-product]"));
+    const shelves = Array.from(root.querySelectorAll<HTMLElement>("[data-shelf]"));
     const emptyMessage = root.querySelector<HTMLElement>("[data-catalog-empty]");
     const counter = root.querySelector<HTMLElement>("[data-catalog-count]");
 
     const fold = (value: string) =>
       value
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[̀-ͯ]/g, "")
         .toLowerCase()
         .trim();
 
@@ -126,6 +186,30 @@ const fold = (value: string) =>
 
     if (!chips.some((chip) => chip.dataset.catalogCategory === category)) category = "";
     if (searchInput) searchInput.value = query;
+
+    // Each shelf scrolls sideways; its arrows only show when there is
+    // somewhere to go in that direction.
+    function syncArrows(shelf: HTMLElement) {
+      const track = shelf.querySelector<HTMLElement>("[data-shelf-track]");
+      const prev = shelf.querySelector<HTMLButtonElement>("[data-shelf-prev]");
+      const next = shelf.querySelector<HTMLButtonElement>("[data-shelf-next]");
+      if (!track || !prev || !next) return;
+      const max = track.scrollWidth - track.clientWidth;
+      // A few px of slack: snapping and sub-pixel widths rarely land on 0 exactly.
+      prev.hidden = track.scrollLeft <= 8;
+      next.hidden = track.scrollLeft >= max - 8;
+    }
+
+    shelves.forEach((shelf) => {
+      const track = shelf.querySelector<HTMLElement>("[data-shelf-track]");
+      if (!track) return;
+      const step = (direction: number) => track.scrollBy({ left: direction * track.clientWidth * 0.85, behavior: "smooth" });
+      shelf.querySelector("[data-shelf-prev]")?.addEventListener("click", () => step(-1));
+      shelf.querySelector("[data-shelf-next]")?.addEventListener("click", () => step(1));
+      track.addEventListener("scroll", () => syncArrows(shelf), { passive: true });
+    });
+
+    window.addEventListener("resize", () => shelves.forEach(syncArrows));
 
     function render() {
       const needle = fold(query);
@@ -138,6 +222,14 @@ const fold = (value: string) =>
 
         card.hidden = !isMatch;
         if (isMatch) visible += 1;
+      });
+
+      // A shelf with nothing left to show disappears along with its heading.
+      shelves.forEach((shelf) => {
+        shelf.hidden = !shelf.querySelector("[data-product]:not([hidden])");
+        const track = shelf.querySelector<HTMLElement>("[data-shelf-track]");
+        if (track) track.scrollLeft = 0;
+        syncArrows(shelf);
       });
 
       chips.forEach((chip) => {

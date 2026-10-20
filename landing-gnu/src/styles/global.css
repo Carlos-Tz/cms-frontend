@@ -1201,31 +1201,35 @@ body.nav-open {
 }
 
 /* Hero — full-bleed, CMS-driven carousel. Sized to the banner media's own
-   ratio so it shows whole: 1138:474, the common banner GIF size.
-   An 800x340 GIF is a hair taller and shows thin blurred side
-   strips; wider media crops a sliver under cover. Never taller than what's
-   left of the viewport below the sticky header (100dvh accounts for mobile
-   browser chrome). */
+   ratio so it shows whole: 1138:474, the common banner GIF size (an 800x340
+   GIF is a hair taller and shows thin blurred side strips; wider media crops
+   a sliver under cover), capped at what's left of the viewport below the
+   sticky header (100dvh accounts for mobile browser chrome) and never under
+   28rem. That's a minimum, not a fixed height: on mid-size and small screens,
+   where the ratio is too short for the title, subtitle and CTA, the hero
+   grows to fit its tallest slide instead of clipping it under the header.
+   100cqw is the hero's own width (container-type), not the viewport's, so
+   the scrollbar doesn't skew the ratio. */
 .hero {
   position: relative;
-  aspect-ratio: 1138 / 474;
-  max-height: calc(100dvh - var(--header-height));
-  min-height: 28rem;
+  container-type: inline-size;
   overflow: hidden;
   background: var(--color-ink);
 }
 
+/* Slides share one grid cell, so the track is as tall as its tallest slide
+   (or the ratio minimum, whichever is more). */
 .hero__track {
   position: relative;
-  height: 100%;
+  display: grid;
+  min-height: max(28rem, min(100cqw * 474 / 1138, 100dvh - var(--header-height)));
 }
 
 /* Slides stack on top of each other; swapping `.is-active` crossfades between
    them instead of the old display:none/block hard cut (display can't transition). */
 .hero-slide {
-  position: absolute;
-  inset: 0;
-  height: 100%;
+  position: relative;
+  grid-area: 1 / 1;
   opacity: 0;
   transition: opacity 1s var(--ease-out);
   pointer-events: none;
@@ -1324,7 +1328,7 @@ body.nav-open {
   flex-direction: column;
   justify-content: flex-end;
   padding-bottom: clamp(3rem, 8vw, 5.5rem);
-  padding-top: 6rem;
+  padding-top: clamp(3rem, 6vw, 6rem);
 }
 
 .hero-slide__title {
@@ -1582,10 +1586,19 @@ body.nav-open {
   padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
 }
 
+/* Three across only where each card gets enough width for its copy; below
+   that, one full-width card per row (three narrow columns wrapped titles
+   onto four lines on mid-size screens). */
 .trust-strip__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: 1fr;
   gap: 1.25rem;
+}
+
+@media (min-width: 1100px) {
+  .trust-strip__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 
 /* Cards stretch to the tallest one; content centers vertically so a shorter

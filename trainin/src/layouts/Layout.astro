@@ -68,9 +68,11 @@ const whatsappUrl = whatsappHref(whatsappButton);
 	<head>
 		<meta charset="utf-8" />
 		{/* The TL monogram, same file the header and footer render. */}
+		{/* The TL monogram, same artwork the header lockup is built from. The
+		    Astro starter's favicon.ico used to be declared here too and won in
+		    browsers that prefer .ico, so it is gone. */}
 		<link rel="icon" type="image/png" href="/logo.png" />
 		<link rel="apple-touch-icon" href="/logo.png" />
-		<link rel="icon" href="/favicon.ico" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="generator" content={Astro.generator} />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />

@@ -2,23 +2,36 @@
 // The site's single logo source. Header and Footer both render this, so the
 // brand mark is swapped in one place.
 //
-// The mark is the TL monogram in public/logo.png. It carries no company name,
-// so it is locked up with the wordmark; pass `markOnly` for the symbol alone.
-const LOGO_SRC = "/logo.png";
+// The artwork is a finished lockup — monogram plus the TRANINN LOGISTIC
+// wordmark — so the component draws no type of its own. `markOnly` falls back
+// to the bare TL monogram, which is also the favicon.
+//
+// The dark-background lockup is supplied artwork (white monogram, red
+// wordmark), not a generated knockout. The monogram's own dark variant is
+// still generated from logo.png — see technical_debt.md.
+const ART = {
+	lockup: { light: "/logo-lockup.png", dark: "/logo-lockup-dark-bg.png", width: 603, height: 183 },
+	mark: { light: "/logo.png", dark: "/logo-white.png", width: 421, height: 367 },
+};
 
 interface Props {
-	// The footer sits on the dark band. The monogram's swoosh is near-black,
-	// so there it rides on a light plate instead of vanishing.
+	// The footer sits on the dark band, where the knockout artwork is used.
 	onDark?: boolean;
-	// The header's mark links home; the footer's does not.
+	// The header's logo links home; the footer's does not.
 	href?: string | null;
-	// Symbol without the wordmark beside it.
+	// The symbol alone, without the wordmark.
 	markOnly?: boolean;
-	// Rendered height of the symbol.
+	// Rendered height of the artwork.
 	height?: string;
 }
 
-const { onDark = false, href = null, markOnly = false, height = "2.4rem" } = Astro.props;
+const { onDark = false, href = null, markOnly = false, height } = Astro.props;
+
+const art = markOnly ? ART.mark : ART.lockup;
+const src = onDark ? art.dark : art.light;
+// The lockup is wide and low; the monogram is nearly square, so it needs less
+// height to read at the same visual weight.
+const renderedHeight = height ?? (markOnly ? "2.4rem" : "2.6rem");
 
 const Tag = href ? "a" : "div";
 ---
@@ -28,74 +41,37 @@ const Tag = href ? "a" : "div";
 	href={href ?? undefined}
 	aria-label={href ? "Traninn Logistic — Inicio" : undefined}
 >
-	<span class="logo-mark" style={`--logo-height: ${height}`}>
-		<img src={LOGO_SRC} alt={markOnly ? "Traninn Logistic" : ""} width="421" height="367" />
-	</span>
-
-	{
-		!markOnly && (
-			<span class="logo-word">
-				{/* Per the brand manual: TRAN in black, INN in red, LOGISTIC in grey. */}
-				<span class="logo-part logo-part--ink">TRAN</span><span class="logo-part logo-part--red">INN</span>
-				<span class="logo-part logo-part--gray">LOGISTIC</span>
-			</span>
-		)
-	}
+	{/* The size is inline as well as in the stylesheet: the width/height
+	    attributes are the artwork's natural size, so until this component's CSS
+	    applies the browser would paint the logo at full size across the page. */}
+	<img
+		class="logo-img"
+		src={src}
+		alt="Traninn Logistic"
+		width={art.width}
+		height={art.height}
+		style={`height: ${renderedHeight}; width: auto;`}
+	/>
 </Tag>
 
 <style>
 	.logo {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.65rem;
-		font-family: var(--font-title);
-		font-size: 1.2rem;
-		font-weight: 800;
-		letter-spacing: 0.01em;
-		white-space: nowrap;
 	}
 
-	.logo-mark {
-		display: grid;
-		place-items: center;
-		height: var(--logo-height);
-	}
-	.logo-mark img {
-		height: 100%;
+	.logo-img {
 		width: auto;
 		object-fit: contain;
 		transition: transform 0.4s var(--ease-out);
 	}
-	.logo:hover .logo-mark img {
-		transform: scale(1.06);
-	}
-
-	/* On the dark footer the monogram's dark swoosh would disappear, so the
-	   symbol sits on a light plate that keeps its brand colours intact. */
-	.logo--on-dark .logo-mark {
-		padding: 0.4rem 0.5rem;
-		border-radius: var(--radius-md);
-		background: #fff;
-	}
-
-	.logo-part--red {
-		color: var(--color-red);
-	}
-	.logo-part--ink {
-		color: var(--color-dark);
-	}
-	.logo--on-dark .logo-part--ink {
-		color: #fff;
-	}
-	.logo-part--gray {
-		color: var(--color-gray);
-		margin-left: 0.3rem;
+	.logo:hover .logo-img {
+		transform: scale(1.04);
 	}
 
 	@media (max-width: 420px) {
-		.logo {
-			font-size: 1rem;
-			gap: 0.5rem;
+		.logo-img {
+			height: 2.1rem !important;
 		}
 	}
 </style>

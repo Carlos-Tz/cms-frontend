@@ -1,0 +1,198 @@
+---
+// TEMPORARY — hardcoded content. See technical_debt.md.
+//
+// The CMS has no section type that carries a heading plus a set of
+// image/title/text items, so this block lives in the front end until one
+// exists. Everything below is copy supplied by the client, not CMS data:
+// when the backend grows a section for it, delete this component and render
+// it through PageSections like every other block.
+//
+// Layout follows the client's zig-zag spec: alternating image/content rows,
+// image above the copy below 1024px.
+import { titleLines, textLines } from "../functions/labels";
+
+interface Props {
+	// Placed on a tinted band by default so it separates from the rich text
+	// above it; the caller can flip it to keep the page's zebra in step.
+	tint?: boolean;
+}
+
+const { tint = true } = Astro.props;
+
+const heading = "Detrás de cada entrega, hay una operación bien coordinada.";
+
+// Stand-in artwork until the CMS can serve a picture per row. One file for
+// all of them on purpose: it reads as pending rather than as chosen photos.
+const PLACEHOLDER_IMAGE = "/image.png";
+
+// Titles carry no trailing colon, per the spec's punctuation rule.
+const highlights = [
+	{
+		index: "01",
+		badge: "Planeación",
+		eyebrow: "Optimización operativa",
+		title: "Eficiencia",
+		text: "Planeamos y coordinamos cada servicio buscando aprovechar de manera eficiente los recursos disponibles, optimizar recorridos y mantener una operación competitiva.",
+	},
+	{
+		index: "02",
+		badge: "Sostenibilidad",
+		eyebrow: "Mejora continua",
+		title: "Operación responsable",
+		text: "Buscamos mejorar continuamente nuestros procesos, el aprovechamiento de recursos y la gestión de nuestras unidades",
+	},
+	{
+		index: "03",
+		badge: "Calidad",
+		eyebrow: "Protocolos rigurosos",
+		title: "Seguridad y control",
+		text: "Trabajamos bajo procesos definidos de planeación, inspección, seguimiento y entrega para mantener el control de cada servicio.",
+	},
+	{
+		index: "04",
+		badge: "Servicio",
+		eyebrow: "Acompañamiento continuo",
+		title: "Atención y seguimiento",
+		text: "Acompañamos cada operación con comunicación y seguimiento de acuerdo con las necesidades del servicio.",
+	},
+];
+---
+
+<div class:list={["band", { "band--tint": tint }]}>
+	<section class="section highlights">
+		<div class="container">
+			<div class="section-head">
+				<h2 class="section-title">
+					{titleLines(heading).map((line) => <span class="title-line">{line}</span>)}
+				</h2>
+			</div>
+
+			<div class="zig-rows">
+				{highlights.map((item) => (
+					<article class="zig-row">
+						<div class="zig-media shine">
+							<span class="zig-badge">{item.index} / {item.badge}</span>
+							{/* alt is empty on purpose: this is a placeholder, and describing
+							    a photo that is not there would mislead a screen reader. The
+							    real images need descriptive alt text — see technical_debt.md. */}
+							<img src={PLACEHOLDER_IMAGE} alt="" loading="lazy" width="1200" height="800" />
+						</div>
+
+						<div class="zig-content">
+							<span class="zig-eyebrow">{item.eyebrow}</span>
+							<h3 class="zig-title">{item.title}</h3>
+							<p class="zig-text">
+								{textLines(item.text).map((line) => <span class="text-line">{line}</span>)}
+							</p>
+						</div>
+					</article>
+				))}
+			</div>
+		</div>
+	</section>
+</div>
+
+<style>
+	.zig-rows {
+		display: flex;
+		flex-direction: column;
+		gap: clamp(3rem, 6vw, 6rem);
+	}
+
+	.zig-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: clamp(2rem, 5vw, 4rem);
+		align-items: center;
+	}
+
+	/* Every second row puts the copy first and the image after it. */
+	.zig-row:nth-child(even) .zig-media {
+		order: 2;
+	}
+
+	.zig-media {
+		position: relative;
+		border-radius: var(--radius-xl);
+		overflow: hidden;
+		background: var(--color-bg-alt);
+		box-shadow: var(--shadow-card);
+	}
+	.zig-media img {
+		display: block;
+		width: 100%;
+		height: clamp(16rem, 26vw, 22rem);
+		object-fit: cover;
+		transition: transform 0.5s var(--ease-out);
+	}
+	.zig-row:hover .zig-media img {
+		transform: scale(1.05);
+	}
+
+	.zig-badge {
+		position: absolute;
+		top: 1rem;
+		left: 1rem;
+		z-index: 3;
+		padding: 0.35rem 0.85rem;
+		border-radius: var(--radius-full);
+		background: var(--color-red);
+		color: #fff;
+		font-family: var(--font-title);
+		font-size: 0.72rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		box-shadow: var(--shadow-cta);
+	}
+
+	.zig-content {
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: 0.75rem;
+	}
+
+	.zig-eyebrow {
+		font-family: var(--font-title);
+		font-size: 0.82rem;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-red);
+	}
+
+	.zig-title {
+		font-size: clamp(1.5rem, 2.6vw, 1.95rem);
+		font-weight: 700;
+		line-height: 1.2;
+		letter-spacing: -0.015em;
+		color: var(--color-dark);
+	}
+
+	.zig-text {
+		font-size: 1.05rem;
+		line-height: 1.75;
+		color: var(--color-text-60);
+		max-width: 34rem;
+	}
+
+	/* Below the spec's 1024px split: one column, image always above the copy
+	   — including on the reversed rows, hence the order reset. */
+	@media (max-width: 1024px) {
+		.zig-row {
+			grid-template-columns: 1fr;
+			gap: 1.75rem;
+		}
+		.zig-row:nth-child(even) .zig-media {
+			order: 0;
+		}
+		.zig-media img {
+			height: clamp(13rem, 42vw, 20rem);
+		}
+		.zig-text {
+			font-size: 1rem;
+			max-width: none;
+		}
+	}
+</style>

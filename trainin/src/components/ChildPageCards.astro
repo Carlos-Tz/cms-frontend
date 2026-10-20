@@ -41,7 +41,10 @@ const findBranch = (items: MenuItem[]): MenuItem | undefined => {
 	return undefined;
 };
 
-const children = applyTitleOverrides(findBranch(menuResponse?.data ?? [])?.children ?? []);
+// Overrides are applied to the whole tree first: the ordering override is
+// keyed by the parent slug, so it only takes effect while the parent is still
+// in hand.
+const children = findBranch(applyTitleOverrides(menuResponse?.data ?? []))?.children ?? [];
 
 const entries = await Promise.all(
 	children.map(async (child) => {

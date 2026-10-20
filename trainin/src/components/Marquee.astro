@@ -21,8 +21,9 @@ if (!words.length) {
 	const menuResponse: MenuResponse | undefined = await fetchData("menu");
 	// The first branch with sub-pages is the services column; its children are
 	// the site's offering, which is what the band is advertising.
-	const branch = (menuResponse?.data ?? []).find((entry) => entry.children?.length);
-	words = applyTitleOverrides(branch?.children ?? []).map((child) => child.title);
+	const menu = applyTitleOverrides(menuResponse?.data ?? []);
+	const branch = menu.find((entry) => entry.children?.length);
+	words = (branch?.children ?? []).map((child) => child.title);
 }
 ---
 
