@@ -188,8 +188,11 @@ const iconFor = (slug: string) =>
 		font-size: clamp(5rem, 12vw, 9rem);
 	}
 
+	/* The card hugs the outer edge of the image rather than sitting a whole
+	   grid column inside it; the margin is the only breathing room. */
 	.service-card {
-		grid-area: 1 / 2 / 2 / 7;
+		grid-area: 1 / 1 / 2 / 6;
+		margin-left: clamp(1rem, 2.5vw, 2.5rem);
 		z-index: 2;
 		display: flex;
 		flex-direction: column;
@@ -200,7 +203,9 @@ const iconFor = (slug: string) =>
 		box-shadow: 0 26px 60px -24px rgba(32, 29, 30, 0.55);
 	}
 	.service-row--flip .service-card {
-		grid-area: 1 / 7 / 2 / 12;
+		grid-area: 1 / 8 / 2 / -1;
+		margin-left: 0;
+		margin-right: clamp(1rem, 2.5vw, 2.5rem);
 	}
 
 	.service-card-top {

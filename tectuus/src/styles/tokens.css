@@ -82,12 +82,12 @@
   --color-surface-muted: rgba(22, 58, 100, 0.04);
   --color-surface-on-dark: rgba(255, 255, 255, 0.05);
 
-  /* Radius — geometry encodes role: pill for things you do, near-square
+  /* Radius — geometry encodes role: pill for things you do, softly rounded
      plates for things you read. */
-  --radius-plate: 0.25rem;
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 1rem;
+  --radius-plate: 1rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
   --radius-xl: 1.5rem;
   --radius-full: 999px;
 

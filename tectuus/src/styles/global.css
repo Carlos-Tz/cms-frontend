@@ -8,6 +8,30 @@
 
 html {
   scroll-behavior: smooth;
+  /* Brand cursor; the hotspot is the centre of the dot. The keyword after the
+     image is the fallback if it fails to load. */
+  cursor: url("/cursor-32.png") 16 16, auto;
+}
+
+/* Over anything clickable the dot grows a size, standing in for the hand.
+   !important because several components set `cursor: pointer` themselves. */
+a,
+button,
+summary,
+label[for],
+select,
+[role="button"],
+[role="tab"],
+input[type="checkbox"],
+input[type="radio"],
+input[type="submit"] {
+  cursor: url("/cursor-40.png") 20 20, pointer !important;
+}
+
+/* Typing still gets the I-beam, or the caret position becomes guesswork. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
+textarea {
+  cursor: text;
 }
 
 body {
@@ -74,7 +98,7 @@ button {
   background: var(--color-primary);
   color: var(--color-text-on-dark);
   padding: 0.5rem 1rem;
-  border-radius: var(--radius-plate);
+  border-radius: var(--radius-sm);
 }
 
 .skip-link:focus {
@@ -369,7 +393,7 @@ button {
 }
 
 /* PLATE — the one surface used for everything you read. Hairline border, a
-   near-square corner, and a registration tick at its origin corner. */
+   softly rounded corner, and a registration tick hugging its origin corner. */
 .card {
   position: relative;
   border-radius: var(--radius-plate);
@@ -389,6 +413,8 @@ button {
   height: 1.375rem;
   border-top: 2px solid var(--color-line);
   border-left: 2px solid var(--color-line);
+  /* Follows the plate's curve (inside its 1px border) so the tick hugs the corner. */
+  border-top-left-radius: calc(var(--radius-plate) - 1px);
   pointer-events: none;
 }
 
@@ -407,7 +433,7 @@ button {
   width: 2.75rem;
   height: 2.75rem;
   border: 1px solid var(--color-line-soft);
-  border-radius: var(--radius-plate);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -477,36 +503,30 @@ button {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
-  font-family: var(--font-display);
-  font-stretch: 118%;
-  font-size: 1.0625rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  color: var(--color-primary);
+  flex-shrink: 0;
 }
 
-.brand__mark {
-  width: 2rem;
-  height: 2rem;
-  border-radius: var(--radius-plate);
-  border: 1px solid var(--color-line-soft);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.brand__logo {
+  height: 2.75rem;
+  width: auto;
 }
 
-.brand__mark img {
-  width: 1.15rem;
-  height: 1.15rem;
-}
-
+/* The wordmark is navy, which disappears on the ink footer, so there the logo
+   sits on a white plate instead of being recoloured. */
 .brand--on-dark {
-  color: var(--color-text-on-dark);
+  padding: 0.6rem 0.9rem;
+  border-radius: var(--radius-md);
+  background: #fff;
 }
 
-.brand--on-dark .brand__mark {
-  border-color: rgba(255, 255, 255, 0.28);
+.brand--on-dark .brand__logo {
+  height: 2.5rem;
+}
+
+@media (max-width: 640px) {
+  .brand__logo {
+    height: 2.25rem;
+  }
 }
 
 /* NAV — the active hover state is a cyan underline struck under the word,
@@ -566,7 +586,7 @@ button {
   width: 2.5rem;
   height: 2.5rem;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-plate);
+  border-radius: var(--radius-sm);
   background: transparent;
   padding: 0 0.6rem;
 }
@@ -669,7 +689,7 @@ button {
 .nav-dropdown__link {
   display: block;
   padding: 0.5rem 0.65rem;
-  border-radius: var(--radius-plate);
+  border-radius: var(--radius-sm);
   font-size: var(--text-small);
   color: var(--color-text-60);
   transition: background 0.15s ease, color 0.15s ease;
@@ -841,6 +861,7 @@ button {
   margin-bottom: 1.5rem;
   border-top: 2px solid var(--color-line);
   border-left: 2px solid var(--color-line);
+  border-top-left-radius: var(--radius-md);
 }
 
 @keyframes bracket-in {
@@ -1153,6 +1174,7 @@ button {
 
 .clients-marquee {
   background: var(--color-surface);
+  border-radius: var(--radius-lg);
   padding: 2.25rem 0;
   box-shadow: 0 18px 40px -28px rgb(0 0 0 / 0.25);
 }
@@ -1379,7 +1401,7 @@ button {
   -webkit-hyphens: auto;
 }
 
-/* FORMS — inputs are square-cornered like every other read surface; only the
+/* FORMS — inputs are softly rounded like every other read surface; only the
    submit button is a pill. */
 .field {
   margin-bottom: 1.1rem;
@@ -1397,7 +1419,7 @@ button {
 .field select,
 .field textarea {
   width: 100%;
-  border-radius: var(--radius-plate);
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
   background: var(--color-surface);
   padding: 0.65rem 0.8rem;
@@ -1832,6 +1854,7 @@ button {
   left: 0;
   border-top: 2px solid var(--color-line);
   border-left: 2px solid var(--color-line);
+  border-top-left-radius: var(--radius-plate);
 }
 
 .product-detail__plate::after {
@@ -1839,6 +1862,7 @@ button {
   bottom: 0;
   border-bottom: 2px solid var(--color-line);
   border-right: 2px solid var(--color-line);
+  border-bottom-right-radius: var(--radius-plate);
 }
 
 .product-detail__image {
@@ -1859,7 +1883,7 @@ button {
 
 .product-detail__thumb {
   width: 4rem;
-  border-radius: var(--radius-plate);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--color-border);
   overflow: hidden;
   padding: 0;
@@ -1970,7 +1994,7 @@ a.footer-link:hover {
 .social-icon {
   width: 2rem;
   height: 2rem;
-  border-radius: var(--radius-plate);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2149,4 +2173,9 @@ a.footer-link:hover {
 
 .prose :is(img, iframe, video, embed, object) {
   max-width: 100%;
+}
+
+/* Media an editor drops into rich text gets the same corner as every plate. */
+.prose :is(img, iframe, video) {
+  border-radius: var(--radius-plate);
 }

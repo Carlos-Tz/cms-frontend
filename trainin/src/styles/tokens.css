@@ -35,7 +35,13 @@
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 
-  --container-max: 72rem;
+  /* 1280px — the width the client's layout spec asks for (max-w-7xl), and
+     close to the reference template's 1350px. At the old 72rem/1152px a
+     1920px screen gave up ~380px of margin on each side.
+     Widening this is safe because nothing relies on it for line length:
+     every block of copy caps its own measure (section heads at 42rem, prose
+     at 48rem, hero copy at 34rem, and so on). */
+  --container-max: 80rem;
 }
 
 * {

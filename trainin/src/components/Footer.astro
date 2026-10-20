@@ -54,7 +54,9 @@ const year = new Date().getFullYear();
 <footer class="site-footer">
 	<div class="container footer-grid">
 		<div class="footer-brand">
-			<Logo onDark />
+			{/* Taller than the header's: the footer column has the room, and the
+			    lockup's "LOGISTIC" line needs the height to stay legible. */}
+			<Logo onDark height="3.9rem" />
 			<p class="footer-text">Transporte de GNC, logística y carga pesada con cobertura nacional.</p>
 			<div class="socials">
 				{socials.map((s) => (
