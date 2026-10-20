@@ -21,15 +21,13 @@ const { tint = true } = Astro.props;
 
 const heading = "Detrás de cada entrega, hay una operación bien coordinada.";
 
-// Stand-in artwork until the CMS can serve a picture per row. One file for
-// all of them on purpose: it reads as pending rather than as chosen photos.
-const PLACEHOLDER_IMAGE = "/image.png";
-
 // Titles carry no trailing colon, per the spec's punctuation rule.
 const highlights = [
 	{
 		index: "01",
 		badge: "Planeación",
+		image: "/cards/eficiencia.webp",
+		alt: "Dos personas trazan una ruta de transporte sobre un mapa en una tableta",
 		eyebrow: "Optimización operativa",
 		title: "Eficiencia",
 		text: "Planeamos y coordinamos cada servicio buscando aprovechar de manera eficiente los recursos disponibles, optimizar recorridos y mantener una operación competitiva.",
@@ -37,6 +35,8 @@ const highlights = [
 	{
 		index: "02",
 		badge: "Sostenibilidad",
+		image: "/cards/operacion-responsable.webp",
+		alt: "Equipo de operaciones revisa indicadores de la flota en una sala de juntas",
 		eyebrow: "Mejora continua",
 		title: "Operación responsable",
 		text: "Buscamos mejorar continuamente nuestros procesos, el aprovechamiento de recursos y la gestión de nuestras unidades",
@@ -44,6 +44,8 @@ const highlights = [
 	{
 		index: "03",
 		badge: "Calidad",
+		image: "/cards/seguridad-y-control.webp",
+		alt: "Técnico inspecciona los neumáticos de una unidad de transporte de gas en el taller",
 		eyebrow: "Protocolos rigurosos",
 		title: "Seguridad y control",
 		text: "Trabajamos bajo procesos definidos de planeación, inspección, seguimiento y entrega para mantener el control de cada servicio.",
@@ -51,6 +53,8 @@ const highlights = [
 	{
 		index: "04",
 		badge: "Servicio",
+		image: "/cards/atencion-y-seguimiento.webp",
+		alt: "Personal de atención da seguimiento a un servicio por teléfono y computadora",
 		eyebrow: "Acompañamiento continuo",
 		title: "Atención y seguimiento",
 		text: "Acompañamos cada operación con comunicación y seguimiento de acuerdo con las necesidades del servicio.",
@@ -72,10 +76,13 @@ const highlights = [
 					<article class="zig-row">
 						<div class="zig-media shine">
 							<span class="zig-badge">{item.index} / {item.badge}</span>
-							{/* alt is empty on purpose: this is a placeholder, and describing
-							    a photo that is not there would mislead a screen reader. The
-							    real images need descriptive alt text — see technical_debt.md. */}
-							<img src={PLACEHOLDER_IMAGE} alt="" loading="lazy" width="1200" height="800" />
+							<img
+								src={item.image}
+								alt={item.alt}
+								loading="lazy"
+								width="1400"
+								height="700"
+							/>
 						</div>
 
 						<div class="zig-content">

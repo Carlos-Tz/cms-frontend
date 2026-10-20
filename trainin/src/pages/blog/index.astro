@@ -19,7 +19,9 @@ const columns = Math.max(1, Math.ceil(posts.length / rows));
 ---
 
 <Layout title="Blog">
-  <PageHero title="Blog" />
+  {/* Hardcoded: the blog has no page in the CMS, so its banner image and
+      title live here. See technical_debt.md. */}
+  <PageHero title="Blog" image="/blog-hero.webp" />
 
   <div class="band band--tint">
   <section class="section blog-list-section">
