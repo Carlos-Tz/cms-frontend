@@ -574,35 +574,6 @@ const organizationJsonLd = JSON.stringify({
         });
       });
 
-      // Dropdown toggles are <button>s here (the hub page is the first link
-      // inside), so a click — touch, or Enter on the keyboard — toggles them;
-      // hover/focus open them in CSS. Outside clicks and Escape close them.
-      const dropdowns = Array.from(document.querySelectorAll<HTMLElement>(".nav-item"));
-      const closeDropdown = (item: HTMLElement) => {
-        item.classList.remove("is-open");
-        item.querySelector(".nav-link--toggle")?.setAttribute("aria-expanded", "false");
-      };
-      dropdowns.forEach((item) => {
-        const toggle = item.querySelector<HTMLButtonElement>(".nav-link--toggle");
-        toggle?.addEventListener("click", () => {
-          const wasOpen = item.classList.contains("is-open");
-          dropdowns.forEach(closeDropdown);
-          if (!wasOpen) {
-            item.classList.add("is-open");
-            toggle.setAttribute("aria-expanded", "true");
-          }
-        });
-      });
-      document.addEventListener("click", (event) => {
-        if (!(event.target instanceof Node)) return;
-        dropdowns.forEach((item) => {
-          if (!item.contains(event.target as Node)) closeDropdown(item);
-        });
-      });
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") dropdowns.forEach(closeDropdown);
-      });
-
       // Spotlight: cards light up under the pointer (the CSS reads --mx/--my).
       if (window.matchMedia("(hover: hover)").matches) {
         document.addEventListener(

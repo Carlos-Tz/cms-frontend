@@ -17,25 +17,17 @@ const inSection = (path: string) =>
 
 {hasChildren ? (
   <div class="nav-item">
-    <button
+    <a
       class:list={["nav-link", "nav-link--toggle", { "is-current": inSection(item.path) }]}
-      aria-expanded="false"
-      aria-haspopup="true"
+      href={item.path}
+      aria-current={isCurrent(item.path) ? "page" : undefined}
     >
       {item.title}
       <svg class="nav-caret" width="10" height="6" viewBox="0 0 10 6" aria-hidden="true">
         <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
-    </button>
+    </a>
     <div class="nav-dropdown">
-      {/* The toggle is a button, so the hub page itself needs its own link. */}
-      <a
-        class:list={["nav-dropdown__link", "nav-dropdown__link--overview", { "is-current": isCurrent(item.path) }]}
-        href={item.path}
-        aria-current={isCurrent(item.path) ? "page" : undefined}
-      >
-        Ver todo {item.title.toLowerCase()} →
-      </a>
       {item.children.map((child) => (
         <div class="nav-dropdown__group">
           <a

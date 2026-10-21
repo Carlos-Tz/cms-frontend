@@ -66,6 +66,18 @@ const {
     <button type="submit" class="btn-primary">{submit_label}</button>
     <p class="lead-form__status" data-lead-form-status role="status" aria-live="polite"></p>
   </form>
+
+  <dialog class="confirmation-modal" id={`${formId}-confirmation`}>
+    <button type="button" class="confirmation-modal__close" aria-label="Cerrar">×</button>
+    <div class="confirmation-modal__check" aria-hidden="true">
+      <svg viewBox="0 0 52 52">
+        <circle class="confirmation-modal__check-circle" cx="26" cy="26" r="24" fill="none" />
+        <path class="confirmation-modal__check-mark" fill="none" d="M14 27l7 7 16-16" />
+      </svg>
+    </div>
+    <p class="confirmation-modal__title">¡Listo!</p>
+    <p class="confirmation-modal__text" data-lead-form-confirmation-text></p>
+  </dialog>
 </div>
 
 <script define:vars={{ apiBase: BASE_URL, leadFormId: formId, leadSource: source }} is:inline>
@@ -77,6 +89,23 @@ const {
 
   const form = document.getElementById(leadFormId);
   const status = form ? form.querySelector("[data-lead-form-status]") : null;
+  const confirmationModal = document.getElementById(`${leadFormId}-confirmation`);
+  const confirmationText = confirmationModal ? confirmationModal.querySelector("[data-lead-form-confirmation-text]") : null;
+  let confirmationTimer;
+
+  function showConfirmation(message) {
+    if (!confirmationModal || typeof confirmationModal.showModal !== "function") return;
+    if (confirmationText) confirmationText.textContent = message;
+    confirmationModal.showModal();
+    clearTimeout(confirmationTimer);
+    confirmationTimer = window.setTimeout(() => confirmationModal.close(), 4500);
+  }
+
+  confirmationModal?.addEventListener("click", (event) => {
+    if (event.target === confirmationModal) confirmationModal.close();
+  });
+  confirmationModal?.querySelector(".confirmation-modal__close")?.addEventListener("click", () => confirmationModal.close());
+  confirmationModal?.addEventListener("close", () => clearTimeout(confirmationTimer));
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -115,9 +144,10 @@ const {
 
       form.reset();
       if (status) {
-        status.textContent = result?.meta?.message || "Gracias por contactarnos.";
-        status.className = "lead-form__status lead-form__status--success";
+        status.textContent = "";
+        status.className = "lead-form__status";
       }
+      showConfirmation(result?.meta?.message || "Gracias por contactarnos. Un asesor se comunicará contigo.");
     } catch (error) {
       if (status) {
         status.textContent =

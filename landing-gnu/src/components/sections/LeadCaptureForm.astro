@@ -66,6 +66,26 @@ const {
   </form>
 </div>
 
+{/* Success confirmation (errors stay inline in the status line above). One
+    dialog per form, so two forms on a page never share one. Same pattern as
+    gas-gnu's LeadCaptureForm. */}
+<dialog
+  class="confirmation-modal"
+  id={`${formId}-confirmation`}
+  aria-labelledby={`${formId}-confirmation-title`}
+  aria-describedby={`${formId}-confirmation-text`}
+>
+  <button type="button" class="confirmation-modal__close" aria-label="Cerrar">×</button>
+  <div class="confirmation-modal__check" aria-hidden="true">
+    <svg viewBox="0 0 52 52">
+      <circle class="confirmation-modal__check-circle" cx="26" cy="26" r="24" fill="none" />
+      <path class="confirmation-modal__check-mark" fill="none" d="M14 27l7 7 16-16" />
+    </svg>
+  </div>
+  <p class="confirmation-modal__title" id={`${formId}-confirmation-title`}>¡Listo!</p>
+  <p class="confirmation-modal__text" id={`${formId}-confirmation-text`} data-lead-form-confirmation-text></p>
+</dialog>
+
 <script define:vars={{ apiBase: BASE_URL, leadFormId: formId, leadSource: source }} is:inline>
   // Only these four map to real `leads` columns. Anything else the CMS lists
   // in this section's `fields[]` (empresa, flota, …) is an extra the API only
@@ -75,6 +95,41 @@ const {
 
   const form = document.getElementById(leadFormId);
   const status = form ? form.querySelector("[data-lead-form-status]") : null;
+
+  // Success confirmation modal. Closes on its × button, Esc, a click on the
+  // backdrop, or by itself after 4.5s; focus then returns to the submit
+  // button so keyboard users land back where they were.
+  const confirmationModal = document.getElementById(leadFormId + "-confirmation");
+  const confirmationText = confirmationModal?.querySelector("[data-lead-form-confirmation-text]");
+  let confirmationTimer;
+
+  function showConfirmation(message) {
+    // No <dialog> support: fall back to the inline status line.
+    if (!confirmationModal || typeof confirmationModal.showModal !== "function") {
+      if (status) {
+        status.textContent = message;
+        status.className = "lead-form__status lead-form__status--success";
+      }
+      return;
+    }
+    if (confirmationText) confirmationText.textContent = message;
+    if (status) {
+      status.textContent = "";
+      status.className = "lead-form__status";
+    }
+    confirmationModal.showModal();
+    clearTimeout(confirmationTimer);
+    confirmationTimer = window.setTimeout(() => confirmationModal.close(), 4500);
+  }
+
+  confirmationModal?.addEventListener("click", (event) => {
+    if (event.target === confirmationModal) confirmationModal.close();
+  });
+  confirmationModal?.querySelector(".confirmation-modal__close")?.addEventListener("click", () => confirmationModal.close());
+  confirmationModal?.addEventListener("close", () => {
+    clearTimeout(confirmationTimer);
+    form?.querySelector('button[type="submit"]')?.focus();
+  });
 
   form?.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -117,10 +172,7 @@ const {
       }
 
       form.reset();
-      if (status) {
-        status.textContent = result?.meta?.message || "Gracias por contactarnos.";
-        status.className = "lead-form__status lead-form__status--success";
-      }
+      showConfirmation(result?.meta?.message || "Gracias por contactarnos. Un asesor se comunicará contigo.");
     } catch (error) {
       if (status) {
         status.textContent = error?.message || "No pudimos enviar tu mensaje. Intenta de nuevo.";

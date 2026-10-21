@@ -51,7 +51,7 @@ export default function Home() {
               title={page.title}
               subtitle={page.subtitle}
               status={page.status}
-              onArrowClick={() => handleOpenPage(page)}
+              onClick={() => handleOpenPage(page)}
             />
           ))}
         </section>

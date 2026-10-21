@@ -172,13 +172,10 @@ const hasMedia = Boolean(embedUrl || fallbackImage);
 ) : (
   <section class="section rich-text-plain texture-dots">
     {/* A page-text-only section (no video, no image) otherwise leaves the
-        whole right side of the wide container as flat white — this is the
-        same soft brand-color wash used on PageHero/the hero band, so the
-        space reads as "intentionally spacious", not empty. */}
-    <div class="aurora aurora--soft" aria-hidden="true">
-      <span class="aurora__blob aurora__blob--1"></span>
-      <span class="aurora__blob aurora__blob--2"></span>
-    </div>
+        whole right side of the wide container as flat white — the brand
+        manual's own corner mark (p.11: pale concentric line arcs, not a
+        color wash) gives it some texture instead. */}
+    <span class="rich-text-plain__arc" aria-hidden="true"></span>
     <div class="container rich-text">
       {title && (isLabelTitle ? <span class="eyebrow">{title}</span> : <h2 class="section-title">{title}</h2>)}
       <div class:list={["prose", "prose--section", { "prose--after-label": isLabelTitle }]} set:html={body} />
