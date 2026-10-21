@@ -1060,6 +1060,38 @@ button {
   padding-top: 1.5rem;
 }
 
+/* With an image, the banner follows the shape editors upload (wide, about
+   8:3 such as 2048x768) so the photo reads instead of collapsing to a thin
+   strip; height is capped so very wide screens don't push content down.
+   The copy sits at the bottom, over a scrim that only darkens behind it. */
+.page-hero--image {
+  display: flex;
+  align-items: flex-end;
+  min-height: clamp(18rem, 37.5vw, 32rem);
+  padding-top: 0;
+}
+
+.page-hero--image .page-hero__content {
+  width: 100%;
+}
+
+.page-hero--image .page-hero__img {
+  opacity: 1;
+  object-position: center;
+}
+
+.page-hero--image .page-hero__scrim {
+  background:
+    linear-gradient(90deg, rgba(10, 30, 53, 0.85) 0%, rgba(10, 30, 53, 0.55) 40%, rgba(10, 30, 53, 0.1) 75%, rgba(10, 30, 53, 0) 100%),
+    linear-gradient(0deg, rgba(10, 30, 53, 0.75) 0%, rgba(10, 30, 53, 0) 55%);
+}
+
+@media (max-width: 640px) {
+  .page-hero--image .page-hero__scrim {
+    background: linear-gradient(0deg, rgba(10, 30, 53, 0.92) 0%, rgba(10, 30, 53, 0.55) 55%, rgba(10, 30, 53, 0.2) 100%);
+  }
+}
+
 .page-hero__content::before {
   content: "";
   position: absolute;
@@ -1652,14 +1684,42 @@ button {
   right: -1.375rem;
 }
 
-/* CATALOG — product cards: the equipment on a soft plate, then its model
-   code, tagline and price set as a small caption underneath. */
+/* CATALOG — product cards. Text-first: most products ship without a photo, so
+   the model code, summary and specs carry the card, set like a spec-sheet
+   entry. A photo, when there is one, is only a thumbnail beside the title,
+   so cards with and without images stay one family. */
 .product-card {
   flex: 0 0 calc((100% - 2 * var(--shelf-gap)) / 3);
   scroll-snap-align: start;
+  position: relative;
   display: flex;
   flex-direction: column;
+  padding: 1.5rem;
+  border-radius: var(--radius-plate);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-plate);
   color: inherit;
+  transition: border-color 0.2s ease, box-shadow 0.25s ease;
+}
+
+/* Registration tick at the origin corner, as on every other plate. */
+.product-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-top: 2px solid var(--color-line);
+  border-left: 2px solid var(--color-line);
+  border-top-left-radius: calc(var(--radius-plate) - 1px);
+  pointer-events: none;
+}
+
+.product-card:hover {
+  border-color: var(--color-border-hover);
+  box-shadow: var(--shadow-plate-raised);
 }
 
 /* The filter script toggles `hidden`, and an author `display` would otherwise
@@ -1669,77 +1729,127 @@ button {
   display: none;
 }
 
-.product-card__media {
-  border-radius: var(--radius-plate);
-  background: linear-gradient(180deg, var(--color-surface) 0%, var(--color-bg-alt) 100%);
+.product-card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.product-card__thumb {
+  flex-shrink: 0;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-plate);
-  overflow: hidden;
-  transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s var(--ease-out);
-}
-
-.product-card__media img {
-  width: 100%;
-  aspect-ratio: 4 / 3;
   object-fit: cover;
-  transition: transform 0.5s var(--ease-out);
+  background: var(--color-bg-alt);
 }
 
-.product-card:hover .product-card__media {
-  border-color: var(--color-border-hover);
-  box-shadow: var(--shadow-plate-raised);
-  transform: translateY(-3px);
+/* Stand-in when there is no photo: an equipment glyph on a tinted tile. */
+.product-card__thumb--icon {
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+  background: var(--color-surface-muted);
+  border-color: var(--color-line-soft);
 }
 
-.product-card:hover .product-card__media img {
-  transform: scale(1.05);
-}
-
-.product-card__body {
-  padding: 1rem 0.25rem 0;
-}
-
-/* Model code, struck through with a hairline like the caption rule under a
-   drawing's title block. */
 .product-card__title {
-  padding-bottom: 0.55rem;
-  border-bottom: 1px solid var(--color-border-hover);
+  min-width: 0;
   font-family: var(--font-display);
   font-stretch: 104%;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  line-height: 1.35;
+  font-size: 1.0625rem;
+  font-weight: 650;
+  line-height: 1.3;
   color: var(--color-primary);
-  transition: border-color 0.2s ease;
 }
 
 /* A model code ("DA300") is set like a part number; a plain descriptive
    name stays in sentence case so it doesn't shout. */
 .product-card__title--code {
-  letter-spacing: 0.04em;
+  font-size: 1.375rem;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
 }
 
-.product-card:hover .product-card__title {
-  border-color: var(--color-line);
+.product-card__tagline {
+  margin-top: 1rem;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  color: var(--color-text);
 }
 
-.product-card__row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-top: 0.6rem;
-}
-
-.product-card__text {
-  font-size: var(--text-micro);
-  line-height: 1.45;
+.product-card__summary {
+  margin-top: 0.75rem;
+  font-size: var(--text-small);
+  line-height: 1.6;
   color: var(--color-text-60);
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* With no specs to show, the summary takes the room they would have used. */
+.product-card__summary--long {
+  -webkit-line-clamp: 8;
+}
+
+/* Key specs tabulated as label / value rows on hairlines. */
+.product-card__specs {
+  margin: 1.1rem 0 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.product-card__spec {
+  display: grid;
+  grid-template-columns: minmax(5.5rem, 0.8fr) 1.2fr;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-micro);
+  line-height: 1.45;
+}
+
+.product-card__spec dt {
+  font-weight: 600;
+  color: var(--color-text-60);
+}
+
+.product-card__spec dd {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.product-card__points {
+  margin: 1.1rem 0 0;
+  padding-left: 1.1rem;
+  font-size: var(--text-micro);
+  line-height: 1.5;
+  color: var(--color-text-60);
+}
+
+.product-card__points li + li {
+  margin-top: 0.3rem;
+}
+
+.product-card__foot {
+  margin-top: auto;
+  padding-top: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.product-card__more {
+  font-size: var(--text-micro);
+  font-weight: 600;
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-decoration-color: var(--color-line);
+  text-underline-offset: 0.25em;
 }
 
 .product-card__price {
@@ -1755,12 +1865,16 @@ button {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.35rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: var(--radius-full);
+  background: var(--color-accent-alt);
   font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--color-accent-alt);
+  color: #fff;
+  transition: filter 0.15s ease;
 }
 
 .product-card__cta svg {
@@ -1800,6 +1914,221 @@ button {
   }
 }
 
+/* CONTACT SPLIT — every lead form sits beside a contact panel, so the visitor
+   sees who they're writing to and every other way to reach the team. */
+.contact-split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+
+@media (max-width: 860px) {
+  .contact-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The illustration is a cut-out (transparent PNG), so it sits straight on
+   the section ground, light or ink, with no plate behind it. */
+.contact-panel__art img {
+  width: 100%;
+  max-width: 34rem;
+  aspect-ratio: 650 / 384;
+  object-fit: contain;
+}
+
+.contact-panel__heading {
+  /* The cut-out carries its own empty margin at the bottom. */
+  margin-top: 0.5rem;
+  font-family: var(--font-display);
+  font-stretch: 104%;
+  font-size: clamp(1.375rem, 2.6vw, 1.75rem);
+  font-weight: 650;
+  line-height: 1.2;
+  color: var(--color-primary);
+}
+
+.contact-panel__reasons {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.6rem;
+  font-size: var(--text-small);
+  color: var(--color-text-60);
+}
+
+.contact-panel__reasons li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+}
+
+.contact-panel__reasons i {
+  width: 1.1rem;
+  text-align: center;
+  color: var(--color-accent-alt);
+}
+
+.contact-panel__details {
+  margin: 1.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+@media (max-width: 520px) {
+  .contact-panel__details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.contact-panel__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.contact-panel__icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-line-soft);
+  color: var(--color-primary);
+  font-size: 0.95rem;
+}
+
+.contact-panel__text {
+  display: grid;
+  min-width: 0;
+  font-size: var(--text-small);
+  line-height: 1.45;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.contact-panel__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-60);
+}
+
+.contact-panel__text a {
+  transition: color 0.15s ease;
+}
+
+.contact-panel__text a:hover {
+  color: var(--color-accent-alt);
+}
+
+.contact-panel__whatsapp {
+  margin-top: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem 1.3rem;
+  border-radius: var(--radius-full);
+  background: #25d366;
+  color: #fff;
+  font-weight: 600;
+  font-size: var(--text-small);
+  transition: filter 0.15s ease, transform 0.2s var(--ease-out);
+}
+
+.contact-panel__whatsapp i {
+  font-size: 1.2rem;
+}
+
+.contact-panel__whatsapp:hover {
+  filter: brightness(0.95);
+  transform: translateY(-1px);
+}
+
+/* On the ink band the panel's copy flips to light; the icon tiles become
+   glassy so they don't punch holes in the dark ground. */
+.section--ink .contact-panel__heading,
+.section--ink .contact-panel__text {
+  color: var(--color-text-on-dark);
+}
+
+.section--ink .contact-panel__reasons,
+.section--ink .contact-panel__label {
+  color: var(--color-text-on-dark-70);
+}
+
+.section--ink .contact-panel__reasons i {
+  color: #4cc46a;
+}
+
+.section--ink .contact-panel__icon {
+  background: var(--color-surface-on-dark);
+  border-color: var(--color-border-on-dark);
+  color: var(--color-line);
+}
+
+.section--ink .contact-panel__text a:hover {
+  color: var(--color-line);
+}
+
+/* ICONS — Font Awesome glyphs placed across the site. */
+.footer-link.footer-link--icon {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.footer-link--icon i {
+  width: 1rem;
+  flex-shrink: 0;
+  text-align: center;
+  color: var(--color-line);
+}
+
+.social-icon i {
+  font-size: 0.875rem;
+}
+
+.whatsapp-fab i {
+  font-size: 1.75rem;
+}
+
+.catalog-search {
+  position: relative;
+}
+
+.catalog-search__icon {
+  position: absolute;
+  left: 0.95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.8rem;
+  color: var(--color-text-60);
+  pointer-events: none;
+}
+
+.catalog-search input {
+  padding-left: 2.3rem;
+}
+
+.product-card__thumb--icon i {
+  font-size: 1.25rem;
+}
+
+.product-card__more {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
 /* PRODUCT DETAIL */
 .breadcrumb {
   display: flex;
@@ -1821,9 +2150,61 @@ button {
   text-underline-offset: 0.2em;
 }
 
+.breadcrumb i {
+  font-size: 0.6rem;
+  opacity: 0.6;
+}
+
+/* Text-first: most products have no photo, so the page reads like a spec
+   sheet (model code as the headline, prose, a spec table) with a sticky
+   quote card alongside. A photo, when there is one, is just another block. */
+.product-detail__header {
+  max-width: 52rem;
+  padding-bottom: clamp(1.75rem, 4vw, 2.5rem);
+  margin-bottom: clamp(2rem, 4vw, 3rem);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.product-detail__eyebrow i {
+  color: var(--color-line);
+}
+
+.product-detail__eyebrow span {
+  font-weight: 500;
+  color: var(--color-text-60);
+}
+
+.product-detail__title {
+  margin-top: 0.85rem;
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  line-height: 1.1;
+  color: var(--color-primary);
+  text-wrap: balance;
+}
+
+/* A model code ("DA300") is set large, like a part number on a data plate. */
+.product-detail__title--code {
+  font-size: clamp(2.75rem, 7vw, 4.5rem);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.product-detail__tagline {
+  margin-top: 0.75rem;
+  font-family: var(--font-display);
+  font-stretch: 104%;
+  font-size: clamp(1.125rem, 2.2vw, 1.5rem);
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-text);
+  max-width: 40rem;
+}
+
 .product-detail__layout {
-  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-  gap: clamp(2rem, 5vw, 3.5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(17rem, 21rem);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
 }
 
 @media (max-width: 860px) {
@@ -1832,11 +2213,99 @@ button {
   }
 }
 
-/* The main image gets the same registration brackets as the banner plate.
-   They hang off the plate wrapper, not the column, so the thumbnail row below
-   never shifts them. */
+.product-detail__block + .product-detail__block {
+  margin-top: clamp(2.25rem, 4vw, 3rem);
+}
+
+.product-detail__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-60);
+}
+
+.product-detail__heading i {
+  color: var(--color-line);
+}
+
+.product-detail__text {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--color-text);
+  max-width: var(--measure);
+}
+
+/* Spec table: label / value rows on hairlines, zebra-tinted for scanning. */
+.spec-table {
+  margin: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-plate);
+  overflow: hidden;
+}
+
+.spec-table__row {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.7fr) 1.3fr;
+  gap: 1rem;
+  padding: 0.85rem 1.25rem;
+  font-size: var(--text-small);
+  line-height: 1.5;
+}
+
+.spec-table__row + .spec-table__row {
+  border-top: 1px solid var(--color-border);
+}
+
+.spec-table__row:nth-child(odd) {
+  background: var(--color-surface-muted);
+}
+
+.spec-table dt {
+  font-weight: 600;
+  color: var(--color-text-60);
+}
+
+.spec-table dd {
+  margin: 0;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+@media (max-width: 520px) {
+  .spec-table__row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.15rem;
+  }
+}
+
+.product-detail__points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.6rem;
+  color: var(--color-text);
+}
+
+.product-detail__points li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.65rem;
+}
+
+.product-detail__points i {
+  color: var(--color-accent-alt);
+}
+
+/* Photos, when present, keep the registration brackets of the banner plate. */
 .product-detail__plate {
   position: relative;
+  max-width: 40rem;
 }
 
 .product-detail__plate::before,
@@ -1905,35 +2374,164 @@ button {
   display: block;
 }
 
-.product-detail__title {
-  font-size: var(--text-h1);
-  color: var(--color-primary);
-  margin-top: 0.85rem;
+/* Sidebar: the quote card follows the reader down the page. */
+.product-detail__aside {
+  position: sticky;
+  top: 6rem;
+  display: grid;
+  gap: 1.25rem;
 }
 
-.product-detail__price {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-border);
+@media (max-width: 860px) {
+  .product-detail__aside {
+    position: static;
+  }
+}
+
+.quote-card {
+  position: relative;
+  padding: 1.75rem 1.5rem 1.5rem;
+  border-radius: var(--radius-plate);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-plate-raised);
+}
+
+.quote-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1.375rem;
+  height: 1.375rem;
+  border-top: 2px solid var(--color-line);
+  border-left: 2px solid var(--color-line);
+  border-top-left-radius: calc(var(--radius-plate) - 1px);
+  pointer-events: none;
+}
+
+.quote-card__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-60);
+}
+
+.quote-card__price {
+  margin-top: 0.25rem;
   font-family: var(--font-display);
   font-stretch: 104%;
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--color-primary);
-  max-width: var(--measure);
 }
 
-.product-detail__text {
-  margin-top: 1.25rem;
-  color: var(--color-text-60);
-  max-width: var(--measure);
+.quote-card__facts {
+  margin: 1.25rem 0 0;
+  border-top: 1px solid var(--color-border);
 }
 
-.product-detail__actions {
+.quote-card__facts > div {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 2.25rem;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-small);
+}
+
+.quote-card__facts dt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-60);
+}
+
+.quote-card__facts dt i {
+  width: 1rem;
+  text-align: center;
+  color: var(--color-line);
+}
+
+.quote-card__facts dd {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: right;
+}
+
+.quote-card__facts dd a:hover {
+  color: var(--color-accent-alt);
+}
+
+.quote-card__actions {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+.quote-card__actions > a {
+  justify-content: center;
+}
+
+.related-list {
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-plate);
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+}
+
+.related-list__title {
+  margin-bottom: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-text-60);
+}
+
+.related-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0;
+  color: var(--color-text);
+}
+
+.related-list__item + .related-list__item {
+  border-top: 1px solid var(--color-border);
+}
+
+.related-list__item > span {
+  display: grid;
+  min-width: 0;
+}
+
+.related-list__name {
+  font-weight: 600;
+  font-size: var(--text-small);
+  color: var(--color-primary);
+}
+
+.related-list__tail {
+  font-size: var(--text-micro);
+  color: var(--color-text-60);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.related-list__item i {
+  font-size: 0.75rem;
+  color: var(--color-text-60);
+  transition: transform 0.2s var(--ease-out), color 0.15s ease;
+}
+
+.related-list__item:hover i {
+  color: var(--color-accent-alt);
+  transform: translateX(3px);
 }
 
 /* FOOTER — ink, so the page closes on the same ground it opened on, with the

@@ -4,7 +4,7 @@ import SectionRenderer from "../../components/SectionRenderer.astro";
 import PageHero from "../../components/sections/PageHero.astro";
 import ProductCatalog from "../../components/ProductCatalog.astro";
 import { fetchData } from "../../functions/fetch";
-import { fetchAllProducts, fetchCategories } from "../../functions/catalog";
+import { fetchAllProducts, fetchCategories, fetchProductDetails } from "../../functions/catalog";
 import type { PageResponse } from "../../types/page";
 
 const pageResponse: PageResponse | undefined = await fetchData("pages/productos");
@@ -13,7 +13,15 @@ const sections = page?.sections ?? [];
 
 // The catalog is a data domain, not a section of this page: the CMS page only
 // carries the hero, and categories/products are managed as their own rows.
-const [categories, products] = await Promise.all([fetchCategories(), fetchAllProducts()]);
+const [categories, listing] = await Promise.all([fetchCategories(), fetchAllProducts()]);
+
+// Most products have no image, so the cards are built from text, and the
+// listing leaves out `description`; each product's detail fills it in.
+const details = await fetchProductDetails(listing);
+const products = listing.map((product) => ({
+  ...product,
+  description: details.get(product.slug)?.description ?? null,
+}));
 ---
 
 <Layout title={page?.title ?? "Productos"}>

@@ -1,45 +1,84 @@
 :root {
-  /* Fonts — swap the family names to rebrand; keep a system-ui fallback */
-  --font-display: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Fonts — per the brand manual: headings in "Quatro" (a commercial face not
+     available on the web — Poppins is the closest open alternative: same
+     geometric, full-contrast character, and it carries the Light↔Bold range
+     the manual asks headlines to mix). Body stays on Inter, which serves the
+     same "Helvetica/Arial for long text" role the manual specifies. */
+  --font-display: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
 
   /* Type scale — clamp(min, preferred, max) so headings stay fluid across viewports.
-     --text-h1 drives every page's main heading (hero, page hero, blog post title). */
+     --text-h1 drives every page's main heading (PageHero, hero slides, blog post title). */
   --text-h1: clamp(2rem, 5vw, 3rem);
   --text-h2: clamp(1.75rem, 3vw, 2.5rem);
   --text-h3: 1.125rem;
   --text-body: 1.0625rem;
   --text-small: 0.875rem;
-  --heading-font-weight: 700;
-  --heading-letter-spacing: -0.01em;
+  --heading-font-weight: 800;
+  --heading-letter-spacing: -0.02em;
 
-  /* Backgrounds — white canvas, alternating with a light slate tinted tile */
+  /* Backgrounds — true near-black canvas, alternating with a neutral parchment tile */
   --color-bg: #ffffff;
-  --color-bg-alt: #f8fafc;
-  --color-ink: #0b2545;
-  --color-ink-2: #304662;
-  --color-ink-3: #485c74;
+  --color-bg-alt: #f2f6f9;
+  /* Deep navy used by the dark bands, so they read as brand rather than plain black */
+  --color-navy: #061a2e;
+  --color-navy-2: #0b2a47;
+  --color-ink: #0a0a0b;
+  --color-ink-2: #141416;
+  --color-ink-3: #1c1c1e;
 
-  /* Brand (Blue Gas UI guidelines palette) */
-  --color-primary: #0082ca;
-  --color-primary-alt: #0068a2;
-  --color-primary-light: #b3daef;
-  --color-accent: #2b9cdb;
-  --color-primary-tint: #e6f3fa;
-  --color-primary-soft: rgba(0, 130, 202, 0.08);
+  /* Brand — per the identity manual's primary palette (p.11): blue + light/sky
+     blue are the only colors stated as "always primary," alongside gray and
+     white. The off-brand teal that used to live here (Pantone 7709) has been
+     retired site-wide — --color-primary is now the same primary brand blue
+     as --color-primary-alt, so every button/badge/icon that used to be teal
+     reads as on-brand blue instead, and any faded/tinted wash derives from
+     this blue rather than from an invented accent color. */
+  --color-primary: #1f5ca9; /* Blue, Pantone 286 — primary brand blue */
+  --color-primary-alt: #1f5ca9; /* Blue, Pantone 286 — primary brand blue */
+  --color-primary-light: #a9e3ff; /* Light blue, Pantone 2905 — secondary */
+  --color-accent: #27bff0; /* Light/sky blue, Pantone 298 — primary brand accent */
 
-  /* Secondary / functional accents */
-  --color-amber: #f5b025;
-  --color-purple: #5c2d83;
+  /* Secondary palette (manual p.13) — for charts, badges and small UI accents
+     only; the manual explicitly warns against using these as large fills. */
+  --color-secondary-blue: #0082d6;
+  --color-secondary-green: #48ad3e;
+  --color-secondary-green-dark: #128836;
+  --color-secondary-green-2: #029640;
 
-  /* Status */
-  --color-status-active: #44b77b;
-  --color-status-error: #e0483f;
+  /* Complementary palette (manual p.16) — reserved for specific promotional
+     campaigns and signage, not core site UI. Kept here so a future campaign
+     page can reach for an on-brand color instead of an arbitrary one. */
+  --color-complementary-yellow: #ffd100;
+  --color-complementary-orange: #ee7203;
+  --color-complementary-coral: #ea4f5f;
+  --color-complementary-red: #fa0032;
+  --color-complementary-magenta: #b82585;
+  --color-complementary-purple: #7f328a;
+  --color-complementary-violet: #5b08a4;
 
-  /* Text on light backgrounds */
-  --color-text: #0f172a;
-  --color-text-60: rgba(15, 23, 42, 0.64);
-  --color-text-40: rgba(15, 23, 42, 0.44);
+  /* Grayscale (manual p.14) — the brand's own neutral scale, for whenever a
+     true gray reads better than an opacity-faded --color-text. */
+  --color-gray: #929292; /* flat mid-gray, Pantone 444 — also a primary color */
+  --color-slate-900: #3c484d;
+  --color-slate-700: #6a767d;
+  --color-slate-500: #96a3a8;
+  --color-slate-300: #c2cacf;
+  --color-slate-100: #dfe4e8;
+
+  /* Status — brand green/red standing in for generic success/error, so even
+     these small indicators stay on-palette. */
+  --color-status-active: #029640;
+  --color-status-error: #fa0032;
+
+  /* Text on light backgrounds. --color-text-60 clears AA at 4.74:1, which is
+     thin for small copy, so body text that carries meaning (card paragraphs,
+     list descriptions) uses --color-text-75 at 6.7:1 instead; -60 and -40 stay
+     for labels, captions and other supporting type. */
+  --color-text: #1d1d1f;
+  --color-text-75: rgba(29, 29, 31, 0.75);
+  --color-text-60: rgba(29, 29, 31, 0.62);
+  --color-text-40: rgba(29, 29, 31, 0.42);
 
   /* Text on dark backgrounds */
   --color-text-on-dark: #ffffff;
@@ -47,26 +86,40 @@
   --color-text-on-dark-45: rgba(255, 255, 255, 0.45);
 
   /* Borders / surfaces */
-  --color-border: rgba(11, 37, 69, 0.12);
-  --color-border-hover: rgba(11, 37, 69, 0.28);
+  --color-border: rgba(29, 29, 31, 0.1);
+  --color-border-hover: rgba(29, 29, 31, 0.2);
   --color-border-on-dark: rgba(255, 255, 255, 0.14);
   --color-surface-on-dark: rgba(255, 255, 255, 0.06);
-  --color-surface: #ffffff;
 
-  /* Radius — pill for actions, lg for utility cards */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  /* Radius — pill for actions, lg for utility cards, none for full-bleed tiles */
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.75rem;
+  --radius-xl: 2.5rem;
   --radius-full: 999px;
 
-  /* Shadows */
-  --shadow-float: 0 20px 45px -18px rgba(11, 37, 69, 0.35);
-  --shadow-cta: 0 10px 30px -8px rgba(0, 104, 162, 0.45);
-  --shadow-card: 0 4px 20px -6px rgba(11, 37, 69, 0.12);
-  --shadow-glow-primary: 0 0 20px rgba(0, 130, 202, 0.25);
-  --shadow-glow-success: 0 0 20px rgba(68, 183, 123, 0.25);
+  /* The one reserved elevation — used only where content "rests" on a tile */
+  --shadow-float: 0 24px 48px -20px rgba(0, 0, 0, 0.4);
+  --shadow-soft: 0 1px 2px rgba(6, 26, 46, 0.06), 0 12px 32px -18px rgba(6, 26, 46, 0.28);
+  --shadow-glow: 0 14px 34px -10px rgba(39, 191, 240, 0.55);
+
+  /* Brand gradient — brand teal into the primary sky-blue accent */
+  --gradient-brand: linear-gradient(120deg, var(--color-primary) 0%, var(--color-accent) 100%);
+  --gradient-ink: linear-gradient(160deg, var(--color-navy) 0%, var(--color-ink) 70%);
+
+  /* Section rhythm — one value so every band breathes the same */
+  --section-space: clamp(3rem, 6vw, 4.5rem);
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* gas-gnu only — names this site's own components use, mapped onto the
+     shared landing-gnu palette above so they read as the same brand. */
+  --color-surface: #ffffff;
+  --color-primary-soft: rgba(31, 92, 169, 0.08);
+  --color-primary-tint: #e8f0f9;
+  --color-amber: var(--color-complementary-yellow);
+  --color-purple: var(--color-complementary-purple);
+  --shadow-card: var(--shadow-soft);
+  --shadow-cta: var(--shadow-glow);
 }

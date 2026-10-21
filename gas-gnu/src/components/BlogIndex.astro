@@ -1,4 +1,6 @@
 ---
+import BalancedGrid from "./BalancedGrid.astro";
+import CardBadge from "./CardBadge.astro";
 // One page of the blog listing. The site is built statically, so a `?page=`
 // query string never reaches the build — each page of `GET blog` gets its own
 // route instead: /blog for the first, /blog/pagina/{n} for the rest.
@@ -37,7 +39,7 @@ const heroImage = hero?.image ? mediaUrl(hero.image) : null;
   <main>
     <PageHero title={heroTitle} subtitle={heroSubtitle} image={hero?.image} />
 
-    <section class="section zebra">
+    <section class="section">
       <div class="container">
         {posts.length ? (
           <>
@@ -47,7 +49,7 @@ const heroImage = hero?.image ? mediaUrl(hero.image) : null;
                 {meta.last_page > 1 && ` · Página ${meta.page} de ${meta.last_page}`}
               </p>
             )}
-            <div class="grid grid--3">
+            <BalancedGrid count={posts.length}>
               {posts.map((post, index) => (
                 <a
                   href={`/blog/${post.slug}`}
@@ -63,6 +65,7 @@ const heroImage = hero?.image ? mediaUrl(hero.image) : null;
                     />
                   </div>
                   <div class="blog-card__body">
+                    <CardBadge />
                     <p class="blog-card__tag"><time datetime={post.published_at}>{formatDate(post.published_at)}</time></p>
                     <p class="blog-card__title">{post.title}</p>
                     {post.excerpt && <p class="blog-card__excerpt">{post.excerpt}</p>}
@@ -70,7 +73,7 @@ const heroImage = hero?.image ? mediaUrl(hero.image) : null;
                   </div>
                 </a>
               ))}
-            </div>
+            </BalancedGrid>
 
             {meta.last_page > 1 && (
               <nav class="pagination" aria-label="Páginas del blog">

@@ -1,0 +1,83 @@
+---
+// A `lead_capture_form` laid out as landing-gnu's contact band: the pitch
+// (and, where the page already shows them, the site-wide contact details) on
+// one side, the form card on the other. Without a `heading` the band carries
+// only the form card, centered — the generic CMS pages, whose form has no
+// separate pitch.
+import LeadCaptureForm from "./LeadCaptureForm.astro";
+import ContactInfo from "./ContactInfo.astro";
+import customerServiceIcon from "../../assets/images/customer-service-agent-icon-vector.jpg";
+import { getGlobals, whatsappHref } from "../../lib/cms";
+
+interface Props {
+  // Left column; omitted → form card only.
+  heading?: string | null;
+  intro?: string | null;
+  showContactInfo?: boolean;
+  // The form card itself.
+  formTitle?: string | null;
+  formIntro?: string | null;
+  submit_label?: string | null;
+  fields?: string[];
+  formId?: string;
+  source?: string | null;
+  id?: string;
+}
+
+const {
+  heading,
+  intro,
+  showContactInfo = false,
+  formTitle,
+  formIntro,
+  submit_label,
+  fields,
+  formId = "lead-form",
+  source = null,
+  id,
+} = Astro.props;
+
+const globals = showContactInfo ? await getGlobals() : null;
+const contactInfo = globals?.contact_info;
+const whatsapp = globals ? whatsappHref(globals) : null;
+---
+
+<section class="section lead-band texture-dots" id={id}>
+  <div class="lead-band__glow" aria-hidden="true"></div>
+  <div class="container">
+    {heading ? (
+      <div class="contact-layout">
+        <div class="lead-band__aside">
+          <div class="lead-band__intro">
+            <img class="contact-agent-icon" src={customerServiceIcon.src} alt="" />
+            <div>
+              <span class="eyebrow">Contacto</span>
+              <h2 class="section-title">{heading}</h2>
+            </div>
+          </div>
+          {intro && <p class="section-subtitle">{intro}</p>}
+          {contactInfo && <ContactInfo {...contactInfo} whatsappHref={whatsapp} inline />}
+        </div>
+        <LeadCaptureForm
+          formId={formId}
+          title={formTitle ?? "Cotiza sin compromiso"}
+          intro={formIntro}
+          submit_label={submit_label ?? "Enviar mensaje"}
+          fields={fields}
+          source={source ?? undefined}
+        />
+      </div>
+    ) : (
+      <div class="lead-band__solo">
+        <LeadCaptureForm
+          formId={formId}
+          title={formTitle ?? "Cotiza sin compromiso"}
+          intro={formIntro}
+          submit_label={submit_label ?? "Enviar mensaje"}
+          fields={fields}
+          source={source ?? undefined}
+        />
+      </div>
+    )}
+  </div>
+</section>

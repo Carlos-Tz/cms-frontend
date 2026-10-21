@@ -1,9 +1,10 @@
 ---
 import Layout from "../../layouts/Layout.astro";
 import LeadCaptureForm from "../../components/sections/LeadCaptureForm.astro";
-import { fetchAllProducts, fetchProduct, formatPrice } from "../../functions/catalog";
-import { mediaUrl, FALLBACK_IMAGE } from "../../functions/fetch";
-import type { Product } from "../../types/catalog";
+import ContactPanel from "../../components/ContactPanel.astro";
+import { fetchAllProducts, fetchProduct, formatPrice, parseDescription, splitLabel } from "../../functions/catalog";
+import { mediaUrl } from "../../functions/fetch";
+import type { Product, ProductListItem } from "../../types/catalog";
 
 // One page per active product. Inactive ones never reach here: they're absent
 // from the listing, and their detail endpoint 404s.
@@ -12,12 +13,18 @@ export async function getStaticPaths() {
 
   return products.map((product) => ({
     params: { slug: product.slug },
-    props: { listing: product },
+    props: {
+      listing: product,
+      // Other equipment from the same product line, for the "see also" list.
+      related: products
+        .filter((other) => other.slug !== product.slug && other.category?.slug === product.category?.slug)
+        .slice(0, 4),
+    },
   }));
 }
 
 const { slug } = Astro.params;
-const { listing } = Astro.props;
+const { listing, related } = Astro.props as { listing: ProductListItem; related: ProductListItem[] };
 
 // The listing omits `description` and keeps only the first image, so the
 // detail endpoint is what fills the page. Falls back to the listing fields if
@@ -29,85 +36,185 @@ const product: Product = detail ?? listing;
 const gallery: string[] = product.images?.length
   ? product.images
   : ([listing?.image].filter(Boolean) as string[]);
-const description = product.description?.trim();
+
+// Text-first: most products have no photo, so the page is built from the name
+// ("CODE | tagline") and the description, which is a spec-sheet paste —
+// prose, then "• Label: value" bullets that become the spec table.
+const { head, tail } = splitLabel(product.name);
+const category = product.category?.name ? splitLabel(product.category.name) : null;
+const { summary, specs, points } = parseDescription(product.description);
+const hasPrice = product.price !== null && product.price !== "";
+// Only server text describes a product; with no description the meta tag
+// falls back to the name rather than to copy written here.
+const metaDescription = summary || product.name;
 ---
 
-<Layout
-  title={product.name}
-  description={description || `${product.name} — ${product.category?.name ?? "equipo industrial"} para gas natural.`}
-  image={gallery[0] ? mediaUrl(gallery[0]) : undefined}
->
+<Layout title={product.name} description={metaDescription} image={gallery[0] ? mediaUrl(gallery[0]) : undefined}>
   <section class="section product-detail">
     <div class="container">
       <nav class="breadcrumb" aria-label="Ruta de navegación">
         <a href="/productos">Productos</a>
         {product.category?.slug && (
           <>
-            <span aria-hidden="true">/</span>
-            <a href={`/productos?category=${product.category.slug}`}>{product.category.name}</a>
+            <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+            <a href={`/productos?category=${product.category.slug}`}>{category?.head}</a>
           </>
         )}
-        <span aria-hidden="true">/</span>
-        <span aria-current="page">{product.name}</span>
+        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+        <span aria-current="page">{head}</span>
       </nav>
 
-      <div class="split product-detail__layout">
-        <div class="product-detail__media">
-          <div class="product-detail__plate">
-            <img
-              class="product-detail__image"
-              id="product-image"
-              src={gallery[0] ? mediaUrl(gallery[0]) : FALLBACK_IMAGE}
-              alt={product.name}
-              width="720"
-              height="540"
-            />
-          </div>
-          {gallery.length > 1 && (
-            <div class="product-detail__thumbs" role="group" aria-label="Imágenes del producto">
-              {gallery.map((image, index) => (
-                <button
-                  type="button"
-                  class:list={["product-detail__thumb", { "is-active": index === 0 }]}
-                  data-product-thumb={mediaUrl(image)}
-                  aria-label={`Ver imagen ${index + 1} de ${product.name}`}
-                >
-                  <img src={mediaUrl(image)} alt="" loading="lazy" width="120" height="90" />
-                </button>
-              ))}
+      <header class="product-detail__header">
+        {category && (
+          <p class="eyebrow product-detail__eyebrow">
+            <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+            {category.head}{category.tail && <span> · {category.tail}</span>}
+          </p>
+        )}
+        <h1 class:list={["product-detail__title", { "product-detail__title--code": tail }]}>{head}</h1>
+        {tail && <p class="product-detail__tagline">{tail}</p>}
+      </header>
+
+      <div class="product-detail__layout">
+        <div class="product-detail__main">
+          {summary && (
+            <section class="product-detail__block" aria-labelledby="pd-overview">
+              <h2 class="product-detail__heading" id="pd-overview">
+                <i class="fa-solid fa-align-left" aria-hidden="true"></i>Descripción
+              </h2>
+              <p class="product-detail__text">{summary}</p>
+            </section>
+          )}
+
+          {specs.length > 0 && (
+            <section class="product-detail__block" aria-labelledby="pd-specs">
+              <h2 class="product-detail__heading" id="pd-specs">
+                <i class="fa-solid fa-list-check" aria-hidden="true"></i>Especificaciones
+              </h2>
+              <dl class="spec-table">
+                {specs.map((spec) => (
+                  <div class="spec-table__row">
+                    <dt>{spec.label}</dt>
+                    <dd>{spec.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          )}
+
+          {points.length > 0 && (
+            <section class="product-detail__block" aria-labelledby="pd-points">
+              <h2 class="product-detail__heading" id="pd-points">
+                <i class="fa-solid fa-circle-check" aria-hidden="true"></i>Características
+              </h2>
+              <ul class="product-detail__points">
+                {points.map((point) => (
+                  <li><i class="fa-solid fa-check" aria-hidden="true"></i>{point}</li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {gallery.length > 0 && (
+            <section class="product-detail__block" aria-labelledby="pd-gallery">
+              <h2 class="product-detail__heading" id="pd-gallery">
+                <i class="fa-solid fa-image" aria-hidden="true"></i>Imágenes
+              </h2>
+              <div class="product-detail__plate">
+                <img
+                  class="product-detail__image"
+                  id="product-image"
+                  src={mediaUrl(gallery[0])}
+                  alt={product.name}
+                  width="720"
+                  height="540"
+                  loading="lazy"
+                />
+              </div>
+              {gallery.length > 1 && (
+                <div class="product-detail__thumbs" role="group" aria-label="Imágenes del producto">
+                  {gallery.map((image, index) => (
+                    <button
+                      type="button"
+                      class:list={["product-detail__thumb", { "is-active": index === 0 }]}
+                      data-product-thumb={mediaUrl(image)}
+                      aria-label={`Ver imagen ${index + 1} de ${product.name}`}
+                    >
+                      <img src={mediaUrl(image)} alt="" loading="lazy" width="120" height="90" />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+        </div>
+
+        <aside class="product-detail__aside">
+          <div class="quote-card">
+            <p class="quote-card__label">Precio</p>
+            <p class="quote-card__price">{hasPrice ? formatPrice(product.price) : "A cotizar"}</p>
+
+            <dl class="quote-card__facts">
+              {tail && (
+                <div>
+                  <dt><i class="fa-solid fa-tag" aria-hidden="true"></i>Modelo</dt>
+                  <dd>{head}</dd>
+                </div>
+              )}
+              {category && product.category?.slug && (
+                <div>
+                  <dt><i class="fa-solid fa-layer-group" aria-hidden="true"></i>Línea</dt>
+                  <dd><a href={`/productos?category=${product.category.slug}`}>{category.head}</a></dd>
+                </div>
+              )}
+              {specs.length > 0 && (
+                <div>
+                  <dt><i class="fa-solid fa-list-check" aria-hidden="true"></i>Especificaciones</dt>
+                  <dd>{specs.length}</dd>
+                </div>
+              )}
+            </dl>
+
+            <div class="quote-card__actions">
+              <a class="btn-primary" href="#cotizar">
+                <i class="fa-solid fa-file-invoice-dollar" aria-hidden="true"></i>Cotizar ahora
+              </a>
+              <a class="btn-secondary" href="/productos">
+                <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i>Ver catálogo
+              </a>
             </div>
-          )}
-        </div>
-
-        <div>
-          {product.category?.name && <p class="eyebrow">{product.category.name}</p>}
-          <h1 class="product-detail__title">{product.name}</h1>
-          <p class="product-detail__price">{formatPrice(product.price)}</p>
-
-          {description ? (
-            <p class="product-detail__text">{description}</p>
-          ) : (
-            <p class="product-detail__text">
-              Escríbenos para recibir la ficha técnica y las especificaciones de este equipo.
-            </p>
-          )}
-
-          <div class="product-detail__actions">
-            <a class="btn-primary" href="#cotizar">Cotizar ahora</a>
-            <a class="btn-secondary" href="/productos">Ver todo el catálogo</a>
           </div>
-        </div>
+
+          {related.length > 0 && (
+            <nav class="related-list" aria-label={`Más equipos de ${category?.head ?? "esta línea"}`}>
+              <p class="related-list__title">Más de {category?.head ?? "esta línea"}</p>
+              {related.map((item) => {
+                const label = splitLabel(item.name);
+                return (
+                  <a class="related-list__item" href={`/productos/${item.slug}`}>
+                    <span>
+                      <span class="related-list__name">{label.head}</span>
+                      {label.tail && <span class="related-list__tail">{label.tail}</span>}
+                    </span>
+                    <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                  </a>
+                );
+              })}
+            </nav>
+          )}
+        </aside>
       </div>
     </div>
   </section>
 
   <section class="section section--ink" id="cotizar">
-    <div class="container container--narrow">
+    <div class="container contact-split">
+      <ContactPanel heading="Cotiza con un especialista" />
       <LeadCaptureForm
         formId="product-lead-form"
         source="productos"
         title="Solicita una cotización"
-        intro={`Cuéntanos qué necesitas de ${product.name} y un asesor te contacta.`}
+        intro={`Cuéntanos qué necesitas de ${head} y un asesor te contacta.`}
         submit_label="Enviar solicitud"
       />
     </div>

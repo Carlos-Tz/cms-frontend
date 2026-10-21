@@ -3,6 +3,7 @@ import Layout from "../../layouts/Layout.astro";
 import SectionRenderer from "../../components/SectionRenderer.astro";
 import PageHero from "../../components/sections/PageHero.astro";
 import LeadCaptureForm from "../../components/sections/LeadCaptureForm.astro";
+import ContactPanel from "../../components/ContactPanel.astro";
 import { fetchData } from "../../functions/fetch";
 import type { PageResponse } from "../../types/page";
 
@@ -16,7 +17,8 @@ const sections = page?.sections ?? [];
     <>
       <PageHero title="Contacto" subtitle="Estamos para ayudarte." />
       <section class="section" id="contacto">
-        <div class="container container--narrow">
+        <div class="container contact-split">
+          <ContactPanel />
           <LeadCaptureForm
             formId="contacto-lead-form"
             source="contacto"

@@ -1,5 +1,6 @@
 ---
 import { mediaUrl } from "../../functions/fetch";
+import { isGif } from "../../lib/media";
 
 interface Props {
   title: string;
@@ -9,12 +10,27 @@ interface Props {
 
 const { title, subtitle, image } = Astro.props;
 const heroImage = image ? mediaUrl(image) : null;
+const heroIsGif = heroImage ? isGif(heroImage) : false;
 ---
 
-<section class="page-hero">
-  {heroImage && <img class="page-hero__img" src={heroImage} alt="" />}
-  <div class="page-hero__scrim" aria-hidden="true"></div>
+<section class:list={["page-hero", "texture-grain", { "page-hero--image": heroImage, "page-hero--gif": heroIsGif }]}>
+  {heroIsGif && (
+    // Same as the home carousel: a blurred copy fills the strips around the
+    // GIF, which is shown whole instead of cropped.
+    <img class="hero-slide__img-fill" src={heroImage} alt="" aria-hidden="true" />
+  )}
+  {heroImage && <img class:list={["page-hero__img", { "page-hero__img--gif": heroIsGif }]} src={heroImage} alt="" />}
+  {/* The blurred color blobs are a nice wash over a plain background, but
+      over a real photo they just read as a smoky haze obscuring it — only
+      rendered when there's no image underneath. */}
+  {!heroImage && (
+    <div class="aurora aurora--soft" aria-hidden="true">
+      <span class="aurora__blob aurora__blob--1"></span>
+      <span class="aurora__blob aurora__blob--2"></span>
+    </div>
+  )}
   <div class="container page-hero__content">
+    <span class="page-hero__rule" aria-hidden="true"></span>
     <h1 class="page-hero__title">{title}</h1>
     {subtitle && <p class="page-hero__subtitle">{subtitle}</p>}
   </div>

@@ -1,9 +1,12 @@
 ---
+import BalancedGrid from "../../components/BalancedGrid.astro";
+import CardBadge from "../../components/CardBadge.astro";
 import Layout from "../../layouts/Layout.astro";
 import noImg from "../../assets/images/noimg.jpg";
 import { mediaUrl } from "../../functions/fetch";
 import { seo } from "../../config/seo";
 import { getAllBlogPosts, getBlogPost } from "../../lib/cms";
+import { normalizeRichText, readingMinutes } from "../../lib/richText";
 
 export async function getStaticPaths() {
   const posts = await getAllBlogPosts();
@@ -21,6 +24,11 @@ const formatDate = (value: string) =>
   new Date(value).toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" });
 
 const coverUrl = post?.cover_image ? mediaUrl(post.cover_image) : null;
+
+// Pasted articles get their paragraphs and subheadings back (lib/richText.ts);
+// the recovered h2s feed the "En este artículo" index.
+const article = normalizeRichText(post?.body, { recoveredHeading: "h2", collectHeadings: true });
+const minutes = readingMinutes(article.words);
 const articleJsonLd = post
   ? {
       "@context": "https://schema.org",
@@ -46,25 +54,39 @@ const articleJsonLd = post
   <main>
     {post ? (
       <>
-        <article class="section zebra">
+        <article class="section">
           <div class="container blog-post">
             <a class="blog-post__back" href="/blog">← Volver al blog</a>
-            <p class="blog-card__tag"><time datetime={post.published_at}>{formatDate(post.published_at)}</time></p>
+            <p class="blog-card__tag blog-post__meta">
+              <time datetime={post.published_at}>{formatDate(post.published_at)}</time>
+              <span aria-hidden="true">·</span>
+              <span>{minutes} min de lectura</span>
+            </p>
             <h1 class="blog-post__title">{post.title}</h1>
             {post.excerpt && <p class="blog-post__lead">{post.excerpt}</p>}
             <img class="blog-post__cover" src={coverUrl ?? noImg.src} alt="" />
-            <div class="blog-post__body prose" set:html={post.body} />
+            {article.headings.length >= 2 && (
+              <nav class="blog-post__toc" aria-labelledby="toc-title">
+                <p class="blog-post__toc-title" id="toc-title">En este artículo</p>
+                <ol>
+                  {article.headings.map((heading) => (
+                    <li><a href={`#${heading.id}`}>{heading.text}</a></li>
+                  ))}
+                </ol>
+              </nav>
+            )}
+            <div class="blog-post__body prose prose--article" set:html={article.html} />
           </div>
         </article>
 
         {morePosts.length > 0 && (
-          <section class="section zebra">
+          <section class="section section--alt">
             <div class="container">
               <div class="section-head section-head--center">
                 <span class="eyebrow">Sigue leyendo</span>
                 <h2 class="section-title">Más artículos</h2>
               </div>
-              <div class="grid grid--3">
+              <BalancedGrid count={morePosts.length}>
                 {morePosts.map((other) => (
                   <a href={`/blog/${other.slug}`} class="blog-card service-card">
                     <div class="service-card__media">
@@ -76,6 +98,7 @@ const articleJsonLd = post
                       />
                     </div>
                     <div class="blog-card__body">
+                      <CardBadge />
                       <p class="blog-card__tag"><time datetime={other.published_at}>{formatDate(other.published_at)}</time></p>
                       <p class="blog-card__title">{other.title}</p>
                       {other.excerpt && <p class="blog-card__excerpt">{other.excerpt}</p>}
@@ -83,7 +106,7 @@ const articleJsonLd = post
                     </div>
                   </a>
                 ))}
-              </div>
+              </BalancedGrid>
             </div>
           </section>
         )}

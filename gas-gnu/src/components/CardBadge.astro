@@ -1,0 +1,25 @@
+---
+// Arrow badge on the top corner of the card panels. Decorative: the card
+// itself carries the link, when there is one.
+// - "round" (default): the round image badge on the linked .service-card.
+// - "small": a small round badge drawn in CSS, on the feature
+//   .card--photo cards.
+import { Image } from "astro:assets";
+import badge from "../assets/images/Texto_del_párrafo__1_-removebg-preview.png";
+
+interface Props {
+  variant?: "round" | "small";
+}
+
+const { variant = "round" } = Astro.props;
+---
+
+{variant === "small" ? (
+  <span class="card-badge card-badge--small" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 17 17 7M8 7h9v9" />
+    </svg>
+  </span>
+) : (
+  <Image class="card-badge" src={badge} alt="" aria-hidden="true" widths={[56, 112]} sizes="3.5rem" />
+)}

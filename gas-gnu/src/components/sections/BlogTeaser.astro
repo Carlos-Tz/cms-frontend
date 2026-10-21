@@ -1,7 +1,10 @@
 ---
-// The newest posts from `GET blog`, linking to their real pages.
+// The newest posts from `GET blog`, linking to their real pages — in the
+// same linked image cards as the blog index (landing-gnu's card style).
 import { mediaUrl } from "../../functions/fetch";
 import noImg from "../../assets/images/noimg.jpg";
+import BalancedGrid from "../BalancedGrid.astro";
+import CardBadge from "../CardBadge.astro";
 import type { BlogPostSummary } from "../../lib/cms";
 
 interface Props {
@@ -16,29 +19,35 @@ const formatDate = (value: string) =>
 ---
 
 {posts.length > 0 && (
-  <section class="section zebra" id="blog">
+  <section class="section" id="blog">
     <div class="container">
-      <div class="section-head blog-teaser__head">
-        <div>
-          <span class="eyebrow">Blog</span>
-          <h2 class="section-title">{title ?? "Aprende más sobre el GNV"}</h2>
-        </div>
-        <a class="btn-secondary btn-secondary--compact" href="/blog">Ver todo el blog</a>
+      <div class="section-head section-head--center">
+        <span class="eyebrow">Blog</span>
+        <h2 class="section-title">{title ?? "Aprende más sobre el GNV"}</h2>
       </div>
-      <div class="grid grid--3">
+      <BalancedGrid count={posts.length}>
         {posts.map((post) => (
           <a class="blog-card service-card" href={`/blog/${post.slug}`}>
             <div class="service-card__media">
               <img class="blog-card__cover" src={post.cover_image ? mediaUrl(post.cover_image) : noImg.src} alt="" loading="lazy" />
             </div>
             <div class="blog-card__body">
-              <span class="blog-card__tag"><time datetime={post.published_at}>{formatDate(post.published_at)}</time></span>
+              <CardBadge />
+              <p class="blog-card__tag"><time datetime={post.published_at}>{formatDate(post.published_at)}</time></p>
               <h3 class="blog-card__title">{post.title}</h3>
               {post.excerpt && <p class="blog-card__excerpt">{post.excerpt}</p>}
               <span class="blog-card__link">Leer más <span class="service-card__arrow" aria-hidden="true">→</span></span>
             </div>
           </a>
         ))}
+      </BalancedGrid>
+      <div class="blog-teaser__cta">
+        <a class="btn-secondary" href="/blog">
+          Ver todo el blog
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6" />
+          </svg>
+        </a>
       </div>
     </div>
   </section>

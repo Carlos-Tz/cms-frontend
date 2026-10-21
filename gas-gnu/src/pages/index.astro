@@ -1,7 +1,8 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import FeatureGrid from "../components/sections/FeatureGrid.astro";
-import LeadCaptureForm from "../components/sections/LeadCaptureForm.astro";
+import ContactBand from "../components/sections/ContactBand.astro";
+import StatsBand from "../components/sections/StatsBand.astro";
 import RewardsProgram from "../components/sections/RewardsProgram.astro";
 import Testimonials from "../components/sections/Testimonials.astro";
 import LocationsList from "../components/sections/LocationsList.astro";
@@ -10,7 +11,8 @@ import ClientsShowcase from "../components/sections/ClientsShowcase.astro";
 import StationsMap from "../components/sections/StationsMap.astro";
 import HeroCarousel from "../components/sections/HeroCarousel.astro";
 import SavingsSimulator from "../components/sections/SavingsSimulator.astro";
-import ChildPageCards from "../components/ChildPageCards.astro";
+import RichText from "../components/sections/RichText.astro";
+import ServiceCards from "../components/ServiceCards.astro";
 import { mediaUrl } from "../functions/fetch";
 import { getBlogList, getPage, sectionOf } from "../lib/cms";
 
@@ -35,6 +37,20 @@ const latestPosts = (await getBlogList(1))?.posts.slice(0, 3) ?? [];
 // The first banner is what the page opens on, so it is also its social preview.
 const firstSlide = bannerCarousel?.slides?.[0];
 const socialImage = firstSlide?.image ? mediaUrl(firstSlide.image) : undefined;
+
+// Hardcoded until `pages/inicio` gets its own rich_text section in the CMS
+// (technical_debt.md §2). Same shape as that section's content, so moving it
+// is a matter of reading `sectionOf(page, "rich_text")` instead.
+const introRichText = {
+  title: "Haz que cada kilómetro te cueste menos",
+  body: `
+    <p>Si utilizas tu vehículo todos los días, el combustible representa una parte importante de tus gastos. Con Gas Natural Vehicular puedes incorporar una alternativa que te ayude a optimizar ese consumo y aprovechar mejor cada recorrido.</p>
+    <p>En GNU te acompañamos para dar el paso al GNV: evaluamos tu vehículo, realizamos la conversión y te brindamos seguimiento para que aproveches sus beneficios con seguridad y confianza.</p>
+    <p>Tu vehículo conserva su sistema original de gasolina y se convierte en bi-fuel, por lo que puedes utilizar GNV o gasolina de acuerdo con las necesidades de tu recorrido.</p>
+    <h3>¿Quieres saber cuánto podrías ahorrar?</h3>
+    <p>Ingresa algunos datos de tu recorrido y descubre el ahorro estimado que podrías generar al utilizar Gas Natural Vehicular.</p>
+  `,
+};
 
 // Offline fallbacks, used only when `pages/inicio` is unreachable at build time.
 const fallbackServices = [
@@ -67,13 +83,17 @@ const fallbackLocations = [
   <main id="inicio">
     <HeroCarousel slides={bannerCarousel?.slides} />
 
-    <div class="hero-stats">
-      <div class="container hero-stats__inner">
-        <div class="hero-stats__item"><strong class="count-up" data-target="5000" data-prefix="+">+5,000</strong><span>equipos instalados</span></div>
-        <div class="hero-stats__item"><strong class="count-up" data-target="60" data-suffix="%">60%</strong><span>ahorro promedio</span></div>
-        <div class="hero-stats__item"><strong>24/7</strong><span>estaciones activas</span></div>
-      </div>
-    </div>
+    <StatsBand
+      stats={[
+        { value: 5000, prefix: "+", label: "equipos instalados" },
+        { value: 60, suffix: "%", label: "ahorro promedio" },
+        { value: 0, display: "24/7", label: "estaciones activas" },
+      ]}
+      cta={{ label: "Conoce nuestros servicios", href: "#servicios" }}
+    />
+
+    <!-- Hardcoded: `pages/inicio` carries no rich_text section — see technical_debt.md §2 -->
+    <RichText title={introRichText.title} body={introRichText.body} />
 
     <!-- Simulador de ahorro -->
     <SavingsSimulator
@@ -84,13 +104,13 @@ const fallbackLocations = [
     />
 
     <!-- Nuestros Servicios: the real service pages, each card from its own hero -->
-    <section class="section zebra" id="servicios">
+    <section class="section" id="servicios">
       <div class="container">
         <div class="section-head section-head--center">
           <span class="eyebrow">Nuestros servicios</span>
           <h2 class="section-title">Todo lo que necesitas para moverte con GNV</h2>
         </div>
-        <ChildPageCards parent="nuestros-servicios" fallback={fallbackServices} variant="accordion" />
+        <ServiceCards parent="nuestros-servicios" fallback={fallbackServices} />
       </div>
     </section>
 
@@ -98,11 +118,11 @@ const fallbackLocations = [
     <ClientsShowcase title={clientsShowcase?.title} logos={clientsShowcase?.logos} />
 
     <!-- Programa de recompensas -->
-    {rewardsGrid?.items?.length ? (
+    <!-- {rewardsGrid?.items?.length ? (
       <FeatureGrid id="recompensas" title={rewardsGrid.title} items={rewardsGrid.items} />
     ) : (
       <RewardsProgram benefits={fallbackBenefits} cta_label="Quiero inscribirme" cta_url="/#contacto" />
-    )}
+    )} -->
 
     <!-- Testimoniales -->
     <Testimonials
@@ -120,39 +140,19 @@ const fallbackLocations = [
     <!-- Blog: the newest real posts -->
     <BlogTeaser posts={latestPosts} />
 
-    <!-- Contacto -->
-    <section class="section zebra" id="contacto">
-      <div class="container contacto-grid">
-        <div>
-          <span class="eyebrow">Contacto</span>
-          <h2 class="section-title">Hablemos de tu conversión a GNV</h2>
-          <p class="section-subtitle">
-            Escríbenos para recibir tu cotización, agendar una verificación o resolver dudas sobre facturación.
-          </p>
-        </div>
-        <LeadCaptureForm
-          formId="home-lead-form"
-          title={leadCaptureForm?.title ?? "Cotiza sin compromiso"}
-          intro={leadCaptureForm?.intro}
-          submit_label={leadCaptureForm?.submit_label ?? "Enviar mensaje"}
-          fields={leadCaptureForm?.fields}
-          source={page?.slug ?? "inicio"}
-        />
-      </div>
-    </section>
+    <!-- Contacto: landing-gnu's contact band — the CMS title/intro and the
+         site-wide contact details on the left, the form card on the right. -->
+    <ContactBand
+      id="contacto"
+      heading={leadCaptureForm?.title ?? "Hablemos de tu conversión a GNV"}
+      intro={leadCaptureForm?.intro ?? "Escríbenos para recibir tu cotización, agendar una verificación o resolver dudas sobre facturación."}
+      showContactInfo
+      formTitle="Cotiza sin compromiso"
+      submit_label={leadCaptureForm?.submit_label ?? "Enviar mensaje"}
+      fields={leadCaptureForm?.fields}
+      formId="home-lead-form"
+      source={page?.slug ?? "inicio"}
+    />
   </main>
 </Layout>
 
-<style>
-  .contacto-grid {
-    display: grid;
-    gap: 3rem;
-  }
-
-  @media (min-width: 860px) {
-    .contacto-grid {
-      grid-template-columns: 1fr 1fr;
-      align-items: start;
-    }
-  }
-</style>

@@ -1,4 +1,5 @@
 ---
+import logo from "../../assets/images/logo-blue.png";
 import { BASE_URL } from "../../functions/fetch";
 
 type ContactFieldType = "text" | "email" | "tel" | "number" | "textarea";
@@ -34,7 +35,8 @@ const {
 } = Astro.props;
 ---
 
-<div class="card">
+<div class="card" id={`${formId}-panel`}>
+  <img class="card__brand-logo" src={logo.src} width={logo.width} height={logo.height} alt="GNU Gas Natural" />
   <p class="card__title" style="margin-bottom: 1rem;">{title}</p>
   {intro && <p class="card__text" style="margin-bottom: 1rem;">{intro}</p>}
   <form id={formId}>

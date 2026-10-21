@@ -11,8 +11,8 @@ const { title, subtitle, image } = Astro.props;
 const heroImage = image ? mediaUrl(image) : null;
 ---
 
-<section class="page-hero">
-  {heroImage && <img class="page-hero__img" src={heroImage} alt="" />}
+<section class:list={["page-hero", { "page-hero--image": heroImage }]}>
+  {heroImage && <img class="page-hero__img" src={heroImage} alt="" fetchpriority="high" />}
   <div class="page-hero__scrim" aria-hidden="true"></div>
   <div class="container page-hero__content">
     <h1 class="page-hero__title">{title}</h1>

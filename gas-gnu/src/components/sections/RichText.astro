@@ -1,11 +1,26 @@
 ---
+import { normalizeRichText } from "../../lib/richText";
+import { mediaUrl } from "../../functions/fetch";
+
 interface Props {
   title?: string | null;
   body: string;
   video_url?: string | null;
+  // Shown in the same media slot when there's no video — both are optional,
+  // and a section with neither falls back to the plain (no-media) layout.
+  image_video_url?: string | null;
 }
 
-const { title, body, video_url } = Astro.props;
+const { title, body: rawBody, video_url, image_video_url } = Astro.props;
+
+// Rebuilds pasted (PDF-wrapped) copy into real paragraphs/headings and tidies
+// editor residue — see lib/richText.ts.
+const body = normalizeRichText(rawBody, { recoveredHeading: "h3" }).html;
+
+// An all-caps title ("NUESTROS SERVICIOS") is written as a label, not a
+// headline: it renders as the eyebrow above the copy, and the body's own
+// first heading (if any) carries the headline size.
+const isLabelTitle = !!title && title === title.toUpperCase() && /[A-ZÁÉÍÓÚÑ]{3}/.test(title);
 
 function toEmbedUrl(url: string) {
   try {
@@ -66,22 +81,107 @@ function withAutoplay(url: string) {
 }
 
 const embedUrl = video_url ? withAutoplay(toEmbedUrl(video_url)) : null;
+// Only consulted when there's no video — video wins when a section somehow
+// has both (e.g. an image left over from before a video was added).
+const fallbackImage = !embedUrl && image_video_url ? mediaUrl(image_video_url) : null;
+const hasMedia = Boolean(embedUrl || fallbackImage);
 ---
 
-<section class="section zebra">
-  <div class="container" style="max-width: 46rem;">
-    {title && <h2 class="section-title">{title}</h2>}
-    <div class="prose" set:html={body} />
-    {embedUrl && (
-      <div class="rich-text__video">
-        <iframe
-          src={embedUrl}
-          title={title ?? "Video"}
-          loading="lazy"
-          allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
-          allowfullscreen
-        ></iframe>
+{hasMedia ? (
+  <>
+  <section class="section rich-text-media">
+    <div class="container">
+      <div class="rich-text-media__layout">
+        <div class="rich-text-media__video">
+          {embedUrl ? (
+            <iframe
+              src={embedUrl}
+              title={title ?? "Video"}
+              loading="lazy"
+              allow="autoplay; fullscreen; encrypted-media; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          ) : (
+            <img src={fallbackImage} alt="" loading="lazy" />
+          )}
+        </div>
+        <div class="rich-text-media__content">
+          {title && (isLabelTitle ? <span class="eyebrow">{title}</span> : <h2 class="section-title">{title}</h2>)}
+          <div class:list={["prose", { "prose--after-label": isLabelTitle }]} set:html={body} />
+        </div>
       </div>
-    )}
-  </div>
-</section>
+    </div>
+  </section>
+
+  <script>
+    // Drifts the section's background from white (matching "Simulador de
+    // ahorro" right above it) to a very light tint of the logo's blue as it
+    // scrolls through view — the dark heading / body text stay readable
+    // against it the whole way through since neither stop ever gets dark.
+    document.querySelectorAll<HTMLElement>(".rich-text-media").forEach((section) => {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+      const stops: [number, number, number][] = [
+        [255, 255, 255], // --color-bg — same white as "Simulador de ahorro"
+        [224, 236, 246], // light tint of the logo blue (#1f5ca9)
+      ];
+
+      function colorAt(t: number) {
+        const scaled = Math.min(0.999, Math.max(0, t)) * (stops.length - 1);
+        const i = Math.floor(scaled);
+        const frac = scaled - i;
+        const [r1, g1, b1] = stops[i];
+        const [r2, g2, b2] = stops[i + 1];
+        const r = Math.round(r1 + (r2 - r1) * frac);
+        const g = Math.round(g1 + (g2 - g1) * frac);
+        const b = Math.round(b1 + (b2 - b1) * frac);
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+
+      let ticking = false;
+      function update() {
+        const rect = section.getBoundingClientRect();
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        // 0 while the section's top hasn't reached the viewport bottom yet,
+        // 1 once its bottom has scrolled past the viewport top — i.e.
+        // progress across the section's own scroll-through range.
+        const total = rect.height + viewportHeight;
+        const rawProgress = total > 0 ? Math.min(1, Math.max(0, (viewportHeight - rect.top) / total)) : 0;
+        // Eased (not linear): holds black through the section's entrance and
+        // only ramps toward the logo blue in the back half of the scroll-through.
+        const progress = Math.pow(rawProgress, 2.5);
+        section.style.setProperty("--section-bg", colorAt(progress));
+        ticking = false;
+      }
+
+      update();
+      window.addEventListener(
+        "scroll",
+        () => {
+          if (!ticking) {
+            ticking = true;
+            requestAnimationFrame(update);
+          }
+        },
+        { passive: true }
+      );
+      window.addEventListener("resize", update);
+    });
+  </script>
+  </>
+) : (
+  <section class="section rich-text-plain texture-dots">
+    {/* A page-text-only section (no video, no image) otherwise leaves the
+        whole right side of the wide container as flat white — this is the
+        same soft brand-color wash used on PageHero/the hero band, so the
+        space reads as "intentionally spacious", not empty. */}
+    <div class="aurora aurora--soft" aria-hidden="true">
+      <span class="aurora__blob aurora__blob--1"></span>
+      <span class="aurora__blob aurora__blob--2"></span>
+    </div>
+    <div class="container rich-text">
+      {title && (isLabelTitle ? <span class="eyebrow">{title}</span> : <h2 class="section-title">{title}</h2>)}
+      <div class:list={["prose", "prose--section", { "prose--after-label": isLabelTitle }]} set:html={body} />
+    </div>
+  </section>
+)}

@@ -1,13 +1,13 @@
 ---
 import { mediaUrl } from "../../functions/fetch";
+import TestimonialTiles from "./TestimonialTiles.astro";
 
-// Every field the CMS `clients_showcase` item carries: the logo links out
-// when it has a `url`, `description` becomes its tooltip, and the logos with a
-// `quote` also get a quote card below the wall of logos.
-interface ClientLogo {
-  name: string;
+interface Logo {
   image: string;
+  name: string;
   url?: string | null;
+  // Optional per-logo extras: the pages that only show a wall of logos leave
+  // them empty; the ones that do fill them get a quote tile per client.
   description?: string | null;
   quote?: string | null;
   quote_author?: string | null;
@@ -15,76 +15,74 @@ interface ClientLogo {
 
 interface Props {
   title?: string | null;
-  logos?: ClientLogo[];
+  logos?: Logo[];
+  id?: string;
 }
 
-const { title, logos = [] } = Astro.props;
+const { title, logos = [], id = "clientes" } = Astro.props;
 const shown = logos.map((logo) => ({ ...logo, image: mediaUrl(logo.image) }));
-const quoted = shown.filter((logo) => logo.quote);
-// A scrolling marquee only reads well with enough logos to loop; fewer than
-// that, the static wrapped row (below) looks better than a mostly-empty belt.
-const asMarquee = shown.length >= 6;
-
-const stripQuotes = (quote: string) =>
-  quote
-    .trim()
-    .replace(/^["“”'‘’]+/, "")
-    .replace(/["“”'‘’]+(?=[.!?]?\s*$)/, "")
-    .trim();
+const useMarquee = shown.length >= 4;
+const marqueeLogos = useMarquee ? [...shown, ...shown] : shown;
+// Reuses the same tile component as the home page's "Lo que dicen nuestros
+// clientes" — the logo doubles as the tile's photo, since these quotes don't
+// have a separate headshot.
+const quotedItems = shown
+  .filter((logo) => logo.quote)
+  .map((logo) => ({
+    quote: logo.quote!,
+    author: logo.quote_author,
+    role: logo.description ?? logo.name,
+    photo: logo.image,
+  }));
 ---
 
 {shown.length > 0 && (
-  <section class="section zebra" id="clientes">
+  <section class="section clients-band texture-dots" id={id}>
     <div class="container">
       <div class="section-head section-head--center">
         <h2 class="section-title">{title ?? "Nuestros clientes"}</h2>
       </div>
-      {asMarquee ? (
-        <div class="clients-marquee">
-          <div class="clients-marquee__track">
-            {[0, 1].map((copy) => (
-              <div class="clients-marquee__set" aria-hidden={copy === 1 ? "true" : undefined}>
-                {shown.map((logo) =>
-                  logo.url ? (
-                    <a class="clients-grid__link" href={logo.url} target="_blank" rel="noopener noreferrer" title={logo.description ?? logo.name} tabindex={copy === 1 ? -1 : undefined}>
-                      <img class="clients-grid__logo" src={logo.image} alt={logo.name} loading="lazy" />
-                    </a>
-                  ) : (
-                    <img class="clients-grid__logo" src={logo.image} alt={logo.name} title={logo.description ?? undefined} loading="lazy" />
-                  )
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : (
-        <div class="clients-grid">
-          {shown.map((logo) =>
-            logo.url ? (
-              <a class="clients-grid__link" href={logo.url} target="_blank" rel="noopener noreferrer" title={logo.description ?? logo.name}>
-                <img class="clients-grid__logo" src={logo.image} alt={logo.name} loading="lazy" />
+      <div class={useMarquee ? "logo-marquee" : "logo-grid"}>
+        <div class={useMarquee ? "logo-marquee__track" : "logo-grid__inner"}>
+          {marqueeLogos.map((logo, index) => {
+            // The marquee's second copy is decorative: hidden from assistive
+            // tech and the tab order so each client is announced once.
+            const duplicate = useMarquee && index >= shown.length;
+            const inner = (
+              <>
+                <div class="logo-card__figure">
+                  <img class="logo-card__img" src={logo.image} alt={duplicate ? "" : logo.name} loading="lazy" />
+                </div>
+                <span class="logo-card__name">{logo.name}</span>
+                {logo.description && <span class="logo-card__desc">{logo.description}</span>}
+              </>
+            );
+            const card = logo.url ? (
+              <a
+                class="logo-card"
+                href={logo.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                tabindex={duplicate ? -1 : undefined}
+                title={logo.description ?? undefined}
+              >
+                {inner}
               </a>
             ) : (
-              <img class="clients-grid__logo" src={logo.image} alt={logo.name} title={logo.description ?? undefined} loading="lazy" />
-            )
-          )}
+              <div class="logo-card" title={logo.description ?? undefined}>{inner}</div>
+            );
+            return useMarquee ? (
+              <div class="logo-marquee__item" aria-hidden={duplicate ? "true" : undefined}>{card}</div>
+            ) : (
+              card
+            );
+          })}
         </div>
-      )}
+      </div>
 
-      {quoted.length > 0 && (
-        <div class="grid grid--3 client-quotes">
-          {quoted.map((logo) => (
-            <blockquote class="card testimonial-card">
-              <p class="testimonial-card__quote">“{stripQuotes(logo.quote!)}”</p>
-              <footer class="testimonial-card__author">
-                <img class="testimonial-card__photo testimonial-card__photo--logo" src={logo.image} alt="" loading="lazy" />
-                <div class="testimonial-card__who">
-                  {logo.quote_author && <strong>{logo.quote_author}</strong>}
-                  <span>{logo.description ?? logo.name}</span>
-                </div>
-              </footer>
-            </blockquote>
-          ))}
+      {quotedItems.length > 0 && (
+        <div class="client-quotes">
+          <TestimonialTiles items={quotedItems} />
         </div>
       )}
     </div>

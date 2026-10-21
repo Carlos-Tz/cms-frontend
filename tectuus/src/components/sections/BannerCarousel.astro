@@ -44,11 +44,11 @@ const resolved = slides.map((slide) => ({
           {slide.subtitle && <p class="hero-slide__subtitle">{slide.subtitle}</p>}
           <div class="hero-slide__actions">
             {slide.link_url && slide.link_label ? (
-              <a class="btn-primary" href={slide.link_url}>{slide.link_label}</a>
+              <a class="btn-primary" href={slide.link_url}>{slide.link_label}<i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
             ) : (
-              <a class="btn-primary" href="/productos">Conoce nuestros productos</a>
+              <a class="btn-primary" href="/productos">Conoce nuestros productos<i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a>
             )}
-            <a class="btn-secondary btn-secondary--on-dark" href="/contacto">Contáctanos</a>
+            <a class="btn-secondary btn-secondary--on-dark" href="/contacto"><i class="fa-solid fa-headset" aria-hidden="true"></i>Contáctanos</a>
           </div>
         </div>
       </article>

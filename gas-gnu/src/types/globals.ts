@@ -24,10 +24,24 @@ export type WhatsappButton = {
   prefilled_message?: string | null;
 };
 
+export type Testimonial = {
+  quote: string;
+  author?: string | null;
+  role?: string | null;
+  photo?: string | null;
+};
+
+// Only the "gnu" site currently returns this block; it has no UI yet.
+export type Testimonials = {
+  title?: string | null;
+  items?: Testimonial[];
+};
+
 export type Globals = {
   contact_info?: ContactInfo | null;
   social_icons?: SocialIcons | null;
   whatsapp_button?: WhatsappButton | null;
+  testimonials?: Testimonials | null;
 };
 
 export type GlobalsResponse = {

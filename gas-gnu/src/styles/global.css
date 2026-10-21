@@ -12,6 +12,11 @@ html {
 
 body {
   margin: 0;
+  /* Read by .site-header (own height) and .hero (fills what's left of the
+     viewport below it) — declared here, not on .site-header, since .hero is
+     its sibling and wouldn't otherwise inherit it. Bumped slightly from
+     3.8125rem to fit the bigger navbar logo without clipping it. */
+  --header-height: 4.25rem;
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-body);
@@ -49,15 +54,51 @@ button {
   cursor: pointer;
 }
 
+/* Rich text (CMS-authored HTML) — justify so paragraphs fill the line width evenly,
+   wherever a `rich_text` section renders (about-us pages, services, home, …) */
+.prose {
+  text-align: justify;
+  text-align-last: left;
+  /* Justified Spanish without hyphenation opens wide gaps between words;
+     `lang="es"` on <html> gives the browser the right dictionary. */
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+
+/* On a phone-width column even hyphenated justification leaves rivers, so
+   the copy goes back to a ragged right edge. */
+@media (max-width: 480px) {
+  .prose {
+    text-align: left;
+  }
+}
+
+/* Home page (/inicio) — same treatment for its other body-copy paragraphs */
+#inicio .hero-slide__subtitle,
+#inicio .simulator__lead,
+#inicio .section-subtitle,
+#inicio .card__text {
+  text-align: justify;
+  text-align-last: left;
+}
+
 /* Scroll reveal (progressive enhancement — JS adds .reveal, no-JS content stays visible).
-   Selector doubled (.reveal.reveal) to out-specificity components like .card/.blog-card
-   that declare their own `transition` shorthand for hover — otherwise, at equal
-   specificity, whichever rule comes later in the file wins the ENTIRE shorthand and
-   silently drops the opacity transition. */
+   Selector doubled (.reveal.reveal) to out-specificity components like .card/.logo-card/
+   .stations-list__item/.testimonial-tile that declare their own `transition` shorthand for
+   hover — otherwise, at equal specificity, whichever rule comes later in the file wins the
+   ENTIRE shorthand and silently drops the opacity transition.
+   Winning outright cuts both ways, though: once an element is revealed it keeps the .reveal
+   class forever, so from then on THIS shorthand is also the only one governing its hover
+   transitions — border-color and box-shadow are listed here too (the two other properties
+   those components animate on :hover) so hover still eases smoothly instead of snapping
+   instantly. transform is already covered above for the reveal itself, so it doubles as the
+   hover-lift's transition too (just at the reveal's slower pace, not each component's own). */
 .reveal.reveal {
   opacity: 0;
-  transform: translateY(64px);
-  transition: opacity 0.9s var(--ease-out), transform 0.9s var(--ease-out);
+  transform: translateY(48px) scale(0.98);
+  /* --reveal-delay staggers siblings (set, and later cleared, by Layout.astro). */
+  transition: opacity 0.9s var(--ease-out) var(--reveal-delay, 0s), transform 0.9s var(--ease-out) var(--reveal-delay, 0s),
+    border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
 }
 
 .reveal.is-visible {
@@ -79,7 +120,7 @@ button {
 @keyframes reveal-in {
   from {
     opacity: 0;
-    transform: translateY(64px);
+    transform: translateY(48px) scale(0.98);
   }
   to {
     opacity: 1;
@@ -88,7 +129,7 @@ button {
 }
 
 .reveal-instant {
-  animation: reveal-in 0.9s var(--ease-out) both;
+  animation: reveal-in 0.9s var(--ease-out) var(--reveal-delay, 0s) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -97,109 +138,63 @@ button {
   }
 }
 
-/* Grid children ease in one after another rather than as one block. The reveal
-   script sets --i per child on the containers listed in its STAGGER selector. */
-.reveal[style*="--i"],
-.reveal-instant[style*="--i"] {
-  transition-delay: calc(var(--i, 0) * 0.09s);
-  animation-delay: calc(var(--i, 0) * 0.09s);
+/* Printing (or saving as PDF) renders the entire page at once. If the visitor
+   does that before scrolling through — a very normal thing to do — whatever
+   .reveal targets the IntersectionObserver hadn't reached yet would print
+   permanently invisible, since nothing about print rendering ever fires it.
+   Force everything visible for print regardless of scroll/JS state. */
+@media print {
+  .reveal,
+  .reveal-instant {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .reveal[style*="--i"],
-  .reveal-instant[style*="--i"] {
-    transition-delay: 0s;
-    animation-delay: 0s;
-  }
+/* Contact page — the form takes noticeably longer to ease in than the
+   site-wide reveal default. Covers both reveal paths: .reveal (scrolled into
+   view) and .reveal-instant (already in view at load). */
+#pagina-contacto .card.reveal {
+  transition-duration: 2.4s;
+}
+
+#pagina-contacto .card.reveal-instant {
+  animation-duration: 2.4s;
 }
 
 /* Layout */
 .container {
-  max-width: 87.5rem;
+  /* Prose/article content (.rich-text, .blog-post) and hero copy already
+     cap their own reading width independently, so widening this doesn't
+     hurt their line length — it just gives grids/cards/forms more of very
+     wide screens instead of sitting in a comparatively narrow column. */
+  max-width: 90rem;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
 
 .section {
-  padding: 6rem 0;
+  position: relative;
+  padding: var(--section-space) 0;
+  scroll-margin-top: var(--header-height);
 }
 
-/* Zebra striping: every generic content section carries `.zebra`, and the
-   nth-child(of .zebra) selector counts only among those — so the stripe
-   alternates correctly no matter which bespoke full-bleed bands (hero,
-   simulator, page-hero) sit between them, and regardless of which section
-   types a CMS page actually uses or in what order. */
-.zebra:nth-child(even of .zebra) {
-  position: relative;
-  overflow: hidden;
+/* Two neighbouring bands on the same background would stack two paddings
+   into one big empty gap — the second one starts right where the first ends. */
+.section:not(.section--alt, .rich-text-media, .lead-band, .clients-band) + .section:not(.section--alt, .rich-text-media, .lead-band, .clients-band),
+.section--alt + .section--alt {
+  padding-top: 0;
+}
+
+.section--alt {
   background: var(--color-bg-alt);
 }
 
-/* Pale corner arcs on the alternating "alt" stripe — the brand manual's
-   recurring interior-page texture (see page-hero below for the same motif
-   on a dark hero), here at a lighter touch for a content section. */
-.zebra:nth-child(even of .zebra)::before,
-.zebra:nth-child(even of .zebra)::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  border-radius: 50%;
-  border: 1px solid var(--color-border);
-  pointer-events: none;
-}
-
-.zebra:nth-child(even of .zebra)::before {
-  top: -7rem;
-  right: -7rem;
-  width: 22rem;
-  height: 22rem;
-}
-
-.zebra:nth-child(even of .zebra)::after {
-  bottom: -9rem;
-  left: -9rem;
-  width: 26rem;
-  height: 26rem;
-}
-
-.zebra:nth-child(even of .zebra) > .container {
-  position: relative;
-  z-index: 1;
-}
-
-/* Rewards/benefits is the one "key section" singled out for a soft brand-
-   tinted blob, echoing the manual's section-divider pages (a large, pale
-   radial glow bleeding off one corner). Targets both the CMS feature_grid
-   instance used for recompensas and its offline fallback. */
-.rewards,
-#recompensas {
-  position: relative;
-  overflow: hidden;
-}
-
-.rewards::before,
-#recompensas::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  top: -14rem;
-  right: -16rem;
-  width: 36rem;
-  height: 36rem;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--color-primary-tint) 0%, rgba(230, 243, 250, 0) 70%);
-  pointer-events: none;
-}
-
-.rewards > .container,
-#recompensas > .container {
-  position: relative;
-  z-index: 1;
-}
-
 .section-head {
-  max-width: 40rem;
-  margin: 0 0 3rem;
+  max-width: 44rem;
+  margin: 0 0 2.5rem;
 }
 
 .section-head--center {
@@ -212,6 +207,37 @@ button {
   font-size: var(--text-h2);
   color: var(--color-text);
   margin-top: 0.75rem;
+  text-wrap: balance;
+}
+
+/* A short gradient rule under centered headings — the recurring brand mark.
+   Grows from its own center, not its left edge: with a left origin, the
+   mid-animation frames show a short bar hugging the left side of where the
+   final centered bar will land, reading as "the rule is misaligned" to
+   anyone who sees that frame (e.g. a screenshot) instead of the brief grow-in. */
+.section-head--center .section-title::after {
+  content: "";
+  display: block;
+  width: 3.5rem;
+  height: 4px;
+  margin: 1rem auto 0;
+  border-radius: var(--radius-full);
+  background: var(--gradient-brand);
+  transform-origin: center;
+}
+
+.section-head--center.is-visible .section-title::after,
+.section-head--center.reveal-instant .section-title::after {
+  animation: rule-grow 0.9s var(--ease-out) 0.25s both;
+}
+
+@keyframes rule-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .section-subtitle {
@@ -223,14 +249,81 @@ button {
 .grid {
   display: grid;
   gap: 1.5rem;
+  /* With fewer cards than columns (e.g. a single feature_grid item), the
+     leftover track space centers as margin instead of stretching the last
+     card — see the capped track size below. */
+  justify-content: center;
 }
 
 .grid--3 {
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  /* Capped, not `1fr`: `1fr` would let a sparse row (down to a single card)
+     grow to fill the whole container — fine at 3-up, but a lone card's
+     1:1 media (card--feature) blows up to the full container width and
+     towers over its own text. The cap matches what a full 3-up row already
+     settles to, so normal rows look unchanged. */
+  grid-template-columns: repeat(auto-fit, minmax(240px, 20rem));
 }
 
 .grid--4 {
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 18rem));
+}
+
+/* BalancedGrid.astro (feature, blog and child-page cards): wrapping rows of
+   --columns (set per card count so rows come out balanced), spanning the
+   full container width. Cards don't grow or shrink, so a shorter last row
+   keeps the same card width and centers under the full ones. On narrower
+   screens cards wrap at their 15rem minimum, still centered. */
+.balanced-grid {
+  --gap: 2rem;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2.5rem var(--gap);
+}
+
+.balanced-grid > * {
+  flex: 0 0 calc((100% - (var(--columns) - 1) * var(--gap)) / var(--columns));
+  min-width: min(100%, 15rem);
+}
+
+/* Equal white panels: within a row by stretching (no-JS fallback), across
+   rows via --panel-height, the tallest panel's height, set by the script in
+   BalancedGrid.astro. .is-measuring drops both for a moment so it can read
+   each panel's natural height. */
+.balanced-grid .card--photo {
+  display: flex;
+  flex-direction: column;
+}
+
+.balanced-grid :is(.card--photo .card__panel, .service-card .blog-card__body) {
+  flex: 1;
+  min-height: var(--panel-height, auto);
+}
+
+.balanced-grid.is-measuring {
+  align-items: flex-start;
+}
+
+.balanced-grid.is-measuring :is(.card--photo .card__panel, .service-card .blog-card__body) {
+  flex: none;
+  min-height: 0;
+}
+
+/* FeatureGrid's optional banner (1024x576 / 16:9 per the content guide),
+   above the title and the icon cards. */
+.feature-grid__banner {
+  aspect-ratio: 16 / 9;
+  max-width: 48rem;
+  margin: 0 auto 2.5rem;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+.feature-grid__banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Gradient text */
@@ -243,188 +336,201 @@ button {
 
 /* Eyebrow label */
 .eyebrow {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.875rem 0.35rem 0.7rem;
   border-radius: var(--radius-full);
-  border: 1px solid rgba(0, 130, 202, 0.3);
-  background: var(--color-primary-soft);
-  padding: 0.25rem 0.75rem;
+  border: 1px solid rgba(31, 92, 169, 0.14);
+  background: rgba(31, 92, 169, 0.06);
   font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-primary-alt);
 }
 
-.eyebrow--on-dark {
-  border-color: rgba(255, 255, 255, 0.3);
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-on-dark);
+/* Pulsing "live" dot — the flame-green signal. */
+.eyebrow::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: var(--radius-full);
+  background: var(--color-primary);
+  animation: dot-pulse 2.4s ease-out infinite;
 }
 
-/* Buttons — one bright accent carries every action */
+@keyframes dot-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(31, 92, 169, 0.55);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 0.5rem rgba(31, 92, 169, 0);
+  }
+}
+
+.eyebrow--on-dark {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(6px);
+}
+
+/* Buttons — one bright accent carries every action; press scales down like a physical key */
 .btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  border: none;
-  cursor: pointer;
   border-radius: var(--radius-full);
   padding: 0.8125rem 1.75rem;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--color-text-on-dark);
-  background: linear-gradient(to right, var(--color-primary), var(--color-accent));
-  box-shadow: var(--shadow-cta);
-  transition: filter 0.15s ease, transform 0.15s var(--ease-out);
-  text-decoration: none;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  /* White, not ink — --gradient-brand now runs blue into sky-blue, and dark
+     text on that darker blue end fails contrast the way it never did on the
+     old bright teal. */
+  color: #ffffff;
+  background: var(--gradient-brand);
+  background-size: 160% 100%;
+  background-position: 0% 50%;
+  border: none;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: var(--shadow-glow);
+  transition: filter 0.15s ease, transform 0.15s var(--ease-out), background-position 0.5s var(--ease-out),
+    box-shadow 0.3s ease;
+}
+
+/* A light sweep crosses the button on hover. */
+.btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.55) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform 0.7s var(--ease-out);
 }
 
 .btn-primary:hover {
-  filter: brightness(1.08);
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-cta), var(--shadow-glow-primary);
+  transform: translateY(-2px);
+  background-position: 100% 50%;
+  box-shadow: 0 18px 40px -12px rgba(39, 191, 240, 0.7);
+}
+
+.btn-primary:hover::after {
+  transform: translateX(120%);
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: progress;
 }
 
 .btn-primary:active {
-  transform: scale(0.97);
+  transform: scale(0.96);
 }
 
-.btn-primary--compact {
-  padding: 0.6rem 1.15rem;
-  font-size: 0.8rem;
-}
-
+/* The double pseudo-element "flip-fill": both panels sit rotated 90° (so
+   they render edge-on / invisible with the browser's default flat
+   perspective) and un-rotate to lay flat on hover, converging from the top
+   and the left into one solid brand-color fill — borrowed from the
+   TechBiz template's signature button micro-interaction (inspiration/). */
 .btn-secondary {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   border-radius: var(--radius-full);
-  padding: 0.8rem 1.65rem;
-  font-size: 0.9rem;
+  padding: 0.8125rem 1.75rem;
+  font-size: 0.9375rem;
   font-weight: 600;
-  color: var(--color-primary-alt);
+  color: var(--color-text);
   border: 1px solid var(--color-border);
-  background: var(--color-surface);
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   transition: color 0.15s ease, border-color 0.15s ease, transform 0.15s var(--ease-out);
-  text-decoration: none;
+}
+
+.btn-secondary::before,
+.btn-secondary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--gradient-brand);
+  transition: transform 0.5s ease;
+}
+
+.btn-secondary::before {
+  transform: rotateX(90deg);
+  transform-origin: top;
+}
+
+.btn-secondary::after {
+  transform: rotateY(90deg);
+  transform-origin: left;
 }
 
 .btn-secondary:hover {
-  color: var(--color-primary);
-  border-color: var(--color-border-hover);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+.btn-secondary:hover::before,
+.btn-secondary:hover::after {
+  transform: rotate(0deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-secondary::before,
+  .btn-secondary::after {
+    transition: none;
+  }
 }
 
 .btn-secondary:active {
-  transform: scale(0.97);
-}
-
-.btn-secondary--compact {
-  padding: 0.6rem 1.15rem;
-  font-size: 0.8rem;
+  transform: scale(0.96);
 }
 
 .btn-secondary--on-dark {
-  color: var(--color-text-on-dark);
-  border-color: rgba(255, 255, 255, 0.3);
-  background: transparent;
+  color: #ffffff;
+  border-color: var(--color-border-on-dark);
 }
 
 .btn-secondary--on-dark:hover {
-  border-color: rgba(255, 255, 255, 0.6);
-}
-
-/* Glassmorphism utilities — translucent surfaces for overlays/calculators,
-   available wherever a plain surface would otherwise look too flat. */
-.glass-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-}
-
-.glass-card-dark {
-  background: rgba(11, 37, 69, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(43, 156, 219, 0.2);
-}
-
-/* Category badges — amber/purple/green get dark text per the accessibility
-   guideline (those backgrounds are too light for white text to read well). */
-.badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.7rem;
-  border-radius: var(--radius-full);
-  font-size: 0.6875rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--color-text-on-dark);
-}
-
-.badge--primary {
-  background: var(--color-primary);
-}
-
-.badge--amber {
-  background: var(--color-amber);
-  color: var(--color-ink);
-}
-
-.badge--purple {
-  background: var(--color-purple);
-}
-
-.badge--green {
-  background: var(--color-status-active);
-  color: var(--color-ink);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Card */
-/* --mx/--my follow the pointer for a soft spotlight glow (one delegated
-   listener in Layout.astro sets them — see the pointermove handler). They
-   default off-box so the gradient is invisible until a pointer actually
-   moves over the card. */
 .card {
   position: relative;
   border-radius: var(--radius-lg);
   border: 1px solid var(--color-border);
+  /* --mx/--my follow the pointer (Layout.astro) for a soft spotlight. */
   background:
-    radial-gradient(22rem circle at var(--mx, -30rem) var(--my, -30rem), var(--color-primary-soft), transparent 60%),
-    var(--color-surface);
-  box-shadow: var(--shadow-card);
-  padding: 1.75rem;
+    radial-gradient(22rem circle at var(--mx, -30rem) var(--my, -30rem), rgba(31, 92, 169, 0.1), transparent 60%),
+    #ffffff;
+  padding: 2rem;
+  box-shadow: var(--shadow-soft);
   transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .card:hover {
-  border-color: var(--color-border-hover);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-float);
+  border-color: rgba(39, 191, 240, 0.35);
+  transform: translateY(-4px);
+  box-shadow: 0 24px 44px -24px rgba(6, 26, 46, 0.4);
 }
 
-.card--tight {
-  padding: 1.25rem;
-}
-
-.card__icon {
-  width: 3rem;
-  height: 3rem;
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-ink);
-  color: var(--color-accent);
-  margin-bottom: 1.1rem;
-  font-size: 1.5rem;
-  transition: transform 0.4s var(--ease-out);
-}
-
-/* Feature-grid variant: a gradient bar grows in along the top edge and the
-   icon tilts/scales on hover, instead of just the base card's lift. */
+/* Feature cards: the icon sits on a tinted tile and a gradient bar grows
+   along the top edge on hover. */
 .card--feature {
   overflow: hidden;
+  padding: 1.75rem;
 }
 
 .card--feature::before {
@@ -432,7 +538,7 @@ button {
   position: absolute;
   inset: 0 0 auto;
   height: 3px;
-  background: linear-gradient(to right, var(--color-primary), var(--color-accent));
+  background: var(--gradient-brand);
   transform: scaleX(0);
   transform-origin: left;
   transition: transform 0.5s var(--ease-out);
@@ -442,24 +548,158 @@ button {
   transform: scaleX(1);
 }
 
+.card--feature .card__icon {
+  width: 3.25rem;
+  height: 3.25rem;
+  padding: 0.65rem;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(140deg, rgba(31, 92, 169, 0.16), rgba(39, 191, 240, 0.16));
+  transition: transform 0.4s var(--ease-out);
+}
+
 .card--feature:hover .card__icon {
   transform: rotate(-6deg) scale(1.08);
 }
 
+/* A real uploaded photo (square, 1254×1254) gets shown as one — a banner
+   bled to the card's own edges, not forced into the small tinted icon tile
+   above (which only reads at that size as a flat-color SVG). */
+.card--feature .card__media {
+  margin: -1.75rem -1.75rem 1.25rem;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.card--feature .card__media-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease-out);
+}
+
+.card--feature:hover .card__media-img {
+  transform: scale(1.04);
+}
+
+/* Photo cards: one white card with a 16:9 photo on top and the copy in a
+   full-width body whose rounded top corners overlap the photo's bottom
+   edge, with a small square arrow badge on the seam. */
+.card--photo {
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s ease;
+}
+
+.card--photo:hover {
+  border-color: transparent;
+  transform: translateY(-4px);
+  box-shadow: 0 24px 44px -24px rgba(6, 26, 46, 0.4);
+}
+
+.card--photo::before {
+  display: none;
+}
+
+.card--photo .card__media {
+  margin: 0;
+  aspect-ratio: 16 / 9;
+  flex-shrink: 0;
+}
+
+.card--photo:hover .card__media-img {
+  transform: scale(1.08);
+}
+
+.card--photo .card__panel {
+  position: relative;
+  margin-top: -1rem;
+  padding: 1.5rem 1.5rem 1.75rem;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: #ffffff;
+}
+
+.card--photo .card__title {
+  color: var(--color-navy);
+  font-size: 1.125rem;
+  line-height: 1.3;
+}
+
+.card--photo .card__text {
+  margin-top: 0.875rem;
+  line-height: 1.6;
+}
+
+/* Small round badge centered on the photo/body seam. */
+.card--photo .card-badge--small {
+  top: -1.125rem;
+  right: 1.25rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #ffffff;
+  box-shadow: 0 8px 18px -8px rgba(31, 92, 169, 0.7);
+  transition: border-radius 0.3s var(--ease-out);
+}
+
+/* On hover the circle morphs into a rounded square and only the arrow
+   turns (↗ to →), so the badge never tilts into a diamond. */
+.card--photo .card-badge--small svg {
+  transition: transform 0.3s var(--ease-out);
+}
+
+.card--photo:hover .card-badge--small {
+  border-radius: 0.625rem;
+}
+
+.card--photo:hover .card-badge.card-badge--small {
+  transform: none;
+}
+
+.card--photo:hover .card-badge--small svg {
+  transform: rotate(45deg);
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .card__icon,
-  .card--feature::before {
+  .card--photo .card-badge--small,
+  .card--photo .card-badge--small svg {
     transition: none;
   }
+}
 
-  .card--feature:hover .card__icon {
+@media (prefers-reduced-motion: reduce) {
+  .card--photo:hover,
+  .card--photo:hover .card__media-img {
     transform: none;
   }
 }
 
+.card--surface {
+  background: var(--color-bg-alt);
+}
+
+/* Plain icon, no circular badge — larger and just colored, so a small
+   CMS-uploaded icon reads clearly instead of getting lost in a tiny dark tile. */
+.card__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary-alt);
+  margin-bottom: 1.25rem;
+}
+
 .card__icon-img {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
 }
 
@@ -471,269 +711,525 @@ button {
   color: var(--color-text);
 }
 
+/* Title-only feature cards (no text below) center their lone title. */
+.card--title-only .card__title {
+  text-align: center;
+}
+
 .card__text {
-  margin-top: 0.6rem;
+  margin-top: 0.625rem;
   font-size: 0.9375rem;
   color: var(--color-text-60);
 }
 
-/* HEADER */
+/* A small brand mark in the lead-capture form's corner (LeadCaptureForm.astro)
+   — a trust signal right where a visitor is about to hand over their details.
+   Pinned top-right instead of sitting inline above the title, which left an
+   empty line's worth of dead space next to it. */
+.card__brand-logo {
+  position: absolute;
+  top: 1.75rem;
+  right: 2rem;
+  height: 2.75rem;
+  width: auto;
+}
+
+/* A little attention-getting wiggle: once when the card scrolls into view
+   (.is-visible is added once by the reveal IntersectionObserver and never
+   removed, so this plays exactly once per load), and again any time a
+   visitor focuses into the form — a small "hey, look at who's asking"
+   touch rather than a static logo nobody notices. */
+@keyframes brand-logo-shake {
+  10%, 90% { transform: translateX(-1px) rotate(-2deg); }
+  20%, 80% { transform: translateX(2px) rotate(2deg); }
+  30%, 50%, 70% { transform: translateX(-4px) rotate(-4deg); }
+  40%, 60% { transform: translateX(4px) rotate(4deg); }
+}
+
+.card.is-visible .card__brand-logo,
+.card:focus-within .card__brand-logo {
+  animation: brand-logo-shake 0.6s var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card__brand-logo {
+    animation: none !important;
+  }
+}
+
+/* Header */
 .site-header {
   position: sticky;
   top: 0;
-  z-index: 50;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: saturate(180%) blur(8px);
+  z-index: 40;
+  height: var(--header-height);
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
   border-bottom: 1px solid var(--color-border);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.site-header.is-scrolled {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 10px 30px -14px rgba(6, 26, 46, 0.18);
+}
+
+/* Reading progress along the header's bottom edge. */
+.scroll-progress {
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 2px;
+  pointer-events: none;
+}
+
+.scroll-progress__bar {
+  display: block;
+  height: 100%;
+  background: var(--gradient-brand);
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+  box-shadow: 0 0 12px rgba(31, 92, 169, 0.7);
 }
 
 .site-header__inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
-  padding-top: 1rem;
-  padding-bottom: 1rem;
+  gap: 1rem;
+  padding: 0.75rem 0;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  text-decoration: none;
+  gap: 0.625rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.0625rem;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
 }
 
 .brand__logo {
-  height: 2.25rem;
+  display: block;
+  height: 2.75rem;
   width: auto;
 }
 
-.nav {
-  display: flex;
-  align-items: center;
-  gap: 1.75rem;
-  font-size: 0.9rem;
-  font-weight: 600;
+/* White logo on the blue footer, as large as its column allows (capped to
+   the tagline width below it). */
+.site-footer .brand {
+  display: block;
 }
 
-.nav a,
+.brand__logo--footer {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Logo and the ISO 9001 / ESR seals as one balanced block: the logo
+   (560x530, ~8.5rem tall at 9rem wide) matches the height of the two
+   stacked 4rem seals, with a hairline divider between them. */
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.footer-brand .brand {
+  flex: 0 0 9rem;
+}
+
+.footer-seals {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 1.5rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+/* White discs so the black/gold ESR mark and the ISO badge read on blue. */
+.footer-seal {
+  display: block;
+  width: 4rem;
+  height: 4rem;
+  padding: 0.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 10px 24px -12px rgba(6, 26, 46, 0.5);
+  transition: transform 0.25s var(--ease-out);
+}
+
+.footer-seal:hover {
+  transform: translateY(-3px);
+}
+
+.footer-seal img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* The ISO artwork sits on a gray square: fill the disc with it and crop to
+   the badge's own circle so the gray corners never show. */
+.footer-seal--iso {
+  padding: 0;
+}
+
+.footer-seal--iso img {
+  object-fit: cover;
+  transform: scale(1.2);
+}
+
+.nav {
+  display: none;
+  align-items: center;
+  gap: 2rem;
+}
+
 .nav-link {
-  text-decoration: none;
-  color: var(--color-text-60);
+  position: relative;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--color-text-75);
   transition: color 0.15s ease;
 }
 
-.nav a:hover,
-.nav-link:hover {
-  color: var(--color-primary);
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.45rem;
+  height: 2px;
+  border-radius: var(--radius-full);
+  background: var(--gradient-brand);
+  transform: scaleX(0);
+  transition: transform 0.3s var(--ease-out);
 }
 
-.header-actions,
-.site-header__actions {
+.nav-link:hover::after,
+.nav-link.is-current::after {
+  transform: scaleX(1);
+}
+
+.nav-link:hover {
+  color: var(--color-primary-alt);
+}
+
+.header-actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.nav-toggle {
+.header-actions .btn-primary {
+  padding: 0.625rem 1.375rem;
+  font-size: 0.8125rem;
+}
+
+/* The header's own social icons — same icons/links as the footer and
+   SocialBand.astro, just smaller and inline. Hidden below 1140px: at
+   narrower desktop widths the nav labels + CTA already fill the bar, and
+   the footer/mobile nav/SocialBand still carry these everywhere else. */
+.header-social {
   display: none;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: none;
-  cursor: pointer;
+  align-items: center;
+  gap: 0.5rem;
+  margin-right: 0.25rem;
 }
 
-.nav-toggle span {
-  display: block;
-  height: 2px;
-  background: var(--color-text);
-  border-radius: 1px;
+@media (min-width: 1140px) {
+  .header-social {
+    display: flex;
+  }
 }
 
-.nav-mobile {
-  display: none;
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0 1.5rem 1.25rem;
+.header-social__icon {
+  width: 2rem;
+  height: 2rem;
 }
 
-.nav-mobile a {
-  padding: 0.6rem 0;
-  text-decoration: none;
-  color: var(--color-text);
-  font-weight: 600;
-  border-bottom: 1px solid var(--color-border);
+@media (min-width: 900px) {
+  .nav {
+    display: flex;
+  }
 }
 
+.nav-link.is-current {
+  color: var(--color-primary-alt);
+}
 
+/* Second level of the CMS menu: a dropdown that opens on hover and on
+   keyboard focus (`:focus-within`), so it needs no script. */
 .nav-item {
   position: relative;
 }
 
-.nav-link--toggle {
+.nav-item--has-menu > .nav-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  background: none;
-  border: none;
-  font: inherit;
-  color: var(--color-text-60);
-  cursor: pointer;
-  padding: 0;
-  transition: color 0.15s ease;
+  gap: 0.3rem;
 }
 
-.nav-link--toggle:hover {
-  color: var(--color-primary);
+.nav-link__caret {
+  transition: transform 0.2s var(--ease-out);
 }
 
-.nav-caret {
-  transition: transform 0.15s ease;
+.nav-menu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  min-width: 13rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -6px);
+  transition: opacity 0.2s ease, transform 0.25s var(--ease-out), visibility 0s linear 0.25s;
 }
 
-.nav-item.is-open .nav-caret,
-.nav-item:hover .nav-caret {
+/* Bridges the gap between the link and the panel so the pointer can travel
+   down without the hover dropping. */
+.nav-menu::before {
+  content: "";
+  position: absolute;
+  inset: -0.875rem 0 auto;
+  height: 0.875rem;
+}
+
+.nav-item--has-menu:hover .nav-menu,
+.nav-item--has-menu:focus-within .nav-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition: opacity 0.2s ease, transform 0.25s var(--ease-out);
+}
+
+.nav-item--has-menu:hover .nav-link__caret,
+.nav-item--has-menu:focus-within .nav-link__caret {
   transform: rotate(180deg);
 }
 
-.nav-dropdown {
-  position: absolute;
-  top: calc(100% + 0.9rem);
-  left: 0;
-  min-width: 15rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(4px);
-  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
-  z-index: 10;
+.nav-menu__link {
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-75);
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
-.nav-item:hover .nav-dropdown,
-.nav-item.is-open .nav-dropdown {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.nav-dropdown__group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-}
-
-.nav-dropdown__link {
-  text-decoration: none;
-  color: var(--color-text-60);
-  font-size: 0.875rem;
-  transition: color 0.15s ease;
-}
-
-.nav-dropdown__link--parent {
+.nav-menu__link:hover,
+.nav-menu__link:focus-visible,
+.nav-menu__link.is-current {
+  background: var(--color-bg-alt);
   color: var(--color-text);
-  font-weight: 600;
 }
 
-.nav-dropdown__link:hover {
+.nav-menu__link.is-current {
+  box-shadow: inset 2px 0 0 var(--color-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-menu,
+  .nav-link__caret {
+    transition: none;
+  }
+}
+
+/* Mobile nav — hamburger toggle + full-screen overlay panel, hidden entirely at desktop widths */
+.nav-toggle {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+}
+
+.nav-toggle__bar {
+  width: 1.125rem;
+  height: 2px;
+  background: var(--color-text);
+  border-radius: var(--radius-full);
+  transition: transform 0.25s var(--ease-out), opacity 0.2s ease;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.mobile-nav {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: var(--color-bg);
+  overflow-y: auto;
+  visibility: hidden;
+  opacity: 0;
+  transform: translateY(-12px);
+  transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out), visibility 0s linear 0.3s;
+}
+
+.mobile-nav.is-open {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+  transition: opacity 0.3s var(--ease-out), transform 0.3s var(--ease-out);
+}
+
+.mobile-nav__inner {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1.5rem 2rem;
+}
+
+.mobile-nav__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0 0;
+}
+
+.mobile-nav__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: transparent;
+  color: var(--color-text);
+}
+
+.mobile-nav__links {
+  display: flex;
+  flex-direction: column;
+  margin-top: 2.5rem;
+}
+
+.mobile-nav__link {
+  padding: 1.125rem 0;
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.mobile-nav__link.is-current {
   color: var(--color-primary);
 }
 
-.nav-dropdown__sublist {
+.mobile-nav__sublinks {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
-  padding-left: 0.85rem;
-  border-left: 1px solid var(--color-border);
-}
-
-.nav-mobile__item summary {
-  padding: 0.6rem 0;
-  font-weight: 600;
-  color: var(--color-text);
-  cursor: pointer;
-  list-style: none;
+  padding: 0.5rem 0 0.75rem 1rem;
   border-bottom: 1px solid var(--color-border);
 }
 
-.nav-mobile__item summary::-webkit-details-marker {
-  display: none;
+.mobile-nav__sublink {
+  padding: 0.5rem 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--color-text-60);
 }
 
-.nav-mobile__item[open] summary {
+.mobile-nav__sublink.is-current {
+  color: var(--color-primary);
+}
+
+/* The parent's own divider would sit between it and its children. */
+.mobile-nav__link:has(+ .mobile-nav__sublinks) {
   border-bottom: none;
 }
 
-.nav-mobile__sublist {
-  display: flex;
-  flex-direction: column;
-  padding: 0 0 0.5rem 1rem;
+.mobile-nav__cta {
+  margin-top: 2rem;
+  justify-content: center;
+  width: 100%;
 }
 
-.nav-mobile__sublist a {
-  padding: 0.45rem 0;
-  border-bottom: 1px solid var(--color-border);
-  color: var(--color-text-60);
-  text-decoration: none;
-  font-weight: 500;
+.mobile-nav__social {
+  justify-content: center;
+  margin-top: 1.5rem;
 }
 
-.nav-mobile__item--nested summary {
-  font-weight: 500;
-  font-size: 0.9rem;
+body.nav-open {
+  overflow: hidden;
 }
 
-@media (max-width: 900px) {
-  .nav,
-  .site-header__actions,
-  .header-actions {
+@media (min-width: 900px) {
+  .nav-toggle,
+  .mobile-nav {
     display: none;
   }
+}
 
-  .nav-toggle {
-    display: flex;
-  }
-
-  /* Only the mobile breakpoint may show the drawer: left unscoped, a menu left
-     open before a resize to desktop stays expanded under the header next to
-     the desktop nav. The resize handler in Layout.astro clears aria-expanded
-     to match. */
-  .nav-mobile.is-open {
-    display: flex;
+@media (prefers-reduced-motion: reduce) {
+  .mobile-nav,
+  .nav-toggle__bar {
+    transition: none;
   }
 }
 
-/* HERO — full-bleed, CMS-driven carousel */
+/* Hero — full-bleed, CMS-driven carousel. Sized to the banner media's own
+   ratio so it shows whole: 1138:474, the common banner GIF size (an 800x340
+   GIF is a hair taller and shows thin blurred side strips; wider media crops
+   a sliver under cover), capped at what's left of the viewport below the
+   sticky header (100dvh accounts for mobile browser chrome) and never under
+   28rem. That's a minimum, not a fixed height: on mid-size and small screens,
+   where the ratio is too short for the title, subtitle and CTA, the hero
+   grows to fit its tallest slide instead of clipping it under the header.
+   100cqw is the hero's own width (container-type), not the viewport's, so
+   the scrollbar doesn't skew the ratio. */
 .hero {
   position: relative;
-  height: min(88vh, 720px);
-  min-height: 32rem;
+  container-type: inline-size;
   overflow: hidden;
   background: var(--color-ink);
 }
 
+/* Slides share one grid cell, so the track is as tall as its tallest slide
+   (or the ratio minimum, whichever is more). */
 .hero__track {
   position: relative;
-  height: 100%;
+  display: grid;
+  min-height: max(28rem, min(100cqw * 474 / 1138, 100dvh - var(--header-height)));
 }
 
 /* Slides stack on top of each other; swapping `.is-active` crossfades between
-   them instead of a display:none/block hard cut (display can't transition). */
+   them instead of the old display:none/block hard cut (display can't transition). */
 .hero-slide {
-  position: absolute;
-  inset: 0;
-  height: 100%;
+  position: relative;
+  grid-area: 1 / 1;
   opacity: 0;
   transition: opacity 1s var(--ease-out);
   pointer-events: none;
@@ -780,29 +1276,24 @@ button {
     hero-slide-img-zoom 24s ease-in-out infinite;
 }
 
-/* Hero copy resolves a beat after the image, line by line. Only the first
-   slide gets it — later slides arrive by crossfade, which is its own motion. */
-@keyframes hero-copy-in {
-  from {
-    opacity: 0;
-    transform: translateY(1.5rem);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+/* Animated GIF slides: shown whole (contain, not cropped) and fade in only,
+   no zoom. A blurred copy behind fills the leftover strips (see
+   HeroCarousel.astro). */
+.hero-slide__img--gif {
+  object-fit: contain;
+  animation: hero-slide-img-in 1.4s var(--ease-out) both;
 }
 
-.hero-slide:first-child .hero-slide__content > * {
-  animation: hero-copy-in 0.9s 0.25s var(--ease-out) both;
-}
-
-.hero-slide:first-child .hero-slide__content > *:nth-child(2) {
-  animation-delay: 0.4s;
-}
-
-.hero-slide:first-child .hero-slide__content > *:nth-child(3) {
-  animation-delay: 0.55s;
+.hero-slide__img-fill {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  /* Scaled up so the blur's soft edges stay outside the hero. */
+  transform: scale(1.1);
+  filter: blur(24px) brightness(0.7);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -811,16 +1302,22 @@ button {
   }
 
   .hero-slide__img,
-  .hero-slide:first-child .hero-slide__content > * {
-    animation: none;
+  .page-hero__img {
+    /* !important: .page-hero__img's own `animation` declaration comes later
+       in this file (with equal specificity), so it would otherwise win over
+       this override regardless of prefers-reduced-motion — same trap as the
+       .reveal/.card transition clash elsewhere in this file. */
+    animation: none !important;
   }
 }
 
+/* Confined to a band behind the title/subtitle/CTA at the bottom instead of
+   washing the whole photo — the rest of the image stays at full clarity. */
 .hero-slide__scrim {
   position: absolute;
   inset: 0;
   z-index: 1;
-  background: linear-gradient(to top, rgba(11, 37, 69, 0.92) 0%, rgba(11, 37, 69, 0.4) 45%, rgba(11, 37, 69, 0.15) 100%);
+  background: linear-gradient(to top, rgba(10, 14, 18, 0.82) 0%, rgba(10, 14, 18, 0.5) 20%, transparent 48%);
 }
 
 .hero-slide__content {
@@ -830,17 +1327,17 @@ button {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding-bottom: clamp(3rem, 8vw, 5rem);
-  padding-top: 6rem;
+  padding-bottom: clamp(3rem, 8vw, 5.5rem);
+  padding-top: clamp(3rem, 6vw, 6rem);
 }
 
 .hero-slide__title {
   max-width: 34rem;
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: var(--heading-font-weight);
   letter-spacing: var(--heading-letter-spacing);
   font-size: var(--text-h1);
-  color: var(--color-text-on-dark);
+  color: #ffffff;
 }
 
 .hero-slide__subtitle {
@@ -850,18 +1347,74 @@ button {
   color: var(--color-text-on-dark-70);
 }
 
-.hero-slide__cta {
+/* Bigger than the sitewide .btn-primary default — this is the hero's one
+   headline action over a busy photo, so it needs to read as the obvious
+   next step rather than blend in at the standard button size. */
+/* CTA, then a hairline divider and the white logo. */
+.hero-slide__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
   margin-top: 1.75rem;
+}
+
+/* Pill with the label and a white arrow disc on its right end. */
+.hero-slide__cta {
   width: fit-content;
+  gap: 1.25rem;
+  padding: 0.5rem 0.5rem 0.5rem 2rem;
+  font-size: 1.0625rem;
+}
+
+.hero-slide__cta-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--color-primary);
+  transition: transform 0.3s var(--ease-out);
+}
+
+.hero-slide__cta:hover .hero-slide__cta-arrow {
+  transform: translateX(3px);
+}
+
+.hero-slide__brand img {
+  display: block;
+  height: 4.5rem;
+  width: auto;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
+
+.hero-slide__cta + .hero-slide__brand {
+  padding-left: 1.5rem;
+  border-left: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+@media (max-width: 480px) {
+  .hero-slide__brand img {
+    height: 3.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide__cta:hover .hero-slide__cta-arrow {
+    transform: none;
+  }
 }
 
 .hero__dots {
   position: absolute;
   z-index: 3;
-  bottom: 1.5rem;
-  /* Left-aligned with the container's gutter. Bottom-right is where the fixed
-     WhatsApp button lives, and it would sit on top of the row. */
-  left: max(1.5rem, calc(50% - 43.75rem + 1.5rem));
+  bottom: 1.75rem;
+  /* Left-aligned with the container's gutter (half of .container's own
+     max-width, 90rem). Bottom-right is where the fixed WhatsApp button
+     lives, and it would sit on top of the whole row. */
+  left: max(1.5rem, calc(50% - 45rem + 1.5rem));
   display: flex;
   gap: 0.5rem;
 }
@@ -875,137 +1428,349 @@ button {
   padding: 0;
 }
 
+/* The active dot stretches into a bar that fills over the slide's 5s. */
+.hero__dot {
+  overflow: hidden;
+  transition: width 0.4s var(--ease-out), background 0.3s ease;
+}
+
 .hero__dot.is-active {
-  background: var(--color-accent);
+  width: 2.5rem;
+  background: rgba(255, 255, 255, 0.25);
 }
 
-/* Hero stats strip — light band under the dark carousel, so the two read as
-   clearly separate sections instead of blending into one dark mass. */
-.hero-stats {
-  background: var(--color-bg-alt);
-  border-bottom: 1px solid var(--color-border);
+.hero__dot.is-active::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--gradient-brand);
+  transform-origin: left;
+  animation: hero-dot-fill 5s linear both;
 }
 
-.hero-stats__inner {
-  display: flex;
-  gap: 2.5rem;
-  flex-wrap: wrap;
-  padding: 1.75rem 0;
+.hero:hover .hero__dot.is-active::before,
+.hero:focus-within .hero__dot.is-active::before {
+  animation-play-state: paused;
 }
 
-.hero-stats__item {
-  display: flex;
-  flex-direction: column;
-  animation: hero-copy-in 0.8s var(--ease-out) both;
+@keyframes hero-dot-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
 }
 
-.hero-stats__item:nth-child(2) {
-  animation-delay: 0.6s;
+/* Slide copy rises in, line by line, each time its slide becomes active —
+   a wider, more deliberate stagger (0.2s between lines, a taller rise and
+   heavier blur) so each line's arrival reads as its own beat instead of
+   nearly-simultaneous, closer to the layered reveal in the TechBiz
+   reference (inspiration/) than the site's original tighter version. */
+.hero-slide.is-active .hero-slide__content > * {
+  animation: hero-copy-in 1s var(--ease-out) both;
 }
 
-.hero-stats__item:nth-child(3) {
-  animation-delay: 0.72s;
+.hero-slide.is-active .hero-slide__content > :nth-child(1) {
+  animation-delay: 0.15s;
 }
 
-.hero-stats__item:first-child {
-  animation-delay: 0.48s;
+.hero-slide.is-active .hero-slide__content > :nth-child(2) {
+  animation-delay: 0.35s;
+}
+
+.hero-slide.is-active .hero-slide__content > :nth-child(3) {
+  animation-delay: 0.55s;
+}
+
+@keyframes hero-copy-in {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.hero-slide__title {
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Brand-tinted light leaking in from the corners, over the photo. */
+.hero__glow {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 0% 100%, rgba(31, 92, 169, 0.28), transparent 70%),
+    radial-gradient(50% 45% at 100% 0%, rgba(39, 191, 240, 0.25), transparent 70%);
+  mix-blend-mode: screen;
+}
+
+.hero__scroll {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  padding: 0.5rem;
+  border: 0;
+  background: transparent;
+}
+
+.hero__scroll-mouse {
+  display: block;
+  width: 1.5rem;
+  height: 2.375rem;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  border-radius: var(--radius-full);
+  position: relative;
+}
+
+.hero__scroll-wheel {
+  position: absolute;
+  top: 0.4rem;
+  left: 50%;
+  width: 3px;
+  height: 0.5rem;
+  margin-left: -1.5px;
+  border-radius: var(--radius-full);
+  background: #ffffff;
+  animation: scroll-wheel 1.8s var(--ease-out) infinite;
+}
+
+@keyframes scroll-wheel {
+  0% {
+    opacity: 0;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(0.75rem);
+  }
+}
+
+@media (max-width: 640px) {
+  .hero__scroll {
+    display: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hero-stats__item {
+  .hero-slide.is-active .hero-slide__content > *,
+  .hero__dot.is-active::before,
+  .hero__scroll-wheel,
+  .eyebrow::before {
     animation: none;
   }
 }
 
-.hero-stats__item strong {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  color: var(--color-primary);
-}
-
-.hero-stats__item span {
-  font-size: 0.8rem;
-  color: var(--color-text-60);
-}
-
-/* SIMULADOR DE AHORRO — full-bleed dark tile, set off from the light stats
-   strip above it with a top accent border and an inward shadow for depth. */
-.simulator-band {
+/* Trust strip — three cards peeking up over the hero's bottom edge (the
+   "feature strip overlapping the hero" layout from the TechBiz template).
+   The overlap is small on purpose: the hero reserves 3–5.5rem of empty
+   padding below its own content before its visual bottom edge, so a
+   1.25rem peek never covers the hero's title/CTA/dots. */
+.trust-strip {
   position: relative;
-  overflow: hidden;
-  background: var(--color-ink);
-  padding: clamp(3.5rem, 8vw, 6rem) 0;
-  border-top: 3px solid var(--color-primary);
-  box-shadow: inset 0 24px 24px -24px rgba(0, 0, 0, 0.35);
+  z-index: 3;
+  margin-top: -1.25rem;
+  padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
 }
 
-/* Wind-streak texture: faint, irregular flowing lines of varied length and
-   curvature set on a diagonal, like the trailing kite-string lines on the
-   brand manual's cover — not a uniform ripple, so it reads as wind, not water. */
-.simulator-band:not(.simulator-band--panel)::before {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  inset: -15% -10%;
-  transform: rotate(-6deg);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='90' viewBox='0 0 240 90'%3E%3Cpath d='M-20 16 C 20 8, 40 24, 80 14 S 150 4, 190 18 S 250 26 270 12' fill='none' stroke='white' stroke-opacity='0.07' stroke-width='1.5' stroke-linecap='round'/%3E%3Cpath d='M-20 48 C 30 38, 55 58, 100 44 S 170 30, 210 50' fill='none' stroke='white' stroke-opacity='0.045' stroke-width='1' stroke-linecap='round'/%3E%3Cpath d='M-20 72 C 15 66, 70 82, 110 68 S 180 58, 260 74' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='1.25' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-  pointer-events: none;
+/* Three across only where each card gets enough width for its copy; below
+   that, one full-width card per row (three narrow columns wrapped titles
+   onto four lines on mid-size screens). */
+.trust-strip__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
 }
 
-.simulator-band > .container {
-  position: relative;
-  z-index: 1;
-}
-
-/* "Big card" treatment for the in-page simulator: a boxed, rounded surface
-   sitting inside the dark section rather than bare content on the bg. */
-.simulator-card {
-  position: relative;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: var(--radius-xl);
-  padding: clamp(2rem, 4vw, 3.5rem);
-  box-shadow: var(--shadow-float);
-  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out), background 0.4s var(--ease-out);
-}
-
-/* The floating panel (see .simulator-band--panel) is already its own card —
-   the wrapper stays invisible there so it isn't a card inside a card. */
-.simulator-band--panel .simulator-card {
-  background: none;
-  border: none;
-  box-shadow: none;
-  border-radius: 0;
-  padding: 0;
-}
-
-/* Focusing the select or the amount input lifts the card off the section:
-   it scales up and floats forward on a deep, diffuse shadow, as if it had
-   risen in front of the rest of the page. Scoped away from the floating
-   panel, which already reads as its own elevated surface. */
-.simulator-band:not(.simulator-band--panel):has(input:focus, select:focus) .simulator-card {
-  transform: scale(1.04) translateY(-0.5rem);
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: 0 50px 90px -25px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.12);
-  z-index: 2;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .simulator-card {
-    transition: none;
+@media (min-width: 1100px) {
+  .trust-strip__grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
-.simulator {
-  display: grid;
-  gap: 2.5rem;
-  color: var(--color-text-on-dark);
+/* Cards stretch to the tallest one; content centers vertically so a shorter
+   card splits its spare space above and below instead of leaving it all at
+   the bottom. */
+.trust-strip__card {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.75rem 2rem;
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
 }
 
-@media (min-width: 860px) {
+.trust-strip__card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-float);
+}
+
+.trust-strip__icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-full);
+  background: linear-gradient(140deg, rgba(31, 92, 169, 0.14), rgba(39, 191, 240, 0.14));
+  color: var(--color-primary-alt);
+}
+
+.trust-strip__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.trust-strip__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  color: var(--color-text);
+  text-wrap: balance;
+}
+
+/* These paragraphs are the card's substance, not a caption: 14px at 62% ink
+   was both small and thin against white, so they read at 15px/75% (6.7:1)
+   with more leading. */
+.trust-strip__text {
+  margin-top: 0.45rem;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--color-text-75);
+  text-wrap: pretty;
+}
+
+/* Stats band — animated counters (count-up script in StatsBand.astro),
+   the pairing every inspiration/ template reaches for right after a
+   clients/logos section. The ribbon is a CSS clip-path rather than an
+   imported texture image, tinted with the site's own brand colors. */
+.stats-band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: var(--section-space) 0;
+  background: var(--color-bg-alt);
+}
+
+.stats-band__ribbon {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(120deg, rgba(31, 92, 169, 0.1), rgba(39, 191, 240, 0.1));
+  /* A true parallelogram shear — top-left and bottom-right corners cut away —
+     rather than only slanting one edge. */
+  clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%);
+}
+
+.stats-band__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.stats-band__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 2rem;
+  width: 100%;
+  text-align: center;
+}
+
+.stats-band__item {
+  position: relative;
+}
+
+.stats-band__item:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 0.4rem;
+  right: -1rem;
+  width: 1px;
+  height: 2.5rem;
+  background: var(--color-border);
+}
+
+@media (max-width: 720px) {
+  .stats-band__item:not(:last-child)::after {
+    display: none;
+  }
+}
+
+.stats-band__value {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.15rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  color: var(--color-primary-alt);
+  font-variant-numeric: tabular-nums;
+}
+
+.stats-band__label {
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  color: var(--color-text-60);
+}
+
+.stats-band__cta {
+  background: #ffffff;
+}
+
+/* Simulador de ahorro — the site's main conversion moment (the savings
+   calculator), right under the dark hero carousel. It gets its own tinted,
+   extra-breathing-room treatment instead of blending into the plain white
+   sections before and after it, so it reads as the page's centerpiece
+   rather than "just another section". */
+.simulator-band {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(60rem circle at 15% -10%, rgba(31, 92, 169, 0.1), transparent 55%),
+    radial-gradient(50rem circle at 100% 110%, rgba(39, 191, 240, 0.12), transparent 60%),
+    var(--color-bg-alt);
+  padding: calc(var(--section-space) * 1.4) 0;
+  scroll-margin-top: var(--header-height);
+}
+
+.simulator-band .aurora__blob {
+  opacity: 0.4;
+}
+
+.simulator {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 3rem;
+  color: var(--color-text);
+}
+
+@media (min-width: 960px) {
   .simulator {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 0.85fr 1.15fr;
+    gap: 4.5rem;
     align-items: center;
   }
 }
@@ -1013,31 +1778,43 @@ button {
 .simulator__heading {
   margin-top: 0.75rem;
   font-size: clamp(1.5rem, 3vw, 2rem);
-  color: var(--color-text-on-dark);
+  color: var(--color-text);
 }
 
 .simulator__lead {
   margin-top: 0.875rem;
   font-size: 1.0625rem;
-  color: var(--color-text-on-dark-70);
+  color: var(--color-text-60);
 }
 
-/* Glassmorphism, reserved for conversion-calculator surfaces like this one. */
+/* Dark-glass look — this is SimulatorCalculator.astro's own default, shared
+   by the home page's (now light) band and the floating FAB (still dark);
+   the band overrides it for its white background further down. */
 .simulator__result {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
   border-radius: var(--radius-lg);
-  padding: 2rem;
+  background:
+    radial-gradient(18rem circle at var(--mx, 80%) var(--my, 0%), rgba(39, 191, 240, 0.22), transparent 65%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--color-border-on-dark);
+  padding: 1.75rem;
   box-shadow: var(--shadow-float);
-  background: rgba(11, 37, 69, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(43, 156, 219, 0.2);
 }
 
 .simulator__result-value {
+  margin-top: 0.25rem;
   font-family: var(--font-display);
   font-size: clamp(2.25rem, 5vw, 3rem);
   font-weight: 800;
   letter-spacing: -0.02em;
-  color: var(--color-accent);
+  line-height: 1.1;
+  background: var(--gradient-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  transform-origin: left center;
   font-variant-numeric: tabular-nums;
   transition: transform 0.25s var(--ease-out);
 }
@@ -1060,21 +1837,38 @@ button {
 .field label {
   display: block;
   margin-bottom: 0.375rem;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-60);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-75);
 }
 
 .field input,
-.field textarea,
-.field select {
+.field select,
+.field textarea {
   width: 100%;
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
-  background: var(--color-bg);
-  padding: 0.7rem 1rem;
-  font-size: 0.9rem;
+  background: #ffffff;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
   font-family: var(--font-body);
+  color: var(--color-text);
+}
+
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 2.75rem;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%231d1d1f' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.875rem;
+}
+
+.field select option {
+  background: #ffffff;
   color: var(--color-text);
 }
 
@@ -1084,8 +1878,8 @@ button {
 }
 
 .field input:focus,
-.field textarea:focus,
-.field select:focus {
+.field select:focus,
+.field textarea:focus {
   outline: 2px solid var(--color-primary);
   outline-offset: 1px;
   border-color: var(--color-primary);
@@ -1099,11 +1893,408 @@ button {
 .field--on-dark select {
   background-color: rgba(255, 255, 255, 0.08);
   border-color: var(--color-border-on-dark);
-  color: var(--color-text-on-dark);
+  color: #ffffff;
+}
+
+.field--on-dark select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.875rem;
 }
 
 .field--on-dark select option {
+  background: var(--color-ink-2);
+  color: #ffffff;
+}
+
+.logo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 2rem;
+  align-items: start;
+}
+
+/* Declutter: a plain trust bar instead of boxed cards — logos sit directly
+   on the section's own background, muted (grayscale + dimmed) until
+   hovered/focused, which is the only cue needed for "this is clickable". */
+.logo-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+  text-decoration: none;
+}
+
+.logo-card__figure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  /* Matches the 800x400px upload size the content guide now asks for —
+     logos sized to that ratio fill the box instead of leaving vertical
+     padding inside a taller 16:9 one. */
+  aspect-ratio: 2 / 1;
+}
+
+.logo-card__img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: grayscale(100%) opacity(55%);
+  transition: filter 0.3s ease;
+}
+
+.logo-card:hover .logo-card__img,
+.logo-card:focus-visible .logo-card__img {
+  filter: grayscale(0%) opacity(100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-card__img {
+    transition: none;
+  }
+}
+
+.logo-card__name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-text-60);
+  text-align: center;
+  transition: color 0.3s ease;
+}
+
+.logo-card:hover .logo-card__name,
+.logo-card:focus-visible .logo-card__name {
+  color: var(--color-primary);
+}
+
+/* Logo marquee — continuous strip, pauses on hover/focus, static list if motion is reduced */
+.logo-marquee {
+  overflow: hidden;
+  padding: 0.5rem 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.logo-marquee__track {
+  display: flex;
+  align-items: stretch;
+  gap: 1.5rem;
+  width: max-content;
+  animation: logo-marquee-scroll 30s linear infinite;
+}
+
+.logo-marquee:hover .logo-marquee__track,
+.logo-marquee:focus-within .logo-marquee__track {
+  animation-play-state: paused;
+}
+
+.logo-marquee__item {
+  flex: 0 0 auto;
+  width: 14rem;
+}
+
+@keyframes logo-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo-marquee__track {
+    animation: none;
+    flex-wrap: wrap;
+    overflow-x: auto;
+  }
+}
+
+/* Testimonial tiles (home "Lo que dicen nuestros clientes"): a sober,
+   always-visible corporate card — left-aligned, full quote shown upfront
+   (no hover-to-reveal), logo muted to grayscale until hovered/focused, card
+   itself lifts a touch on hover. Replaces the old flip/expand card, which
+   hid the quote behind a dark panel and had no real "read more" to link to
+   once the full quote is already on screen. */
+.testimonial-tiles {
+  display: grid;
+  /* A higher max than before so a handful of tiles (the common case — this
+     is one quote per client, not a big catalog) grow to fill the wider
+     .container instead of huddling in the middle of it. */
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 30rem));
+  justify-content: center;
+  align-items: stretch;
+  gap: 2rem;
+}
+
+.testimonial-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0;
+  text-align: left;
+  padding: 2.5rem 2.25rem;
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-soft);
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.testimonial-tile:hover,
+.testimonial-tile:focus-within {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-float);
+  border-color: rgba(31, 92, 169, 0.35);
+}
+
+.testimonial-tile__media {
+  height: 2.75rem;
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.75rem;
+}
+
+.testimonial-tile__img {
+  max-width: 9rem;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  filter: grayscale(100%) opacity(0.75);
+  transition: filter 0.3s ease;
+}
+
+.testimonial-tile:hover .testimonial-tile__img,
+.testimonial-tile:focus-within .testimonial-tile__img {
+  filter: grayscale(0%) opacity(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonial-tile,
+  .testimonial-tile__img {
+    transition: none;
+  }
+}
+
+.testimonial-tile__initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-alt);
+  font-family: var(--font-display);
+  font-weight: 800;
+  color: var(--color-primary-alt);
+}
+
+.testimonial-tile__mark {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  margin-bottom: 0.75rem;
+}
+
+.testimonial-tile__quote {
+  margin: 0 0 1.75rem;
+}
+
+.testimonial-tile__quote p {
+  margin: 0;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  color: var(--color-text-60);
+}
+
+.testimonial-tile__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+  margin-top: auto;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.testimonial-tile__author {
+  font-family: var(--font-display);
+  font-weight: 700;
   color: var(--color-text);
+  font-size: 0.9375rem;
+}
+
+.testimonial-tile__role {
+  margin-top: 0.125rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-60);
+}
+
+/* Map / stations */
+.stations-layout {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 860px) {
+  .stations-layout {
+    grid-template-columns: 3fr 2fr;
+    align-items: stretch;
+  }
+
+  .stations-layout--map-only {
+    grid-template-columns: 1fr;
+  }
+}
+
+.stations-map {
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  aspect-ratio: 16 / 5;
+  background: var(--color-bg-alt);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-float);
+}
+
+@media (min-width: 860px) {
+  .stations-layout:not(.stations-layout--map-only) .stations-map {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 20rem;
+  }
+}
+
+.stations-map__frame {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.stations-map__placeholder {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-60);
+  font-size: 0.875rem;
+}
+
+.stations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0 0.75rem 0 0;
+  list-style: none;
+  max-height: 24rem;
+  overflow-y: auto;
+  /* Firefox thin scrollbar; the ::-webkit- rules below cover Chrome/Safari/Edge.
+     Transparent by default, tinted only on hover/focus (further down) — the
+     track stays reserved (no layout shift) but the thumb itself is invisible
+     until there's a reason to show it. */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.2s ease;
+}
+
+.stations-list:hover,
+.stations-list:focus-within {
+  scrollbar-color: var(--color-border-hover) transparent;
+}
+
+.stations-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.stations-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.stations-list::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: var(--radius-full);
+  transition: background-color 0.2s ease;
+}
+
+.stations-list:hover::-webkit-scrollbar-thumb,
+.stations-list:focus-within::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-hover);
+}
+
+.stations-list__item {
+  /* Matches .stations-map's own radius so the card and the map read as one
+     consistent shape language. */
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  padding: 1.25rem;
+  /* transition lives on the later .stations-list__item rule, next to .is-active */
+}
+
+.stations-list__item {
+  background:
+    radial-gradient(16rem circle at var(--mx, -20rem) var(--my, -20rem), rgba(39, 191, 240, 0.09), transparent 60%),
+    var(--color-bg);
+}
+
+.stations-list__item:hover {
+  border-color: rgba(39, 191, 240, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -16px rgba(0, 0, 0, 0.25);
+}
+
+.stations-list__name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.0625rem;
+  color: var(--color-text);
+}
+
+/* Darker than the schedule/phone rows below it, so address reads as the
+   primary secondary-info line and the rest recedes behind it. */
+.stations-list__address {
+  margin-top: 0.375rem;
+  margin-left: 1.5rem;
+  font-size: var(--text-small);
+  color: var(--color-text);
+}
+
+.stations-list__meta {
+  margin-top: 0.375rem;
+  margin-left: 1.5rem;
+  font-size: var(--text-small);
+  color: var(--color-text-60);
+}
+
+.stations-list__meta--icon {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-left: 0;
+}
+
+.stations-list__icon {
+  flex-shrink: 0;
+  color: var(--color-primary-alt);
+}
+
+/* Padded to clear the 24 CSS-px minimum target size (WCAG 2.5.8); the
+   negative inline margin keeps the text visually flush with the column. */
+.stations-list__link {
+  display: inline-block;
+  margin-top: 0.375rem;
+  padding: 0.35rem 0.5rem;
+  margin-inline: -0.5rem;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-primary);
 }
 
 /* Lead capture form */
@@ -1111,7 +2302,7 @@ button {
   margin-top: 0.875rem;
   font-size: 0.875rem;
   min-height: 1.25rem;
-  color: var(--color-text-60);
+  color: var(--color-text-75);
 }
 
 .lead-form__status--success {
@@ -1122,7 +2313,2633 @@ button {
   color: var(--color-status-error);
 }
 
-/* RECOMPENSAS */
+/* Home page contact section — text and form side by side instead of both
+   capped to a narrow centered column, which left large empty margins on
+   anything wider than a phone. */
+.contact-layout {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 860px) {
+  .contact-layout {
+    grid-template-columns: 1fr 1.05fr;
+    gap: 4rem;
+    align-items: center;
+  }
+}
+
+.contact-agent-icon {
+  flex-shrink: 0;
+  width: 4.5rem;
+  height: 4.5rem;
+  object-fit: cover;
+  border-radius: var(--radius-full);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px #ffffff, 0 0 0 6px rgba(31, 92, 169, 0.45), var(--shadow-soft);
+}
+
+/* Blog — cards bounce in from the bottom on page load (staggered per-card via
+   an inline animation-delay, see blog/index.astro), rather than waiting for
+   the shared scroll-reveal observer. */
+@keyframes blog-card-bounce-in {
+  0% {
+    opacity: 0;
+    transform: translateY(90px);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-18px);
+  }
+  70% {
+    transform: translateY(9px);
+  }
+  85% {
+    transform: translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.blog-card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  animation: blog-card-bounce-in 1s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .blog-card {
+    animation: none;
+  }
+}
+
+.blog-card:hover {
+  border-color: var(--color-border-hover);
+  transform: translateY(-2px);
+}
+
+.blog-card__cover {
+  height: 9rem;
+  width: 100%;
+  object-fit: cover;
+  background: var(--color-bg-alt);
+  transition: transform 0.5s var(--ease-out);
+}
+
+.blog-card:hover .blog-card__cover {
+  transform: scale(1.06);
+}
+
+.blog-card__body {
+  padding: 1.5rem;
+}
+
+.blog-card__tag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-primary);
+}
+
+.blog-card__title {
+  margin-top: 0.625rem;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  color: var(--color-text);
+}
+
+.blog-card__excerpt {
+  margin-top: 0.5rem;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--color-text-75);
+}
+
+.blog-card__link {
+  margin-top: 1rem;
+  display: inline-block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/* Child-page cards (ChildPageCards.astro, on /nuestros-servicios and
+   /sobre-nosotros): a blog card with a stronger hover — lift and shadow, a
+   brand tint over the zooming cover, and the arrow nudging forward, so the
+   child pages read as the section's main way onward. */
+.service-card {
+  transition: border-color 0.3s ease, transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+  /* `both` would keep the bounce-in's final transform forever and override the
+     hover lift; `backwards` releases it once the entrance finishes. */
+  animation-fill-mode: backwards;
+}
+
+.service-card__media {
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card__media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 30%, var(--color-primary-alt));
+  opacity: 0;
+  transition: opacity 0.4s var(--ease-out);
+}
+
+.service-card .blog-card__cover {
+  display: block;
+  height: 11rem;
+}
+
+.service-card .card__title {
+  transition: color 0.3s ease;
+}
+
+.service-card__arrow {
+  display: inline-block;
+  transition: transform 0.3s var(--ease-out);
+}
+
+.service-card:hover,
+.service-card:focus-visible {
+  border-color: var(--color-primary);
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-float);
+}
+
+.service-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.service-card:hover .blog-card__cover,
+.service-card:focus-visible .blog-card__cover {
+  transform: scale(1.08);
+}
+
+.service-card:hover .service-card__media::after,
+.service-card:focus-visible .service-card__media::after {
+  opacity: 0.45;
+}
+
+.service-card:hover .card__title,
+.service-card:focus-visible .card__title {
+  color: var(--color-primary-alt);
+}
+
+.service-card:hover .service-card__arrow,
+.service-card:focus-visible .service-card__arrow {
+  transform: translateX(6px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-card:hover,
+  .service-card:focus-visible,
+  .service-card:hover .blog-card__cover,
+  .service-card:focus-visible .blog-card__cover,
+  .service-card:hover .service-card__arrow,
+  .service-card:focus-visible .service-card__arrow {
+    transform: none;
+  }
+}
+
+/* Linked image cards (blog posts, child pages) in the same Gaseco style as
+   .card--photo: rounded cover, white body panel overlapping its bottom edge,
+   and a round arrow badge on the panel's top corner. Overrides the plain
+   bordered blog-card box above. */
+.service-card {
+  border: none;
+  background: transparent;
+  overflow: visible;
+}
+
+.service-card:hover,
+.service-card:focus-visible {
+  transform: none;
+  box-shadow: none;
+}
+
+.service-card__media {
+  border-radius: var(--radius-lg);
+}
+
+.service-card__media::after {
+  display: none;
+}
+
+.service-card .blog-card__cover {
+  height: auto;
+  aspect-ratio: 4 / 3;
+}
+
+.service-card:hover .blog-card__cover,
+.service-card:focus-visible .blog-card__cover {
+  transform: scale(1.12);
+}
+
+.service-card .blog-card__body {
+  position: relative;
+  flex: 1;
+  margin: -5rem 1.25rem 0;
+  padding: 1.75rem;
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+  transition: box-shadow 0.3s ease;
+}
+
+.service-card:hover .blog-card__body,
+.service-card:focus-visible .blog-card__body {
+  box-shadow: 0 24px 44px -24px rgba(6, 26, 46, 0.4);
+}
+
+/* Room for the badge so a long tag/title never runs under it. */
+.service-card .blog-card__body > :nth-child(2) {
+  padding-right: 3rem;
+}
+
+.card-badge {
+  position: absolute;
+  top: -1.75rem;
+  right: 1.5rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  box-shadow: 0 10px 24px -10px rgba(31, 92, 169, 0.6);
+  transition: transform 0.3s var(--ease-out);
+}
+
+/* Room for the badge so a long title never runs under it. */
+.card--photo .card__title {
+  padding-right: 3rem;
+}
+
+/* Centered title-only panels (Valores) pad both sides so the title stays
+   centered in the card. */
+.card--photo.card--title-only .card__title {
+  padding-left: 3rem;
+}
+
+.service-card:hover .card-badge,
+.service-card:focus-visible .card-badge,
+.card--photo:hover .card-badge {
+  transform: rotate(45deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .service-card:hover .card-badge,
+  .service-card:focus-visible .card-badge,
+  .card--photo:hover .card-badge {
+    transform: none;
+  }
+}
+
+/* Service cards (ServiceCards.astro) — "Explora Nuestros Servicios" as
+   stacked poster cards: a full-width photo with a floating summary panel
+   overlapping it, alternating sides row to row (the "Projects" section
+   from inspiration/loginet), instead of tabs that hide two of the three
+   services at a time. Floats over the image from 760px up; below that the
+   panel has nowhere to float onto, so it stacks under the image instead. */
+.service-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.service-card-row {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Enters from its own image's side instead of the sitewide vertical reveal,
+   so the alternating zig-zag layout also zig-zags in on scroll.
+   :not(.is-visible) scopes this to the pre-reveal state only — once
+   revealed, the shared .reveal.is-visible rule's transform:none takes over
+   untouched (it would otherwise keep losing to this rule's higher
+   specificity forever, since .is-visible never "turns this rule off" on
+   its own). */
+.service-card-row.reveal.reveal:not(.is-visible) {
+  transform: translateX(-64px);
+}
+
+.service-card-row:nth-child(even).reveal.reveal:not(.is-visible) {
+  transform: translateX(64px);
+}
+
+.service-card-row__media {
+  position: relative;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--color-bg-alt);
+  box-shadow: var(--shadow-soft);
+}
+
+.service-card-row__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.service-card-row__panel {
+  position: relative;
+  border-radius: var(--radius-lg);
+  background: #ffffff;
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-soft);
+  padding: 1.75rem;
+}
+
+.service-card-row__badge {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  background: var(--gradient-brand);
+  color: #ffffff;
+  box-shadow: var(--shadow-glow);
+}
+
+.service-card-row__eyebrow {
+  display: inline-flex;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
+  color: var(--color-text-60);
+  border: 1px solid var(--color-border);
+  padding: 0.3rem 0.875rem;
+  border-radius: var(--radius-full);
+  margin-bottom: 1rem;
+}
+
+.service-card-row__heading {
+  max-width: calc(100% - 3.5rem);
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  font-weight: 800;
+  line-height: 1.15;
+  color: var(--color-text);
+}
+
+.service-card-row__features {
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.625rem;
+}
+
+.service-card-row__features li {
+  position: relative;
+  padding-left: 1.5rem;
+  font-size: 0.9375rem;
+  color: var(--color-text);
+}
+
+/* Same checkmark glyph as the simulator's own perk list, for one consistent
+   "included" marker across the site. */
+.service-card-row__features li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.3em;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: var(--radius-full);
+  background: var(--color-primary)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5'/%3E%3C/svg%3E")
+    center / 0.65rem no-repeat;
+}
+
+.service-card-row__link {
+  margin-top: 1.5rem;
+}
+
+@media (min-width: 760px) {
+  .service-card-row {
+    display: block;
+    min-height: 28rem;
+  }
+
+  .service-card-row__media {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+  }
+
+  .service-card-row__panel {
+    position: absolute;
+    top: 50%;
+    right: 2.5rem;
+    transform: translateY(-50%);
+    width: min(26rem, calc(100% - 5rem));
+    padding: 2.25rem;
+    backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  /* Alternate sides row to row so three stacked rows don't read as one
+     repeated template. */
+  .service-card-row:nth-child(even) .service-card-row__panel {
+    right: auto;
+    left: 2.5rem;
+  }
+}
+
+/* Page hero (blog and other interior pages) */
+.page-hero {
+  position: relative;
+  background: var(--color-bg);
+  padding: clamp(4.5rem, 9vw, 6.5rem) 0 clamp(3.5rem, 7vw, 5rem);
+  text-align: center;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* With a CMS image the hero takes the image's own 8:3 shape (the 2400x900 px
+   the content guide asks for), so the photo shows whole on wide screens
+   instead of being cropped to a thin strip. It's a min-height (37.5vw = the
+   full-bleed width at 8:3), not `aspect-ratio`: that one stops growing with
+   its content under `overflow: hidden`, which would clip the title on narrow
+   screens. Here the block just grows and `object-fit: cover` crops the
+   sides instead. On short, wide viewports 37.5vw alone can fall short of
+   the header, leaving bare background under the fold (the same gap the home
+   carousel had) — `max()` also fills what's left of the viewport, same fix,
+   same --header-height var. */
+.page-hero--image {
+  /* Matches the media's ratio so it shows whole: 37.5vw is 8:3 (the common
+     2048x768 photo), 40vw on --gif is 5:2 (the common 800x320 GIF). Capped
+     at what's left of the viewport below the header. */
+  min-height: clamp(22rem, 37.5vw, calc(100dvh - var(--header-height)));
+  display: flex;
+  align-items: center;
+  padding: 5rem 0;
+}
+
+.page-hero--gif {
+  min-height: clamp(22rem, 40vw, calc(100dvh - var(--header-height)));
+}
+
+.page-hero--image .page-hero__content {
+  width: 100%;
+}
+
+.page-hero::before {
+  content: "";
+  position: absolute;
+  top: -12rem;
+  left: 50%;
+  width: 36rem;
+  height: 36rem;
+  transform: translateX(-50%);
+  background: radial-gradient(circle, rgba(39, 191, 240, 0.22), transparent 70%);
+  z-index: 0;
+  pointer-events: none;
+}
+
+.page-hero__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  /* Full clarity — only rendered when there's a real CMS image (see
+     PageHero.astro), so there's no reason to dim it; the title's own
+     drop shadow handles legibility without fading the photo itself. */
+  opacity: 1;
+  /* Same slow Ken-Burns drift as the home page's hero carousel — these inner
+     pages only ever have one static background image (no slides to crossfade
+     between), so they just get the continuous zoom, not the one-shot fade-in. */
+  animation: hero-slide-img-zoom 24s ease-in-out infinite;
+}
+
+/* GIF heroes match the home carousel's GIF slides: whole image, no zoom,
+   over the blurred .hero-slide__img-fill copy. */
+.page-hero__img--gif {
+  object-fit: contain;
+  animation: none;
+}
+
+.page-hero__content {
+  position: relative;
+  z-index: 2;
+}
+
+.page-hero__title {
+  color: var(--color-text);
+  font-size: var(--text-h1);
+  text-wrap: balance;
+  animation: hero-copy-in 0.9s var(--ease-out) both;
+}
+
+/* Only the --image variant still has a photo (and the confined scrim band)
+   behind the title, so only it needs white text + a shadow for legibility. */
+/* No scrim behind the text anymore (it read as a flat gray bar across the
+   photo) — a tight, darker shadow right behind the letters plus the
+   original soft one for depth is what keeps this legible over a bright
+   photo instead. */
+.page-hero--image .page-hero__title {
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55), 0 4px 30px rgba(0, 0, 0, 0.35);
+}
+
+.page-hero__subtitle {
+  animation: hero-copy-in 0.9s var(--ease-out) 0.15s both;
+}
+
+.page-hero__rule {
+  display: block;
+  width: 3rem;
+  height: 4px;
+  margin: 0 auto 1.25rem;
+  border-radius: var(--radius-full);
+  background: var(--gradient-brand);
+  transform-origin: center;
+  animation: rule-grow 0.9s var(--ease-out) 0.3s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-hero__title,
+  .page-hero__subtitle,
+  .page-hero__rule {
+    animation: none;
+  }
+}
+
+.page-hero__subtitle {
+  margin-top: 1rem;
+  font-size: var(--text-body);
+  color: var(--color-text-60);
+  max-width: 34rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.page-hero--image .page-hero__subtitle {
+  color: var(--color-text-on-dark-70);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.55);
+}
+
+/* Pagination */
+.pagination {
+  margin-top: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.pagination__status {
+  font-size: 0.875rem;
+  color: var(--color-text-75);
+}
+
+/* Blog post detail */
+.blog-post {
+  max-width: 42rem;
+}
+
+/* Padded to clear the 24 CSS-px minimum target size (WCAG 2.5.8); the
+   negative inline margin keeps the text visually flush with the column. */
+.blog-post__back {
+  display: inline-block;
+  padding: 0.35rem 0.5rem;
+  margin-inline: -0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: 2rem;
+}
+
+.blog-post__title {
+  margin-top: 0.625rem;
+  font-size: var(--text-h1);
+  color: var(--color-text);
+}
+
+.blog-post__cover {
+  margin-top: 2rem;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-alt);
+}
+
+.blog-post__body {
+  margin-top: 2.5rem;
+}
+
+.blog-post__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* "En este artículo": the post's h2s, built by lib/richText.ts. */
+.blog-post__toc {
+  margin-top: 2.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-alt);
+}
+
+.blog-post__toc-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-40);
+}
+
+.blog-post__toc ol {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+}
+
+.blog-post__toc li + li {
+  margin-top: 0.375rem;
+}
+
+.blog-post__toc li::marker {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.blog-post__toc a {
+  font-weight: 500;
+  color: var(--color-text);
+  transition: color 0.15s ease;
+}
+
+.blog-post__toc a:hover {
+  color: var(--color-primary-alt);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* Shared prose styles for CMS-authored HTML (blog posts, rich_text sections).
+   Bodies arrive normalized by lib/richText.ts: real paragraphs and headings,
+   no stray <br>s, a single h1 per page, timelines marked `.prose-timeline`. */
+.prose {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--color-text-60);
+  overflow-wrap: break-word;
+}
+
+/* Flow spacing: every block after the first gets the same rhythm, inside the
+   <article>/<section> wrappers editors paste too. */
+.prose > * + *,
+.prose :is(article, section) > * + * {
+  margin-top: 1.25rem;
+}
+
+.prose :is(article, section) + * ,
+.prose * + :is(article, section) {
+  margin-top: 1.75rem;
+}
+
+.prose p {
+  text-wrap: pretty;
+}
+
+/* A paragraph whose only content is a <time> — the byline left over from a
+   pasted article's <header> (lib/richText.ts unwraps the <header> itself but
+   leaves its content in place) — reads as metadata, not body copy. */
+.prose p:has(> time:only-child) {
+  margin-top: 0.375rem;
+  font-size: var(--text-small);
+  color: var(--color-text-40);
+}
+
+.prose :is(h1, h2, h3, h4) {
+  color: var(--color-text);
+  text-wrap: balance;
+  hyphens: manual;
+  text-align: left;
+}
+
+.prose h2 {
+  margin-top: 2.75rem;
+  font-size: clamp(1.375rem, 2.4vw, 1.75rem);
+  line-height: 1.2;
+}
+
+.prose h3 {
+  margin-top: 2.25rem;
+  font-size: 1.1875rem;
+  line-height: 1.3;
+}
+
+/* Shown in the editor's own casing (sentence case), not forced to caps. */
+.prose h4 {
+  margin-top: 1.75rem;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+/* A heading sits closer to the copy it introduces than to the copy above it. */
+.prose :is(h2, h3, h4) + * {
+  margin-top: 0.75rem;
+}
+
+.prose > :first-child,
+.prose :is(article, section) > :first-child {
+  margin-top: 0;
+}
+
+.prose strong,
+.prose b {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.prose a {
+  color: var(--color-primary-alt);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+  transition: text-decoration-color 0.15s ease, color 0.15s ease;
+}
+
+.prose a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.prose :is(ul, ol) {
+  padding-left: 1.5rem;
+  text-align: left;
+}
+
+.prose li + li {
+  margin-top: 0.625rem;
+}
+
+.prose li::marker {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.prose li > :is(ul, ol) {
+  margin-top: 0.625rem;
+}
+
+.prose blockquote {
+  margin-inline: 0;
+  padding: 0.25rem 0 0.25rem 1.25rem;
+  border-left: 3px solid var(--color-primary);
+  font-size: 1.125rem;
+  font-style: italic;
+  color: var(--color-text);
+}
+
+.prose hr {
+  margin-block: 2.5rem;
+  border: 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.prose img {
+  border-radius: var(--radius-md);
+}
+
+.prose figcaption {
+  margin-top: 0.5rem;
+  font-size: var(--text-small);
+  color: var(--color-text-40);
+  text-align: center;
+}
+
+.prose-table {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.prose-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  text-align: left;
+}
+
+.prose-table :is(th, td) {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.prose-table th {
+  background: var(--color-bg-alt);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.prose-table tr:last-child td {
+  border-bottom: 0;
+}
+
+/* rich_text section: its column, and the first paragraph as a lead-in. A
+   touch wider than before — on the wide .container this still reads as one
+   comfortable reading column, it just doesn't strand quite so much of the
+   wide container as flat space beside it. */
+.rich-text {
+  max-width: 52rem;
+}
+
+/* The text-only rich_text section (no image/video) — clips its own aurora
+   wash and keeps the copy above it. */
+.rich-text-plain {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.rich-text-plain .aurora {
+  z-index: 0;
+}
+
+.rich-text-plain .container {
+  position: relative;
+  z-index: 1;
+}
+
+.rich-text > .section-title + .prose,
+.rich-text > .eyebrow + .prose {
+  margin-top: 1.25rem;
+}
+
+.prose--section > p:first-child {
+  font-size: 1.1875rem;
+  line-height: 1.65;
+  color: var(--color-text);
+}
+
+/* Title written as a label (all caps) → eyebrow; the body's own first
+   heading then carries the headline size. */
+.prose--after-label {
+  margin-top: 0.875rem;
+}
+
+.prose--after-label > h2:first-child {
+  font-size: var(--text-h2);
+  line-height: 1.15;
+}
+
+.prose--after-label > h2:first-child + p {
+  margin-top: 1.25rem;
+}
+
+/* Blog article: headings clear the sticky header when reached from the index. */
+.prose--article :is(h2, h3) {
+  scroll-margin-top: 6rem;
+}
+
+.prose--article > p:first-child::first-letter {
+  float: left;
+  margin: 0.35rem 0.625rem 0 0;
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 800;
+  line-height: 0.8;
+  color: var(--color-primary-alt);
+}
+
+/* Timeline — lib/richText.ts marks a <section> whose h3s are all years
+   (e.g. "Nuestra historia") as `.prose-timeline`; only those get the rail. */
+.prose .prose-timeline {
+  position: relative;
+  padding-left: 2rem;
+  border-left: 2px solid var(--color-border);
+}
+
+.prose .prose-timeline > h2 {
+  margin-left: -2rem;
+  padding-bottom: 0.5rem;
+  background: var(--color-bg);
+}
+
+.prose .prose-timeline > h3 {
+  position: relative;
+  margin-top: 2.25rem;
+  color: var(--color-primary-alt);
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.prose .prose-timeline > h2 + h3 {
+  margin-top: 1.25rem;
+}
+
+.prose .prose-timeline > h3::before {
+  content: "";
+  position: absolute;
+  top: 0.4em;
+  left: -2.425rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: var(--radius-full);
+  background: var(--color-primary-alt);
+  box-shadow: 0 0 0 4px var(--color-bg), 0 0 0 5px var(--color-border);
+}
+
+.prose .prose-timeline > h3 + p {
+  margin-top: 0.375rem;
+}
+
+.prose .prose-timeline > p + p {
+  margin-top: 0.75rem;
+}
+
+/* Rich text with a video — media on one side, copy on the other (home page). */
+.rich-text-media {
+  /* --section-bg is scrubbed by scroll position (see RichText.astro's script);
+     falls back to the plain bg color with no JS / before the first frame. */
+  background: var(--section-bg, var(--color-bg));
+}
+
+.rich-text-media .section-title {
+  color: var(--color-text);
+}
+
+.rich-text-media .prose {
+  color: var(--color-text-60);
+}
+
+.rich-text-media .prose :is(h1, h2, h3, h4) {
+  color: var(--color-text);
+}
+
+.rich-text-media .prose a {
+  color: var(--color-primary-alt);
+}
+
+.rich-text-media .prose :is(strong, b, blockquote) {
+  color: var(--color-text);
+}
+
+.rich-text-media .prose li::marker {
+  color: var(--color-primary);
+}
+
+.rich-text-media .prose blockquote {
+  border-left-color: var(--color-primary);
+}
+
+.rich-text-media .prose hr {
+  border-top-color: var(--color-border);
+}
+
+.rich-text-media .section-title + .prose,
+.rich-text-media .eyebrow + .prose {
+  margin-top: 1.25rem;
+}
+
+.rich-text-media__layout {
+  display: grid;
+  gap: 2.5rem;
+}
+
+@media (min-width: 860px) {
+  .rich-text-media__layout {
+    grid-template-columns: 1fr 1fr;
+    gap: 3.5rem;
+    /* Video keeps its own 16:9 box (see below) instead of being stretched to
+       match the text column's height — stretching it forced the YouTube
+       player itself to letterbox (black bars) to keep the video at 16:9
+       inside a taller box. Centering it splits the leftover space evenly
+       above/below instead of dumping it all in one large gap underneath. */
+    align-items: center;
+  }
+}
+
+.rich-text-media__video {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--color-ink-2);
+  box-shadow: var(--shadow-float);
+}
+
+.rich-text-media__video :is(iframe, img) {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.rich-text-media__video img {
+  object-fit: cover;
+}
+
+/* Footer */
+.site-footer {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--color-primary);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 4rem 0 2rem;
+}
+
+/* Footer text, links and icons in white tints over the primary blue. */
+.site-footer .footer-heading {
+  color: #ffffff;
+}
+
+.site-footer .footer-link {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.site-footer a.footer-link:hover {
+  color: #ffffff;
+}
+
+.site-footer .social-icon {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
+}
+
+.site-footer .social-icon:hover {
+  background: #ffffff;
+  color: var(--color-primary);
+}
+
+.site-footer .footer-bottom {
+  border-top-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.site-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--color-primary), var(--color-accent), transparent);
+}
+
+.site-footer__glow {
+  position: absolute;
+  z-index: -1;
+  width: 40rem;
+  height: 40rem;
+  right: -12rem;
+  bottom: -22rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(39, 191, 240, 0.18), transparent 65%);
+  pointer-events: none;
+}
+
+.footer-grid {
+  display: grid;
+  gap: 2.5rem;
+  /* The logo + seals block needs ~16rem; never squeeze its column below it. */
+  grid-template-columns: minmax(16rem, 1.3fr) repeat(3, 1fr);
+}
+
+@media (max-width: 800px) {
+  .footer-grid {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  /* Phones: the brand block and the contact details (long address and
+     email) each take a full row; Navegación and Servicios share one. */
+  .footer-grid > :first-child,
+  .footer-grid > .footer-contact {
+    grid-column: 1 / -1;
+  }
+}
+
+.footer-heading {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-40);
+  margin-bottom: 1rem;
+}
+
+.footer-link {
+  display: block;
+  font-size: 0.875rem;
+  padding: 0.3rem 0;
+  /* A long email address breaks instead of running off a phone screen. */
+  overflow-wrap: anywhere;
+  color: var(--color-text-75);
+  transition: color 0.15s ease, transform 0.25s var(--ease-out);
+}
+
+a.footer-link:hover {
+  transform: translateX(4px);
+}
+
+a.footer-link:hover {
+  color: var(--color-primary-alt);
+}
+
+.footer-contact {
+  font-style: normal;
+}
+
+.social-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.social-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-60);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.social-icon {
+  transition: border-color 0.15s ease, background 0.25s ease, transform 0.25s var(--ease-out), color 0.15s ease;
+}
+
+.social-icon:hover {
+  background: var(--gradient-brand);
+  border-color: transparent;
+  color: #ffffff;
+  transform: translateY(-3px);
+}
+
+/* "Nuestras redes sociales" (SocialBand.astro) — the footer's own icons at
+   a bigger, standalone-feature size, plus the same WhatsApp link as the
+   floating button, styled as an in-page pill instead of a fixed FAB. */
+.social-band__row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.social-band__icon {
+  width: 3rem;
+  height: 3rem;
+}
+
+.social-band__whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: var(--radius-full);
+  background: #25d366;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  box-shadow: 0 14px 30px -14px rgba(37, 211, 102, 0.6);
+  transition: transform 0.2s var(--ease-out), box-shadow 0.3s ease;
+}
+
+.social-band__whatsapp:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px -14px rgba(37, 211, 102, 0.75);
+}
+
+.footer-bottom {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-40);
+}
+
+/* WhatsApp floating button */
+.whatsapp-fab {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 50;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: var(--radius-full);
+  background: #25d366;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 25px -5px rgba(37, 211, 102, 0.5);
+  transition: transform 0.15s ease;
+}
+
+.whatsapp-fab:hover {
+  transform: scale(1.06);
+}
+
+.whatsapp-fab::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  border: 2px solid #25d366;
+  animation: fab-ring 2.8s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes fab-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  80%,
+  100% {
+    transform: scale(1.55);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .whatsapp-fab::before {
+    animation: none;
+    opacity: 0;
+  }
+}
+
+/* iOS Safari zooms the whole page when a focused control's text is under 16px,
+   and there is no way back out except a pinch. Below the tablet breakpoint the
+   controls go to exactly 16px; the desktop sizes above are unaffected. */
+@media (max-width: 860px) {
+  .field input,
+  .field select,
+  .field textarea {
+    font-size: 1rem;
+  }
+}
+
+/* The painted dot is only a few pixels tall, far under the 24×24 CSS-px target
+   WCAG 2.5.8 asks for. A transparent pseudo-element enlarges what the finger
+   has to hit without changing what is drawn; the row's gap is widened so
+   neighbouring targets don't overlap. */
+.hero__dots {
+  gap: 1rem;
+}
+
+.hero__dot {
+  position: relative;
+}
+
+.hero__dot::after {
+  content: "";
+  position: absolute;
+  inset: -1.125rem -0.5rem;
+}
+
+/* CMS-authored rich text can carry anything an editor pastes. A wide table or
+   an <iframe> embed would otherwise push the whole page sideways on a phone,
+   so each is made to scroll or shrink inside the column instead. */
+.prose :is(table, pre) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.prose :is(img, iframe, video, embed, object) {
+  max-width: 100%;
+}
+
+/* Custom cursor — the company logo, with a graceful fallback to the browser's
+   native cursor if the image ever fails to load. Placed last in the file so
+   it reliably wins over earlier equal-specificity `cursor` rules (button's
+   own `cursor: pointer` above, and .field select's below) regardless of
+   selector order elsewhere in the stylesheet. */
+html,
+body {
+  cursor: url("/pointer.png") 17 16, auto;
+}
+
+a,
+button,
+input,
+textarea,
+select,
+label {
+  cursor: url("/pointer.png") 17 16, auto;
+}
+
+/* `.field select` sets its own `cursor: pointer` (class+tag, higher
+   specificity than the plain `select` rule above) for its custom dropdown
+   arrow, so it needs its own explicit override. */
+.field select {
+  cursor: url("/pointer.png") 17 16, auto;
+}
+
+/* ------------------------------------------------------------------
+   CMS fields that used to go unrendered
+------------------------------------------------------------------ */
+
+/* Blog: post excerpt as a lead paragraph, and the listing's post count. */
+.blog-post__lead {
+  margin-top: 1rem;
+  font-size: 1.1875rem;
+  line-height: 1.55;
+  color: var(--color-text-60);
+}
+
+.blog-index__count {
+  margin-bottom: 1.5rem;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-text-40);
+  text-align: center;
+}
+
+/* Clients: the grid variant wraps its cards so markup matches the marquee;
+   `display: contents` keeps them direct grid items. */
+.logo-grid__inner {
+  display: contents;
+}
+
+.logo-card__desc {
+  margin-top: -0.375rem;
+  font-size: 0.8125rem;
+  color: var(--color-text-60);
+  text-align: center;
+}
+
+.client-quotes {
+  margin-top: 3rem;
+}
+
+/* Savings simulator: percentage and the per-fuel monthly cost breakdown. */
+.simulator__percent {
+  display: inline-block;
+  margin-top: 1rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: var(--radius-full);
+  background: rgba(31, 92, 169, 0.14);
+  color: var(--color-primary);
+  font-size: 0.8125rem;
+  font-weight: 700;
+}
+
+.simulator__breakdown {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border-on-dark);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.simulator__breakdown dt {
+  font-size: 0.75rem;
+  color: var(--color-text-on-dark-45);
+}
+
+.simulator__breakdown dd {
+  margin: 0.25rem 0 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.simulator__breakdown div:last-child dd {
+  color: var(--color-primary);
+}
+
+.simulator__percent[hidden],
+.simulator__breakdown[hidden] {
+  display: none;
+}
+
+/* Stations: call link, and the "Ver en el mapa" toggle with its active card. */
+a.stations-list__phone {
+  /* display:flex (not block) so its icon sits inline with the number —
+     .stations-list__meta--icon's own display:flex would otherwise lose to
+     this compound selector's higher specificity. */
+  display: flex;
+  color: var(--color-primary-alt);
+}
+
+a.stations-list__phone:hover {
+  text-decoration: underline;
+}
+
+/* Equal-width side-by-side buttons instead of a button + a plain text link,
+   so the card's bottom edge reads as one balanced row of two actions. */
+.stations-list__actions {
+  display: flex;
+  gap: 0.625rem;
+  margin-top: 0.875rem;
+}
+
+.stations-list__actions .stations-list__focus,
+.stations-list__actions .stations-list__link {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--radius-full);
+  text-align: center;
+}
+
+.stations-list__actions .stations-list__link {
+  border: 1px solid var(--color-border-hover);
+  color: var(--color-primary-alt);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.stations-list__actions .stations-list__link:hover {
+  border-color: var(--color-primary-alt);
+  background: var(--color-bg-alt);
+}
+
+.stations-list__focus {
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-hover);
+  background: transparent;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.stations-list__focus:hover,
+.stations-list__focus[aria-pressed="true"] {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+.stations-list__item {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.stations-list__item.is-active {
+  border-color: var(--color-primary);
+  background: rgba(31, 92, 169, 0.06);
+  box-shadow: inset 3px 0 0 var(--color-primary), 0 16px 32px -20px rgba(31, 92, 169, 0.5);
+}
+
+/* Contact info: address/phone/email/hours as actionable rows. */
+.contact-info {
+  margin-top: 2rem;
+}
+
+.contact-info__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.125rem;
+}
+
+.contact-info__item {
+  display: flex;
+  gap: 0.875rem;
+  align-items: flex-start;
+}
+
+.contact-info__icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-full);
+  background: rgba(31, 92, 169, 0.14);
+  color: var(--color-primary-alt);
+}
+
+.contact-info__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-40);
+}
+
+.contact-info__value {
+  display: block;
+  margin-top: 0.125rem;
+  color: var(--color-text);
+}
+
+/* Dark by default (same as plain .contact-info__value) instead of brand
+   blue — legible first, with color reserved for hover as the "this is
+   clickable" cue rather than the resting state. */
+.contact-info__value--link {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.contact-info__value--link:hover {
+  color: var(--color-primary-alt);
+  text-decoration: underline;
+}
+
+.contact-info__extra {
+  margin-top: 1.25rem;
+  font-size: var(--text-small);
+  color: var(--color-text-60);
+}
+
+/* Image gallery + lightbox. */
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.gallery__item {
+  margin: 0;
+}
+
+.gallery__open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-bg-alt);
+  cursor: zoom-in;
+}
+
+.gallery__img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  transition: transform 0.5s var(--ease-out);
+}
+
+.gallery__open:hover .gallery__img,
+.gallery__open:focus-visible .gallery__img {
+  transform: scale(1.05);
+}
+
+.gallery__open:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+.gallery__caption {
+  margin-top: 0.5rem;
+  font-size: var(--text-small);
+  color: var(--color-text-60);
+}
+
+.gallery-lightbox {
+  max-width: min(92vw, 70rem);
+  max-height: 92vh;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-ink);
+  color: var(--color-text-on-dark-70);
+}
+
+.gallery-lightbox::backdrop {
+  background: rgba(10, 10, 11, 0.82);
+}
+
+.gallery-lightbox__img {
+  display: block;
+  max-width: 100%;
+  max-height: 80vh;
+  margin: 0 auto;
+}
+
+.gallery-lightbox__caption:not(:empty) {
+  padding: 0.875rem 1.25rem;
+  font-size: var(--text-small);
+}
+
+.gallery-lightbox__close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-on-dark);
+  background: rgba(10, 10, 11, 0.6);
+  color: #ffffff;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery__img {
+    transition: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Visual layer: textures, aurora light, and the bands built on them
+------------------------------------------------------------------ */
+
+/* Film grain over dark bands, so large flat areas don't read as dead pixels. */
+.texture-grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.09;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* The hero's slides form their own stacking layer; the grain sits above them. */
+.hero.texture-grain::after {
+  z-index: 2;
+}
+
+.site-footer > .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Light bands: a faint dot lattice / blueprint grid instead of flat white. */
+.texture-dots {
+  background-image: radial-gradient(rgba(31, 92, 169, 0.07) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+  background-position: -11px -11px;
+}
+
+.texture-grid {
+  background-image:
+    linear-gradient(rgba(31, 92, 169, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(31, 92, 169, 0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.texture-dots > .container,
+.texture-grid > .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* Fade the lattice out toward the band's edges so it never meets a hard line. */
+.texture-dots::before,
+.texture-grid::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--band-fade, #ffffff) 0%, transparent 18%, transparent 82%, var(--band-fade, #ffffff) 100%);
+}
+
+.site-footer.texture-dots {
+  --band-fade: var(--color-primary);
+  /* White dots instead of the blue lattice, which vanishes on the blue. */
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1.2px);
+}
+
+.section--alt.texture-grid {
+  --band-fade: var(--color-bg-alt);
+}
+
+/* Aurora: slow drifting blobs of brand light behind dark content. */
+.aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aurora__blob {
+  position: absolute;
+  width: 34rem;
+  height: 34rem;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+  animation: aurora-drift 22s ease-in-out infinite alternate;
+}
+
+.aurora__blob--1 {
+  top: -14rem;
+  left: -8rem;
+  background: rgba(31, 92, 169, 0.55);
+}
+
+.aurora__blob--2 {
+  bottom: -18rem;
+  right: -6rem;
+  background: rgba(39, 191, 240, 0.6);
+  animation-duration: 26s;
+  animation-delay: -6s;
+}
+
+.aurora__blob--3 {
+  top: 30%;
+  left: 45%;
+  width: 22rem;
+  height: 22rem;
+  background: rgba(31, 92, 169, 0.8);
+  animation-duration: 30s;
+  animation-delay: -12s;
+}
+
+.aurora--soft .aurora__blob {
+  opacity: 0.28;
+}
+
+.page-hero .aurora {
+  z-index: 1;
+}
+
+@keyframes aurora-drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(6rem, 3rem) scale(1.15);
+  }
+  100% {
+    transform: translate(-3rem, 5rem) scale(0.92);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora__blob {
+    animation: none;
+  }
+}
+
+/* Simulator band: intro column */
+.simulator__intro {
+  max-width: 32rem;
+}
+
+.simulator__heading {
+  font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+  text-wrap: balance;
+}
+
+.simulator__perks {
+  list-style: none;
+  margin: 1.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.simulator__perks li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.875rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-alt);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text-75);
+}
+
+.simulator__perks li::before {
+  content: "";
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: var(--radius-full);
+  background: var(--color-primary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5'/%3E%3C/svg%3E") center / 0.65rem no-repeat;
+}
+
+/* The calculator itself (SimulatorCalculator.astro) */
+.sim {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.sim--band {
+  position: relative;
+  z-index: 1;
+  padding: 1.25rem;
+  border-radius: calc(var(--radius-lg) + 0.5rem);
+  border: 1px solid var(--color-border);
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgba(31, 92, 169, 0.1), 0 36px 70px -28px rgba(31, 92, 169, 0.35), var(--shadow-float);
+}
+
+/* .sim--band is also a scroll-reveal target (see Layout.astro), and once
+   revealed it keeps .is-visible forever — so its transition for
+   transform/box-shadow would otherwise still be governed by the shared
+   .reveal.reveal rule's 900ms entrance timing (equal specificity, earlier
+   in the file) instead of a snappy one of its own. Declaring the faster
+   transition on the post-reveal `.is-visible` state itself beats that on
+   specificity, without touching the entrance animation pre-reveal. */
+.sim--band.is-visible {
+  transition: transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
+}
+
+/* Grows and lifts above the rest of the section while the visitor is
+   actually using it (any field/button inside has focus) — a click-driven
+   moment of focus instead of a scroll-driven one. :focus-within clears
+   itself the instant focus leaves the calculator (click elsewhere, tab
+   away); the script below also blurs the active field on scroll, so
+   scrolling past it "lets go" too and the visitor can keep reading. */
+.sim--band:focus-within {
+  z-index: 10;
+  transform: scale(1.1);
+  box-shadow: 0 48px 110px -30px rgba(31, 92, 169, 0.5), var(--shadow-float);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sim--band:focus-within {
+    transform: none;
+  }
+}
+
+/* The calculator's shared result/field pieces default to a dark-glass look
+   (see .simulator__result, .field--on-dark above) for the floating FAB's
+   dark popover — this white band needs their light equivalents instead. */
+.sim--band .simulator__result {
+  background: radial-gradient(18rem circle at var(--mx, 80%) var(--my, 0%), rgba(39, 191, 240, 0.12), transparent 65%), var(--color-bg-alt);
+  border-color: var(--color-border);
+}
+
+.sim--band .simulator__result-label {
+  color: var(--color-text-60);
+}
+
+.sim--band .simulator__result-label--top {
+  color: var(--color-text-40);
+}
+
+.sim--band .simulator__meter {
+  background: var(--color-border);
+}
+
+.sim--band .simulator__breakdown {
+  border-top-color: var(--color-border);
+}
+
+.sim--band .simulator__breakdown dt {
+  color: var(--color-text-40);
+}
+
+.sim--band .simulator__breakdown dd {
+  color: var(--color-text);
+}
+
+/* A small brand mark above "Combustible actual" — in normal flow (not
+   absolutely positioned over the card) so it reserves its own real space
+   instead of guessing at how much blank space .sim__form's vertical
+   centering happens to leave above the field. That guess was wrong as soon
+   as the result panel's height differed from whatever state this was built
+   against (no breakdown rows, a different fuel, etc.), and the logo ended
+   up floating on top of the label instead of above it. */
+.sim__brand-logo {
+  /* .sim__form is a flex column, which stretches block children to its
+     full width by default — without this, "width: auto" resolves to that
+     stretched width instead of the image's own intrinsic width, squashing
+     the square logo into a wide, distorted smear. */
+  align-self: flex-start;
+  display: block;
+  height: 4.75rem;
+  width: auto;
+  margin-bottom: 1.5rem;
+}
+
+/* The shake now lives on the submit button (see .sim__submit) instead — a
+   static logo reads better than one that visibly collided with the label
+   in production. */
+
+@media (min-width: 640px) {
+  .sim--band {
+    grid-template-columns: 1fr 1fr;
+    align-items: stretch;
+    padding: 1.5rem;
+    gap: 1.5rem;
+  }
+}
+
+.sim__form {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.sim__form .field:last-of-type {
+  margin-bottom: 1.25rem;
+}
+
+.sim__money {
+  position: relative;
+}
+
+.sim__money-sign {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 700;
+  color: var(--color-primary);
+  pointer-events: none;
+}
+
+.field .sim__money input {
+  padding-left: 2.375rem;
+}
+
+.sim__submit {
+  justify-content: center;
+  width: 100%;
+}
+
+.sim__submit svg {
+  transition: transform 0.3s var(--ease-out);
+}
+
+.sim__submit:hover svg {
+  transform: translateX(4px);
+}
+
+/* The attention-getting wiggle moved here from the logo (see .sim__brand-logo)
+   — a wide pill button reads better with a plain horizontal shake than the
+   rotate+shift used elsewhere, which looks exaggerated on something this
+   wide. Same triggers: once on reveal, again whenever the card is focused
+   into. */
+@keyframes cta-attention-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+.sim--band.is-visible .sim__submit,
+.sim--band:focus-within .sim__submit {
+  animation: cta-attention-shake 0.6s var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sim__submit {
+    animation: none !important;
+  }
+}
+
+.sim.is-loading .simulator__result-value {
+  opacity: 0.45;
+}
+
+.simulator__result {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.simulator__result-label--top {
+  margin-top: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-on-dark-45);
+}
+
+/* A meter that fills to the share of today's spend that would be saved. */
+.simulator__meter {
+  margin-top: 1rem;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.simulator__meter-fill {
+  display: block;
+  height: 100%;
+  width: var(--fill, 0%);
+  border-radius: inherit;
+  background: var(--gradient-brand);
+  box-shadow: 0 0 16px rgba(31, 92, 169, 0.6);
+  transition: width 0.9s var(--ease-out);
+}
+
+.simulator__result-glow {
+  position: absolute;
+  z-index: -1;
+  right: -30%;
+  bottom: -60%;
+  width: 16rem;
+  height: 16rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(31, 92, 169, 0.3), transparent 65%);
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.sim.has-result .simulator__result-glow {
+  opacity: 1;
+}
+
+.field--on-dark input:focus,
+.field--on-dark select:focus {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Compact variant for the floating panel. */
+.sim--compact .simulator__result {
+  padding: 1.25rem;
+}
+
+.sim--compact .simulator__result-value {
+  font-size: 2rem;
+}
+
+.sim--compact .field {
+  margin-bottom: 0.75rem;
+}
+
+/* ------------------------------------------------------------------
+   Floating savings simulator (SimulatorFab.astro)
+------------------------------------------------------------------ */
+.sim-fab {
+  position: fixed;
+  right: 1.5rem;
+  /* Stacks above the WhatsApp button (3.5rem + its 1.5rem offset + a gap). */
+  bottom: 6rem;
+  z-index: 55;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  transition: transform 0.45s var(--ease-out), opacity 0.3s ease;
+}
+
+body:not(:has(.whatsapp-fab)) .sim-fab {
+  bottom: 1.5rem;
+}
+
+/* Steps aside while the page's own simulator section is on screen. */
+.sim-fab.is-tucked {
+  opacity: 0;
+  transform: translateY(1rem) scale(0.85);
+  pointer-events: none;
+}
+
+.sim-fab__toggle {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 3.5rem;
+  min-width: 3.5rem;
+  padding: 0 1.25rem 0 1.0625rem;
+  gap: 0.625rem;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--gradient-brand);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 0.9375rem;
+  box-shadow: var(--shadow-glow), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: padding 0.4s var(--ease-out), gap 0.4s var(--ease-out), transform 0.2s var(--ease-out), box-shadow 0.3s ease;
+}
+
+.sim-fab__toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 40px -12px rgba(39, 191, 240, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.sim-fab__toggle:active {
+  transform: scale(0.95);
+}
+
+.sim-fab__toggle:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 3px;
+}
+
+.sim-fab__label {
+  max-width: 12rem;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width 0.45s var(--ease-out), opacity 0.3s ease;
+}
+
+/* Scrolled: collapses to the round icon button. Hover brings the label back. */
+.sim-fab.is-compact:not(.is-open) .sim-fab__toggle:not(:hover, :focus-visible),
+.sim-fab.is-open .sim-fab__toggle {
+  padding: 0 1.0625rem;
+  gap: 0;
+}
+
+.sim-fab.is-compact:not(.is-open) .sim-fab__toggle:not(:hover, :focus-visible) .sim-fab__label,
+.sim-fab.is-open .sim-fab__label {
+  max-width: 0;
+  opacity: 0;
+}
+
+.sim-fab__icon {
+  display: inline-flex;
+  width: 1.375rem;
+  justify-content: center;
+  transition: transform 0.4s var(--ease-out), opacity 0.25s ease;
+}
+
+.sim-fab__icon--close {
+  position: absolute;
+  left: 1.0625rem;
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.6);
+}
+
+.sim-fab.is-open .sim-fab__icon--open {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.6);
+}
+
+.sim-fab.is-open .sim-fab__icon--close {
+  opacity: 1;
+  transform: none;
+}
+
+/* A soft ring pulses around the button while it's closed. */
+.sim-fab__ring {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  animation: sim-fab-pulse 2.6s ease-out infinite;
+  pointer-events: none;
+}
+
+.sim-fab.is-open .sim-fab__ring {
+  animation: none;
+}
+
+@keyframes sim-fab-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(31, 92, 169, 0.5);
+  }
+  70%,
+  100% {
+    box-shadow: 0 0 0 0.875rem rgba(31, 92, 169, 0);
+  }
+}
+
+.sim-fab__panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 0.875rem);
+  width: min(24rem, calc(100vw - 2rem));
+  /* Clears the header above and the FAB stack below; the body scrolls inside. */
+  max-height: calc(100dvh - var(--header-height) - 12rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border-on-dark);
+  background:
+    radial-gradient(120% 60% at 100% 0%, rgba(39, 191, 240, 0.25), transparent 60%),
+    radial-gradient(90% 50% at 0% 100%, rgba(31, 92, 169, 0.18), transparent 60%),
+    rgba(6, 22, 38, 0.95);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  color: #ffffff;
+  box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.7);
+  transform-origin: bottom right;
+  opacity: 0;
+  transform: translateY(1rem) scale(0.92);
+  transition: opacity 0.25s ease, transform 0.35s var(--ease-out);
+}
+
+.sim-fab__panel[hidden] {
+  display: none;
+}
+
+.sim-fab.is-open .sim-fab__panel {
+  opacity: 1;
+  transform: none;
+}
+
+.sim-fab__head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1rem 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border-on-dark);
+}
+
+.sim-fab__badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.375rem;
+  height: 2.375rem;
+  border-radius: var(--radius-sm);
+  background: var(--gradient-brand);
+  color: #ffffff;
+}
+
+/* The actual brand mark (not the generic calculator icon) — a white tile
+   instead of the gradient fill, since the logo itself is already blue and
+   would wash out against a blue/sky-blue background. */
+.sim-fab__badge--brand {
+  background: #ffffff;
+  padding: 0.25rem;
+}
+
+.sim-fab__badge--brand img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.sim-fab__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.sim-fab__subtitle {
+  font-size: 0.8125rem;
+  color: var(--color-text-on-dark-45);
+}
+
+.sim-fab__close {
+  flex-shrink: 0;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border-on-dark);
+  background: transparent;
+  color: #ffffff;
+  transition: background 0.2s ease, transform 0.3s var(--ease-out);
+}
+
+.sim-fab__close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: rotate(90deg);
+}
+
+.sim-fab__body {
+  padding: 1.25rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Phones: the panel becomes a bottom sheet over a dimmed page. */
+@media (max-width: 640px) {
+  .sim-fab {
+    right: 1rem;
+    bottom: 5.75rem;
+  }
+
+  /* Matches .sim-fab's own mobile `right` above — without this the two FABs
+     sit 0.5rem out of line with each other (1rem vs. the desktop 1.5rem),
+     which reads as a visible horizontal misalignment between the two
+     stacked buttons on a phone screen. */
+  .whatsapp-fab {
+    right: 1rem;
+  }
+
+  .sim-fab__panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 88dvh;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    transform-origin: bottom center;
+    transform: translateY(100%);
+  }
+
+  .sim-fab__head {
+    padding-top: 1.5rem;
+  }
+
+  .sim-fab__head::before {
+    content: "";
+    position: absolute;
+    top: 0.5rem;
+    left: 50%;
+    width: 2.5rem;
+    height: 4px;
+    margin-left: -1.25rem;
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .sim-fab::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 18, 32, 0.55);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .sim-fab.is-open::before {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  body.sim-fab-sheet-open {
+    overflow: hidden;
+  }
+
+  /* The sheet has its own close button; the toggle would sit on top of it. */
+  .sim-fab.is-open .sim-fab__toggle {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sim-fab,
+  .sim-fab__panel,
+  .sim-fab__toggle,
+  .sim-fab__label,
+  .sim-fab__icon {
+    transition: none;
+  }
+
+  .sim-fab__ring {
+    animation: none;
+  }
+}
+
+@media print {
+  .sim-fab,
+  .whatsapp-fab {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Contact band (ContactBand.astro) and the light bands around it
+------------------------------------------------------------------ */
+.lead-band {
+  overflow: hidden;
+}
+
+.lead-band__glow {
+  position: absolute;
+  top: -10rem;
+  right: -10rem;
+  width: 36rem;
+  height: 36rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(31, 92, 169, 0.18), transparent 65%);
+  pointer-events: none;
+}
+
+.lead-band__intro {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.lead-band__intro .section-title {
+  margin-top: 0.5rem;
+}
+
+.lead-band .contact-info {
+  margin-top: 1.75rem;
+}
+
+/* Contact rows become small cards in a two-up grid, so the column carries
+   as much weight as the form beside it. */
+.lead-band .contact-info__list {
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+}
+
+.lead-band .contact-info__item {
+  align-items: center;
+  padding: 0.875rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+  transition: border-color 0.2s ease, transform 0.3s var(--ease-out), box-shadow 0.3s ease;
+}
+
+.lead-band .contact-info__item:hover {
+  border-color: rgba(31, 92, 169, 0.5);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-soft);
+}
+
+.contact-info__value {
+  overflow-wrap: anywhere;
+}
+
+.contact-info__icon {
+  background: linear-gradient(140deg, rgba(31, 92, 169, 0.18), rgba(39, 191, 240, 0.18));
+}
+
+/* The form card gets the brand gradient as a hairline frame. */
+.lead-band .card {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(140deg, rgba(31, 92, 169, 0.6), rgba(39, 191, 240, 0.6)) border-box;
+  box-shadow: 0 30px 60px -30px rgba(6, 26, 46, 0.35);
+  /* The header's "Contacto" CTA deep-links straight to this card (see
+     Layout.astro's contactCtaHref) instead of just the page/section top, so
+     it needs its own scroll offset under the fixed header. */
+  scroll-margin-top: calc(var(--header-height) + 1.5rem);
+}
+
+.lead-band .card:hover {
+  transform: none;
+}
+
+.lead-band .card .card__title {
+  font-size: 1.375rem;
+}
+
+.lead-band form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 1rem;
+}
+
+.lead-band form > .field:has(textarea),
+.lead-band form > .field:first-child,
+.lead-band form > button,
+.lead-band form > .lead-form__status {
+  grid-column: 1 / -1;
+}
+
+.lead-band form > button {
+  justify-self: start;
+}
+
+@media (max-width: 520px) {
+  .lead-band form {
+    grid-template-columns: 1fr;
+  }
+}
+
+.field input,
+.field select,
+.field textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(31, 92, 169, 0.22);
+}
+
+/* The contact band and the stations map below it read as one block. */
+.stations-band {
+  background:
+    radial-gradient(60% 80% at 100% 0%, rgba(39, 191, 240, 0.08), transparent 70%),
+    var(--color-bg-alt);
+}
+
+/* A bit more breathing room than the sitewide section-head default before
+   the map/cards start. */
+.stations-band .section-head {
+  margin-bottom: 4.5rem;
+}
+
+.clients-band .section-head {
+  margin-bottom: 4rem;
+}
+
+.clients-band .logo-marquee__item {
+  width: 14rem;
+}
+
+.client-quotes {
+  margin-top: 2rem;
+}
+
+.rich-text-media {
+  overflow: hidden;
+}
+
+.rich-text-media__video :is(iframe, img) {
+  border-radius: inherit;
+}
+
+html {
+  scrollbar-color: rgba(31, 92, 169, 0.45) transparent;
+}
+
+::selection {
+  background: rgba(31, 92, 169, 0.35);
+}
+
+/* ==================================================================
+   gas-gnu only — everything above is landing-gnu's global.css verbatim
+   (keep it in sync from there). Below: rules for the classes only this
+   site's markup uses (three-level menu, header CTAs, hero stats, the
+   simulator card and floating panel, services feature list, rewards,
+   locations, scheduler, testimonial cards, client logos, zebra sections).
+================================================================== */
+
+.zebra:nth-child(even of .zebra) {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-bg-alt);
+  background-image: radial-gradient(rgba(31, 92, 169, 0.07) 1px, transparent 1.2px);
+  background-size: 22px 22px;
+  background-position: -11px -11px;
+  --band-fade: var(--color-bg-alt);
+}
+
+.zebra:nth-child(even of .zebra)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, var(--band-fade) 0%, transparent 18%, transparent 82%, var(--band-fade) 100%);
+}
+
+.zebra:nth-child(even of .zebra) > .container {
+  position: relative;
+  z-index: 1;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--radius-full);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-on-dark);
+}
+
+.card--tight {
+  padding: 1.25rem;
+}
+
+.simulator-band:not(.simulator-band--panel)::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background-image: radial-gradient(60rem circle at 15% -10%, rgba(31, 92, 169, 0.35), transparent 55%),
+    radial-gradient(50rem circle at 100% 110%, rgba(39, 191, 240, 0.3), transparent 60%);
+  pointer-events: none;
+}
+
+.simulator-band:not(.simulator-band--panel):has(input:focus, select:focus) .simulator-card {
+  transform: scale(1.04) translateY(-0.5rem);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 50px 90px -25px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.12);
+  z-index: 2;
+}
+
 .rewards {
   background: var(--color-bg-alt);
 }
@@ -1174,31 +4991,6 @@ button {
   }
 }
 
-/* TESTIMONIALES */
-.testimonial-card {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  justify-content: space-between;
-}
-
-.testimonial-card__quote {
-  margin: 0;
-  color: var(--color-text-60);
-  font-style: italic;
-}
-
-.testimonial-card__author {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.85rem;
-}
-
-.testimonial-card__author span {
-  color: var(--color-text-40);
-}
-
-/* UBICACIONES */
 .locations {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
@@ -1235,197 +5027,6 @@ button {
   }
 }
 
-/* Map */
-.stations-map {
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  aspect-ratio: 16 / 10;
-  background: var(--color-bg-alt);
-  border: 1px solid var(--color-border);
-}
-
-.stations-map__frame {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-.stations-map__placeholder {
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-40);
-  font-size: 0.875rem;
-}
-
-.clients-grid {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 2.5rem 3rem;
-}
-
-.clients-grid__logo {
-  height: 2.25rem;
-  width: auto;
-  max-width: 9rem;
-  object-fit: contain;
-  filter: grayscale(1);
-  opacity: 0.6;
-  transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s var(--ease-out);
-}
-
-.clients-grid__logo:hover {
-  filter: grayscale(0);
-  opacity: 1;
-  transform: translateY(-4px) scale(1.06);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .clients-grid__logo:hover {
-    transform: none;
-  }
-}
-
-/* Infinite logo marquee — two copies of the same track, scrolled exactly
-   half its total width so the loop point is seamless. */
-.clients-marquee {
-  overflow: hidden;
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-}
-
-.clients-marquee__track {
-  display: flex;
-  width: max-content;
-  animation: clients-marquee 32s linear infinite;
-}
-
-.clients-marquee:hover .clients-marquee__track {
-  animation-play-state: paused;
-}
-
-.clients-marquee__set {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  gap: 3rem;
-  padding-right: 3rem;
-}
-
-@keyframes clients-marquee {
-  to {
-    transform: translateX(-50%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .clients-marquee__track {
-    animation: none;
-  }
-
-  .clients-marquee__set[aria-hidden="true"] {
-    display: none;
-  }
-}
-
-/* BLOG — cards bounce in from the bottom on page load (staggered per-card via
-   an inline animation-delay, see blog/index.astro), rather than waiting for
-   the shared scroll-reveal observer. */
-@keyframes blog-card-bounce-in {
-  0% {
-    opacity: 0;
-    transform: translateY(90px);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-18px);
-  }
-  70% {
-    transform: translateY(9px);
-  }
-  85% {
-    transform: translateY(-5px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.blog-card {
-  position: relative;
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  overflow: hidden;
-  background:
-    radial-gradient(22rem circle at var(--mx, -30rem) var(--my, -30rem), var(--color-primary-soft), transparent 60%),
-    var(--color-surface);
-  display: flex;
-  flex-direction: column;
-  transition: border-color 0.2s ease, transform 0.2s ease;
-  animation: blog-card-bounce-in 1s ease-out both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .blog-card {
-    animation: none;
-  }
-}
-
-.blog-card:hover {
-  border-color: var(--color-border-hover);
-  transform: translateY(-2px);
-}
-
-.blog-card__cover {
-  height: 9rem;
-  width: 100%;
-  object-fit: cover;
-  background: var(--color-bg-alt);
-  transition: transform 0.5s var(--ease-out);
-}
-
-.blog-card:hover .blog-card__cover {
-  transform: scale(1.06);
-}
-
-.blog-card__body {
-  padding: 1.25rem 1.4rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.blog-card__tag {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-primary);
-}
-
-.blog-card__title {
-  font-family: var(--font-display);
-  font-size: 1rem;
-}
-
-.blog-card__excerpt {
-  margin-top: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--color-text-60);
-}
-
-.blog-card__link {
-  margin-top: 0.25rem;
-  display: inline-block;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-/* Service scheduling widget */
 .scheduler {
   display: flex;
   flex-direction: column;
@@ -1496,1206 +5097,283 @@ button {
   margin-bottom: 1rem;
 }
 
-.pagination {
-  margin-top: 3.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1.25rem;
-  flex-wrap: wrap;
-}
-
-.pagination__status {
-  font-size: 0.875rem;
-  color: var(--color-text-60);
-}
-
-.blog-post {
-  max-width: 42rem;
-}
-
-/* Padded to clear the 24 CSS-px minimum target size (WCAG 2.5.8); the
-   negative inline margin keeps the text visually flush with the column. */
-.blog-post__back {
-  display: inline-block;
-  padding: 0.35rem 0.5rem;
-  margin-inline: -0.5rem;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--color-primary);
-  margin-bottom: 2rem;
-}
-
-.blog-post__title {
-  margin-top: 0.625rem;
-  font-size: var(--text-h1);
-  color: var(--color-text);
-}
-
-.blog-post__cover {
-  margin-top: 2rem;
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  border-radius: var(--radius-lg);
-  background: var(--color-bg-alt);
-}
-
-.blog-post__body {
-  margin-top: 2.5rem;
-}
-
-/* Page hero (future interior pages) */
-.page-hero {
-  position: relative;
-  background: var(--color-ink);
-  padding: 9rem 0 5rem;
-  text-align: center;
-  overflow: hidden;
-}
-
-/* Decorative light arcs, mirroring the brand manual's hero treatment. Sit at
-   the same stacking level as .page-hero__img below, so a page with a photo
-   simply paints over them — they only show on a flat-navy hero. */
-.page-hero::before,
-.page-hero::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  top: -8rem;
-  right: -8rem;
-  width: 24rem;
-  height: 24rem;
-  border-radius: 50%;
-  border: 1px solid rgba(43, 156, 219, 0.2);
-  pointer-events: none;
-}
-
-.page-hero::after {
-  top: -4rem;
-  right: -4rem;
-  width: 24rem;
-  height: 24rem;
-  border-color: rgba(0, 130, 202, 0.3);
-}
-
-.page-hero__img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 0;
-  opacity: 0.5;
-}
-
-.page-hero__scrim {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: linear-gradient(180deg, rgba(11, 37, 69, 0.35), rgba(11, 37, 69, 0.94));
-}
-
-.page-hero__content {
-  position: relative;
-  z-index: 2;
-}
-
-.page-hero__title {
-  color: var(--color-text-on-dark);
-  font-size: var(--text-h1);
-}
-
-.page-hero__subtitle {
-  margin-top: 1rem;
-  font-size: var(--text-body);
-  color: var(--color-text-on-dark-70);
-  max-width: 34rem;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Shared prose styles for CMS-authored HTML (rich_text sections) */
-.prose {
-  font-size: 1.0625rem;
-  line-height: 1.75;
-  color: var(--color-text-60);
-  text-align: justify;
-  text-align-last: left;
-  hyphens: auto;
-}
-
-.prose :is(h2, h3) {
-  margin-top: 2rem;
-  color: var(--color-text);
-}
-
-.prose p + p {
-  margin-top: 1.25rem;
-}
-
-.prose a {
-  color: var(--color-primary);
-  text-decoration: underline;
-}
-
-.rich-text__video {
-  margin-top: 2rem;
-  position: relative;
-  aspect-ratio: 16 / 9;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: var(--color-ink);
-}
-
-.rich-text__video iframe {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-/* FOOTER */
-.site-footer {
-  background: var(--color-ink);
-  color: var(--color-text-on-dark-70);
-  padding: 4rem 0 2rem;
-}
-
-.footer-grid {
-  display: grid;
-  gap: 2.5rem;
-  grid-template-columns: 1.3fr repeat(3, 1fr);
-}
-
-@media (max-width: 800px) {
-  .footer-grid {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+@keyframes clients-marquee {
+  to {
+    transform: translateX(-50%);
   }
 }
 
-.footer-heading {
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-on-dark-45);
-  margin-bottom: 1rem;
+
+/* landing-gnu lays its card rows out with BalancedGrid (full container
+   width); this site's markup uses plain .grid rows, so they stretch to the
+   full width too instead of landing's capped, centered tracks. */
+.grid--3 {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
-.footer-link {
-  display: block;
-  font-size: 0.875rem;
-  padding: 0.3rem 0;
-  color: var(--color-text-on-dark-70);
+.grid--4 {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
-.footer-link:hover {
-  color: var(--color-text-on-dark);
+/* Zebra sections alternate background, so each keeps its own top padding —
+   landing's "neighbouring sections share one gap" rule above assumes the
+   same background and would butt headings against the band edge. The
+   repeated class only lifts specificity past that rule's :not() chain. */
+.section.zebra.zebra.zebra.zebra.zebra {
+  padding-top: var(--section-space);
 }
 
-.social-row {
-  display: flex;
-  gap: 0.75rem;
-  margin-top: 1.25rem;
-}
-
-.social-icon {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-border-on-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-on-dark);
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-
-.social-icon:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.5);
-}
-
-.social-row--nav-mobile {
-  justify-content: center;
-  margin-top: 0.5rem;
-}
-
-.social-icon--on-light {
-  color: var(--color-text);
-  border-color: var(--color-border);
-}
-
-.social-icon--on-light:hover {
-  background: var(--color-primary-soft);
-  border-color: var(--color-border-hover);
-}
-
-.footer-bottom {
-  margin-top: 2.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--color-border-on-dark);
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  font-size: 0.8125rem;
-  color: var(--color-text-on-dark-45);
-}
-
-/* WhatsApp floating button */
-.whatsapp-fab {
-  position: fixed;
-  right: 1.5rem;
-  bottom: 1.5rem;
-  z-index: 60;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: var(--radius-full);
-  background: #25d366;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 10px 25px -5px rgba(37, 211, 102, 0.5);
-  transition: transform 0.15s ease;
-}
-
-.whatsapp-fab:hover {
-  transform: scale(1.06);
-}
-
-.simulator-fab {
-  position: fixed;
-  right: 1.5rem;
-  /* Stacks above the WhatsApp button: 3.5rem (its height) + 1.5rem (its own
-     bottom offset) + a 1rem gap = 6rem. */
-  bottom: 6rem;
-  z-index: 65;
-  width: 3.5rem;
-  height: 3.5rem;
-  border: none;
-  border-radius: var(--radius-full);
-  background: var(--color-primary);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow-cta);
-  transition: transform 0.15s ease;
-}
-
-.simulator-fab:hover {
-  transform: scale(1.06);
-}
-
-/* If WhatsApp isn't rendered (no phone configured in the CMS), the
-   calculator FAB collapses back down to the corner instead of floating
-   6rem up with a dead gap underneath it. */
-body:not(:has(.whatsapp-fab)) .simulator-fab {
-  bottom: 1.5rem;
-}
-
-/* The floating "Calcula tu ahorro" panel: same component as the homepage's
-   section, recycled — see SavingsSimulator.astro's `variant="panel"`. Always
-   in the DOM (not `hidden`): opacity/visibility/transform carry the
-   open/closed state so both the desktop popover and the mobile sheet below
-   can transition in and out instead of popping. */
-.simulator-band--panel {
-  /* The top accent border/inset shadow are a page-section divider; the
-     floating popover is self-contained and shouldn't carry either. */
-  border-top: none;
-  box-shadow: var(--shadow-float);
-  position: fixed;
-  right: 1.5rem;
-  /* Above the FAB that opens it: 6rem (its bottom) + 3.5rem (its height) +
-     a 1rem gap = 10.5rem. */
-  bottom: 10.5rem;
-  z-index: 70;
-  width: min(28rem, calc(100vw - 3rem));
-  max-height: calc(100vh - 12rem);
-  overflow-y: auto;
-  padding: 1.75rem;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-float);
-  transform-origin: bottom right;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transform: translateY(0.75rem) scale(0.96);
-  transition: opacity 0.2s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.2s;
-}
-
-.simulator-band--panel.is-open {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: none;
-}
-
-/* Same fallback as the FAB: without WhatsApp, the panel has nothing to float
-   above either. */
-body:not(:has(.whatsapp-fab)) .simulator-band--panel {
-  bottom: 6rem;
-}
-
-.simulator-band--panel .container {
-  margin: 0;
-  max-width: none;
-  padding: 0;
-}
-
-.simulator-band--panel .simulator {
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-}
-
-.simulator-band--panel .simulator__result {
-  padding: 1.25rem;
-}
-
-.simulator-panel__close {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  width: 2rem;
-  height: 2rem;
-  border: none;
-  border-radius: var(--radius-full);
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-on-dark);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.simulator-panel__close:hover {
-  background: rgba(255, 255, 255, 0.18);
-}
-
-/* Backdrop behind the mobile bottom sheet — inert on desktop, where the
-   panel is a small popover with nothing to dim behind it. */
-.simulator-backdrop {
-  display: none;
-}
-
-@media (max-width: 640px) {
-  /* Both FABs share the same right offset so they stay stacked in one
-     column — pulled in slightly from the edge on phones. */
-  .whatsapp-fab,
-  .simulator-fab {
-    right: 1rem;
-  }
-
-  .simulator-band--panel {
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: auto;
-    max-height: 88dvh;
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    padding-top: 2rem;
-    transform-origin: bottom center;
-    transform: translateY(100%);
-  }
-
-  .simulator-band--panel::before {
-    content: "";
-    position: absolute;
-    top: 0.625rem;
-    left: 50%;
-    width: 2.5rem;
-    height: 4px;
-    margin-left: -1.25rem;
-    border-radius: var(--radius-full);
-    background: rgba(255, 255, 255, 0.25);
-  }
-
-  .simulator-band--panel.is-open {
-    transform: none;
-  }
-
-  .simulator-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 69;
-    background: rgba(6, 18, 32, 0.55);
-    backdrop-filter: blur(3px);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s ease;
-  }
-
-  .simulator-backdrop.is-open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  body.simulator-sheet-open {
-    overflow: hidden;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .simulator-band--panel {
-    transition: opacity 0.15s linear, visibility 0.15s linear;
-    transform: none !important;
-  }
-
-  .simulator-backdrop {
-    transition: none;
-  }
-}
-
-/* iOS Safari zooms the whole page when a focused control's text is under 16px,
-   and there is no way back out except a pinch. Below the tablet breakpoint the
-   controls go to exactly 16px; the desktop sizes above are unaffected. */
-@media (max-width: 860px) {
-  .field input,
-  .field textarea,
-  .field select {
-    font-size: 1rem;
-  }
-}
-
-/* The painted dot is only a few pixels tall, far under the 24×24 CSS-px target
-   WCAG 2.5.8 asks for. A transparent pseudo-element enlarges what the finger
-   has to hit without changing what is drawn; the row's gap is widened so
-   neighbouring targets don't overlap. */
-.hero__dots {
-  gap: 1rem;
-}
-
-.hero__dot {
-  position: relative;
-}
-
-.hero__dot::after {
-  content: "";
-  position: absolute;
-  inset: -1.125rem -0.5rem;
-}
-
-/* CMS-authored rich text can carry anything an editor pastes. A wide table or
-   an <iframe> embed would otherwise push the whole page sideways on a phone,
-   so each is made to scroll or shrink inside the column instead. */
-.prose :is(table, pre) {
-  display: block;
-  max-width: 100%;
-  overflow-x: auto;
-}
-
-.prose :is(img, iframe, video, embed, object) {
-  max-width: 100%;
+/* White logo in the blue footer at landing's size (landing marks it with
+   .brand__logo--footer; here it is the plain .brand__logo). */
+.site-footer .brand__logo {
+  width: 9rem;
+  height: auto;
 }
 
 /* ------------------------------------------------------------------
-   CMS data that used to go unrendered, and the navigation fixes
+   Nav — landing-gnu's nav bar on this site's own menu markup: the
+   dropdown toggles are <button>s (.nav-link--toggle), the dropdown is
+   .nav-dropdown with a third level, and the mobile menu is the in-header
+   mobile menu is a tree of <details> groups. Same type, colors, dropdown
+   panel and "you are here" marks as landing-gnu's .nav-menu / .mobile-nav.
 ------------------------------------------------------------------ */
 
-/* Nav: current page, and the hub link at the top of each dropdown. */
-.nav-link.is-current,
-.nav-link--toggle.is-current {
-  color: var(--color-primary);
+/* Toggles read as the plain .nav-link next to them (including its gradient
+   underline on hover and on the current section). */
+.nav-link--toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: 0.8125rem;
   font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: inherit;
+  color: var(--color-text-75);
+}
+
+.nav-link--toggle:hover,
+.nav-link--toggle.is-current {
+  color: var(--color-primary-alt);
+}
+
+.nav-caret {
+  transition: transform 0.2s var(--ease-out);
+}
+
+.nav-item:hover .nav-caret,
+.nav-item:focus-within .nav-caret,
+.nav-item.is-open .nav-caret {
+  transform: rotate(180deg);
+}
+
+/* Dropdown panel — landing-gnu's .nav-menu. */
+.nav-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  z-index: 10;
+  min-width: 13rem;
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+  box-shadow: var(--shadow-soft);
+  opacity: 0;
+  visibility: hidden;
+  transform: translate(-50%, -6px);
+  transition: opacity 0.2s ease, transform 0.25s var(--ease-out), visibility 0s linear 0.25s;
+}
+
+/* Bridges the gap between the toggle and the panel so the pointer can
+   travel down without the hover dropping. */
+.nav-dropdown::before {
+  content: "";
+  position: absolute;
+  inset: -0.875rem 0 auto;
+  height: 0.875rem;
+}
+
+.nav-item:hover .nav-dropdown,
+.nav-item:focus-within .nav-dropdown,
+.nav-item.is-open .nav-dropdown {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition: opacity 0.2s ease, transform 0.25s var(--ease-out);
+}
+
+.nav-dropdown__group,
+.nav-dropdown__sublist {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Links — landing-gnu's .nav-menu__link. */
+.nav-dropdown__link {
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-text-75);
+  white-space: nowrap;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+/* "Ver todo …" (the hub page itself) sits above the children, past a
+   hairline, since the toggle is a button rather than a link. */
+.nav-dropdown__link--overview {
+  margin-bottom: 0.375rem;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  box-shadow: 0 1px 0 var(--color-border);
+}
+
+/* Third level: indented under its parent. */
+.nav-dropdown__link--sub {
+  padding-left: 1.75rem;
+  font-size: 0.78rem;
+  color: var(--color-text-60);
+}
+
+/* "You are here": tinted row with the brand bar on its left edge. */
+.nav-dropdown__link:hover,
+.nav-dropdown__link:focus-visible,
+.nav-dropdown__link.is-current {
+  background: var(--color-bg-alt);
+  color: var(--color-text);
 }
 
 .nav-dropdown__link.is-current {
-  color: var(--color-primary);
-  font-weight: 600;
+  box-shadow: inset 2px 0 0 var(--color-primary);
 }
 
-.nav-dropdown__link--overview {
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--color-border);
-  font-weight: 600;
-  color: var(--color-primary);
-}
-
-.nav-mobile a.is-current {
-  color: var(--color-primary);
-}
-
-.footer-contact {
-  font-style: normal;
-}
-
-a.footer-link:hover {
-  color: #ffffff;
-}
-
-/* Child-page cards (ChildPageCards.astro, home "Servicios", blog cards): a
-   blog card with a stronger hover — lift and shadow, a brand tint over the
-   zooming cover, and the arrow nudging forward. */
-.service-card {
-  transition: border-color 0.3s ease, transform 0.4s var(--ease-out), box-shadow 0.4s var(--ease-out);
-  /* `both` would keep the bounce-in's final transform forever and override the
-     hover lift; `backwards` releases it once the entrance finishes. */
-  animation-fill-mode: backwards;
-  text-decoration: none;
-}
-
-.service-card__media {
-  position: relative;
-  overflow: hidden;
-}
-
-.service-card__media::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg, transparent 30%, var(--color-primary-alt));
-  opacity: 0;
-  transition: opacity 0.4s var(--ease-out);
-}
-
-.service-card .blog-card__cover {
-  display: block;
-  height: 11rem;
-}
-
-.service-card .card__title,
-.service-card .blog-card__title {
-  transition: color 0.3s ease;
-}
-
-.service-card__arrow {
-  display: inline-block;
-  transition: transform 0.3s var(--ease-out);
-}
-
-.service-card:hover,
-.service-card:focus-visible {
-  border-color: var(--color-primary);
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-float);
-}
-
-.service-card:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 3px;
-}
-
-.service-card:hover .blog-card__cover,
-.service-card:focus-visible .blog-card__cover {
-  transform: scale(1.08);
-}
-
-.service-card:hover .service-card__media::after,
-.service-card:focus-visible .service-card__media::after {
-  opacity: 0.45;
-}
-
-.service-card:hover .card__title,
-.service-card:focus-visible .card__title,
-.service-card:hover .blog-card__title,
-.service-card:focus-visible .blog-card__title {
-  color: var(--color-primary);
-}
-
-.service-card:hover .service-card__arrow,
-.service-card:focus-visible .service-card__arrow {
-  transform: translateX(6px);
+/* A parent whose child is the current page keeps its own text marked. */
+.nav-dropdown__group:has(.nav-dropdown__link--sub.is-current) > .nav-dropdown__link--parent {
+  color: var(--color-primary-alt);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .service-card:hover,
-  .service-card:focus-visible,
-  .service-card:hover .blog-card__cover,
-  .service-card:focus-visible .blog-card__cover,
-  .service-card:hover .service-card__arrow,
-  .service-card:focus-visible .service-card__arrow {
-    transform: none;
-  }
-}
-
-/* Services feature list — each card a photo half + dark circuit-textured
-   panel half, alternating sides down the list, used as a more editorial
-   homepage teaser than the plain card grid (see ChildPageCards.astro). */
-.services-feature-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
-}
-
-.services-feature {
-  display: grid;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  box-shadow: var(--shadow-card);
-}
-
-@media (min-width: 720px) {
-  .services-feature {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  /* Alternates the media to the left on every other card. */
-  .services-feature--reverse .services-feature__media {
-    order: -1;
-  }
-}
-
-/* Light half: the image inset over a pale backdrop, with a thin accent bar
-   at the outer edge and a soft brand-tinted blob behind it. */
-.services-feature__media {
-  position: relative;
-  min-height: 16rem;
-  background: var(--color-bg-alt);
-  padding: 2rem 1.5rem 2rem 2rem;
-  display: flex;
-  align-items: center;
-}
-
-.services-feature__media::before {
-  content: "";
-  position: absolute;
-  top: 1.5rem;
-  bottom: 1.5rem;
-  left: 0;
-  width: 3px;
-  background: var(--color-primary-light);
-}
-
-.services-feature__media-blob {
-  position: absolute;
-  z-index: 0;
-  inset: 1rem 1.5rem 1rem 2rem;
-  border-radius: 50%;
-  background: radial-gradient(circle, var(--color-primary-tint) 0%, rgba(230, 243, 250, 0) 72%);
-  pointer-events: none;
-}
-
-.services-feature__media img {
-  position: relative;
-  z-index: 1;
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-}
-
-.services-feature__media-badge {
-  position: absolute;
-  z-index: 2;
-  bottom: 1.5rem;
-  left: 1.5rem;
-  width: 3.25rem;
-  height: 3.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-full);
-  background: var(--color-primary);
-  color: var(--color-text-on-dark);
-  box-shadow: var(--shadow-cta);
-}
-
-/* Dark half: a faint hexagon/circuit texture over the ink background. */
-.services-feature__panel {
-  position: relative;
-  overflow: hidden;
-  background: var(--color-ink);
-  padding: clamp(2rem, 4vw, 3rem);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cpath d='M30 12 L45.6 21 L45.6 39 L30 48 L14.4 39 L14.4 21 Z' fill='none' stroke='white' stroke-opacity='0.08' stroke-width='1'/%3E%3Cpath d='M120 36 L132.1 43 L132.1 57 L120 64 L107.9 57 L107.9 43 Z' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='1'/%3E%3Cpath d='M70 90 L87.3 100 L87.3 120 L70 130 L52.7 120 L52.7 100 Z' fill='none' stroke='white' stroke-opacity='0.08' stroke-width='1'/%3E%3Cpath d='M140 128 L150.4 134 L150.4 146 L140 152 L129.6 146 L129.6 134 Z' fill='none' stroke='white' stroke-opacity='0.06' stroke-width='1'/%3E%3Cpath d='M45.6 30 L107.9 50' fill='none' stroke='white' stroke-opacity='0.05' stroke-width='1'/%3E%3Cpath d='M70 130 L140 140' fill='none' stroke='white' stroke-opacity='0.05' stroke-width='1'/%3E%3C/svg%3E");
-  background-repeat: repeat;
-}
-
-.services-feature__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  position: relative;
-  z-index: 1;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-text-on-dark-70);
-}
-
-.services-feature__title {
-  position: relative;
-  z-index: 1;
-  margin-top: 0.75rem;
-  font-family: var(--font-display);
-  font-weight: 800;
-  font-size: 1.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.01em;
-  color: var(--color-text-on-dark);
-}
-
-.services-feature__text {
-  position: relative;
-  z-index: 1;
-  margin-top: 1.25rem;
-  padding: 0.875rem 1.125rem;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border-on-dark);
-  background: var(--color-surface-on-dark);
-  color: var(--color-text-on-dark-70);
-  font-size: 0.9375rem;
-}
-
-.services-feature__link {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 1.25rem;
-  padding: 0.875rem 1.25rem;
-  border-radius: var(--radius-md);
-  background: var(--color-text-on-dark);
-  color: var(--color-text);
-  font-weight: 700;
-  text-decoration: none;
-  transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out);
-}
-
-.services-feature__link span {
-  transition: transform 0.3s var(--ease-out);
-}
-
-.services-feature__link:hover {
-  box-shadow: var(--shadow-card);
-}
-
-.services-feature__link:hover span {
-  transform: translateX(4px);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .services-feature__link {
+  .nav-dropdown,
+  .nav-caret {
     transition: none;
   }
 }
 
-.blog-teaser__head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-/* Blog: excerpt as lead paragraph, and the listing's post count. */
-.blog-post__lead {
-  margin-top: 1rem;
-  font-size: 1.1875rem;
-  line-height: 1.55;
-  color: var(--color-text-60);
-}
-
-.blog-index__count {
-  margin-bottom: 1.5rem;
-  font-size: var(--text-small);
-  font-weight: 600;
-  color: var(--color-text-40);
-  text-align: center;
-}
-
-/* Testimonials: the author row now carries the CMS photo. */
-.testimonial-card {
-  margin: 0;
-}
-
-.testimonial-card__author {
-  flex-direction: row;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.testimonial-card__who {
-  display: flex;
-  flex-direction: column;
-}
-
-.testimonial-card__photo {
-  width: 2.75rem;
-  height: 2.75rem;
-  flex-shrink: 0;
-  border-radius: var(--radius-full);
-  object-fit: cover;
-  border: 1px solid var(--color-border);
-}
-
-.testimonial-card__photo--logo {
-  object-fit: contain;
-  padding: 0.25rem;
-  background: var(--color-bg-alt);
-  border-radius: var(--radius-sm);
-}
-
-/* Clients: linked logos and the quote cards under the logo wall. */
-.clients-grid__link {
-  display: inline-flex;
-}
-
-.clients-grid__link:hover .clients-grid__logo,
-.clients-grid__link:focus-visible .clients-grid__logo {
-  filter: grayscale(0);
-  opacity: 1;
-  transform: translateY(-4px) scale(1.06);
-}
-
-.client-quotes {
-  margin-top: 3rem;
-}
-
-/* Savings simulator: percentage and per-fuel monthly cost breakdown. */
-.simulator__percent {
-  display: inline-block;
-  margin-top: 1rem;
-  padding: 0.3rem 0.75rem;
-  border-radius: var(--radius-full);
-  background: rgba(43, 156, 219, 0.18);
-  color: var(--color-primary-light);
-  font-size: 0.8125rem;
+/* Mobile menu — landing-gnu's full-screen .mobile-nav overlay; the tree
+   inside is this site's <details> groups (NavItemMobile.astro), styled as
+   landing's links (top level) and sublinks (everything below). */
+.mobile-nav__tree > a,
+.mobile-nav__tree .nav-mobile__item > summary {
+  padding: 1.125rem 0;
+  border-bottom: 1px solid var(--color-border);
+  font-family: var(--font-display);
+  font-size: 1.25rem;
   font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+  list-style: none;
 }
 
-.simulator__breakdown {
-  margin: 1.25rem 0 0;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--color-border-on-dark);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.simulator__breakdown dt {
-  font-size: 0.75rem;
-  color: var(--color-text-on-dark-45);
-}
-
-.simulator__breakdown dd {
-  margin: 0.25rem 0 0;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-.simulator__breakdown div:last-child dd {
-  color: var(--color-primary-light);
-}
-
-.simulator__percent[hidden],
-.simulator__breakdown[hidden] {
+.mobile-nav__tree .nav-mobile__item > summary::-webkit-details-marker {
   display: none;
 }
 
-/* Stations: the map plus every active station from `GET stations`. */
-.stations-layout {
-  display: grid;
-  gap: 1.5rem;
+.mobile-nav__tree .nav-mobile__item > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-@media (min-width: 860px) {
-  .stations-layout {
-    grid-template-columns: 3fr 2fr;
-    align-items: stretch;
-  }
-
-  .stations-layout--map-only {
-    grid-template-columns: 1fr;
-  }
-
-  .stations-layout:not(.stations-layout--map-only) .stations-map {
-    aspect-ratio: auto;
-    height: 100%;
-    min-height: 20rem;
-  }
+/* A caret on the expandable groups, flipped while open. */
+.mobile-nav__tree .nav-mobile__item > summary::after {
+  content: "";
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: translateY(-25%) rotate(45deg);
+  transition: transform 0.2s var(--ease-out);
 }
 
-.stations-list {
+.mobile-nav__tree .nav-mobile__item[open] > summary::after {
+  transform: translateY(25%) rotate(-135deg);
+}
+
+.mobile-nav__tree .nav-mobile__item[open] > summary {
+  border-bottom: none;
+}
+
+.nav-mobile__sublist {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  max-height: 26rem;
-  overflow-y: auto;
+  padding: 0 0 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.stations-list__item {
-  position: relative;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
-  background:
-    radial-gradient(22rem circle at var(--mx, -30rem) var(--my, -30rem), var(--color-primary-soft), transparent 60%),
-    var(--color-surface);
-  padding: 1.25rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.stations-list__item.is-active {
-  border-color: var(--color-primary);
-  box-shadow: inset 3px 0 0 var(--color-primary);
-}
-
-.stations-list__name {
-  margin: 0;
-  font-weight: 700;
+.mobile-nav__tree .nav-mobile__sublist a,
+.mobile-nav__tree .nav-mobile__item--nested > summary {
+  padding: 0.5rem 0;
+  border-bottom: 0;
+  font-family: var(--font-body);
   font-size: 0.9375rem;
-  color: var(--color-text);
-}
-
-.stations-list__address,
-.stations-list__meta {
-  margin: 0.25rem 0 0;
-  font-size: var(--text-small);
+  font-weight: 500;
   color: var(--color-text-60);
-}
-
-a.stations-list__phone {
-  display: block;
-  color: var(--color-primary);
   text-decoration: none;
 }
 
-a.stations-list__phone:hover {
-  text-decoration: underline;
+.mobile-nav__tree .nav-mobile__item--nested > summary::after {
+  width: 0.4rem;
+  height: 0.4rem;
 }
 
-.stations-list__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 1rem;
-  margin-top: 0.5rem;
+.nav-mobile__item--nested > .nav-mobile__sublist {
+  padding-bottom: 0.25rem;
+  border-bottom: 0;
 }
 
-/* Padded to clear the 24 CSS-px minimum target size (WCAG 2.5.8). */
-.stations-list__link {
-  display: inline-block;
-  padding: 0.35rem 0.5rem;
-  margin-inline: -0.5rem;
-  font-size: var(--text-small);
-  font-weight: 600;
+/* "You are here": the current page, and the group(s) holding it. */
+.mobile-nav__tree a.is-current,
+.mobile-nav__tree .nav-mobile__item:has(.is-current) > summary {
   color: var(--color-primary);
-  text-decoration: none;
 }
 
-.stations-list__focus {
-  padding: 0.35rem 0.875rem;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-border-hover);
-  background: transparent;
-  font: inherit;
-  font-size: var(--text-small);
-  font-weight: 600;
-  color: var(--color-text);
-  cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
-}
-
-.stations-list__focus:hover,
-.stations-list__focus[aria-pressed="true"] {
-  border-color: var(--color-primary);
-  background: var(--color-primary);
-  color: #ffffff;
-}
-
-/* Contact page: form beside the site-wide contact details. */
-.contact-layout {
-  display: grid;
-  gap: 3rem;
-}
-
-@media (min-width: 860px) {
-  .contact-layout {
-    grid-template-columns: 1fr 1fr;
-    align-items: start;
+@media (max-width: 1099px) {
+  .header-actions .btn-secondary {
+    display: none;
   }
 }
 
-.contact-info {
-  margin-top: 2rem;
+/* Header: the booking CTA beside "Cotiza tu equipo", sized like it. */
+.header-actions .btn-secondary {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.8125rem;
 }
 
-.contact-info__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 1.125rem;
-}
-
-.contact-info__item {
-  display: flex;
-  gap: 0.875rem;
-  align-items: flex-start;
-}
-
-.contact-info__icon {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: var(--radius-full);
-  background: var(--color-primary-tint);
-  color: var(--color-primary);
-}
-
-.contact-info__label {
-  margin: 0;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-text-40);
-}
-
-.contact-info__value {
-  display: block;
-  margin: 0.125rem 0 0;
-  color: var(--color-text);
-}
-
-.contact-info__value--link {
-  font-weight: 600;
-  color: var(--color-primary);
-  text-decoration: none;
-}
-
-.contact-info__value--link:hover {
-  text-decoration: underline;
-}
-
-.contact-info__extra {
-  margin-top: 1.25rem;
-  font-size: var(--text-small);
-  color: var(--color-text-60);
-}
-
-/* Image gallery + lightbox. */
-.gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-  gap: 1rem;
-}
-
-.gallery__item {
-  margin: 0;
-}
-
-.gallery__open {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  background: var(--color-bg-alt);
-  cursor: zoom-in;
-}
-
-.gallery__img {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 3;
-  object-fit: cover;
-  transition: transform 0.5s var(--ease-out);
-}
-
-.gallery__open:hover .gallery__img,
-.gallery__open:focus-visible .gallery__img {
-  transform: scale(1.05);
-}
-
-.gallery__open:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 3px;
-}
-
-.gallery__caption {
-  margin-top: 0.5rem;
-  font-size: var(--text-small);
-  color: var(--color-text-60);
-}
-
-.gallery-lightbox {
-  max-width: min(92vw, 70rem);
-  max-height: 92vh;
-  padding: 0;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: var(--color-ink);
-  color: var(--color-text-on-dark-70);
-}
-
-.gallery-lightbox::backdrop {
-  background: rgba(11, 37, 69, 0.82);
-}
-
-.gallery-lightbox__img {
-  display: block;
-  max-width: 100%;
-  max-height: 80vh;
+/* A lead form with no separate pitch (generic CMS pages): the form card
+   alone, centered in landing-gnu's contact band. */
+.lead-band__solo {
+  max-width: 34rem;
   margin: 0 auto;
 }
 
-.gallery-lightbox__caption:not(:empty) {
-  padding: 0.875rem 1.25rem;
-  font-size: var(--text-small);
+/* Home blog teaser: "Ver todo el blog" centered under the cards. */
+.blog-teaser__cta {
+  display: flex;
+  justify-content: center;
+  margin-top: 2.5rem;
 }
 
-.gallery-lightbox__close {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-border-on-dark);
-  background: rgba(11, 37, 69, 0.6);
-  color: #ffffff;
-  font-size: 1.25rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .gallery__img {
-    transition: none;
-  }
-}
-
-/* Custom cursor. Appended last so it wins ties in specificity against the
-   plain `cursor: pointer` rules above; the higher-specificity selectors
-   below still need their own explicit override to actually win. */
-html,
-body {
-  cursor: url("/pointer.png") 16 16, auto;
-}
-
-a,
-button,
-input,
-textarea,
-select,
-label {
-  cursor: url("/pointer.png") 16 16, auto;
-}
-
-.btn-primary,
-.nav-toggle,
-.nav-link--toggle,
-.nav-mobile__item summary,
-.scheduler__slot,
-.stations-list__focus,
-.gallery-lightbox__close {
-  cursor: url("/pointer.png") 16 16, auto;
+/* On the home page the stations band follows the (also light) testimonials
+   band — a pairing landing-gnu never has — and landing's "neighbouring
+   light bands share one gap" rule would butt its heading against them. */
+.section--alt + .section--alt.stations-band {
+  padding-top: var(--section-space);
 }

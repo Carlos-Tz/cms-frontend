@@ -9,6 +9,7 @@ import FeatureGrid from "./sections/FeatureGrid.astro";
 import ImageGallery from "./sections/ImageGallery.astro";
 import ClientsShowcase from "./sections/ClientsShowcase.astro";
 import LeadCaptureForm from "./sections/LeadCaptureForm.astro";
+import ContactPanel from "./ContactPanel.astro";
 import type { PageSection } from "../types/page";
 
 interface Props {
@@ -82,7 +83,8 @@ const { sections, pageSlug = null } = Astro.props;
 
       return (
         <section class:list={["section", { "section--ink": onInk }]} id="contacto">
-          <div class="container container--narrow">
+          <div class="container contact-split">
+            <ContactPanel />
             <LeadCaptureForm
               formId={`lead-form-${index}`}
               source={pageSlug}

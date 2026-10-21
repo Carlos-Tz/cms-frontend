@@ -1,13 +1,5 @@
 ---
-import { BASE_URL } from "../../functions/fetch";
-
-interface FuelPrice {
-  fuel: string;
-  label: string;
-  price_per_unit: number;
-  unit: string;
-  equivalence_factor: number;
-}
+import SimulatorCalculator, { type FuelPrice } from "../SimulatorCalculator.astro";
 
 interface Props {
   title?: string | null;
@@ -18,190 +10,56 @@ interface Props {
   // needs this to pick the right one — without it it silently answers with
   // the site's first.
   page?: string | null;
-  // "section": the full-bleed block embedded in a page's own flow (the
-  // homepage). "panel": the same functionality recycled as a closable
-  // floating panel, available site-wide from the FAB in the layout.
-  variant?: "section" | "panel";
 }
 
-const { title, intro, fuel_prices = [], page = null, variant = "section" } = Astro.props;
+const { title, intro, fuel_prices = [], page = null } = Astro.props;
 
-const gasNaturalPrice = fuel_prices.find((fuel) => fuel.fuel === "gas-natural");
-const comparableFuels = fuel_prices.filter((fuel) => fuel.fuel !== "gas-natural");
-const isPanel = variant === "panel";
+const hasComparableFuels = fuel_prices.some((fuel) => fuel.fuel !== "gas-natural");
 ---
 
-{comparableFuels.length > 0 && (
-  <section
-    class:list={["simulator-band", { "simulator-band--panel": isPanel }]}
-    id={isPanel ? "simulator-panel" : "simulador"}
-  >
-    {isPanel && (
-      <button type="button" class="simulator-panel__close" aria-label="Cerrar simulador">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <line x1="6" y1="6" x2="18" y2="18" />
-          <line x1="18" y1="6" x2="6" y2="18" />
-        </svg>
-      </button>
-    )}
-    <div class="container">
-      <div class="simulator-card">
-        <div class="simulator">
-          <div>
-            <span class="eyebrow eyebrow--on-dark">Simulador de ahorro</span>
-            <h2 class="simulator__heading">{title ?? "Descubre cuánto te ahorras al cambiar a GNV"}</h2>
-            <p class="simulator__lead">
-              {intro ?? "Ingresa tu gasto mensual actual en gasolina y descubre tu ahorro estimado al cambiarte a gas natural vehicular."}
-            </p>
-            <form class="savings-simulator-form" style="margin-top: 1.5rem;">
-              <div class="field field--on-dark">
-                <label for="current-fuel">Combustible que usas actualmente</label>
-                <select class="savings-simulator-fuel" id="current-fuel" name="current-fuel">
-                  {comparableFuels.map((fuel) => (
-                    <option value={fuel.fuel}>{fuel.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div class="field field--on-dark">
-                <label for="monthly-spend">Gasto mensual actual (MXN)</label>
-                <input type="number" class="savings-simulator-spend" id="monthly-spend" name="monthly-spend" min="0" placeholder="Ej. 3000" required />
-              </div>
-              <button type="submit" class="btn-primary">Calcular mi ahorro</button>
-            </form>
-          </div>
-          <div class="simulator__result">
-            <p class="simulator__result-value savings-simulator-value">$0 MXN</p>
-            <p class="simulator__result-label">Ahorro mensual estimado</p>
-            <p class="simulator__result-label savings-simulator-annual" style="margin-top: 0.75rem;">
-              Ahorro anual estimado: $0 MXN
-            </p>
-            <p class="simulator__percent savings-simulator-percent" hidden></p>
-            <dl class="simulator__breakdown savings-simulator-breakdown" hidden>
-              <div>
-                <dt class="savings-simulator-current-label">Hoy pagas</dt>
-                <dd class="savings-simulator-current-cost"></dd>
-              </div>
-              <div>
-                <dt>Con gas natural</dt>
-                <dd class="savings-simulator-gas-cost"></dd>
-              </div>
-            </dl>
-          </div>
-        </div>
+{hasComparableFuels && (
+  <section class="simulator-band texture-grain" id="simulador" data-inline-simulator>
+    <div class="aurora aurora--soft" aria-hidden="true">
+      <span class="aurora__blob aurora__blob--1"></span>
+      <span class="aurora__blob aurora__blob--2"></span>
+      <span class="aurora__blob aurora__blob--3"></span>
+    </div>
+    <div class="container simulator">
+      <div class="simulator__intro">
+        <span class="eyebrow">Simulador de ahorro</span>
+        <h2 class="simulator__heading">{title ?? "Descubre cuánto te ahorras al cambiar a GNV"}</h2>
+        <p class="simulator__lead">
+          {intro ?? "Ingresa tu gasto mensual actual en gasolina y descubre tu ahorro estimado al cambiarte a gas natural vehicular."}
+        </p>
       </div>
+      <SimulatorCalculator fuel_prices={fuel_prices} page={page} idPrefix={`sim-${page ?? "page"}`} />
     </div>
   </section>
 )}
 
-<script is:inline define:vars={{ comparableFuels, gasNaturalPrice, apiBase: BASE_URL, simulatorPage: page }}>
-  document.querySelectorAll(".savings-simulator-form").forEach((form) => {
-    const section = form.closest(".simulator-band");
-    const valueEl = section?.querySelector(".savings-simulator-value");
-    const annualEl = section?.querySelector(".savings-simulator-annual");
-    const fuelSelect = form.querySelector(".savings-simulator-fuel");
-    // "Hasta un 60%" is this site's headline savings claim.
-    const FALLBACK_SAVINGS_RATE = 0.6;
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    let currentMonthly = 0;
-
-    function animateCount(el, from, to, duration, format) {
-      if (!el) return;
-      if (prefersReducedMotion || from === to) {
-        el.textContent = format(to);
-        return;
-      }
-      const start = performance.now();
-      function tick(now) {
-        const progress = Math.min(1, (now - start) / duration);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        el.textContent = format(Math.round(from + (to - from) * eased));
-        if (progress < 1) requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
-    }
-
-    // The savings math belongs to the CMS (`GET {site}/savings-simulator`):
-    // it owns the reference prices and stays right after the admin edits them,
-    // whereas the `fuel_prices` baked into this page are as old as the last
-    // build. The local formula below is only the offline fallback.
-    async function serverSavings(selectedFuel, spend) {
-      if (!selectedFuel?.price_per_unit) return null;
-
-      const quantity = spend / selectedFuel.price_per_unit;
-      const query = new URLSearchParams({ fuel: selectedFuel.fuel, quantity: String(quantity) });
-      if (simulatorPage) query.set("page", simulatorPage);
-
-      try {
-        const response = await fetch(`${apiBase}savings-simulator?${query}`);
-        const result = await response.json().catch(() => null);
-        if (!response.ok || result?.status !== "success") return null;
-        return Number.isFinite(result?.data?.savings) ? result.data : null;
-      } catch (error) {
-        return null;
-      }
-    }
-
-    const percentEl = section?.querySelector(".savings-simulator-percent");
-    const breakdownEl = section?.querySelector(".savings-simulator-breakdown");
-    const currentLabelEl = section?.querySelector(".savings-simulator-current-label");
-    const currentCostEl = section?.querySelector(".savings-simulator-current-cost");
-    const gasCostEl = section?.querySelector(".savings-simulator-gas-cost");
-    const money = (value) => `$${Math.round(value).toLocaleString("es-MX")} MXN`;
-
-    // The CMS answer carries more than the saving: the percentage and what
-    // each fuel costs per month. Shown when present, hidden on the offline
-    // fallback so the panel never shows numbers it did not compute.
-    function showBreakdown(result) {
-      const percent = result?.savings_percent;
-      if (percentEl) {
-        percentEl.hidden = !Number.isFinite(percent);
-        if (Number.isFinite(percent)) percentEl.textContent = `${Math.max(0, percent).toLocaleString("es-MX", { maximumFractionDigits: 1 })}% menos cada mes`;
-      }
-      const current = result?.current_fuel;
-      const gas = result?.natural_gas;
-      if (breakdownEl) {
-        const ok = Number.isFinite(current?.cost) && Number.isFinite(gas?.cost);
-        breakdownEl.hidden = !ok;
-        if (ok) {
-          if (currentLabelEl) currentLabelEl.textContent = `Hoy pagas (${current.label.toLowerCase()})`;
-          if (currentCostEl) currentCostEl.textContent = money(current.cost);
-          if (gasCostEl) gasCostEl.textContent = money(gas.cost);
-        }
-      }
-    }
-
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const input = form.querySelector(".savings-simulator-spend");
-      const spend = Number(input?.value ?? 0);
-      if (!Number.isFinite(spend) || spend <= 0) return;
-
-      const selectedFuel = comparableFuels.find((fuel) => fuel.fuel === fuelSelect?.value);
-      const serverResult = await serverSavings(selectedFuel, spend);
-      showBreakdown(serverResult);
-      let monthlySavings = serverResult ? Math.max(0, Math.round(serverResult.savings)) : null;
-
-      if (monthlySavings === null) {
-        if (selectedFuel && gasNaturalPrice) {
-          const unitsConsumed = spend / selectedFuel.price_per_unit;
-          const gasNaturalUnitsNeeded = unitsConsumed * selectedFuel.equivalence_factor;
-          const gasNaturalCost = gasNaturalUnitsNeeded * gasNaturalPrice.price_per_unit;
-          monthlySavings = Math.max(0, Math.round(spend - gasNaturalCost));
-        } else {
-          monthlySavings = Math.round(spend * FALLBACK_SAVINGS_RATE);
-        }
-      }
-
-      const annualSavings = monthlySavings * 12;
-
-      if (valueEl) {
-        animateCount(valueEl, currentMonthly, monthlySavings, 650, (v) => `$${v.toLocaleString("es-MX")} MXN`);
-        currentMonthly = monthlySavings;
-        valueEl.classList.remove("is-updated");
-        void valueEl.offsetWidth;
-        valueEl.classList.add("is-updated");
-      }
-      if (annualEl) annualEl.textContent = `Ahorro anual estimado: $${annualSavings.toLocaleString("es-MX")} MXN`;
-    });
+<script>
+  // The calculator grows via plain CSS (.sim--band:focus-within, see
+  // global.css) the moment a field inside it is focused, and shrinks back
+  // the moment focus leaves it (click elsewhere, tab away) — no JS needed
+  // for that part. The one thing CSS can't do on its own is "shrink back
+  // when the visitor scrolls past it without clicking anywhere else" —
+  // focus doesn't clear itself just because the page scrolled, so this
+  // blurs the focused field once the visitor scrolls while it's expanded,
+  // which drops :focus-within and lets the section settle back down.
+  document.querySelectorAll<HTMLElement>("[data-inline-simulator] .sim--band").forEach((band) => {
+    let scrolling = false;
+    window.addEventListener(
+      "scroll",
+      () => {
+        if (scrolling) return;
+        scrolling = true;
+        requestAnimationFrame(() => {
+          const active = document.activeElement as HTMLElement | null;
+          if (active && band.contains(active)) active.blur();
+          scrolling = false;
+        });
+      },
+      { passive: true }
+    );
   });
 </script>

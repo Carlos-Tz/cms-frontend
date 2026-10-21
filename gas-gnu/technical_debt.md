@@ -1,0 +1,137 @@
+# Deuda técnica — gas-gnu (sitio `gnu-vehicular` en el CMS)
+
+Todo lo que vive en el front porque el CMS no lo soporta o el panel no permite editarlo. Cada entrada dice qué está en duro, dónde, y qué hace falta para eliminarlo.
+
+> Regla general: si un texto o una imagen que el cliente puede querer cambiar está en el repositorio y no en el CMS, pertenece a este archivo.
+
+Datos verificados contra la API en vivo (`/api/public/gnu-vehicular/...`), no contra los seeders. En vivo, `pages/inicio` trae solo: `banner_carousel`, `savings_simulator`, `feature_grid`, `testimonials`, `stations_map` y `lead_capture_form`.
+
+> **Antes de mover cualquier bloque al CMS:** no correr los seeders en producción para crear las secciones nuevas. `BlueprintSeeder::section()` y `page()` hacen `updateOrCreate`: sobrescriben el contenido de **todas** las secciones de los cuatro sitios con los valores del seeder (se pierde todo lo editado desde el panel) y vuelven a publicar las páginas ocultas. Las secciones nuevas deben entrar con una migración que solo inserte lo que falta, como `2026_09_30_195011_backfill_image_video_url_in_rich_text_sections.php`.
+
+---
+
+## 1. Banda de cifras de inicio
+
+**Archivo:** `src/pages/index.astro` → props `stats` y `cta` de `<StatsBand>`
+**Se renderiza en:** `/`, justo debajo del carrusel.
+
+| cifra | texto |
+| --- | --- |
+| +5,000 | equipos instalados |
+| 60 % | ahorro promedio |
+| 24/7 | estaciones activas |
+
+Botón: "Conoce nuestros servicios" → `#servicios`.
+
+**Qué hace falta (en el backend):** el tipo `stats_band` ya existe en `UpdateSectionRequest::SCHEMAS` y en `GnuVehicularBlueprintSeeder`, pero **no está en la base de producción** y el panel no tiene editor para él (cae al `<pre>` de solo lectura de `page-sections-editor.jsx`). Además, el esquema no alcanza para estas tres cifras:
+
+| campo | hoy | falta |
+| --- | --- | --- |
+| `stats[].value` | numérico | "24/7" no es un número: hace falta un campo de texto libre (p. ej. `display`) |
+| `stats[].suffix` | string | — |
+| `stats[].prefix` | no existe | para el "+" de "+5,000" |
+| `cta_label` / `cta_href` | existen | — |
+
+Después: leer `sectionOf(page, "stats_band")` en `index.astro` y borrar el arreglo en duro. `StatsBand.astro` ya acepta `prefix` y `display`.
+
+---
+
+## 2. Texto "Haz que cada kilómetro te cueste menos"
+
+**Archivo:** `src/pages/index.astro` → constante `introRichText`
+**Se renderiza en:** `/`, entre la banda de cifras y el simulador de ahorro, con el mismo componente que las secciones `rich_text` del CMS (`RichText.astro`).
+
+Contenido en duro: el título y cinco bloques (cuatro párrafos y el subtítulo "¿Quieres saber cuánto podrías ahorrar?").
+
+**Qué hace falta (en el backend):** el tipo `rich_text` ya existe y es editable en el panel, pero `pages/inicio` de `gnu-vehicular` no tiene ninguna. Agregar una (`title`, `body`; `video_url` e `image_video_url` vacíos) con una migración, copiando este texto como valor inicial.
+
+Después: en `index.astro`, `const introRichText = sectionOf(page, "rich_text")` y borrar la constante. El `body` es el mismo HTML que guardaría el editor.
+
+---
+
+## 3. Encabezados y textos de sección en duro
+
+Las secciones vienen del CMS, pero estos títulos, antetítulos e introducciones no tienen campo:
+
+| dónde | texto en duro |
+| --- | --- |
+| `/` — servicios (`index.astro`) | antetítulo "Nuestros servicios", título "Todo lo que necesitas para moverte con GNV" |
+| `/` — contacto (`index.astro` → `ContactBand`) | título de la tarjeta del formulario "Cotiza sin compromiso" (el `title` e `intro` del `lead_capture_form` van a la columna izquierda) |
+| cualquier página con una sección `lead_capture_form` vía `SectionRenderer.astro` → `ContactBand` (p. ej. `/nuestros-servicios/instala-tu-equipo-de-gnv/cotiza-tu-equipo`) | mismo caso: título de la tarjeta "Cotiza sin compromiso", `title`/`intro` del CMS van a la columna izquierda |
+| `/` — blog (`BlogTeaser.astro`) | antetítulo "Blog", título "Aprende más sobre el GNV", botón "Ver todo el blog" |
+| `/nuestros-servicios` | "Conoce más" / "Explora Nuestros servicios" |
+| `/nuestros-servicios/instala-tu-equipo-de-gnv` | "Conoce más" / "Explora Instala tu equipo de GNV" |
+| `/ubicaciones` | "Conoce más" / "Explora Ubicaciones" |
+| `/contacto` (`contacto/index.astro`) | título de la tarjeta del formulario "Cotiza sin compromiso" (el `title` del CMS va al encabezado de la izquierda) |
+| antetítulos de sección | "Simulador de ahorro", "Testimoniales", "Contacto" |
+| tarjetas de servicio (`ServiceCards.astro`) | botón "Ver página completa" |
+| blog (`blog/[slug].astro`, `BlogIndex.astro`) | "En este artículo", "Sigue leyendo", "Más artículos", "← Volver al blog", paginación, "Aún no hay publicaciones disponibles." |
+
+**Qué hace falta:** campos opcionales `eyebrow` / `title` / `intro` en el `page_hero` o en la sección correspondiente, o aceptar que son textos de interfaz y dejarlos aquí. Los encabezados de "Nuestros servicios" y del blog no tienen sección propia en el CMS: salen del menú y de `GET blog`.
+
+---
+
+## 4. Encabezado y pie de página
+
+**Archivo:** `src/layouts/Layout.astro`
+
+| elemento | en duro |
+| --- | --- |
+| botones del encabezado | "Agenda tu verificación" y "Cotiza tu equipo" (los destinos sí salen del menú del CMS) |
+| botón del menú móvil | "Cotiza tu equipo" |
+| lema del pie | "Gas Natural Vehicular — energía más limpia y económica para tu movilidad." |
+| títulos de columnas | "Navegación", "Servicios", "Contacto" |
+| enlace extra | "Ver todas las estaciones →" |
+| línea legal | "© {año} GNU Gas Natural Vehicular. Todos los derechos reservados." y "Aviso de privacidad · Términos y condiciones" (**texto plano, sin enlace**: no existen esas páginas) |
+
+**Qué hace falta:** un campo `tagline` en `contact_info` (o una sección global nueva) para el lema, y las páginas de aviso de privacidad y términos en el CMS para poder enlazarlas.
+
+---
+
+## 5. Etiquetas de formularios y del simulador
+
+| archivo | en duro |
+| --- | --- |
+| `LeadCaptureForm.astro` → `FIELD_META` | etiqueta y placeholder de cada campo. El CMS (`lead_capture_form.fields[]`) solo lista las claves (`name`, `email`, `phone`, `message`, `vehicle_description`, `fleet_size`); un campo nuevo en el CMS sin entrada aquí no tendría etiqueta |
+| `ServiceScheduling.astro` | "Estación", "Fecha", "Ver horarios", "Placa", "Descripción del vehículo", "Confirmar cita", etc. |
+| `SimulatorCalculator.astro` | "Combustible que usas actualmente", "Gasto mensual actual (MXN)", "Calcular mi ahorro", "Ahorro mensual estimado", "Hoy pagas", "Con gas natural" |
+| `SimulatorFab.astro` | "Calcula tu ahorro" (el título y el subtítulo del panel sí vienen del `savings_simulator` de inicio) |
+| `ContactInfo.astro` | "Dirección", "Teléfono", "Correo", "WhatsApp", "Horario" |
+
+**Qué hace falta:** si el cliente quiere editarlas, `fields[]` tendría que pasar de lista de claves a objetos `{ key, label, placeholder, required }`.
+
+---
+
+## 6. Datos y comportamiento en código
+
+| qué | dónde | problema / qué hace falta |
+| --- | --- | --- |
+| IDs de estaciones para agendar | `ServiceScheduling.astro` → `LEGACY_STATION_IDS` (`"Estación Morelia": 3`, `"Estación Uruapan": 4`) | `GET stations` no devuelve `id`, y la agenda lo necesita. Si se renombra o se agrega una estación en el panel, desaparece de la agenda sin error. **Backend:** agregar `'id' => $station->id` en `StationController::present()`; después borrar el mapa. |
+| mensaje de cita confirmada | `ServiceScheduling.astro` | se muestra `meta.message` de la API ("Tu cita quedó registrada. Te esperamos."), así que el `success_message` editable del CMS nunca aparece. Mostrar primero el del CMS. |
+| ahorro de respaldo | `SimulatorCalculator.astro` → `FALLBACK_SAVINGS_RATE = 0.6` | solo se usa si la API del simulador falla; el 60 % es la promesa comercial del sitio. |
+| ejemplo inicial del simulador | `SimulatorCalculator.astro` → `value="20000"` | el simulador abre ya calculado con $20,000 de gasto mensual. |
+| SEO por defecto | `src/config/seo.ts` | título, descripción y `siteUrl` (`https://www.gnu-gnv.mx`, sin verificar que sea el dominio real). No hay campos SEO en el CMS. |
+
+---
+
+## 7. Respaldos que solo aparecen si el CMS falla al compilar
+
+`fetchData` (`src/functions/fetch.ts`) no revisa el estado HTTP: si la API no responde, la compilación **no falla** y publica estos respaldos como si fueran contenido real. Algunos son promesas o testimonios **inventados**:
+
+| archivo | respaldo |
+| --- | --- |
+| `HeroCarousel.astro` → `fallbackSlides` | "Ahorra hasta un 60% en combustible con GNV", "Instalación con 20% de descuento este mes", "Financiamiento a 12 meses sin intereses" |
+| `index.astro` → `fallbackTestimonials` | tres testimonios con nombres inventados (Ricardo Peña, Lupita Camacho, Juan Osorio) |
+| `index.astro` → `fallbackBenefits`, `RewardsProgram.astro` | beneficios del programa de recompensas y botón "Quiero inscribirme" |
+| `index.astro` → `fallbackLocations`, `LocationsList.astro` | "3 puntos de carga activos las 24 horas", "Carga rápida y área de espera techada", etc. |
+| `index.astro`, `nuestros-servicios`, `ubicaciones`, `instala-tu-equipo-de-gnv` → `fallback*` | listas de páginas hijas |
+| `Layout.astro` | menú, enlaces de servicios del pie y correo `hola@gnu-gnv.mx` |
+| componentes (`?? "…"`) | títulos por defecto del simulador, testimonios, clientes, blog, contacto, etc. |
+
+**Qué hace falta:** que `fetchData` lance un error cuando la respuesta no sea `ok` en `menu`, `globals` y `pages/*`, para que una caída del CMS detenga el despliegue en vez de publicar estos textos. Después, borrar los respaldos inventados (hero, testimonios, recompensas, ubicaciones).
+
+---
+
+## 8. Imágenes en el repositorio
+
+No son contenido editable, pero viven en código: logos (`src/assets/images/logo*.png`, `public/logo*.png`), el ícono de asesor del bloque de contacto, la insignia de flecha de las tarjetas (`Texto_del_párrafo__1_-removebg-preview.png`), el placeholder `noimg.jpg` y el cursor (`public/pointer.png`).

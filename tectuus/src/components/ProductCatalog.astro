@@ -8,14 +8,25 @@
 // Products are laid out as one horizontal shelf per category, each under its
 // own heading, so the catalog reads by product line rather than as one flat
 // grid of mixed equipment.
-import { categoryLabel, formatPrice, splitLabel } from "../functions/catalog";
-import { mediaUrl, FALLBACK_IMAGE } from "../functions/fetch";
+//
+// Cards are text-first: most products ship without an image, so the model
+// code, tagline, summary and key specs carry the card, and a photo — when
+// there is one — is only a small thumbnail beside the title. That keeps cards
+// with and without images looking like the same family.
+import { categoryLabel, formatPrice, parseDescription, splitLabel } from "../functions/catalog";
+import { mediaUrl } from "../functions/fetch";
 import type { ProductCategory, ProductListItem } from "../types/catalog";
+
+// The listing plus the `description` pulled from each product's detail.
+type CatalogProduct = ProductListItem & { description?: string | null };
 
 interface Props {
   categories: ProductCategory[];
-  products: ProductListItem[];
+  products: CatalogProduct[];
 }
+
+// Specs shown per card; the rest live on the product page.
+const MAX_SPECS = 3;
 
 const { categories, products } = Astro.props;
 
@@ -36,15 +47,13 @@ type Shelf = {
   slug: string;
   head: string;
   tail: string | null;
-  image: string | null;
-  items: ProductListItem[];
+  items: CatalogProduct[];
 };
 
 const shelves: Shelf[] = categories
   .map((category) => ({
     slug: category.slug,
     ...categoryLabel(category),
-    image: category.image ?? null,
     items: products.filter((product) => product.category?.slug === category.slug),
   }))
   .filter((shelf) => shelf.items.length > 0);
@@ -52,7 +61,7 @@ const shelves: Shelf[] = categories
 // A product whose category isn't in the category list still has to show up.
 const known = new Set(categories.map((category) => category.slug));
 const orphans = products.filter((product) => !known.has(product.category?.slug ?? ""));
-if (orphans.length) shelves.push({ slug: "", head: "Otros equipos", tail: null, image: null, items: orphans });
+if (orphans.length) shelves.push({ slug: "", head: "Otros equipos", tail: null, items: orphans });
 ---
 
 <section class="section" id="catalogo" data-catalog>
@@ -78,6 +87,7 @@ if (orphans.length) shelves.push({ slug: "", head: "Otros equipos", tail: null, 
           </div>
 
           <div class="catalog-search">
+            <i class="fa-solid fa-magnifying-glass catalog-search__icon" aria-hidden="true"></i>
             <label class="sr-only" for="catalog-search">Buscar producto</label>
             <input
               type="search"
@@ -102,7 +112,7 @@ if (orphans.length) shelves.push({ slug: "", head: "Otros equipos", tail: null, 
               <div class="catalog-shelf__track catalog-grid" data-shelf-track>
                 {shelf.items.map((product) => {
                   const { head, tail } = splitLabel(product.name);
-                  const image = product.image ?? shelf.image;
+                  const { summary, specs, points } = parseDescription(product.description);
                   const hasPrice = product.price !== null && product.price !== "";
                   return (
                     <a
@@ -110,32 +120,51 @@ if (orphans.length) shelves.push({ slug: "", head: "Otros equipos", tail: null, 
                       href={`/productos/${product.slug}`}
                       data-product
                       data-category={product.category?.slug ?? ""}
-                      data-haystack={fold(`${product.name} ${product.category?.name ?? ""} ${shelf.head}`)}
+                      data-haystack={fold(`${product.name} ${shelf.head} ${summary} ${specs.map((s) => `${s.label} ${s.value}`).join(" ")}`)}
                     >
-                      <div class="product-card__media">
-                        <img
-                          src={image ? mediaUrl(image) : FALLBACK_IMAGE}
-                          alt={product.name}
-                          loading="lazy"
-                          width="480"
-                          height="360"
-                        />
-                      </div>
-                      <div class="product-card__body">
+                      <div class="product-card__head">
+                        {product.image ? (
+                          <img class="product-card__thumb" src={mediaUrl(product.image)} alt="" loading="lazy" width="64" height="64" />
+                        ) : (
+                          <span class="product-card__thumb product-card__thumb--icon" aria-hidden="true">
+                            <i class="fa-solid fa-industry"></i>
+                          </span>
+                        )}
                         <p class:list={["product-card__title", { "product-card__title--code": tail }]}>{head}</p>
-                        <div class="product-card__row">
-                          {tail ? <p class="product-card__text">{tail}</p> : <span />}
-                          {hasPrice ? (
-                            <span class="product-card__price">{formatPrice(product.price)}</span>
-                          ) : (
-                            <span class="product-card__cta">
-                              Cotizar
-                              <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
-                                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round" />
-                              </svg>
-                            </span>
-                          )}
-                        </div>
+                      </div>
+
+                      {tail && <p class="product-card__tagline">{tail}</p>}
+                      {summary && (
+                        <p class:list={["product-card__summary", { "product-card__summary--long": !specs.length && !points.length }]}>{summary}</p>
+                      )}
+
+                      {specs.length > 0 ? (
+                        <dl class="product-card__specs">
+                          {specs.slice(0, MAX_SPECS).map((spec) => (
+                            <div class="product-card__spec">
+                              <dt>{spec.label}</dt>
+                              <dd>{spec.value}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      ) : (
+                        points.length > 0 && (
+                          <ul class="product-card__points">
+                            {points.slice(0, MAX_SPECS).map((point) => <li>{point}</li>)}
+                          </ul>
+                        )
+                      )}
+
+                      <div class="product-card__foot">
+                        <span class="product-card__more"><i class="fa-solid fa-file-lines" aria-hidden="true"></i>Ver ficha</span>
+                        {hasPrice ? (
+                          <span class="product-card__price">{formatPrice(product.price)}</span>
+                        ) : (
+                          <span class="product-card__cta">
+                            Cotizar
+                            <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                          </span>
+                        )}
                       </div>
                     </a>
                   );

@@ -1,0 +1,104 @@
+---
+// Sits beside every lead form so the visitor sees who they're writing to and
+// every other way to reach Tectuus. Contact details come from the CMS globals
+// (Landing Page → Datos de contacto / Botón de WhatsApp), the same source as
+// the footer, so editing them there updates both.
+import { fetchData } from "../functions/fetch";
+import type { GlobalsResponse } from "../types/globals";
+
+interface Props {
+  heading?: string;
+}
+
+const { heading = "Hablemos de tu proyecto" } = Astro.props;
+
+const globalsResponse: GlobalsResponse | undefined = await fetchData("globals");
+const contact = globalsResponse?.data?.contact_info;
+const whatsapp = globalsResponse?.data?.whatsapp_button;
+
+const whatsappDigits = (whatsapp?.phone ?? "").replace(/\D/g, "");
+const whatsappHref = whatsappDigits
+  ? `https://wa.me/${whatsappDigits}${
+      whatsapp?.prefilled_message ? `?text=${encodeURIComponent(whatsapp.prefilled_message)}` : ""
+    }`
+  : null;
+
+const details = [
+  contact?.address && {
+    icon: "fa-location-dot",
+    label: "Dirección",
+    value: contact.address,
+    href: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(contact.address)}`,
+    external: true,
+  },
+  contact?.phone && {
+    icon: "fa-phone",
+    label: "Teléfono",
+    value: contact.phone,
+    href: `tel:${contact.phone.replace(/[^\d+]/g, "")}`,
+  },
+  contact?.email && {
+    icon: "fa-envelope",
+    label: "Correo",
+    value: contact.email,
+    href: `mailto:${contact.email}`,
+  },
+  contact?.schedule && { icon: "fa-clock", label: "Horario", value: contact.schedule },
+  contact?.additional_info && { icon: "fa-circle-info", label: "Información", value: contact.additional_info },
+].filter(Boolean) as { icon: string; label: string; value: string; href?: string; external?: boolean }[];
+
+const reasons = [
+  { icon: "fa-user-gear", text: "Asesoría de un especialista en gas natural" },
+  { icon: "fa-file-lines", text: "Ficha técnica y especificaciones del equipo" },
+  { icon: "fa-sliders", text: "Propuesta a la medida de tu operación" },
+];
+---
+
+<aside class="contact-panel">
+  <div class="contact-panel__art">
+    <img src="/contact-illustration.png" alt="" width="650" height="384" loading="lazy" />
+  </div>
+
+  <p class="contact-panel__heading">{heading}</p>
+
+  <!-- <ul class="contact-panel__reasons">
+    {reasons.map((reason) => (
+      <li>
+        <i class={`fa-solid ${reason.icon}`} aria-hidden="true"></i>
+        {reason.text}
+      </li>
+    ))}
+  </ul> -->
+
+  {details.length > 0 && (
+    <ul class="contact-panel__details">
+      {details.map((item) => (
+        <li class="contact-panel__item">
+          <span class="contact-panel__icon" aria-hidden="true">
+            <i class={`fa-solid ${item.icon}`}></i>
+          </span>
+          <span class="contact-panel__text">
+            <span class="contact-panel__label">{item.label}</span>
+            {item.href ? (
+              <a
+                href={item.href}
+                {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              >
+                {item.value}
+              </a>
+            ) : (
+              <span>{item.value}</span>
+            )}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )}
+
+  {whatsappHref && (
+    <a class="contact-panel__whatsapp" href={whatsappHref} target="_blank" rel="noopener noreferrer">
+      <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
+      Escríbenos por WhatsApp
+    </a>
+  )}
+</aside>

@@ -3,6 +3,9 @@
 // SectionRenderer, not only the home page.
 import noImg from "../../assets/images/noimg.jpg";
 import { mediaUrl } from "../../functions/fetch";
+import { isGif } from "../../lib/media";
+import { Image } from "astro:assets";
+import logoWhite from "../../assets/images/logo.png";
 
 interface Slide {
   image: string;
@@ -37,7 +40,7 @@ const shown = slides.length ? slides.map((slide) => ({ ...slide, image: mediaUrl
 const isExternal = (url: string) => /^https?:\/\//i.test(url);
 ---
 
-<section class="hero" id="banner-carousel" aria-roledescription="carrusel" aria-label="Banners">
+<section class="hero texture-grain" id="banner-carousel" aria-roledescription="carrusel" aria-label="Banners">
   <div class="hero__track">
     {shown.map((slide, index) => (
       <div
@@ -47,28 +50,57 @@ const isExternal = (url: string) => /^https?:\/\//i.test(url);
         aria-label={`${index + 1} de ${shown.length}`}
         aria-hidden={index === 0 ? undefined : "true"}
       >
-        <img class="hero-slide__img" src={slide.image} alt="" fetchpriority={index === 0 ? "high" : undefined} loading={index === 0 ? "eager" : "lazy"} />
+        {isGif(slide.image) && (
+          // Blurred copy filling the strips left around the GIF, which is
+          // shown whole (contain) instead of cropped. Same URL, so the
+          // browser fetches it once.
+          <img class="hero-slide__img-fill" src={slide.image} alt="" aria-hidden="true" loading={index === 0 ? "eager" : "lazy"} />
+        )}
+        <img class:list={["hero-slide__img", { "hero-slide__img--gif": isGif(slide.image) }]} src={slide.image} alt="" fetchpriority={index === 0 ? "high" : undefined} loading={index === 0 ? "eager" : "lazy"} />
         <div class="hero-slide__scrim" aria-hidden="true" />
         <div class="container hero-slide__content">
           {slide.title && (index === 0 ? <h1 class="hero-slide__title">{slide.title}</h1> : <p class="hero-slide__title">{slide.title}</p>)}
           {slide.subtitle && <p class="hero-slide__subtitle">{slide.subtitle}</p>}
-          {slide.link_url && slide.link_label && (
-            <a
-              class="btn-primary hero-slide__cta"
-              href={slide.link_url}
-              {...(isExternal(slide.link_url) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-            >
-              {slide.link_label}
-            </a>
-          )}
+          {/* CTA (when the slide has one) with the white logo beside it, past a
+              divider; the logo shows on every slide in the same spot. */}
+          <div class="hero-slide__actions">
+            {slide.link_url && slide.link_label && (
+              <a
+                class="btn-primary hero-slide__cta"
+                href={slide.link_url}
+                {...(isExternal(slide.link_url) ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+              >
+                {slide.link_label}
+                <span class="hero-slide__cta-arrow" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </span>
+              </a>
+            )}
+            <span class="hero-slide__brand">
+              <Image src={logoWhite} alt="" widths={[96, 192]} sizes="6rem" loading={index === 0 ? "eager" : "lazy"} />
+            </span>
+          </div>
         </div>
       </div>
     ))}
   </div>
+  <div class="hero__glow" aria-hidden="true"></div>
   {shown.length > 1 && <div class="hero__dots" aria-label="Banners"></div>}
+  <button type="button" class="hero__scroll" aria-label="Ir al siguiente contenido">
+    <span class="hero__scroll-mouse" aria-hidden="true"><span class="hero__scroll-wheel"></span></span>
+  </button>
 </section>
 
 <script>
+  // The scroll cue jumps to whatever section follows the carousel on this page.
+  document.querySelectorAll<HTMLElement>(".hero").forEach((hero) => {
+    hero.querySelector(".hero__scroll")?.addEventListener("click", () => {
+      hero.nextElementSibling?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
   document.querySelectorAll<HTMLElement>(".hero").forEach((hero) => {
     const slides = Array.from(hero.querySelectorAll<HTMLElement>(".hero-slide"));
     const dotsContainer = hero.querySelector<HTMLElement>(".hero__dots");
