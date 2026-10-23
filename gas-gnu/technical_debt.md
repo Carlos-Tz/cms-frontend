@@ -161,3 +161,25 @@ Es el caso más fuera de lo normal del archivo: no es un valor por defecto (`??`
 El título real de esa página en el CMS sigue siendo "Estaciones móviles" (lo trae `getMenu()` y es lo que ve el admin en el panel). El script busca, después de cargar la página, cualquier `<a>` o `<summary>` sin hijos cuyo texto sea exactamente "Estaciones móviles" y lo reemplaza por "Estaciones de suministro de GNV". Igual que el caso del §9: **no existe en el HTML servido** (no lo indexa un buscador tal cual, y si JS falla o tarda, el visitante ve el título real un instante o de forma permanente). Se hizo así para no tocar el título de la página en el CMS (que también es su identificador en el panel) solo por cambiar cómo se lee en la navegación.
 
 **Qué hace falta:** si el nombre "Estaciones de suministro de GNV" es el definitivo, renombrar el título de la página directamente en el panel del CMS y borrar este script.
+
+---
+
+## 11. Texto de "Hablemos de tu vehículo" fijo para todo `lead_capture_form`
+
+**Archivo:** `src/lib/cms.ts` → `CONTACT_PITCH_TITLE`, `CONTACT_PITCH_INTRO`. Se usan en `src/components/SectionRenderer.astro` (caso `lead_capture_form`, cubre `cotiza-tu-equipo`, `flotillas-empresariales` y cualquier página nueva con esta sección) y en `src/pages/contacto/index.astro`.
+**Se renderiza en:** el lado izquierdo (ícono + "CONTACTO" + encabezado + párrafo) de toda banda de contacto del sitio, **excepto** la de inicio (`src/pages/index.astro`), que sigue leyendo `title`/`intro` del CMS tal cual.
+
+Cada página tiene su propio `title`/`intro` en el panel para esta sección — "Cotiza tu equipo" / "Déjanos los datos de tu vehículo y te enviamos una cotización.", "Cotiza para tu flotilla" / "Cuéntanos cuántas unidades tienes...", "Captación de leads" / "Cuéntanos qué necesitas..." en `contacto` — pero en el front ya no se usan: todas muestran el texto de inicio ("¿Tienes dudas? Hablemos de tu vehículo" / "No necesitas conocer todos los detalles técnicos para comenzar...") para que la banda de contacto se vea igual en cualquier página. El `fields` de cada sección (qué campos trae el formulario — p. ej. `vehicle_description` en Cotiza tu equipo, `fleet_size` en Flotillas) sigue viniendo del CMS sin cambios; solo el texto de la izquierda está fijo.
+
+**Qué hace falta:** si el texto por página era intencional (y no un campo que ningún admin llegó a revisar), revertir esto y volver a leer `section.content.title`/`.intro`. Si el texto único es el definitivo, lo más limpio es borrar `title`/`intro` del esquema de `lead_capture_form` en el CMS (no hacen nada ya) y dejar `CONTACT_PITCH_TITLE`/`CONTACT_PITCH_INTRO` como la única fuente.
+
+---
+
+## 12. Sección "¿Qué se instala?" oculta en Instala tu equipo de GNV
+
+**Archivo:** `src/pages/nuestros-servicios/instala-tu-equipo-de-gnv/index.astro` → prop `excludeTypes={["feature_grid"]}` de `<CmsPage>` (mecanismo genérico agregado en `src/components/CmsPage.astro`, reutilizable en cualquier página con el mismo problema).
+**Se renderiza en:** `/nuestros-servicios/instala-tu-equipo-de-gnv` — ya no se renderiza, mejor dicho.
+
+El `feature_grid` "¿Qué se instala?" de esta página tiene sus tres tarjetas ("Evaluacion de tu vehiculo", "Instalación certificada", "Seguimiento técnico") con el campo `text` en `"-"` — un placeholder, no contenido real —, dejando la sección en pantalla con título e ícono pero sin texto que decir. Se ocultó por completo en vez de mostrarla a medio llenar, a pedido explícito mientras se llena el contenido real en el panel.
+
+**Qué hace falta:** pedir que se escriba el `text` real de cada tarjeta en el panel del CMS (sección `feature_grid` de esta página) y, hecho eso, quitar `excludeTypes={["feature_grid"]}` de este archivo.

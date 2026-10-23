@@ -4,7 +4,7 @@ import SectionRenderer from "../../components/SectionRenderer.astro";
 import PageHero from "../../components/sections/PageHero.astro";
 import ContactBand from "../../components/sections/ContactBand.astro";
 import { mediaUrl } from "../../functions/fetch";
-import { getPage, heroOf } from "../../lib/cms";
+import { getPage, heroOf, CONTACT_PITCH_TITLE, CONTACT_PITCH_INTRO } from "../../lib/cms";
 
 const page = await getPage("contacto");
 const hero = heroOf(page);
@@ -30,8 +30,8 @@ const sectionsAfterLead = leadIndex === -1 ? [] : sections.slice(leadIndex + 1);
     <SectionRenderer sections={sectionsBeforeLead} pageSlug={page?.slug} />
     {leadSection && (
       <ContactBand
-        heading={leadSection.content.title ?? "Escríbenos"}
-        intro={leadSection.content.intro}
+        heading={CONTACT_PITCH_TITLE}
+        intro={CONTACT_PITCH_INTRO}
         showContactInfo
         formTitle="Cotiza sin compromiso"
         submit_label={leadSection.content.submit_label}

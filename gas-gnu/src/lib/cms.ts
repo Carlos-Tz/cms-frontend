@@ -83,6 +83,16 @@ export async function getAllBlogPosts(): Promise<BlogPostSummary[]> {
 export const sectionOf = (page: Page | null, type: string) =>
   page?.sections.find((section) => section.type === type)?.content;
 
+// Every `lead_capture_form` section's own `title`/`intro` is really an admin
+// label for telling the panel's sections apart ("Cotiza para tu flotilla",
+// "Captación de leads"…), not copy meant to vary per page — the home page's
+// own section (`src/pages/index.astro`) happens to hold the one version
+// written as public-facing pitch copy, so every other instance of the form
+// is standardized on it here instead of showing its own CMS text verbatim.
+export const CONTACT_PITCH_TITLE = "¿Tienes dudas? Hablemos de tu vehículo";
+export const CONTACT_PITCH_INTRO =
+  "No necesitas conocer todos los detalles técnicos para comenzar. Cuéntanos qué vehículo utilizas, cuánto recorres y qué quieres saber. Nuestro equipo puede orientarte sobre conversión, ahorro, financiamiento, estaciones y verificación.";
+
 /** The page's "Encabezado de página", which doubles as its SEO summary. */
 export const heroOf = (page: Page | null) => sectionOf(page, "page_hero") as PageHero | undefined;
 

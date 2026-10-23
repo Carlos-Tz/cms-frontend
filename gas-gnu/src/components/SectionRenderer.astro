@@ -11,6 +11,7 @@ import HeroCarousel from "./sections/HeroCarousel.astro";
 import ImageGallery from "./sections/ImageGallery.astro";
 import Testimonials from "./sections/Testimonials.astro";
 import ContactInfo from "./sections/ContactInfo.astro";
+import { CONTACT_PITCH_TITLE, CONTACT_PITCH_INTRO } from "../lib/cms";
 
 interface Section {
   type: string;
@@ -45,8 +46,8 @@ const { sections, pageSlug = null } = Astro.props;
     case "lead_capture_form":
       return (
         <ContactBand
-          heading={section.content.title}
-          intro={section.content.intro}
+          heading={CONTACT_PITCH_TITLE}
+          intro={CONTACT_PITCH_INTRO}
           showContactInfo
           submit_label={section.content.submit_label}
           fields={section.content.fields}

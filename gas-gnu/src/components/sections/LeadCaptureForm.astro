@@ -47,7 +47,7 @@ const {
         placeholder: "",
       };
       return (
-        <div class="field">
+        <div class="field" data-field={field}>
           <label for={`${formId}-${field}`}>{meta.label}</label>
           {meta.type === "textarea" ? (
             <textarea id={`${formId}-${field}`} name={field} rows="3" placeholder={meta.placeholder} />

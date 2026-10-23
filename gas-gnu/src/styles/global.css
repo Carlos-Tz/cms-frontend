@@ -5049,11 +5049,20 @@ body:not(:has(.whatsapp-fab)) .sim-fab {
   column-gap: 1rem;
 }
 
-.lead-band form > .field:has(textarea),
-.lead-band form > .field:first-child,
+/* Every field spans the full row by default — the name, a lone extra like
+   "Descripción del vehículo" or "Número de unidades", the message textarea,
+   whatever a page's CMS section adds. Email and phone are the one pair every
+   contact form shares, so they're the only fields that ever sit side by
+   side — and only when a page actually includes both, back to back. */
+.lead-band form > .field,
 .lead-band form > button,
 .lead-band form > .lead-form__status {
   grid-column: 1 / -1;
+}
+
+.lead-band form > .field[data-field="email"]:has(+ .field[data-field="phone"]),
+.lead-band form > .field[data-field="email"] + .field[data-field="phone"] {
+  grid-column: span 1;
 }
 
 .lead-band form > button {
