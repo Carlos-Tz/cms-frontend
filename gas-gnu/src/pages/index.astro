@@ -85,15 +85,14 @@ const fallbackLocations = [
 
     <StatsBand
       stats={[
-        { value: 5000, prefix: "+", label: "equipos instalados" },
-        { value: 60, suffix: "%", label: "ahorro promedio" },
-        { value: 0, display: "24/7", label: "estaciones activas" },
+        { value: 1500, prefix: "+", label: "autos convertidos a gas natural" },
+        { value: 50, suffix: "%", label: "ahorro frente a la gasolina" },
+        { value: 0, display: "3", label: "Estaciones de GNV para acompañar tus recorridos" },
       ]}
       cta={{ label: "Conoce nuestros servicios", href: "#servicios" }}
     />
 
-    <!-- Hardcoded: `pages/inicio` carries no rich_text section — see technical_debt.md §2 -->
-    <RichText title={introRichText.title} body={introRichText.body} />
+
 
     <!-- Simulador de ahorro -->
     <SavingsSimulator
@@ -103,6 +102,11 @@ const fallbackLocations = [
       page={page?.slug ?? "inicio"}
     />
 
+
+    <!-- Hardcoded: `pages/inicio` carries no rich_text section — see technical_debt.md §2 -->
+    <RichText title={introRichText.title} body={introRichText.body} />
+
+    
     <!-- Nuestros Servicios: the real service pages, each card from its own hero -->
     <section class="section" id="servicios">
       <div class="container">

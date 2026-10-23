@@ -58,7 +58,7 @@ Las secciones vienen del CMS, pero estos títulos, antetítulos e introducciones
 | `/` — servicios (`index.astro`) | antetítulo "Nuestros servicios", título "Todo lo que necesitas para moverte con GNV" |
 | `/` — contacto (`index.astro` → `ContactBand`) | título de la tarjeta del formulario "Cotiza sin compromiso" (el `title` e `intro` del `lead_capture_form` van a la columna izquierda) |
 | cualquier página con una sección `lead_capture_form` vía `SectionRenderer.astro` → `ContactBand` (p. ej. `/nuestros-servicios/instala-tu-equipo-de-gnv/cotiza-tu-equipo`) | mismo caso: título de la tarjeta "Cotiza sin compromiso", `title`/`intro` del CMS van a la columna izquierda |
-| `/` — blog (`BlogTeaser.astro`) | antetítulo "Blog", título "Aprende más sobre el GNV", botón "Ver todo el blog" |
+| `/` — blog (`BlogTeaser.astro`) | antetítulo "Blog", título "Explora el mundo del GNV", subtítulo "Conoce nuestros artículos y descubre por qué el Gas Natural es la mejor opción.", botón "Ver todo el blog" |
 | `/nuestros-servicios` | "Conoce más" / "Explora Nuestros servicios" |
 | `/nuestros-servicios/instala-tu-equipo-de-gnv` | "Conoce más" / "Explora Instala tu equipo de GNV" |
 | `/ubicaciones` | "Conoce más" / "Explora Ubicaciones" |
@@ -135,3 +135,29 @@ Las secciones vienen del CMS, pero estos títulos, antetítulos e introducciones
 ## 8. Imágenes en el repositorio
 
 No son contenido editable, pero viven en código: logos (`src/assets/images/logo*.png`, `public/logo*.png`), el ícono de asesor del bloque de contacto, la insignia de flecha de las tarjetas (`Texto_del_párrafo__1_-removebg-preview.png`), el placeholder `noimg.jpg` y el cursor (`public/pointer.png`).
+
+---
+
+## 9. Texto inyectado por JS en cliente (ni CMS ni build)
+
+**Archivo:** `src/pages/nuestros-servicios/estaciones-moviles/index.astro` → `<script>` al final del archivo.
+**Se renderiza en:** `/nuestros-servicios/estaciones-moviles`, debajo del título "Abastece tu vehículo en nuestras estaciones de GNV" (la sección `feature_grid` de esa página).
+
+El script busca el `.section-title` cuyo texto sea exactamente ese título y le inserta un `<p class="section-subtitle">` después, con este texto fijo:
+
+> Contamos con estaciones ubicadas en Morelia y Uruapan para facilitar el suministro de Gas Natural Vehicular en tus recorridos diarios. Consulta la estación más conveniente, revisa sus horarios de atención y ubica cómo llegar antes de iniciar tu trayecto. Nuestro equipo puede orientarte durante el proceso de carga.
+
+Es el caso más fuera de lo normal del archivo: no es un valor por defecto (`??`) ni una constante leída en el build como las demás entradas — se escribe en el DOM después de que la página ya cargó, así que **no existe en el HTML servido** (no lo indexa un buscador, y si JS falla o tarda, el visitante nunca lo ve). Se hizo así porque el `feature_grid` no tiene campo para una introducción y el `text` de cada tarjeta llegó vacío (`"."`), dejando la sección con el título solo y tres tarjetas sin texto.
+
+**Qué hace falta:** agregar un campo `intro` opcional al esquema de `feature_grid` (lo mismo que ya le falta a `stats_band`, ver §1) y, mientras tanto, pedir que se llene el `text` real de cada tarjeta en el panel en vez de dejar el placeholder `"."`. Hecho cualquiera de los dos, borrar el `<script>` completo.
+
+---
+
+## 10. Renombre por JS del título de menú "Estaciones móviles"
+
+**Archivo:** `src/layouts/Layout.astro` → `<script>` al final del archivo.
+**Se renderiza en:** todas las páginas — el enlace "Estaciones móviles" del dropdown "Nuestros servicios" (escritorio), del menú móvil y del pie "Servicios".
+
+El título real de esa página en el CMS sigue siendo "Estaciones móviles" (lo trae `getMenu()` y es lo que ve el admin en el panel). El script busca, después de cargar la página, cualquier `<a>` o `<summary>` sin hijos cuyo texto sea exactamente "Estaciones móviles" y lo reemplaza por "Estaciones de suministro de GNV". Igual que el caso del §9: **no existe en el HTML servido** (no lo indexa un buscador tal cual, y si JS falla o tarda, el visitante ve el título real un instante o de forma permanente). Se hizo así para no tocar el título de la página en el CMS (que también es su identificador en el panel) solo por cambiar cómo se lee en la navegación.
+
+**Qué hace falta:** si el nombre "Estaciones de suministro de GNV" es el definitivo, renombrar el título de la página directamente en el panel del CMS y borrar este script.

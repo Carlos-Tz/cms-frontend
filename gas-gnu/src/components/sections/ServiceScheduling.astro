@@ -1,5 +1,6 @@
 ---
 import { fetchData, BASE_URL } from "../../functions/fetch";
+import calendarIcon from "../../assets/images/calendar-icon.png";
 
 interface Props {
   title?: string | null;
@@ -40,9 +41,15 @@ const fallbackSuccessMessage = "Tu cita quedó registrada. Te esperamos.";
 ---
 
 <section class="section zebra" id="agenda">
-  <div class="container" style="max-width: 40rem;">
-    <div class="section-head section-head--center">
-      <h2 class="section-title">{title ?? "Agenda tu verificación"}</h2>
+  <div class="container contact-layout scheduler-layout">
+    <div class="scheduler-aside">
+      <div class="scheduler-aside__intro">
+        <div class="scheduler-aside__art" aria-hidden="true">
+          <span class="scheduler-aside__blob"></span>
+          <img class="scheduler-aside__icon" src={calendarIcon.src} width={calendarIcon.width} height={calendarIcon.height} alt="" />
+        </div>
+        <h2 class="section-title">{title ?? "Agenda tu verificación"}</h2>
+      </div>
       {intro && <p class="section-subtitle">{intro}</p>}
     </div>
 
@@ -50,15 +57,40 @@ const fallbackSuccessMessage = "Tu cita quedó registrada. Te esperamos.";
       <div class="card scheduler" data-success-message={success_message ?? fallbackSuccessMessage}>
         <form id="scheduler-lookup-form" class="scheduler__lookup">
           <div class="field">
-            <label for="scheduler-station">Estación</label>
-            <select id="scheduler-station" required>
+            <label for="scheduler-station-trigger">
+              <svg class="field__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z" />
+                <circle cx="12" cy="9.5" r="2.25" />
+              </svg>
+              Estación
+            </label>
+            <button
+              type="button"
+              class="station-select"
+              id="scheduler-station-trigger"
+              aria-haspopup="dialog"
+              aria-expanded="false"
+              aria-controls="scheduler-station-modal"
+            >
+              <span id="scheduler-station-value" class="station-select__value">{stations[0]?.name}</span>
+              <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M4 6l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+            <select id="scheduler-station" class="station-select__native" tabindex="-1" aria-hidden="true" required>
               {stations.map((station) => (
                 <option value={station.id}>{station.name}</option>
               ))}
             </select>
           </div>
           <div class="field">
-            <label for="scheduler-date">Fecha</label>
+            <label for="scheduler-date">
+              <svg class="field__icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4.5" width="18" height="16" rx="2" />
+                <path d="M3 9.5h18M8 3v3M16 3v3" />
+              </svg>
+              Fecha
+            </label>
             <input type="date" id="scheduler-date" required />
           </div>
           <button type="submit" class="btn-secondary">Ver horarios</button>
@@ -66,33 +98,35 @@ const fallbackSuccessMessage = "Tu cita quedó registrada. Te esperamos.";
 
         <div id="scheduler-slots" class="scheduler__slots" role="status" aria-live="polite"></div>
 
-        <form id="scheduler-booking-form" class="scheduler__booking" hidden>
-          <input type="hidden" id="scheduler-selected-station" />
-          <input type="hidden" id="scheduler-selected-date" />
-          <input type="hidden" id="scheduler-selected-slot" />
-          <p class="scheduler__selected-slot" id="scheduler-selected-label"></p>
-          <div class="field">
-            <label for="scheduler-name">Nombre completo</label>
-            <input type="text" id="scheduler-name" placeholder="Tu nombre" required />
+        <form id="scheduler-booking-form" class="scheduler__booking">
+          <div class="scheduler__booking-inner">
+            <input type="hidden" id="scheduler-selected-station" />
+            <input type="hidden" id="scheduler-selected-date" />
+            <input type="hidden" id="scheduler-selected-slot" />
+            <p class="scheduler__selected-slot" id="scheduler-selected-label"></p>
+            <div class="field">
+              <label for="scheduler-name">Nombre completo</label>
+              <input type="text" id="scheduler-name" placeholder="Tu nombre" required />
+            </div>
+            <div class="field">
+              <label for="scheduler-email">Correo electrónico</label>
+              <input type="email" id="scheduler-email" placeholder="tucorreo@ejemplo.com" required />
+            </div>
+            <div class="field">
+              <label for="scheduler-phone">Teléfono</label>
+              <input type="tel" id="scheduler-phone" placeholder="Ej. 55 1234 5678" required />
+            </div>
+            <div class="field">
+              <label for="scheduler-plate">Placa</label>
+              <input type="text" id="scheduler-plate" placeholder="Ej. ABC-12-34" required />
+            </div>
+            <div class="field">
+              <label for="scheduler-vehicle">Descripción del vehículo</label>
+              <input type="text" id="scheduler-vehicle" placeholder="Marca, modelo y año" required />
+            </div>
+            <button type="submit" class="btn-primary">Confirmar cita</button>
+            <p class="lead-form__status" id="scheduler-status" role="status" aria-live="polite"></p>
           </div>
-          <div class="field">
-            <label for="scheduler-email">Correo electrónico</label>
-            <input type="email" id="scheduler-email" placeholder="tucorreo@ejemplo.com" required />
-          </div>
-          <div class="field">
-            <label for="scheduler-phone">Teléfono</label>
-            <input type="tel" id="scheduler-phone" placeholder="Ej. 55 1234 5678" required />
-          </div>
-          <div class="field">
-            <label for="scheduler-plate">Placa</label>
-            <input type="text" id="scheduler-plate" placeholder="Ej. ABC-12-34" required />
-          </div>
-          <div class="field">
-            <label for="scheduler-vehicle">Descripción del vehículo</label>
-            <input type="text" id="scheduler-vehicle" placeholder="Marca, modelo y año" required />
-          </div>
-          <button type="submit" class="btn-primary">Confirmar cita</button>
-          <p class="lead-form__status" id="scheduler-status" role="status" aria-live="polite"></p>
         </form>
 
         <dialog class="confirmation-modal" id="scheduler-confirmation">
@@ -107,7 +141,51 @@ const fallbackSuccessMessage = "Tu cita quedó registrada. Te esperamos.";
           <p class="confirmation-modal__text" id="scheduler-confirmation-text"></p>
         </dialog>
       </div>
-    ) : (
+    ) : null}
+
+    {stations.length > 0 && (
+      <>
+        {/* Deliberately NOT nested inside .card.scheduler: that card's own
+            :hover transform (see .card:hover in global.css) would become the
+            containing block for a position: fixed descendant the moment the
+            visitor's pointer is resting on the card — which it almost always
+            is right after clicking the trigger inside it — pinning this
+            "modal" to the card's corner instead of centering it on the
+            viewport. A plain toggled div, not <dialog>/showModal(), so there
+            is no dependency on that API's own (less consistently
+            implemented) top-layer exemption from the same problem either. */}
+        <div class="station-modal-backdrop" id="scheduler-station-backdrop" aria-hidden="true"></div>
+        <div class="station-modal" id="scheduler-station-modal" role="dialog" aria-modal="true" aria-label="Selecciona una estación">
+          <div class="station-modal__header">
+            <p class="station-modal__title">Elige tu estación</p>
+            <button type="button" class="station-modal__close" aria-label="Cerrar">×</button>
+          </div>
+          <ul class="station-modal__list" role="listbox" aria-label="Estaciones disponibles">
+            {stations.map((station, index) => (
+              <li role="presentation">
+                <button
+                  type="button"
+                  class:list={["station-modal__option", { "is-selected": index === 0 }]}
+                  role="option"
+                  aria-selected={index === 0}
+                  data-value={station.id}
+                >
+                  <svg class="station-modal__pin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21Z" />
+                    <circle cx="12" cy="9.5" r="2.25" />
+                  </svg>
+                  <span>{station.name}</span>
+                  <svg class="station-modal__check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M20 6 9 17l-5-5" />
+                  </svg>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </>
+    )}
+    {stations.length === 0 && (
       <p class="section-subtitle" style="text-align:center;">
         Agenda no disponible por el momento. Contáctanos directamente para programar tu verificación.
       </p>
@@ -154,13 +232,68 @@ const fallbackSuccessMessage = "Tu cita quedó registrada. Te esperamos.";
     dateInput.min = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   }
 
+  // Custom station picker: a trigger button + a styled popup listing every
+  // station as a big tappable row, instead of a plain <select> (whose open
+  // list is OS/browser chrome — no amount of CSS can restyle it). The real
+  // <select> stays in the DOM (hidden from view and from assistive tech) just
+  // to hold the value the rest of this script already reads from it.
+  //
+  // Plain div + a .is-open class, not <dialog>/showModal(): this toggles
+  // the same way the site's other fixed-position overlays already do (the
+  // savings-simulator FAB panel), which keeps it independent of a browser's
+  // own top-layer implementation for <dialog>.
+  const stationTrigger = document.getElementById("scheduler-station-trigger");
+  const stationValueLabel = document.getElementById("scheduler-station-value");
+  const stationModal = document.getElementById("scheduler-station-modal");
+  const stationBackdrop = document.getElementById("scheduler-station-backdrop");
+  const stationOptions = stationModal ? Array.from(stationModal.querySelectorAll(".station-modal__option")) : [];
+
+  function openStationModal() {
+    stationModal?.classList.add("is-open");
+    stationBackdrop?.classList.add("is-open");
+    stationTrigger?.setAttribute("aria-expanded", "true");
+    document.body.classList.add("station-modal-open");
+  }
+
+  function closeStationModal() {
+    stationModal?.classList.remove("is-open");
+    stationBackdrop?.classList.remove("is-open");
+    stationTrigger?.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("station-modal-open");
+  }
+
+  function selectStationOption(option) {
+    if (!stationSelect || !option) return;
+    stationSelect.value = option.dataset.value || "";
+    if (stationValueLabel) stationValueLabel.textContent = option.querySelector("span")?.textContent ?? "";
+    stationOptions.forEach((opt) => {
+      const selected = opt === option;
+      opt.classList.toggle("is-selected", selected);
+      opt.setAttribute("aria-selected", String(selected));
+    });
+  }
+
+  stationTrigger?.addEventListener("click", openStationModal);
+  stationModal?.querySelector(".station-modal__close")?.addEventListener("click", closeStationModal);
+  stationBackdrop?.addEventListener("click", closeStationModal);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && stationModal?.classList.contains("is-open")) closeStationModal();
+  });
+  stationOptions.forEach((option) => {
+    option.addEventListener("click", () => {
+      selectStationOption(option);
+      closeStationModal();
+      stationTrigger?.focus();
+    });
+  });
+
   function stationName(id) {
     const option = Array.from(stationSelect?.options ?? []).find((opt) => opt.value === String(id));
     return option?.textContent ?? "";
   }
 
   function resetBooking() {
-    bookingForm?.setAttribute("hidden", "");
+    bookingForm?.classList.remove("is-visible");
     if (statusEl) {
       statusEl.textContent = "";
       statusEl.className = "lead-form__status";
@@ -193,10 +326,11 @@ const fallbackSuccessMessage = "Tu cita quedó registrada. Te esperamos.";
       }
 
       slotsContainer.innerHTML = "";
-      slots.forEach(({ slot, available }) => {
+      slots.forEach(({ slot, available }, index) => {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "scheduler__slot" + (available ? "" : " is-unavailable");
+        button.style.animationDelay = `${Math.min(index * 30, 300)}ms`;
         button.textContent = slot;
         button.disabled = !available;
         button.addEventListener("click", () => {
@@ -207,7 +341,7 @@ const fallbackSuccessMessage = "Tu cita quedó registrada. Te esperamos.";
           if (selectedSlotInput) selectedSlotInput.value = slot;
           if (selectedLabel) selectedLabel.textContent = `${stationName(station)} · ${date} · ${slot}`;
           resetBooking();
-          bookingForm?.removeAttribute("hidden");
+          bookingForm?.classList.add("is-visible");
         });
         slotsContainer.appendChild(button);
       });
@@ -250,7 +384,7 @@ const fallbackSuccessMessage = "Tu cita quedó registrada. Te esperamos.";
       }
 
       bookingForm.reset();
-      bookingForm.setAttribute("hidden", "");
+      bookingForm.classList.remove("is-visible");
       if (slotsContainer) slotsContainer.textContent = "";
       showConfirmation(result?.meta?.message || successMessage);
     } catch (error) {

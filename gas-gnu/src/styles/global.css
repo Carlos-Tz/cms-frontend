@@ -622,15 +622,22 @@ button {
   background: #ffffff;
 }
 
+/* min-height reserves a standard 2-line slot for both the title and the
+   description, so a one-line title/description still leaves the rest of the
+   card (and its neighbors in the same row) lining up the same as a two-line
+   one — independent of BalancedGrid's own row-height equalization, which
+   only matches the panel's overall height, not where its text starts. */
 .card--photo .card__title {
   color: var(--color-navy);
   font-size: 1.125rem;
   line-height: 1.3;
+  min-height: calc(1.125rem * 1.3 * 2);
 }
 
 .card--photo .card__text {
   margin-top: 0.875rem;
   line-height: 1.6;
+  min-height: calc(0.9375rem * 1.6 * 2);
 }
 
 /* Small round badge centered on the photo/body seam. */
@@ -2031,6 +2038,57 @@ body.nav-open {
   gap: 2rem;
 }
 
+/* Three or more tiles: a single row that scrolls instead of wrapping — same
+   "duplicate + translateX(-50%) loop, pause on hover" pattern as the
+   client-logo marquee, just sized for these much wider cards. */
+.testimonial-marquee {
+  overflow: hidden;
+  padding: 0.5rem 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
+}
+
+.testimonial-marquee__track {
+  display: flex;
+  align-items: stretch;
+  gap: 2rem;
+  width: max-content;
+  animation: testimonial-marquee-scroll 36s linear infinite;
+}
+
+.testimonial-marquee:hover .testimonial-marquee__track,
+.testimonial-marquee:focus-within .testimonial-marquee__track {
+  animation-play-state: paused;
+}
+
+.testimonial-marquee .testimonial-tile {
+  flex: 0 0 auto;
+  width: 24rem;
+}
+
+@keyframes testimonial-marquee-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .testimonial-marquee__track {
+    animation: none;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  /* Without the scroll, the duplicated set would just sit there visibly
+     repeating the same quotes — hide it, the real set already wraps fine. */
+  .testimonial-marquee .testimonial-tile[aria-hidden="true"] {
+    display: none;
+  }
+}
+
 .testimonial-tile {
   display: flex;
   flex-direction: column;
@@ -2053,18 +2111,22 @@ body.nav-open {
 }
 
 .testimonial-tile__media {
-  height: 2.75rem;
+  width: 5rem;
+  height: 5rem;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
-  margin-bottom: 1.75rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  box-shadow: 0 0 0 4px var(--color-bg-alt), 0 0 0 5px var(--color-border);
 }
 
 .testimonial-tile__img {
-  max-width: 9rem;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   filter: grayscale(100%) opacity(0.75);
   transition: filter 0.3s ease;
 }
@@ -2085,12 +2147,12 @@ body.nav-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: var(--radius-full);
+  width: 100%;
+  height: 100%;
   background: var(--color-bg-alt);
   font-family: var(--font-display);
   font-weight: 800;
+  font-size: 1.25rem;
   color: var(--color-primary-alt);
 }
 
@@ -5164,6 +5226,16 @@ html {
   font-weight: 700;
 }
 
+/* Enough items (a parts list, say) to pay off a grid instead of one long
+   column — see richText.ts's flat-<div>-of-<p>s promotion. */
+@media (min-width: 560px) {
+  .check-list--grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    column-gap: 1.5rem;
+  }
+}
+
 @media (max-width: 900px) {
   .rewards__inner {
     grid-template-columns: 1fr;
@@ -5210,25 +5282,313 @@ html {
   }
 }
 
+/* "Agenda tu verificación": copy + the calendar artwork on one side, the
+   scheduler card (bigger than a plain form card) on the other. */
+@media (min-width: 860px) {
+  .scheduler-layout {
+    grid-template-columns: 1fr 1.15fr;
+  }
+}
+
+.scheduler-aside__intro {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.scheduler-aside__intro .section-title {
+  margin-top: 0;
+}
+
+.scheduler-aside__art {
+  position: relative;
+  flex-shrink: 0;
+  width: 5.5rem;
+  height: 5.5rem;
+}
+
+.scheduler-aside__blob {
+  position: absolute;
+  inset: -1.5rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--color-primary-tint) 0%, rgba(230, 243, 250, 0) 72%);
+  pointer-events: none;
+}
+
+.scheduler-aside__icon {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 24px rgba(31, 92, 169, 0.25));
+}
+
+/* container-type lets the lookup row's 3-up breakpoint react to the CARD's
+   own width instead of the viewport's: this card sits in a two-column page
+   layout (scheduler-layout), so a wide viewport doesn't mean a wide card —
+   a viewport media query alone was going 3-up well before there was
+   actually room, clipping "Ver horarios" off the edge. */
 .scheduler {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.75rem;
+  padding: 2.5rem;
+  border-radius: var(--radius-lg);
+  container-type: inline-size;
 }
 
 .scheduler__lookup {
   display: grid;
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
-@media (min-width: 640px) {
+.scheduler__lookup label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.field__icon {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+@container (min-width: 34rem) {
   .scheduler__lookup {
     grid-template-columns: 1fr 1fr auto;
     align-items: end;
   }
 
+  /* The default grid-item min-width is the content's own min-content size,
+     which is wide enough (a full, untruncated station name) to blow the
+     track past the card's edge instead of actually sharing the 1fr space —
+     the exact grid equivalent of the flex min-width trap already called out
+     on .station-select__value. */
   .scheduler__lookup .field {
     margin-bottom: 0;
+    min-width: 0;
+  }
+}
+
+/* Bigger, more deliberate controls — this card is the page's one job. */
+.scheduler .field input,
+.scheduler .field select {
+  padding: 0.9rem 1.1rem;
+  font-size: 1rem;
+  border-width: 1.5px;
+}
+
+.scheduler .field select {
+  padding-right: 2.75rem;
+}
+
+.scheduler .field input:focus,
+.scheduler .field select:focus {
+  box-shadow: 0 0 0 4px var(--color-primary-soft);
+}
+
+.scheduler__lookup .btn-secondary {
+  padding: 0.95rem 1.75rem;
+  font-size: 1rem;
+}
+
+/* Station picker: a button styled like the field next to it (a native
+   <select>'s own open list can't be restyled across browsers), opening a
+   <dialog> of big, fully-stylable rows instead. */
+.station-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--color-border);
+  background: var(--color-bg);
+  padding: 0.9rem 1.1rem;
+  font-size: 1rem;
+  font-family: var(--font-body);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.station-select:hover {
+  border-color: var(--color-border-hover);
+}
+
+.station-select:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 4px var(--color-primary-soft);
+}
+
+.station-select svg {
+  flex-shrink: 0;
+  color: var(--color-text-60);
+}
+
+/* min-width: 0 is load-bearing — a flex item's default min-width is "auto"
+   (content size), which silently defeats text-overflow: ellipsis until it's
+   overridden. Without this, a long station name just wrapped the button
+   across several lines instead of truncating on one. */
+.station-select__value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.station-select__native {
+  display: none;
+}
+
+/* A plain fixed-position overlay toggled by .is-open, not <dialog> — see the
+   comment in ServiceScheduling.astro for why. Same mechanism as the
+   savings-simulator FAB panel (.simulator-band--panel / .simulator-backdrop). */
+.station-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(10, 10, 11, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s ease, visibility 0.2s;
+}
+
+.station-modal-backdrop.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.station-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 91;
+  max-width: 28rem;
+  width: calc(100vw - 3rem);
+  max-height: min(28rem, 80vh);
+  padding: 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-bg);
+  box-shadow: var(--shadow-float);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.96);
+  transition: opacity 0.2s ease, transform 0.25s var(--ease-out), visibility 0.2s;
+}
+
+.station-modal.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+body.station-modal-open {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .station-modal,
+  .station-modal-backdrop {
+    transition: none;
+  }
+}
+
+.station-modal__header {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.station-modal__title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.station-modal__close {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-60);
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.station-modal__list {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem;
+  overflow-y: auto;
+}
+
+.station-modal__option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 1rem 0.75rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.station-modal__option:hover,
+.station-modal__option:focus-visible {
+  background: var(--color-bg-alt);
+  outline: none;
+}
+
+.station-modal__option span {
+  flex: 1;
+}
+
+.station-modal__pin {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+.station-modal__check {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  opacity: 0;
+}
+
+.station-modal__option.is-selected {
+  background: var(--color-primary-soft);
+}
+
+.station-modal__option.is-selected .station-modal__check {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .station-modal[open] {
+    animation: none;
   }
 }
 
@@ -5238,6 +5598,11 @@ html {
   gap: 0.75rem;
   font-size: 0.875rem;
   color: var(--color-text-60);
+  transition: opacity 0.15s ease;
+}
+
+.scheduler__slots.is-loading {
+  opacity: 0.5;
 }
 
 .scheduler__slot {
@@ -5249,11 +5614,13 @@ html {
   font-weight: 600;
   color: var(--color-text);
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  animation: scheduler-slot-in 0.35s var(--ease-out) backwards;
 }
 
 .scheduler__slot:hover:not(:disabled) {
   border-color: var(--color-primary);
+  transform: translateY(-1px);
 }
 
 .scheduler__slot.is-selected {
@@ -5268,9 +5635,51 @@ html {
   cursor: not-allowed;
 }
 
+@keyframes scheduler-slot-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* The booking form's own height varies with its fields, so a fixed max-height
+   transition would either clip it or race ahead of its real content — the
+   `grid-template-rows: 0fr -> 1fr` trick animates to the content's actual
+   height instead. `visibility` (see .station-modal for the same pattern)
+   keeps the collapsed fields out of tab order, since 0fr still leaves them
+   technically present in the DOM. */
 .scheduler__booking {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  transition: grid-template-rows 0.4s var(--ease-out), opacity 0.3s ease, visibility 0.4s;
+}
+
+.scheduler__booking.is-visible {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+}
+
+.scheduler__booking-inner {
+  min-height: 0;
+  overflow: hidden;
   border-top: 1px solid var(--color-border);
   padding-top: 1.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scheduler__booking {
+    transition: none;
+  }
+  .scheduler__slot {
+    animation: none;
+  }
 }
 
 .scheduler__selected-slot {

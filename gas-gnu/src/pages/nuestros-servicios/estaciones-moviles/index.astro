@@ -3,3 +3,23 @@ import CmsPage from "../../../components/CmsPage.astro";
 ---
 
 <CmsPage slug="estaciones-moviles" fallbackTitle="Estaciones móviles" fallbackSubtitle="Suministro de gas natural donde opera tu flotilla." />
+
+<script>
+  // Client-side patch, not CMS content — see technical_debt.md §9. The
+  // feature_grid section here ("Abastece tu vehículo...") has no CMS field
+  // for an intro paragraph, and each item's own `text` is just a placeholder
+  // "." (nothing to show), so the section reads as a bare title + empty
+  // cards. Inserted by DOM lookup on the title text rather than hardcoded
+  // into the shared FeatureGrid.astro component, which every other
+  // feature_grid section on the site also renders.
+  const heading = Array.from(document.querySelectorAll<HTMLElement>(".section-title")).find(
+    (el) => el.textContent?.trim() === "Abastece tu vehículo en nuestras estaciones de GNV",
+  );
+  if (heading && heading.nextElementSibling?.tagName !== "P") {
+    const subtitle = document.createElement("p");
+    subtitle.className = "section-subtitle";
+    subtitle.textContent =
+      "Contamos con estaciones ubicadas en Morelia y Uruapan para facilitar el suministro de Gas Natural Vehicular en tus recorridos diarios. Consulta la estación más conveniente, revisa sus horarios de atención y ubica cómo llegar antes de iniciar tu trayecto. Nuestro equipo puede orientarte durante el proceso de carga.";
+    heading.insertAdjacentElement("afterend", subtitle);
+  }
+</script>

@@ -145,6 +145,17 @@ export function normalizeRichText(input: string | null | undefined, options: Opt
     .replace(/(\s*<br\s*\/?>\s*)+$/i, "")
     .replace(/<p>(\s|&nbsp;|<br\s*\/?>)*<\/p>/gi, "");
 
+  // A `</li>` with no `<li>` left open before it is a typo for `</p>` (seen in
+  // the wild: a pasted "<p>Item</li>" where the editor's last edit was inside
+  // a real list). Left alone, the stray tag would make every later <p> in the
+  // same block merge into one, since the next real </p> becomes its close.
+  html = html.replace(/<\/li>/gi, (match, offset: number) => {
+    const before = html.slice(0, offset);
+    const opened = (before.match(/<li[\s>]/gi) ?? []).length;
+    const closed = (before.match(/<\/li>/gi) ?? []).length;
+    return opened > closed ? match : "</p>";
+  });
+
   // A whole article pasted into a section's body ("<article><header><h1>…
   // <time>…</header><p>…</p>…</article>") carries its own headline/byline —
   // but the section already has those (its `title` prop, the page's own
@@ -186,6 +197,22 @@ export function normalizeRichText(input: string | null | undefined, options: Opt
     const h3s = [...inner.matchAll(/<h3[^>]*>([\s\S]*?)<\/h3>/gi)].map((m) => stripTags(m[1]).trim());
     const isTimeline = h3s.length >= 2 && h3s.every((text) => /^\d{4}$/.test(text));
     return isTimeline ? `<section class="prose-timeline"${attrs}>${inner}</section>` : match;
+  });
+
+  // Another pasted-by-hand shape: a <div> of nothing but short, unpunctuated
+  // <p> one-liners — an editor's bullet list typed without a <ul> (e.g. a
+  // parts list: "Cilindro de GNV", "Válvula de cilindro", …). Rendered as
+  // plain paragraphs it's a cramped, bullet-less wall; promoted to the same
+  // checkmark list used elsewhere (ServiceCards.astro's .check-list), as a
+  // responsive grid once there are enough items for one to pay off.
+  html = html.replace(/<div(\s[^>]*)?>([\s\S]*?)<\/div>/gi, (match, _attrs, inner: string) => {
+    const items = [...inner.matchAll(/<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/gi)].map((m) => m[1].trim());
+    const leftover = inner.replace(/<p(?:\s[^>]*)?>[\s\S]*?<\/p>/gi, "").replace(/\s+/g, "");
+    if (items.length < 4 || leftover.length > 0) return match;
+    if (items.some((item) => stripTags(item).length > 60 || SENTENCE_END.test(stripTags(item)))) return match;
+
+    const listClass = items.length >= 6 ? "check-list check-list--grid" : "check-list";
+    return `<ul class="${listClass}">${items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
   });
 
   // Links leaving the site open in a new tab, safely; images load lazily.

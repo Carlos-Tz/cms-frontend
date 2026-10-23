@@ -39,32 +39,49 @@ const initials = (name?: string | null) =>
     .slice(0, 2)
     .map((word) => word[0]?.toUpperCase())
     .join("") || "“";
+
+// These tiles are wide (18–30rem each): three or more already overflow a
+// single row on anything but the widest desktop, so past that count they
+// scroll in an infinite marquee instead of wrapping to a second row — same
+// "duplicate the set, animate, pause on hover" pattern as the client-logo
+// marquee (see ClientsShowcase.astro / .logo-marquee).
+const useMarquee = items.length >= 3;
+const shownItems = useMarquee ? [...items, ...items] : items;
 ---
 
 {items.length > 0 && (
-  <div class="testimonial-tiles">
-    {items.map((item) => (
-      <figure class="testimonial-tile" aria-label={item.author ? `Testimonio de ${item.author}` : "Testimonio"}>
-        <div class="testimonial-tile__media" aria-hidden="true">
-          {item.photo ? (
-            <img class="testimonial-tile__img" src={mediaUrl(item.photo)} alt="" loading="lazy" />
-          ) : (
-            <span class="testimonial-tile__initials">{initials(item.author)}</span>
-          )}
-        </div>
-        <svg class="testimonial-tile__mark" width="28" height="22" viewBox="0 0 34 26" fill="none" aria-hidden="true">
-          <path d="M14.4 0 8 12.2h5.6V26H0V13.6L6.4 0h8Zm19.6 0-6.4 12.2H33V26H19.6V13.6L26 0h8Z" fill="currentColor" />
-        </svg>
-        <blockquote class="testimonial-tile__quote">
-          <p>{stripQuotes(item.quote)}</p>
-        </blockquote>
-        {(item.author || item.role) && (
-          <figcaption class="testimonial-tile__meta">
-            {item.author && <span class="testimonial-tile__author">{item.author}</span>}
-            {item.role && <span class="testimonial-tile__role">{item.role}</span>}
-          </figcaption>
-        )}
-      </figure>
-    ))}
+  <div class={useMarquee ? "testimonial-marquee" : undefined}>
+    <div class={useMarquee ? "testimonial-marquee__track" : "testimonial-tiles"}>
+      {shownItems.map((item, index) => {
+        const duplicate = useMarquee && index >= items.length;
+        return (
+          <figure
+            class="testimonial-tile"
+            aria-hidden={duplicate ? "true" : undefined}
+            aria-label={duplicate ? undefined : item.author ? `Testimonio de ${item.author}` : "Testimonio"}
+          >
+            <div class="testimonial-tile__media" aria-hidden="true">
+              {item.photo ? (
+                <img class="testimonial-tile__img" src={mediaUrl(item.photo)} alt="" loading="lazy" />
+              ) : (
+                <span class="testimonial-tile__initials">{initials(item.author)}</span>
+              )}
+            </div>
+            <svg class="testimonial-tile__mark" width="28" height="22" viewBox="0 0 34 26" fill="none" aria-hidden="true">
+              <path d="M14.4 0 8 12.2h5.6V26H0V13.6L6.4 0h8Zm19.6 0-6.4 12.2H33V26H19.6V13.6L26 0h8Z" fill="currentColor" />
+            </svg>
+            <blockquote class="testimonial-tile__quote">
+              <p>{stripQuotes(item.quote)}</p>
+            </blockquote>
+            {(item.author || item.role) && (
+              <figcaption class="testimonial-tile__meta">
+                {item.author && <span class="testimonial-tile__author">{item.author}</span>}
+                {item.role && <span class="testimonial-tile__role">{item.role}</span>}
+              </figcaption>
+            )}
+          </figure>
+        );
+      })}
+    </div>
   </div>
 )}

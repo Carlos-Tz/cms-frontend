@@ -433,6 +433,19 @@ const organizationJsonLd = JSON.stringify({
         });
       }
 
+      // "Estaciones móviles" is the CMS-owned menu/page title (admin-editable,
+      // see technical_debt.md §9) — renamed here instead of in the CMS so the
+      // page's own slug, URL and admin label are untouched. Matches by exact
+      // text everywhere the title is rendered from the menu tree: the desktop
+      // nav dropdown, the mobile nav, and the footer "Servicios" list.
+      document
+        .querySelectorAll("a, summary")
+        .forEach((el) => {
+          if (el.children.length === 0 && el.textContent?.trim() === "Estaciones móviles") {
+            el.textContent = "Estaciones de suministro de GNV";
+          }
+        });
+
       const revealTargets = Array.from(
         document.querySelectorAll(
           ".section-head, .card, .logo-card, .simulator__intro, .sim--band, .prose, .testimonial-tile, .stations-map, .stations-list__item, .rich-text-media__video, .contact-info__item, .gallery__item, .lead-band__aside, .trust-strip__card, .stats-band__item, .service-card-row, .scheduler, .rewards__inner",
