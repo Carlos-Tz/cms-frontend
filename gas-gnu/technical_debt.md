@@ -156,9 +156,9 @@ Es el caso más fuera de lo normal del archivo: no es un valor por defecto (`??`
 ## 10. Renombre por JS del título de menú "Estaciones móviles"
 
 **Archivo:** `src/layouts/Layout.astro` → `<script>` al final del archivo.
-**Se renderiza en:** todas las páginas — el enlace "Estaciones móviles" del dropdown "Nuestros servicios" (escritorio), del menú móvil y del pie "Servicios".
+**Se renderiza en:** todas las páginas — el enlace "Estaciones móviles" del dropdown "Nuestros servicios" (escritorio), del menú móvil y del pie "Servicios"; y en `/` (inicio), el encabezado de su tarjeta en `ServiceCards.astro` (el `<h3>` que, a falta de subtítulo propio en la página, cae al título de la página — ver `card.subtitle ?? card.title`).
 
-El título real de esa página en el CMS sigue siendo "Estaciones móviles" (lo trae `getMenu()` y es lo que ve el admin en el panel). El script busca, después de cargar la página, cualquier `<a>` o `<summary>` sin hijos cuyo texto sea exactamente "Estaciones móviles" y lo reemplaza por "Estaciones de suministro de GNV". Igual que el caso del §9: **no existe en el HTML servido** (no lo indexa un buscador tal cual, y si JS falla o tarda, el visitante ve el título real un instante o de forma permanente). Se hizo así para no tocar el título de la página en el CMS (que también es su identificador en el panel) solo por cambiar cómo se lee en la navegación.
+El título real de esa página en el CMS sigue siendo "Estaciones móviles" (lo trae `getMenu()` y es lo que ve el admin en el panel). El script busca, después de cargar la página, cualquier `<a>`, `<summary>` o `<h3>` sin hijos cuyo texto sea exactamente "Estaciones móviles" y lo reemplaza por "Estaciones de suministro de GNV". Igual que el caso del §9: **no existe en el HTML servido** (no lo indexa un buscador tal cual, y si JS falla o tarda, el visitante ve el título real un instante o de forma permanente). Se hizo así para no tocar el título de la página en el CMS (que también es su identificador en el panel) solo por cambiar cómo se lee en la navegación y en esta tarjeta.
 
 **Qué hace falta:** si el nombre "Estaciones de suministro de GNV" es el definitivo, renombrar el título de la página directamente en el panel del CMS y borrar este script.
 

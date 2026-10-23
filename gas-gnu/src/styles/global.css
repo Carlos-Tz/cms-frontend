@@ -3256,6 +3256,36 @@ body.nav-open {
   max-width: 52rem;
 }
 
+/* The CMS's rich_text body has no field for a real two-up layout, so pasted
+   content comparing two places/options side by side (e.g. two stations)
+   reaches for plain "rich_row"/"rich_column" div wrappers instead of real
+   markup. Styled here so that convention actually renders as two columns —
+   stacked on narrow screens, like every other two-column block on the site —
+   instead of just two more full-width blocks running down the page. */
+.prose .rich_row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem 2.5rem;
+  align-items: start;
+}
+
+.prose .rich_column > :first-child {
+  margin-top: 0;
+}
+
+/* Two columns need more than the single-column reading width this section
+   is otherwise capped at. */
+.rich-text:has(.rich_row) {
+  max-width: 64rem;
+}
+
+@media (max-width: 640px) {
+  .prose .rich_row {
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+}
+
 /* The text-only rich_text section (no image/video) — clips its own corner
    mark and keeps the copy above it. */
 .rich-text-plain {

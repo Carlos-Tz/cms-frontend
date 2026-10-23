@@ -434,12 +434,14 @@ const organizationJsonLd = JSON.stringify({
       }
 
       // "Estaciones móviles" is the CMS-owned menu/page title (admin-editable,
-      // see technical_debt.md §9) — renamed here instead of in the CMS so the
-      // page's own slug, URL and admin label are untouched. Matches by exact
-      // text everywhere the title is rendered from the menu tree: the desktop
-      // nav dropdown, the mobile nav, and the footer "Servicios" list.
+      // see technical_debt.md §10) — renamed here instead of in the CMS so
+      // the page's own slug, URL and admin label are untouched. Matches by
+      // exact text everywhere the title is rendered: the desktop nav
+      // dropdown, the mobile nav and footer "Servicios" list (from the menu
+      // tree), and the home page's ServiceCards.astro card heading (`<h3>`,
+      // falling back to the child page's own title when it has no subtitle).
       document
-        .querySelectorAll("a, summary")
+        .querySelectorAll("a, summary, h3")
         .forEach((el) => {
           if (el.children.length === 0 && el.textContent?.trim() === "Estaciones móviles") {
             el.textContent = "Estaciones de suministro de GNV";

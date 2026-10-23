@@ -182,3 +182,24 @@ const hasMedia = Boolean(embedUrl || fallbackImage);
     </div>
   </section>
 )}
+
+<script>
+  // Two ".rich_block" paragraphs in a ".rich_row" (see the .rich_row CSS in
+  // global.css) sit in unrelated DOM branches — each nested inside its own
+  // .rich_column — so CSS grid/flex row-stretching, which only equalizes
+  // direct grid/flex items, can't reach them. Measured and matched by hand
+  // instead, so the content below (address, hours, button) still lines up
+  // across both columns even when one write-up runs longer than the other.
+  function equalizeRichBlocks() {
+    document.querySelectorAll<HTMLElement>(".rich_row").forEach((row) => {
+      const blocks = Array.from(row.querySelectorAll<HTMLElement>(".rich_block"));
+      if (blocks.length < 2) return;
+      blocks.forEach((el) => (el.style.minHeight = ""));
+      const tallest = Math.max(...blocks.map((el) => el.offsetHeight));
+      blocks.forEach((el) => (el.style.minHeight = `${tallest}px`));
+    });
+  }
+
+  equalizeRichBlocks();
+  window.addEventListener("resize", equalizeRichBlocks);
+</script>
