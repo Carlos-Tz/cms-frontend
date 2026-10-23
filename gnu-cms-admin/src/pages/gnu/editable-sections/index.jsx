@@ -53,6 +53,7 @@ function BannerCarouselEditor({ content, onChange, errors }) {
             hint="2400×1000 px aprox. (relación 2.4:1) · JPG · máx. 5 MB, ideal menos de 1 MB. Se recorta a pantalla completa: evita texto o rostros cerca de los bordes."
             value={slide.image}
             onChange={(value) => updateSlide(i, 'image', value)}
+            removable={false}
             error={fieldError(errors, `content.slides.${i}.image`)}
           />
           <div className="grid gap-4 sm:grid-cols-2">
@@ -137,6 +138,7 @@ function ClientsShowcaseEditor({ content, onChange, errors }) {
             hint="800×500 px (relación 16:10) · PNG con fondo transparente · máx. 5 MB, ideal menos de 300 KB. Se muestra en escala de grises hasta que el usuario pasa el mouse encima."
             value={logo.image}
             onChange={(value) => updateLogo(i, 'image', value)}
+            removable={false}
             error={fieldError(errors, `content.logos.${i}.image`)}
           />
           <div className="grid gap-4 sm:grid-cols-2">

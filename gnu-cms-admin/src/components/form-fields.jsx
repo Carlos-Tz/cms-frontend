@@ -84,8 +84,14 @@ export function WordHint({ value, recommendedMin, recommendedMax }) {
  * Image upload field with recommendation hint + client-side guardrails:
  * blocks files over the server's 5 MB limit before wasting an upload request,
  * and reports the measured width/height/weight once a file is picked.
+ *
+ * `removable` (default true) hides the "quitar imagen" (×) button: some
+ * image fields are backend-required (e.g. a `banner_carousel` slide's,
+ * `clients_showcase` logo's, or `image_gallery` image's own `image`) — there,
+ * clearing just the image would 422 on save, so the correct way to drop one
+ * is removing the whole item (DynamicItem's own "Eliminar"), not the image.
  */
-export function ImageField({ label, value, onChange, error, hint }) {
+export function ImageField({ label, value, onChange, error, hint, removable = true }) {
   const [uploading, setUploading] = useState(false)
   const [checking, setChecking] = useState(false)
   const [feedback, setFeedback] = useState(null) // { tone: 'ok' | 'warn' | 'error', text }
@@ -138,6 +144,27 @@ export function ImageField({ label, value, onChange, error, hint }) {
         ) : (
           <span>Sin imagen</span>
         )}
+        {value && !uploading && removable && (
+          <button
+            type="button"
+            onClick={() => {
+              setFeedback(null)
+              onChange(null)
+            }}
+            aria-label="Quitar imagen"
+            title="Quitar imagen"
+            className="absolute top-1.5 right-1.5 flex h-6 w-6 items-center justify-center rounded-full border border-white/15 bg-black/60 text-white/70 transition hover:border-rose-400/70 hover:text-rose-300"
+          >
+            <svg viewBox="0 0 16 16" fill="none" className="h-3 w-3">
+              <path
+                d="M4 4l8 8M12 4l-8 8"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </button>
+        )}
         {uploading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/60 text-white">
             <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5 animate-spin">
@@ -161,6 +188,11 @@ export function ImageField({ label, value, onChange, error, hint }) {
         onChange={(e) => handleFile(e.target.files?.[0])}
         className="block w-full text-xs text-white/60"
       />
+      {value && !removable && (
+        <span className="block text-xs text-white/40">
+          Esta imagen es obligatoria — para quitarla, elimina este elemento completo.
+        </span>
+      )}
       {checking && <span className="block text-xs text-white/40">Verificando imagen…</span>}
       {feedback && (
         <span

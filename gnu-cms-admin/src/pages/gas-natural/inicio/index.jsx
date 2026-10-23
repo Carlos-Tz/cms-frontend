@@ -50,6 +50,7 @@ function BannerCarouselEditor({ content, onChange, errors }) {
             hint="2400×1000 px aprox. (relación 2.4:1) · JPG · máx. 5 MB, ideal menos de 1 MB. Se recorta a pantalla completa: evita texto o rostros cerca de los bordes."
             value={slide.image}
             onChange={(value) => updateSlide(i, 'image', value)}
+            removable={false}
             error={fieldError(errors, `content.slides.${i}.image`)}
           />
           <div className="grid gap-4 sm:grid-cols-2">
