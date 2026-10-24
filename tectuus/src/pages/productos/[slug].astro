@@ -42,7 +42,7 @@ const gallery: string[] = product.images?.length
 // prose, then "• Label: value" bullets that become the spec table.
 const { head, tail } = splitLabel(product.name);
 const category = product.category?.name ? splitLabel(product.category.name) : null;
-const { summary, specs, points } = parseDescription(product.description);
+const { summary, specs, points, html } = parseDescription(product.description);
 const hasPrice = product.price !== null && product.price !== "";
 // Only server text describes a product; with no description the meta tag
 // falls back to the name rather than to copy written here.
@@ -77,16 +77,23 @@ const metaDescription = summary || product.name;
 
       <div class="product-detail__layout">
         <div class="product-detail__main">
-          {summary && (
+          {/* An HTML description (CMS rich text) already carries its own
+              paragraphs, sub-headings and lists, so it renders as-is and the
+              spec/point blocks below, rebuilt from plain text, stay out. */}
+          {(html || summary) && (
             <section class="product-detail__block" aria-labelledby="pd-overview">
               <h2 class="product-detail__heading" id="pd-overview">
                 <i class="fa-solid fa-align-left" aria-hidden="true"></i>Descripción
               </h2>
-              <p class="product-detail__text">{summary}</p>
+              {html ? (
+                <div class="prose product-detail__prose" set:html={html} />
+              ) : (
+                <p class="product-detail__text">{summary}</p>
+              )}
             </section>
           )}
 
-          {specs.length > 0 && (
+          {!html && specs.length > 0 && (
             <section class="product-detail__block" aria-labelledby="pd-specs">
               <h2 class="product-detail__heading" id="pd-specs">
                 <i class="fa-solid fa-list-check" aria-hidden="true"></i>Especificaciones
@@ -102,7 +109,7 @@ const metaDescription = summary || product.name;
             </section>
           )}
 
-          {points.length > 0 && (
+          {!html && points.length > 0 && (
             <section class="product-detail__block" aria-labelledby="pd-points">
               <h2 class="product-detail__heading" id="pd-points">
                 <i class="fa-solid fa-circle-check" aria-hidden="true"></i>Características

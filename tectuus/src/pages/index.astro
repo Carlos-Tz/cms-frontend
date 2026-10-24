@@ -1,6 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import SectionRenderer from "../components/SectionRenderer.astro";
+import EngineeringHighlight from "../components/EngineeringHighlight.astro";
 import { fetchData, FALLBACK_IMAGE } from "../functions/fetch";
 import type { PageResponse, PageSection } from "../types/page";
 
@@ -93,5 +94,7 @@ const sections = page?.sections?.length ? page.sections : fallbackSections;
 ---
 
 <Layout slug={page?.slug ?? "inicio"}>
-  <SectionRenderer sections={sections} pageSlug={page?.slug ?? "inicio"} />
+  <SectionRenderer sections={sections} pageSlug={page?.slug ?? "inicio"}>
+    <EngineeringHighlight slot="after-rich_text" />
+  </SectionRenderer>
 </Layout>

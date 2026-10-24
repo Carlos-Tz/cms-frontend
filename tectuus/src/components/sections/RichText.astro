@@ -1,11 +1,25 @@
 ---
+import { mediaUrl } from "../../functions/fetch";
+
 interface Props {
   title?: string | null;
   body: string;
   video_url?: string | null;
+  // Cover image for the section's media slot (a media path, despite the
+  // `_url` name). Shown beside the text when there's no video, as in
+  // landing-gnu; with a video, the video wins.
+  image_video_url?: string | null;
+  // Frontend-only images stacked under the cover (see technical_debt.md):
+  // public paths, not CMS media.
+  extraImages?: { src: string; alt: string }[];
 }
 
-const { title, body, video_url } = Astro.props;
+const { title, body: rawBody, video_url, image_video_url, extraImages = [] } = Astro.props;
+
+// The page title (page hero) owns the page's single <h1>. Editors sometimes
+// open the body with their own <h1>; render it one level down so the page
+// keeps one top-level heading. The text itself is untouched.
+const body = rawBody.replace(/<(\/?)h1\b/gi, "<$1h2");
 
 function toEmbedUrl(url: string) {
   try {
@@ -66,16 +80,32 @@ function withAutoplay(url: string) {
 }
 
 const embedUrl = video_url ? withAutoplay(toEmbedUrl(video_url)) : null;
+const coverImage = !embedUrl && image_video_url ? mediaUrl(image_video_url) : null;
+const media = [...(coverImage ? [{ src: coverImage, alt: "" }] : []), ...(embedUrl ? [] : extraImages)];
+// A titled section with no media would otherwise leave half the container
+// empty; it reads as a spread instead: title on the left, copy on the right.
+const split = Boolean(title) && media.length === 0 && !embedUrl;
 ---
 
 <section class="section">
-  <div class="container">
+  <div class:list={["container", { "rich-text-cover": media.length }]}>
+    {media.length > 0 && (
+      <div class="rich-text-cover__aside">
+        {media.map((image) => (
+          <figure class="rich-text-cover__media">
+            <img src={image.src} alt={image.alt} loading="lazy" />
+          </figure>
+        ))}
+      </div>
+    )}
+    <div class:list={["rich-text-cover__content", { "rich-text-split": split }]}>
     {title && (
       <div class="section-head">
         <h2 class="section-title">{title}</h2>
       </div>
     )}
     <div class="prose" set:html={body} />
+    </div>
     {embedUrl && (
       <div class="rich-text__video">
         <iframe

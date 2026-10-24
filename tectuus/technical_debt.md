@@ -44,3 +44,80 @@ contacto, por ejemplo:
 Con cualquiera de los dos: leer la imagen en `ContactPanel.astro` (con
 `mediaUrl`) y dejar `/contact-illustration.png` solo como respaldo si el campo
 viene vacío.
+
+---
+
+## 2. Secciones ocultas desde el front
+
+**Archivo:** `src/components/SectionRenderer.astro` → `HIDDEN_ON_PAGE`
+
+El CMS las sigue sirviendo; el sitio decide no pintarlas.
+
+| sección | página | motivo |
+| --- | --- | --- |
+| `image_gallery` ("Nuestra experiencia") | `sobre-nosotros` | temporal: las tres imágenes son la misma foto y los pies son de relleno (`Descripción de la imágen`, `DEscripción de la imágen 2`…) |
+
+Para volver a mostrarla basta con borrar su entrada de `HIDDEN_ON_PAGE`.
+
+**Qué hace falta:** poder despublicar una **sección** desde el panel (hoy solo
+se puede despublicar una página completa). Mientras tanto, cargar las fotos y
+los pies reales en el CMS y quitar la entrada.
+
+---
+
+## 3. Bloque "Ingeniería que transforma necesidades en soluciones" (portada)
+
+**Archivo:** `src/components/EngineeringHighlight.astro`
+**Imagen:** `public/home/ingenieria-soluciones.jpg`
+**Se renderiza en:** `/`, justo después del primer `rich_text` (slot
+`after-rich_text` de `src/components/SectionRenderer.astro`, pasado desde
+`src/pages/index.astro`).
+
+Imagen, título, tres párrafos y el remate en cursiva (*"Ingeniería y control
+que impulsan cada proyecto."*): todo escrito en el componente, a pedido del
+cliente. Ningún tipo de sección del CMS lleva **imagen + título + texto**.
+
+**Imagen:** entregada como `Ingeniería que transforma necesidades en
+soluciones.png` (2048×768, 2.1 MB). Se convirtió a JPEG de 1600 px en
+`public/home/ingenieria-soluciones.jpg` (136 KB); el original queda en la raíz
+del repo. **Si se reemplaza, hay que volver a convertirla.**
+
+**Qué hace falta en el backend:** un campo de imagen en `rich_text`, por
+ejemplo:
+
+| campo | tipo | nota |
+| --- | --- | --- |
+| `rich_text.image` | media path (opcional) | imagen arriba del título |
+
+Con eso: crear este bloque como un segundo `rich_text` en la página `inicio`,
+borrar `EngineeringHighlight.astro` y quitar el slot de `index.astro`.
+
+---
+
+## 4. Segunda imagen junto al texto de "Sobre nosotros"
+
+**Archivo:** `src/components/SectionRenderer.astro` → `EXTRA_RICH_TEXT_IMAGES`
+**Imagen:** `public/about/nuestra-experiencia.jpg`
+**Se renderiza en:** `/sobre-nosotros`, en la columna derecha del primer
+`rich_text`, debajo de su imagen de portada (`image_video_url`, que sí viene
+del CMS). Ambas imágenes acompañan al texto mientras se hace scroll.
+
+El `rich_text` del CMS admite **una sola** imagen (`image_video_url`); esta
+segunda imagen se agrega desde el front, con su texto alternativo, por slug de
+página.
+
+**Imagen:** entregada como `Nuestra experiencia.png` (2048×768, 2.1 MB). Se
+convirtió a JPEG de 1600 px en `public/about/nuestra-experiencia.jpg` (140 KB);
+el original queda en la raíz del repo. **Si se reemplaza, hay que volver a
+convertirla.**
+
+**Qué hace falta en el backend:** que `rich_text` acepte varias imágenes, por
+ejemplo:
+
+| campo | tipo | nota |
+| --- | --- | --- |
+| `rich_text.images[].image` | media path | cada imagen de la columna lateral |
+| `rich_text.images[].alt` | string (opcional) | texto alternativo |
+
+Con eso: leer `images[]` en `RichText.astro` y borrar
+`EXTRA_RICH_TEXT_IMAGES` de `SectionRenderer.astro`.

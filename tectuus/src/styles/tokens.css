@@ -31,8 +31,12 @@
   --heading-letter-spacing: -0.02em;
 
   /* Measure — body copy stays under 80 characters. */
-  --measure: 34rem;
-  --measure-prose: 40rem;
+  --measure: 38rem;
+  --measure-prose: 46rem;
+
+  /* Page content width. One token so the container, the hero copy and the
+     hero controls (which align to the container edge) can't drift apart. */
+  --container: 84rem;
 
   /* Grounds — cool throughout, so the page reads like paper under fluorescent
      light rather than a warm editorial spread. */

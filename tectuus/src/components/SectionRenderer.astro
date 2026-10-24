@@ -19,7 +19,32 @@ interface Props {
   pageSlug?: string | null;
 }
 
-const { sections, pageSlug = null } = Astro.props;
+const { sections: allSections, pageSlug = null } = Astro.props;
+
+// Sections the CMS still serves but this site temporarily doesn't render, by
+// page slug. The CMS can only unpublish a whole page, not one section, so the
+// switch lives here (see technical_debt.md). Remove an entry to show it again.
+const HIDDEN_ON_PAGE: Record<string, string[]> = {
+  // "Nuestra experiencia" — placeholder captions, hidden until real content.
+  "sobre-nosotros": ["image_gallery"],
+};
+
+const hidden = HIDDEN_ON_PAGE[pageSlug ?? ""] ?? [];
+const sections = allSections.filter((section) => !hidden.includes(section.type));
+const firstRichText = sections.findIndex((section) => section.type === "rich_text");
+
+// Frontend-only images stacked under a page's first rich-text cover image,
+// by page slug. The CMS gives a rich_text one cover image; these are extra
+// (see technical_debt.md).
+const EXTRA_RICH_TEXT_IMAGES: Record<string, { src: string; alt: string }[]> = {
+  "sobre-nosotros": [
+    {
+      src: "/about/nuestra-experiencia.jpg",
+      alt: "Ingeniero revisando planos de una planta de gas natural en su escritorio",
+    },
+  ],
+};
+const extraImages = EXTRA_RICH_TEXT_IMAGES[pageSlug ?? ""] ?? [];
 ---
 
 {sections.map((section, index) => {
@@ -41,12 +66,26 @@ const { sections, pageSlug = null } = Astro.props;
     }
 
     case "rich_text": {
-      const { title, body, video_url } = section.content as {
+      const { title, body, video_url, image_video_url } = section.content as {
         title?: string | null;
         body?: string | null;
         video_url?: string | null;
+        image_video_url?: string | null;
       };
-      return <RichText title={title} body={body ?? ""} video_url={video_url} />;
+      // A page can hand in frontend-only content to follow its first rich
+      // text (the homepage's engineering block) through this named slot.
+      return (
+        <>
+          <RichText
+            title={title}
+            body={body ?? ""}
+            video_url={video_url}
+            image_video_url={image_video_url}
+            extraImages={index === firstRichText ? extraImages : []}
+          />
+          {index === firstRichText && <slot name="after-rich_text" />}
+        </>
+      );
     }
 
     case "feature_grid": {

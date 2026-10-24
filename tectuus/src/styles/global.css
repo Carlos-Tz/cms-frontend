@@ -120,7 +120,7 @@ button {
 
 /* LAYOUT */
 .container {
-  max-width: 72rem;
+  max-width: var(--container);
   margin: 0 auto;
   padding: 0 1.5rem;
 }
@@ -847,7 +847,7 @@ button {
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 72rem;
+  max-width: var(--container);
   margin: 0 auto;
   padding: clamp(3.5rem, 7vw, 6rem) 1.5rem clamp(4.5rem, 8vw, 6.5rem);
 }
@@ -965,17 +965,17 @@ button {
    right — so they never cross the copy or the plate. The max() keeps them
    aligned to the container gutter instead of the viewport edge. */
 .hero__arrow--prev {
-  right: max(4.75rem, calc(50% - 36rem + 4.75rem));
+  right: max(4.75rem, calc(50% - var(--container) / 2 + 4.75rem));
 }
 
 .hero__arrow--next {
-  right: max(1.5rem, calc(50% - 36rem + 1.5rem));
+  right: max(1.5rem, calc(50% - var(--container) / 2 + 1.5rem));
 }
 
 .hero__dots {
   position: absolute;
   bottom: 2.75rem;
-  left: max(1.5rem, calc(50% - 36rem + 1.5rem));
+  left: max(1.5rem, calc(50% - var(--container) / 2 + 1.5rem));
   z-index: 3;
   display: flex;
   gap: 0.4rem;
@@ -1124,6 +1124,94 @@ button {
   max-width: var(--measure);
 }
 
+/* HOMEPAGE ENGINEERING BLOCK — follows the CMS rich text as its second act,
+   so it drops the section's top padding and opens on a wide photo plate. */
+.engineering-highlight {
+  padding-top: 0;
+}
+
+/* Photo left, copy right — mirrors the title-left/copy-right rich text
+   above, so the two read as alternating panels of one story. */
+.engineering-highlight__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: center;
+}
+
+.engineering-highlight__content .section-head {
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 860px) {
+  .engineering-highlight__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.engineering-highlight__media {
+  position: relative;
+  margin: 0;
+  border-radius: var(--radius-plate);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-alt);
+}
+
+.engineering-highlight__media img {
+  width: 100%;
+  /* The height attribute (kept to reserve space) would otherwise pin it. */
+  height: auto;
+  /* Half the container now, so the wide photo is cropped toward the
+     engineer and his screens rather than shown as a thin strip. */
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  object-position: 62% center;
+}
+
+/* Registration brackets, as on the banner and product photos. */
+.engineering-highlight__media::before,
+.engineering-highlight__media::after {
+  content: "";
+  position: absolute;
+  width: 2.5rem;
+  height: 2.5rem;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.engineering-highlight__media::before {
+  top: 0;
+  left: 0;
+  border-top: 2px solid var(--color-line);
+  border-left: 2px solid var(--color-line);
+  border-top-left-radius: var(--radius-plate);
+}
+
+.engineering-highlight__media::after {
+  right: 0;
+  bottom: 0;
+  border-bottom: 2px solid var(--color-line);
+  border-right: 2px solid var(--color-line);
+  border-bottom-right-radius: var(--radius-plate);
+}
+
+@media (max-width: 640px) {
+  .engineering-highlight__media img {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+.engineering-highlight__tagline {
+  margin-top: 1.75rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--color-line);
+  font-family: var(--font-display);
+  font-stretch: 104%;
+  font-size: 1.125rem;
+  color: var(--color-primary);
+}
+
 /* RICH TEXT — CMS-authored HTML */
 .prose {
   font-size: var(--text-body);
@@ -1134,6 +1222,7 @@ button {
 
 .prose :is(h2, h3) {
   margin-top: 2.25rem;
+  margin-bottom: 0.85rem;
   color: var(--color-primary);
 }
 
@@ -1157,6 +1246,125 @@ button {
   text-decoration-color: var(--color-line);
   text-decoration-thickness: 1px;
   text-underline-offset: 0.2em;
+}
+
+/* Rich text with a cover image (`image_video_url`): copy on the left, photo
+   plate on the right, kept in view while the copy scrolls past; stacks on
+   narrow screens. Editors usually upload widescreen (16:9) photos, so the
+   plate is set to that shape rather than cropping them to a portrait. */
+.rich-text-cover {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+
+.rich-text-cover__aside {
+  order: 2;
+  position: sticky;
+  top: 6.5rem;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.rich-text-cover__media {
+  position: relative;
+  margin: 0;
+  border-radius: var(--radius-plate);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-alt);
+}
+
+.rich-text-cover__media img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+
+/* Registration brackets, as on every other photo plate. */
+.rich-text-cover__media::before,
+.rich-text-cover__media::after {
+  content: "";
+  position: absolute;
+  width: 2.5rem;
+  height: 2.5rem;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.rich-text-cover__media::before {
+  top: 0;
+  left: 0;
+  border-top: 2px solid var(--color-line);
+  border-left: 2px solid var(--color-line);
+  border-top-left-radius: var(--radius-plate);
+}
+
+.rich-text-cover__media::after {
+  right: 0;
+  bottom: 0;
+  border-bottom: 2px solid var(--color-line);
+  border-right: 2px solid var(--color-line);
+  border-bottom-right-radius: var(--radius-plate);
+}
+
+.rich-text-split {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: start;
+}
+
+.rich-text-split .section-head {
+  position: sticky;
+  top: 6.5rem;
+  margin-bottom: 0;
+}
+
+.rich-text-split .prose {
+  max-width: none;
+  /* Start level with the title, not with the rule above it. */
+  padding-top: 1.5rem;
+}
+
+.rich-text-split .prose > :first-child {
+  margin-top: 0;
+}
+
+@media (max-width: 860px) {
+  .rich-text-split {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .rich-text-split .section-head {
+    position: static;
+    margin-bottom: 2rem;
+  }
+
+  .rich-text-split .prose {
+    padding-top: 0;
+  }
+}
+
+/* An opening heading in the body leads the copy, so it gets no top gap. */
+.rich-text-cover__content .prose > :first-child,
+.rich-text-cover__content .prose > article > :first-child {
+  margin-top: 0;
+}
+
+@media (max-width: 860px) {
+  .rich-text-cover {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Stacked, the photos lead the copy. */
+  .rich-text-cover__aside {
+    order: 0;
+    position: static;
+  }
 }
 
 .rich-text__video {
@@ -1424,13 +1632,16 @@ button {
  *
  * Deliberately excluded: headings (their line breaks are set by text-wrap:
  * balance), and card copy — those columns are ~255px wide, far too narrow to
- * justify without visible gaps. */
-[data-page="inicio"] .prose,
-[data-page="inicio"] .hero-slide__subtitle,
-[data-page="inicio"] .section-subtitle {
-  text-align: justify;
-  hyphens: auto;
-  -webkit-hyphens: auto;
+ * justify without visible gaps. The same goes for a phone's single column,
+ * so it only applies from tablet width up. */
+@media (min-width: 861px) {
+  [data-page="inicio"] .prose,
+  [data-page="inicio"] .hero-slide__subtitle,
+  [data-page="inicio"] .section-subtitle {
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+  }
 }
 
 /* FORMS — inputs are softly rounded like every other read surface; only the
@@ -1643,6 +1854,10 @@ button {
   padding: 0.5rem 0.25rem 1.25rem;
   margin: -0.5rem -0.25rem -1.25rem;
   scrollbar-width: none;
+  /* One or two products sit centred under the heading instead of hugging the
+     left edge. `safe` falls back to start once the row overflows, so a
+     scrolling row never gets its first card clipped. */
+  justify-content: safe center;
 }
 
 .catalog-shelf__track::-webkit-scrollbar {
@@ -2238,6 +2453,58 @@ button {
   line-height: 1.75;
   color: var(--color-text);
   max-width: var(--measure);
+}
+
+/* CMS rich-text description: same reading size as the plain one, bold-only
+   paragraphs promoted to sub-headings (see parseDescription), and list items
+   ticked like the plain-text "Características" list. */
+.product-detail__prose {
+  font-size: 1.0625rem;
+  line-height: 1.75;
+  color: var(--color-text);
+  max-width: var(--measure);
+}
+
+.product-detail__prose p + p {
+  margin-top: 1rem;
+}
+
+.product-detail__prose h3 {
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.1875rem;
+  line-height: 1.35;
+  color: var(--color-primary);
+}
+
+.product-detail__prose ul {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.product-detail__prose ul li {
+  position: relative;
+  padding-left: 1.75rem;
+  margin: 0;
+}
+
+.product-detail__prose ul li::before {
+  content: "\f00c";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  position: absolute;
+  left: 0;
+  top: 0.05em;
+  font-size: 0.875rem;
+  color: var(--color-accent-alt);
+}
+
+.product-detail__prose ol {
+  margin: 1rem 0 0;
+  padding-left: 1.25rem;
 }
 
 /* Spec table: label / value rows on hairlines, zebra-tinted for scanning. */
