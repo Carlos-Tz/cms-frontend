@@ -16,9 +16,26 @@ import type {
 // Safety net so a bad `last_page` can never spin the build forever.
 const MAX_PAGES = 25;
 
+// The CMS has no sort field for categories, so the client orders them with a
+// numeric prefix on the name ("1 - EDRM", "2 - Compresores"). It only sets the
+// order and is never shown; unprefixed categories keep API order after them.
+const ORDER_PREFIX = /^\s*(\d+)\s*-\s*/;
+
+export function stripOrderPrefix(text: string): string {
+  return text.replace(ORDER_PREFIX, "");
+}
+
 export async function fetchCategories(): Promise<ProductCategory[]> {
   const response: ProductCategoryResponse | undefined = await fetchData("product-categories");
-  return response?.data ?? [];
+  const rank = (category: ProductCategory) => Number(category.name.match(ORDER_PREFIX)?.[1] ?? Infinity);
+
+  return [...(response?.data ?? [])]
+    .sort((a, b) => rank(a) - rank(b))
+    .map((category) => ({
+      ...category,
+      name: stripOrderPrefix(category.name),
+      description: category.description && stripOrderPrefix(category.description),
+    }));
 }
 
 export async function fetchAllProducts(): Promise<ProductListItem[]> {

@@ -2,7 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import LeadCaptureForm from "../../components/sections/LeadCaptureForm.astro";
 import ContactPanel from "../../components/ContactPanel.astro";
-import { fetchAllProducts, fetchProduct, formatPrice, parseDescription, splitLabel } from "../../functions/catalog";
+import { fetchAllProducts, fetchProduct, formatPrice, parseDescription, splitLabel, stripOrderPrefix } from "../../functions/catalog";
 import { mediaUrl } from "../../functions/fetch";
 import type { Product, ProductListItem } from "../../types/catalog";
 
@@ -41,7 +41,7 @@ const gallery: string[] = product.images?.length
 // ("CODE | tagline") and the description, which is a spec-sheet paste —
 // prose, then "• Label: value" bullets that become the spec table.
 const { head, tail } = splitLabel(product.name);
-const category = product.category?.name ? splitLabel(product.category.name) : null;
+const category = product.category?.name ? splitLabel(stripOrderPrefix(product.category.name)) : null;
 const { summary, specs, points, html } = parseDescription(product.description);
 const hasPrice = product.price !== null && product.price !== "";
 // Only server text describes a product; with no description the meta tag
