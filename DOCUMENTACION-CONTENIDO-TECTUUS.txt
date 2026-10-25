@@ -494,3 +494,7 @@ PENDIENTES TECNICOS DETECTADOS (para reportar a desarrollo, no para el editor)
 9. Los botones fijos del carrusel ("Conoce nuestros productos" y
    "Contactanos") no son editables. Confirmar si el cliente los quiere asi.
 ==============================================================================
+
+- **Ordering**: the CMS has no sort field for categories or products, so editors order them with a numeric prefix on the name (`1 - EDRM`, `2 - Compresores`; `1 - EDRM-500`). The prefix only sets the order and is never shown on the site. Keep the `N - Name` format (number, dash).
+  - **Categories** are sorted by the prefix in `fetchCategories()`, so the chips, shelves and Productos submenu all share one order. Categories without a prefix keep API order after the numbered ones.
+  - **Products** are sorted within their category by `orderByPrefix()`, on the catalog shelves and on the product page (title, "Más de …" list). A category is only reordered when **every** product in it has a prefix and no two share a number. Otherwise the whole category keeps the server's order and names unchanged, prefixes included.

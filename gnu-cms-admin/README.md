@@ -284,3 +284,8 @@ If you'd rather use the same bucket-plus-CDN shape as the S3 section above inste
 
 - **No backend in this repo.** This project only talks to the headless CMS API (and the separate `build-server`) over HTTP; there's no server code, database, or SSR here — it's a static bundle once built.
 - **Design system**: colors, buttons, and card/glass styles are documented in `CLAUDE.md`; keep new UI consistent with that palette rather than introducing new colors.
+
+## Sorting categories and products at Tectuus site
+- **Ordering**: the CMS has no sort field for categories or products, so editors order them with a numeric prefix on the name (`1 - EDRM`, `2 - Compresores`; `1 - EDRM-500`). The prefix only sets the order and is never shown on the site. Keep the `N - Name` format (number, dash).
+  - **Categories** are sorted by the prefix in `fetchCategories()`, so the chips, shelves and Productos submenu all share one order. Categories without a prefix keep API order after the numbered ones.
+  - **Products** are sorted within their category by `orderByPrefix()`, on the catalog shelves and on the product page (title, "Más de …" list). A category is only reordered when **every** product in it has a prefix and no two share a number. Otherwise the whole category keeps the server's order and names unchanged, prefixes included.
