@@ -13,7 +13,7 @@
 // code, tagline, summary and key specs carry the card, and a photo — when
 // there is one — is only a small thumbnail beside the title. That keeps cards
 // with and without images looking like the same family.
-import { categoryLabel, formatPrice, parseDescription, splitLabel } from "../functions/catalog";
+import { categoryLabel, formatPrice, orderByPrefix, parseDescription, splitLabel } from "../functions/catalog";
 import { mediaUrl } from "../functions/fetch";
 import type { ProductCategory, ProductListItem } from "../types/catalog";
 
@@ -54,14 +54,14 @@ const shelves: Shelf[] = categories
   .map((category) => ({
     slug: category.slug,
     ...categoryLabel(category),
-    items: products.filter((product) => product.category?.slug === category.slug),
+    items: orderByPrefix(products.filter((product) => product.category?.slug === category.slug)),
   }))
   .filter((shelf) => shelf.items.length > 0);
 
 // A product whose category isn't in the category list still has to show up.
 const known = new Set(categories.map((category) => category.slug));
 const orphans = products.filter((product) => !known.has(product.category?.slug ?? ""));
-if (orphans.length) shelves.push({ slug: "", head: "Otros equipos", tail: null, items: orphans });
+if (orphans.length) shelves.push({ slug: "", head: "Otros equipos", tail: null, items: orderByPrefix(orphans) });
 ---
 
 <section class="section" id="catalogo" data-catalog>

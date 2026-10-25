@@ -25,6 +25,19 @@ export function stripOrderPrefix(text: string): string {
   return text.replace(ORDER_PREFIX, "");
 }
 
+// Products reuse the prefix to order their product line ("1 - EDRM-500").
+// It's only trusted when every item in the group has one and no two share a
+// number; otherwise the group keeps the server's order and names untouched.
+export function orderByPrefix<T extends { name: string }>(items: T[]): T[] {
+  const ranks = items.map((item) => item.name.match(ORDER_PREFIX)?.[1]);
+  if (ranks.some((rank) => rank === undefined) || new Set(ranks.map(Number)).size !== ranks.length) return items;
+
+  return items
+    .map((item, index) => ({ item, rank: Number(ranks[index]) }))
+    .sort((a, b) => a.rank - b.rank)
+    .map(({ item }) => ({ ...item, name: stripOrderPrefix(item.name) }));
+}
+
 export async function fetchCategories(): Promise<ProductCategory[]> {
   const response: ProductCategoryResponse | undefined = await fetchData("product-categories");
   const rank = (category: ProductCategory) => Number(category.name.match(ORDER_PREFIX)?.[1] ?? Infinity);

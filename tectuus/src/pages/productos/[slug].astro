@@ -2,7 +2,7 @@
 import Layout from "../../layouts/Layout.astro";
 import LeadCaptureForm from "../../components/sections/LeadCaptureForm.astro";
 import ContactPanel from "../../components/ContactPanel.astro";
-import { fetchAllProducts, fetchProduct, formatPrice, parseDescription, splitLabel, stripOrderPrefix } from "../../functions/catalog";
+import { fetchAllProducts, fetchProduct, formatPrice, parseDescription, orderByPrefix, splitLabel, stripOrderPrefix } from "../../functions/catalog";
 import { mediaUrl } from "../../functions/fetch";
 import type { Product, ProductListItem } from "../../types/catalog";
 
@@ -11,12 +11,20 @@ import type { Product, ProductListItem } from "../../types/catalog";
 export async function getStaticPaths() {
   const products = await fetchAllProducts();
 
-  return products.map((product) => ({
+  // Ordered and named per product line, the same way the catalog shelves are.
+  const lines = new Map<string, ProductListItem[]>();
+  for (const product of products) {
+    const key = product.category?.slug ?? "";
+    lines.set(key, [...(lines.get(key) ?? []), product]);
+  }
+  const ordered = [...lines.values()].flatMap((line) => orderByPrefix(line));
+
+  return ordered.map((product) => ({
     params: { slug: product.slug },
     props: {
       listing: product,
       // Other equipment from the same product line, for the "see also" list.
-      related: products
+      related: ordered
         .filter((other) => other.slug !== product.slug && other.category?.slug === product.category?.slug)
         .slice(0, 4),
     },
@@ -30,7 +38,8 @@ const { listing, related } = Astro.props as { listing: ProductListItem; related:
 // detail endpoint is what fills the page. Falls back to the listing fields if
 // that request fails, so the page still renders.
 const detail: Product | undefined = await fetchProduct(slug!);
-const product: Product = detail ?? listing;
+// The listing's name has its order prefix stripped when its line uses one.
+const product: Product = { ...(detail ?? listing), name: listing.name };
 
 // The detail endpoint returns every image; the listing only carried the first.
 const gallery: string[] = product.images?.length
