@@ -19,14 +19,17 @@ poder borrarla.
 sección de cotización de `/productos/[slug]` y cualquier `lead_capture_form`
 que se agregue desde el panel (`src/components/SectionRenderer.astro`).
 
-La ilustración (persona con audífonos frente a una laptop) está en duro en el
+La ilustración (dos globos de conversación en verde) está en duro en el
 componente. El tipo de sección `lead_capture_form` **no tiene campo de
 imagen**, y el panel de contacto es un bloque del front que el CMS no conoce.
 
-**Imagen:** entregada por el cliente como `image-removebg-preview.png`
-(650×384, PNG con fondo transparente, 239 KB). Se copió tal cual a
-`public/contact-illustration.png`; el original queda en la raíz del repo como
-referencia. Una versión anterior con fondo blanco (`image.png`) ya no se usa.
+**Imagen:** entregada por el cliente como `contact-illustration.png`
+(1254×1254, PNG cuadrado con fondo transparente, 615 KB). Se redujo a
+640×640 en `public/contact-illustration.png` (209 KB) —se muestra a ~20rem—;
+el original queda en la raíz del repo. **Si se reemplaza, hay que volver a
+reducirla**, y si cambia de proporción, ajustar `width`/`height` en el
+componente y el `aspect-ratio` de `.contact-panel__art img`. Versiones
+anteriores (`image.png`, `image-removebg-preview.png`) ya no se usan.
 
 Como es un recorte con fondo transparente, se pinta **sin tarjeta detrás**,
 directo sobre el fondo de la sección (claro en `/contacto`, azul tinta en
@@ -121,3 +124,35 @@ ejemplo:
 
 Con eso: leer `images[]` en `RichText.astro` y borrar
 `EXTRA_RICH_TEXT_IMAGES` de `SectionRenderer.astro`.
+
+---
+
+## 5. Textos del panel de contacto
+
+**Archivo:** `src/components/ContactPanel.astro` → props `heading` e `intro`
+(con su valor por defecto); `src/pages/productos/[slug].astro` sobrescribe
+`heading`.
+**Se renderiza en:** el mismo panel del punto 1 — `/contacto`, la sección de
+cotización de `/productos/[slug]` y cualquier `lead_capture_form` del panel.
+
+Encabezado y texto bajo él, escritos en el componente:
+
+| texto | valor | dónde |
+| --- | --- | --- |
+| Encabezado | `Encuentra la solución que necesitas` | por defecto |
+| Encabezado | `Cotiza con un especialista` | `/productos/[slug]` |
+| Texto bajo el encabezado | `Cuéntanos qué equipo, tecnología o solución estás buscando. Nuestro equipo puede orientarte para encontrar la opción adecuada para tu operación.` | todas |
+
+Los datos de contacto del panel (dirección, teléfono, correo, horario,
+WhatsApp) **sí** vienen del CMS (`globals`); solo estos textos están en duro.
+
+**Qué hace falta en el backend:** campos de texto para el panel, por ejemplo
+en `globals.contact_info`:
+
+| campo | tipo | nota |
+| --- | --- | --- |
+| `contact_info.panel_title` | string (opcional) | encabezado del panel |
+| `contact_info.panel_text` | string (opcional) | texto bajo el encabezado |
+
+Con eso: leerlos en `ContactPanel.astro` y dejar los valores actuales solo
+como respaldo si vienen vacíos.

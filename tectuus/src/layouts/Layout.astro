@@ -225,10 +225,10 @@ const whatsappHref = whatsappDigits
         <div class="footer-grid">
           <div>
             <a href="/" class="brand brand--on-dark">
-              <img class="brand__logo" src="/logo-tectuus.png" alt="Tectuus — Technological Momentum" width="798" height="206" loading="lazy" />
+              <img class="brand__logo" src="/logo-tectuus-white.png" alt="Tectuus — Technological Momentum" width="800" height="204" loading="lazy" />
             </a>
             <p class="footer-tagline">
-              Ingeniería y equipo industrial para gas natural: EDRM, compresoras y valvulería.
+              Tectuus, contribuyendo al aprovechamiento integral del gas natural en la industria Mexicana
             </p>
             <div class="social-row">
               {socialNetworks.map((item) => (
@@ -378,13 +378,13 @@ const whatsappHref = whatsappDigits
       // the dimension lines above: no JS, no hidden content.
       const revealTargets = Array.from(
         document.querySelectorAll(
-          ".card, .product-card, .gallery-item, .client-card, .clients-grid__item, .prose, .product-detail__layout, .rich-text__video"
+          ".card, .product-card, .gallery-item, .client-card, .clients-grid__item, .prose, .product-detail__layout, .rich-text__video, .engineering-highlight__media, .rich-text-cover__media"
         )
       );
 
       // Members of these containers arrive one after another rather than as one
       // slab; --i is the element's position among its revealing siblings.
-      const STAGGER_PARENTS = ".grid, .catalog-grid, .gallery-grid, .clients-grid, .clients-wall";
+      const STAGGER_PARENTS = ".grid, .catalog-grid, .gallery-grid, .clients-grid, .clients-wall, .rich-text-cover__aside";
 
       if (revealTargets.length) {
         const staggerCounts = new Map<Element, number>();

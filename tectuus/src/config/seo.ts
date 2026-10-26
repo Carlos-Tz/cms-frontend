@@ -15,7 +15,7 @@ export const seo = {
 
   // Fallback <meta name="description"> when a page doesn't provide its own.
   defaultDescription:
-    "Tectuus: ingeniería y equipo industrial para gas natural — EDRM, compresoras y valvulería, con instalación y mantenimiento certificado.",
+    "Tectuus: Contribuyendo al aprovechamiento integral del gas natural en la industria Mexicana",
 
   // Production domain, no trailing slash. Used to build canonical/og:url links.
   siteUrl: "https://www.tectuus.mx",

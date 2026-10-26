@@ -94,6 +94,7 @@ const split = Boolean(title) && media.length === 0 && !embedUrl;
         {media.map((image) => (
           <figure class="rich-text-cover__media">
             <img src={image.src} alt={image.alt} loading="lazy" />
+            <span class="photo-shine" aria-hidden="true"></span>
           </figure>
         ))}
       </div>

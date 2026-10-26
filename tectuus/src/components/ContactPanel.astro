@@ -8,9 +8,14 @@ import type { GlobalsResponse } from "../types/globals";
 
 interface Props {
   heading?: string;
+  // Line under the heading. Frontend copy, not CMS (see technical_debt.md).
+  intro?: string;
 }
 
-const { heading = "Hablemos de tu proyecto" } = Astro.props;
+const {
+  heading = "Encuentra la solución que necesitas",
+  intro = "Cuéntanos qué equipo, tecnología o solución estás buscando. Nuestro equipo puede orientarte para encontrar la opción adecuada para tu operación.",
+} = Astro.props;
 
 const globalsResponse: GlobalsResponse | undefined = await fetchData("globals");
 const contact = globalsResponse?.data?.contact_info;
@@ -56,10 +61,11 @@ const reasons = [
 
 <aside class="contact-panel">
   <div class="contact-panel__art">
-    <img src="/contact-illustration.png" alt="" width="650" height="384" loading="lazy" />
+    <img src="/contact-illustration.png" alt="" width="640" height="577" loading="lazy" />
   </div>
 
   <p class="contact-panel__heading">{heading}</p>
+  {intro && <p class="contact-panel__intro">{intro}</p>}
 
   <!-- <ul class="contact-panel__reasons">
     {reasons.map((reason) => (
