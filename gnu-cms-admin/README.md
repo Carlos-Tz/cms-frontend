@@ -1,33 +1,33 @@
 # GNU CMS Admin
 
-Admin panel for **four independent public sites that share one Laravel headless CMS backend**: `gnu` (GNU corporate site), `gas-natural` (GNU Vehicular / gas-gnu), `trainin` (Trainin Logistic), and `tectuus` (industrial equipment + product catalog). A single React + Vite SPA lets editors log in once and manage page sections, blog posts, contact leads, stations, verification appointments, and (for Tectuus) a product catalog, across all four sites.
+Panel de administración para **cuatro sitios públicos independientes que comparten un mismo backend de CMS headless en Laravel**: `gnu` (sitio corporativo de GNU), `gas-natural` (GNU Vehicular / gas-gnu), `trainin` (Trainin Logistic) y `tectuus` (equipo industrial + catálogo de productos). Una sola SPA de React + Vite permite que los editores inicien sesión una vez y administren secciones de páginas, entradas del blog, leads de contacto, estaciones, citas de verificación y (para Tectuus) un catálogo de productos, en los cuatro sitios.
 
-See [`CLAUDE.md`](./CLAUDE.md) for coding conventions and the production server layout, and [`GUIDELINES.md`](./GUIDELINES.md) for the design language shared with the public sites.
+Consulta [`CLAUDE.md`](./CLAUDE.md) para las convenciones de código y la estructura del servidor de producción, y [`GUIDELINES.md`](./GUIDELINES.md) para el lenguaje de diseño que comparte con los sitios públicos.
 
-## Tech stack
+## Stack técnico
 
-- **React 19** + **Vite** (rolldown-powered `vite build`)
-- **Tailwind CSS v4** via `@tailwindcss/vite` — no `tailwind.config.js`, utilities used directly in JSX
-- **react-router v8** (`import from "react-router"`, not `react-router-dom`)
-- **zustand** (+ `persist` middleware) for two stores: session (auth token) and per-site public URLs
-- **Leaflet** for the station map pickers (`stations_map` sections and the station editor)
+- **React 19** + **Vite** (`vite build` impulsado por rolldown)
+- **Tailwind CSS v4** vía `@tailwindcss/vite` — sin `tailwind.config.js`, las utilidades se usan directamente en el JSX
+- **react-router v8** (`import from "react-router"`, no `react-router-dom`)
+- **zustand** (+ middleware `persist`) para dos stores: sesión (token de autenticación) y URLs públicas por sitio
+- **Leaflet** para los selectores de mapa de estaciones (secciones `stations_map` y el editor de estaciones)
 
-## Quick start
+## Inicio rápido
 
 ```bash
 npm install
-npm run dev       # http://localhost:5173 with HMR
+npm run dev       # http://localhost:5173 con HMR
 ```
 
-Other scripts:
+Otros scripts:
 
 ```bash
 npm run lint       # oxlint
-npm run build      # production build -> dist/
-npm run preview    # serve the dist/ build locally, for a final smoke test
+npm run build      # compilación de producción -> dist/
+npm run preview    # sirve la compilación de dist/ localmente, para una prueba final
 ```
 
-## Environment configuration (`.env`)
+## Configuración de entorno (`.env`)
 
 ```bash
 # .env
@@ -35,167 +35,167 @@ VITE_BASE_URL=https://gnu-headless-cms.165.227.59.215.sslip.io
 VITE_BUILD_SERVER_URL=http://localhost:4400
 ```
 
-| Var | Required | Purpose |
+| Variable | Requerida | Propósito |
 | :-- | :-- | :-- |
-| `VITE_BASE_URL` | yes | The CMS API origin, no trailing slash. Every call in `fetch.jsx` prepends this to a path starting with `/api/...`. |
-| `VITE_BUILD_SERVER_URL` | only for the "Reconstruir sitio" button | Origin of the separate `build-server` service (see [Rebuilding a site](#rebuilding-a-site-reconstruir-sitio) below). Without it, the rebuild button shows a clear "not configured" error instead of failing silently. |
+| `VITE_BASE_URL` | sí | El origen de la API del CMS, sin diagonal final. Cada llamada en `fetch.jsx` lo antepone a una ruta que empieza con `/api/...`. |
+| `VITE_BUILD_SERVER_URL` | solo para el botón "Reconstruir sitio" | Origen del servicio independiente `build-server` (ver [Reconstruir un sitio](#reconstruir-un-sitio-reconstruir-sitio) más abajo). Sin ella, el botón de reconstrucción muestra un error claro de "no configurado" en lugar de fallar en silencio. |
 
-- Both must be `VITE_`-prefixed for Vite to expose them to client code (`import.meta.env.VITE_*`) — **anything with that prefix ships inside the public JS bundle**, readable by anyone with dev tools open. Never put a secret or a server filesystem path in this file for that reason (see the rebuild section for why `build-server` keeps its own, separate `.env`).
-- Read at build time: changing a value requires restarting `npm run dev` or re-running `npm run build`.
-- `.env` **is tracked in this repo** (not gitignored) — by design, since today it holds no secrets, only a public API origin and a service URL. To point at a different backend (staging, another environment) without touching the tracked file, create `.env.production.local` / `.env.development.local` with an override; Vite picks those up automatically and they're gitignored by Vite's default pattern.
+- Ambas deben llevar el prefijo `VITE_` para que Vite las exponga al código del cliente (`import.meta.env.VITE_*`) — **todo lo que tenga ese prefijo se incluye en el bundle público de JS**, legible para cualquiera con las herramientas de desarrollo abiertas. Por eso nunca pongas un secreto ni una ruta del sistema de archivos del servidor en este archivo (ver la sección de reconstrucción para entender por qué `build-server` tiene su propio `.env`, aparte).
+- Se leen en tiempo de compilación: cambiar un valor requiere reiniciar `npm run dev` o volver a correr `npm run build`.
+- `.env` **está versionado en este repo** (no está en el gitignore) — a propósito, ya que hoy no contiene secretos, solo un origen de API público y la URL de un servicio. Para apuntar a otro backend (staging, otro entorno) sin tocar el archivo versionado, crea `.env.production.local` / `.env.development.local` con el valor a sobrescribir; Vite los toma automáticamente y quedan ignorados por el patrón por defecto de Vite.
 
-## Authentication & sessions
+## Autenticación y sesiones
 
-[`src/store/sessionStore.jsx`](./src/store/sessionStore.jsx) is a zustand store (`useSessionStore`) holding `accessToken` and `tenantDomain`, wrapped in `persist` so the session survives a reload (`localStorage` key `gnu-cms-session`; only `accessToken` is persisted — `tenantDomain` always comes fresh from `VITE_BASE_URL` on load, so an old session can't silently pin the app to a stale API host).
+[`src/store/sessionStore.jsx`](./src/store/sessionStore.jsx) es un store de zustand (`useSessionStore`) que guarda `accessToken` y `tenantDomain`, envuelto en `persist` para que la sesión sobreviva a una recarga (llave de `localStorage` `gnu-cms-session`; solo se persiste `accessToken` — `tenantDomain` siempre se toma fresco de `VITE_BASE_URL` al cargar, para que una sesión vieja no pueda amarrar la app en silencio a un host de API obsoleto).
 
-- `login(email, password)` populates the store on success.
-- `logout()` calls the backend's logout endpoint, then always clears `accessToken` (in a `finally`), even if the request fails.
-- **Every other authenticated call** checks for a `401` response and, if it gets one, calls the module-private `handleUnauthorized()`: clears `accessToken` and redirects to `/login` (guarded so it won't loop if already there). A backend JWT's default TTL is an hour, so this is the normal way a long-open tab gets kicked back to login, not just a logout path.
+- `login(email, password)` llena el store si tiene éxito.
+- `logout()` llama al endpoint de logout del backend y después siempre limpia `accessToken` (en un `finally`), aunque la petición falle.
+- **Cualquier otra llamada autenticada** revisa si la respuesta es `401` y, si es así, llama a `handleUnauthorized()`, privada del módulo: limpia `accessToken` y redirige a `/login` (con una protección para no entrar en bucle si ya está ahí). El TTL por defecto de un JWT del backend es de una hora, así que esta es la forma normal en que una pestaña abierta mucho tiempo regresa al login, no solo una ruta de logout.
 
-## Site identifiers — four names for the same four sites
+## Identificadores de sitio — cuatro nombres para los mismos cuatro sitios
 
-This is the single most confusing thing in the codebase, so it gets its own table. The same site is addressed differently depending on which layer you're in:
+Esto es lo más confuso de todo el código, así que tiene su propia tabla. El mismo sitio se nombra distinto según la capa en la que estés:
 
-| Site | Admin route prefix (`src/pages/<this>`, `App.jsx`) | CMS `site` slug (`?site=` in every API call) | `pageUrls` store key | `build-server` env var prefix |
+| Sitio | Prefijo de ruta del admin (`src/pages/<this>`, `App.jsx`) | Slug `site` del CMS (`?site=` en cada llamada a la API) | Llave del store `pageUrls` | Prefijo de variables de entorno de `build-server` |
 | :-- | :-- | :-- | :-- | :-- |
-| GNU corporate | `gnu` | `gnu` | `gnu` | `VITE_GNU_` |
+| GNU corporativo | `gnu` | `gnu` | `gnu` | `VITE_GNU_` |
 | GNU Vehicular | `gas-natural` | `gnu-vehicular` | `gas-gnu` | `VITE_GAS_NATURAL_` |
 | Trainin Logistic | `trainin` | `traninn-logistic` | `trainin` | `VITE_TRANINN_` |
 | Tectuus | `tectuus` | `tectuus` | `tectuus` | `VITE_TECTUUS_` |
 
-Three of the four have a **different** CMS slug than their admin route prefix — a page component's `site="..."` prop (passed to `PageSectionsEditor`/`SectionsFields`) must be the CMS slug (middle column), not the route prefix, or every fetch for that page silently 404s/empty-states. Double-check this specifically when adding a page to `gas-natural`, `trainin`, or `tectuus`.
+Tres de los cuatro tienen un slug del CMS **distinto** a su prefijo de ruta del admin — el prop `site="..."` de un componente de página (que se pasa a `PageSectionsEditor`/`SectionsFields`) debe ser el slug del CMS (columna del medio), no el prefijo de ruta; si no, cada fetch de esa página regresa 404 o vacío en silencio. Revisa esto en particular al agregar una página a `gas-natural`, `trainin` o `tectuus`.
 
-## How the app talks to the backend (REST)
+## Cómo se comunica la app con el backend (REST)
 
-All HTTP calls live in **[`src/functions/fetch.jsx`](./src/functions/fetch.jsx)** — there is no separate API client library or codegen; every endpoint gets a small exported `async` function there. Pages import only the functions they need instead of calling `fetch` directly, and every mutating call follows the same hand-written pattern (own headers, own 401 check, own catch) rather than a shared `request()` wrapper — copy the nearest existing function when wiring up a new endpoint.
+Todas las llamadas HTTP viven en **[`src/functions/fetch.jsx`](./src/functions/fetch.jsx)** — no hay una librería de cliente de API aparte ni generación de código; cada endpoint tiene ahí una pequeña función `async` exportada. Las páginas importan solo las funciones que necesitan en lugar de llamar a `fetch` directamente, y cada llamada que modifica datos sigue el mismo patrón escrito a mano (sus propios headers, su propia revisión de 401, su propio catch) en lugar de un wrapper `request()` compartido — copia la función existente más parecida al conectar un endpoint nuevo.
 
-Every backend response follows the envelope `{ status: "success" | "error", data, meta }`; a network failure or a `401` is normalized into that same shape so every caller can just read `res.status`/`res.data` without a `try`/`catch` of its own.
+Toda respuesta del backend sigue el sobre `{ status: "success" | "error", data, meta }`; una falla de red o un `401` se normaliza a esa misma forma para que cada llamador pueda leer `res.status`/`res.data` sin su propio `try`/`catch`.
 
-| Function | Endpoint | Notes |
+| Función | Endpoint | Notas |
 | :-- | :-- | :-- |
-| `login(email, password)` | `POST /api/admin/auth/login` | Populates the session store on success |
-| `logout()` | `POST /api/admin/auth/logout` | Clears the token regardless of the response |
-| `fetchData(suffix)` | `GET <suffix>` | Generic authenticated GET — pass e.g. `` `/api/admin/sections?site=gnu&page=inicio` `` |
-| `updateSection(id, content)` | `PUT /api/admin/sections/{id}` | Full-replace of `content` (see [Section editing semantics](#section-editing-semantics)) |
-| `createBlogPost` / `updateBlogPost` / `deleteBlogPost` | `/api/admin/blog-posts` | gnu, gas-natural, trainin only — Tectuus has no blog |
-| `createProductCategory` / `updateProductCategory` / `deleteProductCategory` | `/api/admin/product-categories` | Tectuus only |
-| `createProduct` / `updateProduct` / `deleteProduct` | `/api/admin/products` | Tectuus only |
-| `createStation` / `updateStation` / `deleteStation` | `/api/admin/stations` | Backs every `stations_map` section's station list (see `stations-editor.jsx`) |
-| `deleteAppointment(id)` | `DELETE /api/admin/appointments/{id}` | Read via `fetchData`; no create/update — an appointment is only ever generated by a site visitor |
-| `uploadMedia(file)` | `POST /api/admin/media` (multipart) | Returns `{path, url}`; the `url` is what gets stored in section/post content — the UI never stores raw files |
-| `rebuildSite(site)` / `getRebuildStatus(site)` | `build-server`'s `POST`/`GET /builds/:site` | Separate service, see below |
+| `login(email, password)` | `POST /api/admin/auth/login` | Llena el store de sesión si tiene éxito |
+| `logout()` | `POST /api/admin/auth/logout` | Limpia el token sin importar la respuesta |
+| `fetchData(suffix)` | `GET <suffix>` | GET autenticado genérico — pasa p. ej. `` `/api/admin/sections?site=gnu&page=inicio` `` |
+| `updateSection(id, content)` | `PUT /api/admin/sections/{id}` | Reemplazo completo de `content` (ver [Semántica de edición de secciones](#semántica-de-edición-de-secciones)) |
+| `createBlogPost` / `updateBlogPost` / `deleteBlogPost` | `/api/admin/blog-posts` | Solo gnu, gas-natural y trainin — Tectuus no tiene blog |
+| `createProductCategory` / `updateProductCategory` / `deleteProductCategory` | `/api/admin/product-categories` | Solo Tectuus |
+| `createProduct` / `updateProduct` / `deleteProduct` | `/api/admin/products` | Solo Tectuus |
+| `createStation` / `updateStation` / `deleteStation` | `/api/admin/stations` | Respalda la lista de estaciones de cada sección `stations_map` (ver `stations-editor.jsx`) |
+| `deleteAppointment(id)` | `DELETE /api/admin/appointments/{id}` | Se leen vía `fetchData`; no hay create/update — una cita solo la genera un visitante del sitio |
+| `uploadMedia(file)` | `POST /api/admin/media` (multipart) | Regresa `{path, url}`; la `url` es lo que se guarda en el contenido de la sección/entrada — la UI nunca guarda archivos crudos |
+| `rebuildSite(site)` / `getRebuildStatus(site)` | `POST`/`GET /builds/:site` de `build-server` | Servicio aparte, ver abajo |
 
-## Routing & folder structure
+## Rutas y estructura de carpetas
 
-- `src/App.jsx` owns the top-level `<Routes>` tree and renders the public landing page directly.
-- Route components live under `src/pages/<site>/<page>/index.jsx` and are routed at `/<site>/<page>` — there is no filesystem-based router, so adding a page means adding both the file **and** a `<Route>` in `App.jsx`.
-- `BrowserRouter` wraps `<App />` in `src/main.jsx`.
+- `src/App.jsx` es dueño del árbol `<Routes>` de nivel superior y renderiza directamente la landing page pública.
+- Los componentes de ruta viven en `src/pages/<site>/<page>/index.jsx` y se enrutan en `/<site>/<page>` — no hay un router basado en el sistema de archivos, así que agregar una página implica agregar tanto el archivo **como** un `<Route>` en `App.jsx`.
+- `BrowserRouter` envuelve a `<App />` en `src/main.jsx`.
 
 ```
 src/
-├── App.jsx                    # <Routes> tree + the public landing page
-├── main.jsx                    # React root, wraps <App /> in <BrowserRouter>
-├── index.css                   # Tailwind entry point
-├── assets/                     # images used by the landing page
+├── App.jsx                    # árbol <Routes> + la landing page pública
+├── main.jsx                    # raíz de React, envuelve <App /> en <BrowserRouter>
+├── index.css                   # punto de entrada de Tailwind
+├── assets/                     # imágenes que usa la landing page
 ├── components/
-│   ├── card.jsx                  # status-dot card used on the Home dashboard
-│   ├── form-fields.jsx           # shared primitives: Field, ImageField (upload + client-side
-│   │                              # size/dimension checks), DynamicItem, AddButton, CharHint/
+│   ├── card.jsx                  # tarjeta con punto de estado que se usa en el dashboard de Home
+│   ├── form-fields.jsx           # primitivas compartidas: Field, ImageField (carga + validación
+│   │                              # de tamaño/dimensiones del lado del cliente), DynamicItem, AddButton, CharHint/
 │   │                              # WordHint, fieldError(), inputClass/buttonSecondaryClass
-│   ├── map-picker.jsx             # <MapPicker lat lng onPick zoom /> — click-to-place Leaflet marker
-│   ├── stations-editor.jsx        # <StationsEditor site siteId /> — CRUD for a site's stations
-│   │                              # (name/address/phone/schedule/lat-lng/active), embedded under
-│   │                              # every `stations_map` section card
-│   ├── site-url-link.jsx          # <SiteUrlLink site /> — click-through + pencil-to-edit for a
-│   │                              # site's public URL (backed by the pageUrls store)
-│   ├── rebuild-site-button.jsx    # <RebuildSiteButton site /> — the "Reconstruir sitio" button
-│   └── page-sections-editor.jsx   # the shared section-editing machinery (see below)
+│   ├── map-picker.jsx             # <MapPicker lat lng onPick zoom /> — marcador de Leaflet que se coloca con clic
+│   ├── stations-editor.jsx        # <StationsEditor site siteId /> — CRUD de las estaciones de un sitio
+│   │                              # (nombre/dirección/teléfono/horario/lat-lng/activa), incrustado bajo
+│   │                              # cada tarjeta de sección `stations_map`
+│   ├── site-url-link.jsx          # <SiteUrlLink site /> — liga directa + lápiz para editar la
+│   │                              # URL pública de un sitio (respaldada por el store pageUrls)
+│   ├── rebuild-site-button.jsx    # <RebuildSiteButton site /> — el botón "Reconstruir sitio"
+│   └── page-sections-editor.jsx   # la maquinaria compartida de edición de secciones (ver abajo)
 ├── functions/
-│   └── fetch.jsx                 # all REST calls (see above)
+│   └── fetch.jsx                 # todas las llamadas REST (ver arriba)
 ├── store/
-│   ├── sessionStore.jsx           # zustand: auth token, tenant domain
-│   └── pageUrls.jsx                # zustand+persist: site -> public URL map
+│   ├── sessionStore.jsx           # zustand: token de autenticación, dominio del tenant
+│   └── pageUrls.jsx                # zustand+persist: mapa sitio -> URL pública
 └── pages/
-    ├── login/, home/                       # pre- and post-login shell
-    ├── gnu/                                 # GNU corporate site
-    ├── gas-natural/                          # GNU Vehicular (CMS slug gnu-vehicular)
-    ├── trainin/                              # Trainin Logistic (CMS slug traninn-logistic)
+    ├── login/, home/                       # estructura antes y después del login
+    ├── gnu/                                 # sitio corporativo de GNU
+    ├── gas-natural/                          # GNU Vehicular (slug del CMS gnu-vehicular)
+    ├── trainin/                              # Trainin Logistic (slug del CMS traninn-logistic)
     └── tectuus/                              # Tectuus
 ```
 
-Each site folder follows the same shape: a `select-page.jsx` (the card grid shown after clicking that site's card on Home — also hosts `<SiteUrlLink>` and `<RebuildSiteButton>`), then one subfolder per top-level nav item. A nav item with its own children (e.g. `nuestros-servicios`) is itself a `select-page`-style folder with an `index.jsx` listing its children plus a `portada/index.jsx` that edits the **parent item's own** sections — the parent's `index.jsx` is pure navigation, it holds no CMS content itself.
+Cada carpeta de sitio sigue la misma forma: un `select-page.jsx` (la cuadrícula de tarjetas que aparece después de hacer clic en la tarjeta de ese sitio en Home — también aloja `<SiteUrlLink>` y `<RebuildSiteButton>`), y luego una subcarpeta por cada elemento de navegación de nivel superior. Un elemento de navegación con sus propios hijos (p. ej. `nuestros-servicios`) es a su vez una carpeta estilo `select-page` con un `index.jsx` que lista sus hijos más un `portada/index.jsx` que edita las secciones **propias del elemento padre** — el `index.jsx` del padre es pura navegación, no contiene contenido del CMS.
 
-## Shared components
+## Componentes compartidos
 
-**`page-sections-editor.jsx`** is the core abstraction almost every page is built from: "fetch this page's sections, render one editor per section `type`, let the editor `PUT` the full section content back." It exports:
+**`page-sections-editor.jsx`** es la abstracción central con la que está construida casi cada página: "obtén las secciones de esta página, renderiza un editor por cada `type` de sección, deja que el editor haga `PUT` del contenido completo de la sección". Exporta:
 
-- **`PageSectionsEditor`** (default) — full page chrome (back link, title, section count) + `SectionsFields`. Used as a one-line wrapper by most pages: `<PageSectionsEditor site="..." page="..." title="..." backTo="..." includeGlobals? />`.
-- **`SectionsFields`** — headless version (no back link/title), for embedding inline alongside other content (e.g. the Contacto pages embed it below their leads table).
-- **`GlobalSectionsFields`** — just the site-wide sections (`contact_info`, `social_icons`, `whatsapp_button`, and `testimonials` where a site has it) — these have `page_id: null` server-side, so they're fetched and rendered separately, not mixed into a specific page's list. Pass `includeGlobals` on `PageSectionsEditor`/`SectionsFields` only from the one page meant to surface them (each site's landing page), or embed `<GlobalSectionsFields site="..." />` directly, like `gnu/editable-sections` does (a page that predates this shared component and still keeps its own local copy of several editors for historical reasons).
+- **`PageSectionsEditor`** (default) — el marco completo de la página (liga de regreso, título, conteo de secciones) + `SectionsFields`. La mayoría de las páginas lo usan como wrapper de una línea: `<PageSectionsEditor site="..." page="..." title="..." backTo="..." includeGlobals? />`.
+- **`SectionsFields`** — versión headless (sin liga de regreso ni título), para incrustarla junto a otro contenido (p. ej. las páginas de Contacto la incrustan debajo de su tabla de leads).
+- **`GlobalSectionsFields`** — solo las secciones de todo el sitio (`contact_info`, `social_icons`, `whatsapp_button` y `testimonials` donde el sitio la tenga) — estas tienen `page_id: null` del lado del servidor, así que se obtienen y renderizan por separado, no se mezclan en la lista de una página específica. Pasa `includeGlobals` en `PageSectionsEditor`/`SectionsFields` solo desde la única página que debe mostrarlas (la landing page de cada sitio), o incrusta `<GlobalSectionsFields site="..." />` directamente, como hace `gnu/editable-sections` (una página anterior a este componente compartido que, por razones históricas, todavía tiene su propia copia local de varios editores).
 
-**Known non-obvious behavior**: `GET /api/admin/sections?site&page=` has been observed on at least one site (`traninn-logistic`) returning *every* section of the site regardless of the `page` filter. To stay correct regardless of which backend behaves this way, `loadPageSections`/`loadGlobalSections` resolve the real numeric `page_id` from `GET /api/admin/pages?site=` and narrow the result client-side rather than trusting the server's `page` filter — so every page is defensively self-correcting even when the backend's filter is a no-op.
+**Comportamiento no obvio conocido**: se ha visto que `GET /api/admin/sections?site&page=` en al menos un sitio (`traninn-logistic`) regresa *todas* las secciones del sitio sin importar el filtro `page`. Para mantenerse correctos sin importar qué backend se comporte así, `loadPageSections`/`loadGlobalSections` resuelven el `page_id` numérico real desde `GET /api/admin/pages?site=` y filtran el resultado del lado del cliente en lugar de confiar en el filtro `page` del servidor — así cada página se autocorrige de forma defensiva aunque el filtro del backend no haga nada.
 
-### Section editing semantics
+### Semántica de edición de secciones
 
-- `PUT /api/admin/sections/{id}` is a **full replacement** of `content`, not a patch — arrays like `slides`/`items`/`logos` are replaced wholesale. Every editor keeps the whole `content` object in local state and submits it entirely on save.
-- Some fields are server-side "fijo" (locked) per section type — e.g. `lead_capture_form.fields[]` — the backend drops them from validation and merges the previous value back in, so the admin doesn't need to (and can't) change them; the editor just displays them read-only.
-- A section `type` with no matching editor renders as a read-only, pretty-printed JSON block instead of a form, so a newly-seeded section type never looks broken in the admin — it's just not editable from the UI yet.
+- `PUT /api/admin/sections/{id}` es un **reemplazo completo** de `content`, no un parche — arreglos como `slides`/`items`/`logos` se reemplazan enteros. Cada editor mantiene todo el objeto `content` en su estado local y lo envía completo al guardar.
+- Algunos campos son "fijos" del lado del servidor según el tipo de sección — p. ej. `lead_capture_form.fields[]` — el backend los excluye de la validación y vuelve a combinar el valor anterior, así que el admin no necesita (ni puede) cambiarlos; el editor solo los muestra en modo de solo lectura.
+- Un `type` de sección sin editor correspondiente se renderiza como un bloque JSON de solo lectura con formato en lugar de un formulario, para que un tipo de sección recién sembrado nunca se vea roto en el admin — simplemente todavía no se puede editar desde la UI.
 
-### Section types with a real editor
+### Tipos de sección con editor real
 
-| Type | What it edits |
+| Tipo | Qué edita |
 | :-- | :-- |
-| `page_hero` | Title, subtitle, image |
-| `rich_text` | Title, HTML body, video URL |
-| `feature_grid` | Section title + cards (icon, title, text) |
-| `clients_showcase` | Section title + logos (image, name, link, description, quote, quote author) |
-| `stations_map` | Title, map center/zoom (click-to-place) — **plus** the embedded `StationsEditor` for that site's actual station pins |
-| `lead_capture_form` | Title, intro, submit label (the `fields[]` list is locked) |
-| `service_scheduling` | Title, intro, confirmation message (the bookable time slots are hardcoded backend-side, not content) |
-| `banner_carousel` | Slides (image, title, subtitle, link URL/label) |
-| `savings_simulator` | Title, intro, fuel price comparison rows |
-| `contact_info` | Address, phone, email, schedule, extra info |
-| `social_icons` | Network + URL list |
-| `whatsapp_button` | Phone, prefilled message |
-| `image_gallery` | Section title + images (image, caption, alt) |
-| `testimonials` | Section title + quotes (photo, quote, author, role) |
+| `page_hero` | Título, subtítulo, imagen |
+| `rich_text` | Título, cuerpo HTML, URL de video |
+| `feature_grid` | Título de la sección + tarjetas (ícono, título, texto) |
+| `clients_showcase` | Título de la sección + logos (imagen, nombre, liga, descripción, cita, autor de la cita) |
+| `stations_map` | Título, centro/zoom del mapa (se coloca con clic) — **además** del `StationsEditor` incrustado para los pines reales de las estaciones de ese sitio |
+| `lead_capture_form` | Título, introducción, texto del botón de envío (la lista `fields[]` está bloqueada) |
+| `service_scheduling` | Título, introducción, mensaje de confirmación (los horarios disponibles para agendar están en duro en el backend, no son contenido) |
+| `banner_carousel` | Slides (imagen, título, subtítulo, URL/texto de la liga) |
+| `savings_simulator` | Título, introducción, filas de comparación de precios de combustible |
+| `contact_info` | Dirección, teléfono, correo, horario, información adicional |
+| `social_icons` | Lista de red + URL |
+| `whatsapp_button` | Teléfono, mensaje prellenado |
+| `image_gallery` | Título de la sección + imágenes (imagen, pie de foto, alt) |
+| `testimonials` | Título de la sección + citas (foto, cita, autor, puesto) |
 
-## Site-by-site content map
+## Mapa de contenido por sitio
 
-| Site | Blog | Contacto | Site-specific extras |
+| Sitio | Blog | Contacto | Extras específicos del sitio |
 | :-- | :-- | :-- | :-- |
-| `gnu` | yes | leads + sections | `desarrollo-sostenible` (parent + 4 children), `sobre-nosotros` (parent + 4 children), `nuestros-servicios` (parent + GNC/GND/GNV) |
-| `gas-natural` | yes | leads + sections | `nuestros-servicios` (parent + 5 service pages), `ubicaciones` (parent + 2 stations + `agenda-tu-verificacion` with its own appointments list + `talleres`) |
-| `trainin` | yes | leads + sections | `nuestros-servicios` (parent + 3 children), `sobre-nosotros` (parent + 3 children), `ubicaciones` (single flat page) |
-| `tectuus` | **no** | leads (with an "Origen" column — this site's lead form exists on more than one page) + sections | `sobre-nosotros` (single flat page, no children), `productos` (its own `page_hero` section **plus** full category/product catalog CRUD — a separate data resource, not CMS sections) |
+| `gnu` | sí | leads + secciones | `desarrollo-sostenible` (padre + 4 hijos), `sobre-nosotros` (padre + 4 hijos), `nuestros-servicios` (padre + GNC/GND/GNV) |
+| `gas-natural` | sí | leads + secciones | `nuestros-servicios` (padre + 5 páginas de servicio), `ubicaciones` (padre + 2 estaciones + `agenda-tu-verificacion` con su propia lista de citas + `talleres`) |
+| `trainin` | sí | leads + secciones | `nuestros-servicios` (padre + 3 hijos), `sobre-nosotros` (padre + 3 hijos), `ubicaciones` (una sola página plana) |
+| `tectuus` | **no** | leads (con una columna "Origen" — el formulario de leads de este sitio existe en más de una página) + secciones | `sobre-nosotros` (una sola página plana, sin hijos), `productos` (su propia sección `page_hero` **más** el CRUD completo del catálogo de categorías/productos — un recurso de datos aparte, no secciones del CMS) |
 
-Every site's landing page (`inicio`/`editable-sections`) renders with `includeGlobals`, so it's also where `contact_info`/`social_icons`/`whatsapp_button`/`testimonials` get edited.
+La landing page de cada sitio (`inicio`/`editable-sections`) se renderiza con `includeGlobals`, así que también es donde se editan `contact_info`/`social_icons`/`whatsapp_button`/`testimonials`.
 
-## Per-site public URL quick-links
+## Accesos directos a la URL pública de cada sitio
 
-`src/store/pageUrls.jsx` + `<SiteUrlLink site="..." />` (top of every `select-page.jsx`) lets an editor click straight through to that site's live public URL, with a pencil icon to update the stored URL inline. Purely a convenience bookmark in `localStorage` — it has no effect on routing, the CMS, or the build; `site` here must be the **`pageUrls` store key** column from the identifiers table above, not the admin route or CMS slug.
+`src/store/pageUrls.jsx` + `<SiteUrlLink site="..." />` (arriba de cada `select-page.jsx`) le permite a un editor ir directo a la URL pública en vivo de ese sitio, con un ícono de lápiz para actualizar la URL guardada ahí mismo. Es solo un marcador de conveniencia en `localStorage` — no tiene efecto en el ruteo, el CMS ni la compilación; aquí `site` debe ser la columna **llave del store `pageUrls`** de la tabla de identificadores de arriba, no la ruta del admin ni el slug del CMS.
 
-## Rebuilding a site ("Reconstruir sitio")
+## Reconstruir un sitio ("Reconstruir sitio")
 
-The Astro sites only read the CMS **at build time**, so a saved edit is invisible on the public site until it's rebuilt — and a browser SPA can't run `npm run build` or touch a server filesystem itself. `<RebuildSiteButton site="..." />` (admin route prefix) calls a **separate** zero-dependency Node service, `../build-server`, via `rebuildSite`/`getRebuildStatus` in `fetch.jsx`.
+Los sitios de Astro solo leen el CMS **en tiempo de compilación**, así que una edición guardada no se ve en el sitio público hasta que se reconstruye — y una SPA en el navegador no puede correr `npm run build` ni tocar por sí misma el sistema de archivos de un servidor. `<RebuildSiteButton site="..." />` (prefijo de ruta del admin) llama a un servicio de Node **independiente** y sin dependencias, `../build-server`, vía `rebuildSite`/`getRebuildStatus` en `fetch.jsx`.
 
-- Configure it with `VITE_BUILD_SERVER_URL` in **this** repo's `.env` — just the URL, nothing else belongs here.
-- Everything else — each site's `CODE_PATH` (where `npm run build` runs) and `PUBLIC_PATH` (what the web server serves, fully replaced with `CODE_PATH/dist/` after a successful build) — lives in `build-server`'s own `.env`, never in this one, since this repo's `.env` ships inside the public browser bundle and those are real server filesystem paths.
-- A site with unset/placeholder paths fails the build closed with a clear error rather than risking a destructive filesystem operation.
-- Full setup, API, and safety notes: **[`../build-server/README.md`](../build-server/README.md)**.
+- Configúralo con `VITE_BUILD_SERVER_URL` en el `.env` de **este** repo — solo la URL, nada más va aquí.
+- Todo lo demás — el `CODE_PATH` de cada sitio (donde corre `npm run build`) y el `PUBLIC_PATH` (lo que sirve el servidor web, reemplazado por completo con `CODE_PATH/dist/` después de una compilación exitosa) — vive en el `.env` propio de `build-server`, nunca en este, ya que el `.env` de este repo se incluye en el bundle público del navegador y esas son rutas reales del sistema de archivos del servidor.
+- Un sitio con rutas sin definir o de ejemplo hace que la compilación falle de forma cerrada con un error claro en lugar de arriesgarse a una operación destructiva en el sistema de archivos.
+- Configuración completa, API y notas de seguridad: **[`../build-server/README.md`](../build-server/README.md)**.
 
-## Building for production
+## Compilar para producción
 
 ```bash
 npm run build
 ```
 
-Outputs a static site to `dist/` — `index.html` plus an `assets/` folder (hashed JS/CSS bundles). This is a pure client-side SPA: **every route must fall back to `index.html`**, since `react-router`'s `BrowserRouter` resolves paths like `/gnu/blog` on the client. Both deployment options below account for that.
+Genera un sitio estático en `dist/` — `index.html` más una carpeta `assets/` (bundles de JS/CSS con hash). Es una SPA puramente del lado del cliente: **cada ruta debe caer de regreso a `index.html`**, ya que el `BrowserRouter` de `react-router` resuelve rutas como `/gnu/blog` en el cliente. Las dos opciones de despliegue de abajo toman esto en cuenta.
 
-### Deploying `dist/` to Nginx
+### Desplegar `dist/` en Nginx
 
-1. Copy the contents of `dist/` to the server, e.g. `/var/www/gnu-cms-admin`.
-2. Nginx server block:
+1. Copia el contenido de `dist/` al servidor, p. ej. `/var/www/gnu-cms-admin`.
+2. Bloque server de Nginx:
 
    ```nginx
    server {
@@ -205,12 +205,12 @@ Outputs a static site to `dist/` — `index.html` plus an `assets/` folder (hash
        root /var/www/gnu-cms-admin;
        index index.html;
 
-       # SPA fallback: any unknown path serves index.html, react-router takes it from there
+       # fallback de SPA: cualquier ruta desconocida sirve index.html, react-router se encarga desde ahí
        location / {
            try_files $uri $uri/ /index.html;
        }
 
-       # long-cache hashed build assets; index.html itself must NOT be cached
+       # caché larga para los assets con hash de la compilación; index.html NO debe guardarse en caché
        location /assets/ {
            access_log off;
            add_header Cache-Control "public, max-age=31536000, immutable";
@@ -222,31 +222,31 @@ Outputs a static site to `dist/` — `index.html` plus an `assets/` folder (hash
    }
    ```
 
-3. Put TLS in front of it (e.g. `certbot --nginx`) — the admin sends a bearer token on every request, so it should only ever be served over HTTPS.
-4. Reload: `nginx -t && systemctl reload nginx`.
+3. Pon TLS al frente (p. ej. `certbot --nginx`) — el admin envía un bearer token en cada petición, así que solo debe servirse por HTTPS.
+4. Recarga: `nginx -t && systemctl reload nginx`.
 
-### Deploying `dist/` to Amazon S3
+### Desplegar `dist/` en Amazon S3
 
-1. Create a bucket (bucket name doesn't need to match the domain unless you're using it as the apex/CNAME target).
-2. Enable **Static website hosting** on the bucket:
+1. Crea un bucket (el nombre del bucket no tiene que coincidir con el dominio, a menos que lo uses como destino apex/CNAME).
+2. Activa **Static website hosting** en el bucket:
    - Index document: `index.html`
-   - **Error document: `index.html`** — this is the SPA-fallback equivalent of the Nginx `try_files` rule above. Without it, refreshing on `/gnu/blog` returns S3's 404 page instead of the app.
-3. Upload the build, replacing whatever was there before:
+   - **Error document: `index.html`** — es el equivalente del fallback de SPA de la regla `try_files` de Nginx de arriba. Sin esto, recargar en `/gnu/blog` regresa la página 404 de S3 en lugar de la app.
+3. Sube la compilación, reemplazando lo que hubiera antes:
    ```bash
    aws s3 sync dist/ s3://your-bucket-name --delete
    ```
-4. Set the bucket policy to allow public `s3:GetObject` (or keep it private and put CloudFront's Origin Access Control in front — recommended for HTTPS + a custom domain anyway).
-5. **Recommended**: put a CloudFront distribution in front of the bucket:
-   - Origin: the bucket (via OAC, not the public website endpoint)
-   - Add a **custom error response**: HTTP 403 and 404 → response page `/index.html`, HTTP code `200` — this is the CloudFront-level SPA fallback (needed because an OAC-backed S3 origin doesn't apply the bucket's own "error document" setting).
-   - Attach an ACM certificate for HTTPS and your domain.
-6. Re-deploys: re-run the `aws s3 sync` command, then invalidate CloudFront's cache for `/index.html` (`aws cloudfront create-invalidation --distribution-id <id> --paths "/index.html"`) so clients don't keep the old build cached.
+4. Configura la política del bucket para permitir `s3:GetObject` público (o mantenlo privado y pon el Origin Access Control de CloudFront al frente — de todos modos es lo recomendado para HTTPS + un dominio propio).
+5. **Recomendado**: pon una distribución de CloudFront al frente del bucket:
+   - Origen: el bucket (vía OAC, no el endpoint público del sitio web)
+   - Agrega una **respuesta de error personalizada**: HTTP 403 y 404 → página de respuesta `/index.html`, código HTTP `200` — este es el fallback de SPA a nivel de CloudFront (necesario porque un origen S3 con OAC no aplica la configuración "error document" propia del bucket).
+   - Asocia un certificado de ACM para HTTPS y tu dominio.
+6. Nuevos despliegues: vuelve a correr el comando `aws s3 sync` y luego invalida la caché de CloudFront para `/index.html` (`aws cloudfront create-invalidation --distribution-id <id> --paths "/index.html"`) para que los clientes no se queden con la compilación anterior en caché.
 
-### Deploying `dist/` to Azure Static Web Apps
+### Desplegar `dist/` en Azure Static Web Apps
 
-The simplest Azure option for this app: a static host with built-in SPA fallback, free managed TLS on a custom domain, and (if you link it to this repo) a CI pipeline Azure sets up for you.
+La opción más sencilla de Azure para esta app: un host estático con fallback de SPA integrado, TLS administrado gratis en un dominio propio y (si lo vinculas a este repo) un pipeline de CI que Azure configura por ti.
 
-1. Add `staticwebapp.config.json` at the **repo root** (Azure looks for it next to the app, or inside `dist/` if you commit it there instead):
+1. Agrega `staticwebapp.config.json` en la **raíz del repo** (Azure lo busca junto a la app, o dentro de `dist/` si prefieres versionarlo ahí):
 
    ```json
    {
@@ -263,29 +263,29 @@ The simplest Azure option for this app: a static host with built-in SPA fallback
    }
    ```
 
-   `navigationFallback` is the SPA-fallback equivalent of the Nginx `try_files`/S3 "error document" rules above — any unknown path serves `index.html` and `react-router` takes it from there, while the `exclude` list keeps real asset requests (and genuine 404s for them) from being swallowed by the rewrite.
+   `navigationFallback` es el equivalente del fallback de SPA de las reglas `try_files` de Nginx / "error document" de S3 de arriba — cualquier ruta desconocida sirve `index.html` y `react-router` se encarga desde ahí, mientras que la lista `exclude` evita que la reescritura se trague las peticiones reales de assets (y los 404 legítimos de esos assets).
 
-2. **Env vars are build-time, not runtime** — same caveat as everywhere else in this README. Azure Static Web Apps has no server to read "Application settings" from at request time for a static build like this one; `VITE_BASE_URL`/`VITE_BUILD_SERVER_URL` must be set as pipeline/CI variables (or in a committed `.env.production`) *before* `npm run build` runs, not configured in the Azure portal after deploying.
-3. Deploy either:
-   - **Via the Azure Static Web Apps CLI**, pointing it straight at the already-built output: `swa deploy ./dist --env production` (after `swa login`), or
-   - **Via GitHub Actions**: creating the Static Web App resource in the Azure portal and linking it to this repo scaffolds a workflow using `Azure/static-web-apps-deploy@v1`. Set `app_location` to the repo root, `output_location` to `dist`, and add a build step (`npm ci && npm run build`) before the deploy step — don't let the action's own Oryx build step run `npm run build` for you unless the pipeline's env vars are set at that stage too.
-4. Custom domain + TLS: attach the domain in the Static Web App's **Custom domains** blade — Azure provisions and renews the certificate automatically, no `certbot` step needed.
-5. Re-deploys: re-run `swa deploy` (CLI) or just push to the linked branch (GitHub Actions) — Azure Static Web Apps replaces the previous deployment and handles cache invalidation for you.
+2. **Las variables de entorno son de tiempo de compilación, no de ejecución** — la misma advertencia que en todo este README. Azure Static Web Apps no tiene un servidor que lea "Application settings" en cada petición para una compilación estática como esta; `VITE_BASE_URL`/`VITE_BUILD_SERVER_URL` deben definirse como variables del pipeline/CI (o en un `.env.production` versionado) *antes* de que corra `npm run build`, no configurarse en el portal de Azure después del despliegue.
+3. Despliega de alguna de estas formas:
+   - **Con el CLI de Azure Static Web Apps**, apuntándolo directamente a la salida ya compilada: `swa deploy ./dist --env production` (después de `swa login`), o
+   - **Con GitHub Actions**: al crear el recurso Static Web App en el portal de Azure y vincularlo a este repo, se genera un workflow que usa `Azure/static-web-apps-deploy@v1`. Define `app_location` como la raíz del repo, `output_location` como `dist`, y agrega un paso de compilación (`npm ci && npm run build`) antes del paso de despliegue — no dejes que el paso de compilación Oryx propio de la action corra `npm run build` por ti, a menos que las variables de entorno del pipeline también estén definidas en esa etapa.
+4. Dominio propio + TLS: asocia el dominio en la sección **Custom domains** de la Static Web App — Azure emite y renueva el certificado automáticamente, no hace falta el paso de `certbot`.
+5. Nuevos despliegues: vuelve a correr `swa deploy` (CLI) o simplemente haz push a la rama vinculada (GitHub Actions) — Azure Static Web Apps reemplaza el despliegue anterior y se encarga de invalidar la caché por ti.
 
-If you'd rather use the same bucket-plus-CDN shape as the S3 section above instead of Static Web Apps, Azure's equivalent is **Blob Storage static website hosting + Azure CDN/Front Door** in front of it, with the CDN's custom error response (404 → `/index.html`, 200) standing in for CloudFront's.
+Si prefieres usar la misma forma de bucket + CDN que en la sección de S3 de arriba en lugar de Static Web Apps, el equivalente en Azure es **Blob Storage static website hosting + Azure CDN/Front Door** al frente, con la respuesta de error personalizada del CDN (404 → `/index.html`, 200) en lugar de la de CloudFront.
 
-## Known limitations
+## Limitaciones conocidas
 
-- **No page-title/menu editor.** A page's own `title` (used e.g. as the badge label on `ServiceCards`-style preview cards on the public sites) is blueprint/seed data — `UpdatePageRequest` only accepts `is_published`, and nothing in the admin exposes a page-settings screen. Changing a page's title requires a backend change.
-- **No section-creation UI.** The backend upserts a section by `(page_id, type)` via `PUT`, but the admin has no "add a new section to this page" control — sections are seeded server-side; the admin only edits existing ones.
-- **No media library browse/manage UI.** `uploadMedia()` (`POST /api/admin/media`) is used everywhere a file is picked, but there's no screen for `GET /api/admin/media` (list previously-uploaded files for reuse) or `DELETE /api/admin/media/{name}` (remove an old upload) — the backend supports both already.
+- **No hay editor de títulos de página/menú.** El `title` propio de una página (que se usa p. ej. como texto de la etiqueta en las tarjetas de vista previa estilo `ServiceCards` de los sitios públicos) es dato del blueprint/seed — `UpdatePageRequest` solo acepta `is_published`, y nada en el admin expone una pantalla de configuración de página. Cambiar el título de una página requiere un cambio en el backend.
+- **No hay UI para crear secciones.** El backend hace upsert de una sección por `(page_id, type)` vía `PUT`, pero el admin no tiene un control de "agregar una sección nueva a esta página" — las secciones se siembran del lado del servidor; el admin solo edita las existentes.
+- **No hay UI para explorar/administrar la biblioteca de medios.** `uploadMedia()` (`POST /api/admin/media`) se usa en todos los lugares donde se elige un archivo, pero no hay pantalla para `GET /api/admin/media` (listar archivos subidos antes para reutilizarlos) ni para `DELETE /api/admin/media/{name}` (eliminar una carga vieja) — el backend ya soporta ambos.
 
-## Other relevant notes
+## Otras notas relevantes
 
-- **No backend in this repo.** This project only talks to the headless CMS API (and the separate `build-server`) over HTTP; there's no server code, database, or SSR here — it's a static bundle once built.
-- **Design system**: colors, buttons, and card/glass styles are documented in `CLAUDE.md`; keep new UI consistent with that palette rather than introducing new colors.
+- **No hay backend en este repo.** Este proyecto solo se comunica con la API del CMS headless (y con el `build-server` aparte) por HTTP; aquí no hay código de servidor, base de datos ni SSR — una vez compilado es un bundle estático.
+- **Sistema de diseño**: los colores, botones y estilos de tarjeta/glass están documentados en `CLAUDE.md`; mantén la UI nueva consistente con esa paleta en lugar de introducir colores nuevos.
 
-## Sorting categories and products at Tectuus site
-- **Ordering**: the CMS has no sort field for categories or products, so editors order them with a numeric prefix on the name (`1 - EDRM`, `2 - Compresores`; `1 - EDRM-500`). The prefix only sets the order and is never shown on the site. Keep the `N - Name` format (number, dash).
-  - **Categories** are sorted by the prefix in `fetchCategories()`, so the chips, shelves and Productos submenu all share one order. Categories without a prefix keep API order after the numbered ones.
-  - **Products** are sorted within their category by `orderByPrefix()`, on the catalog shelves and on the product page (title, "Más de …" list). A category is only reordered when **every** product in it has a prefix and no two share a number. Otherwise the whole category keeps the server's order and names unchanged, prefixes included.
+## Ordenar categorías y productos en el sitio de Tectuus
+- **Orden**: el CMS no tiene un campo de orden para categorías ni productos, así que los editores los ordenan con un prefijo numérico en el nombre (`1 - EDRM`, `2 - Compresores`; `1 - EDRM-500`). El prefijo solo define el orden y nunca se muestra en el sitio. Respeta el formato `N - Nombre` (número, guion).
+  - Las **categorías** se ordenan por el prefijo en `fetchCategories()`, así que los chips, los estantes y el submenú de Productos comparten un mismo orden. Las categorías sin prefijo conservan el orden de la API después de las numeradas.
+  - Los **productos** se ordenan dentro de su categoría con `orderByPrefix()`, en los estantes del catálogo y en la página del producto (título, lista "Más de …"). Una categoría solo se reordena cuando **todos** sus productos tienen prefijo y ninguno repite número. Si no, toda la categoría conserva el orden y los nombres del servidor sin cambios, prefijos incluidos.

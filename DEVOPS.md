@@ -1,112 +1,110 @@
-# DevOps & Developer Handbook — cms-frontend
+# Manual de DevOps y desarrollo — cms-frontend
 
-Operational reference for the five frontend projects in this repo: the React admin panel and the four Astro public sites.
+Referencia operativa de los cinco proyectos frontend de este repositorio: el panel de administración en React y los cuatro sitios públicos en Astro.
 
-Written for developers. The per-site **content** guides for editors/webmasters are the Spanish `DOCUMENTACION-CONTENIDO-*.txt` files at the repo root — this document does not repeat them.
+Escrito para desarrolladores. Las guías de **contenido** por sitio para editores/webmasters son los archivos en español `DOCUMENTACION-CONTENIDO-*.txt` en la raíz del repositorio — este documento no las repite.
 
-| Doc | Audience | Language |
+| Doc | Público | Idioma |
 | :-- | :-- | :-- |
-| `README.md` | Overview of the system | English |
-| `DEVOPS.md` (this file) | Developers / deployers | English |
-| `DOCUMENTACION-CONTENIDO-*.txt` | Content editors, webmaster | Spanish |
-| `<project>/GUIDELINES.md` | Design language (identical copy in all 5) | English |
-| `<project>/README.md` | Per-project detail (only admin + landing-gnu are written) | English |
-
-> **Note on `README.md`**: its status table is out of date. It calls `gas-gnu`, `tectuus` and `trainin` "Astro scaffold only — no CMS wiring yet". All three are fully wired and built out. Treat this file as the current state.
+| `README.md` | Panorama general del sistema | Español |
+| `DEVOPS.md` (este archivo) | Desarrolladores / quien despliega | Español |
+| `DOCUMENTACION-CONTENIDO-*.txt` | Editores de contenido, webmaster | Español |
+| `<project>/GUIDELINES.md` | Lenguaje de diseño (copia idéntica en los 5) | Español |
+| `<project>/README.md` | Detalle por proyecto (los cinco proyectos tienen el suyo) | Español |
 
 ---
 
-## 1. System architecture
+## 1. Arquitectura del sistema
 
 ```
                     ┌───────────────────────────────┐
-                    │  External headless CMS (Laravel)│
+                    │  CMS headless externo (Laravel) │
                     │  gnu-headless-cms...sslip.io    │
                     └───────┬───────────────┬────────┘
-       authenticated write  │               │  public read, no auth
+     escritura autenticada  │               │  lectura pública, sin auth
        /api/admin/*         │               │  /api/public/{site}/*
-       Bearer JWT           │               │  AT BUILD TIME ONLY
+       Bearer JWT           │               │  SOLO EN TIEMPO DE COMPILACIÓN
                             │               │
                  ┌──────────┴─────┐   ┌─────┴──────────────────────────┐
                  │ gnu-cms-admin   │   │ landing-gnu  gas-gnu           │
                  │ React SPA       │   │ tectuus      trainin           │
-                 │ login required  │   │ Astro → static dist/           │
+                 │ requiere login  │   │ Astro → dist/ estático         │
                  └─────────────────┘   └────────────────────────────────┘
                                                     │
-                                          public, no login, no session
+                                        público, sin login, sin sesión
 ```
 
-**The single most important operational fact:** the Astro sites fetch CMS content *at build time only*. There is no SSR adapter in any `astro.config.mjs`. An editor saving in the admin changes the database immediately, but **the live site does not change until that site is rebuilt and redeployed**. There is no webhook wired up; publishing is a manual step today.
+**El hecho operativo más importante:** los sitios Astro obtienen el contenido del CMS *solo en tiempo de compilación*. No hay adaptador SSR en ningún `astro.config.mjs`. Cuando un editor guarda en el panel, la base de datos cambia de inmediato, pero **el sitio en vivo no cambia hasta que ese sitio se vuelve a compilar y desplegar**. No hay ningún webhook conectado; hoy publicar es un paso manual.
 
-### The four sites and their CMS slugs
+### Los cuatro sitios y sus slugs en el CMS
 
-The CMS slug is **not** the folder name. This trips people up constantly.
+El slug del CMS **no** es el nombre de la carpeta. Esto confunde a la gente todo el tiempo.
 
-| Folder | Brand | CMS site slug | Admin route prefix | Admin `site_id` |
+| Carpeta | Marca | Slug del sitio en el CMS | Prefijo de ruta en el panel | `site_id` en el panel |
 | :-- | :-- | :-- | :-- | :-- |
 | `landing-gnu` | GNU Gas Natural | `gnu` | `/gnu/*` | 1 |
 | `gas-gnu` | GNU Gas Natural Vehicular | `gnu-vehicular` | `/gas-natural/*` | 2 |
 | `trainin` | Traninn Logistic | `traninn-logistic` | `/trainin/*` | 3 |
 | `tectuus` | Tectuus | `tectuus` | `/tectuus/*` | 4 |
 
-Note the spelling drift on Traninn/Trainin — folder, brand string and CMS slug all differ. Don't "fix" one without the others.
+Ojo con la ortografía inconsistente de Traninn/Trainin — la carpeta, el nombre de la marca y el slug del CMS son distintos. No "corrijas" uno sin los demás.
 
 ---
 
-## 2. Prerequisites
+## 2. Requisitos previos
 
-- **Node.js ≥ 22.12.0** — declared in `engines` on all four Astro projects. The admin declares no engine but needs a modern Node for Vite 8.
-- **npm** — no workspace tooling of any kind (no pnpm workspaces, Lerna, Nx, Turborepo). Each project has its own `package.json`, `node_modules` and `.env`.
-- **You must `cd` into a project before any npm command.** There is no root `package.json`.
+- **Node.js ≥ 22.12.0** — declarado en `engines` en los cuatro proyectos Astro. El panel no declara versión, pero necesita un Node moderno para Vite 8.
+- **npm** — sin ninguna herramienta de workspaces (ni pnpm workspaces, Lerna, Nx, Turborepo). Cada proyecto tiene su propio `package.json`, `node_modules` y `.env`.
+- **Tienes que hacer `cd` a un proyecto antes de cualquier comando npm.** No hay `package.json` en la raíz.
 
-### Stack versions
+### Versiones del stack
 
-| | Framework | Build tool | Styling | State |
+| | Framework | Herramienta de compilación | Estilos | Estado |
 | :-- | :-- | :-- | :-- | :-- |
-| `gnu-cms-admin` | React 19 + react-router 8 | Vite 8 | Tailwind CSS v4 (`@tailwindcss/vite`) | zustand 5 (persisted) |
-| Astro sites | Astro 7.1 | Astro (Vite under the hood) | Plain CSS + custom properties | — |
+| `gnu-cms-admin` | React 19 + react-router 8 | Vite 8 | Tailwind CSS v4 (`@tailwindcss/vite`) | zustand 5 (persistido) |
+| Sitios Astro | Astro 7.1 | Astro (Vite por debajo) | CSS plano + custom properties | — |
 
-Extra admin deps: `leaflet` 1.9 (map picker for `stations_map`), `oxlint` (lint).
+Dependencias extra del panel: `leaflet` 1.9 (selector de mapa para `stations_map`), `oxlint` (lint).
 
 ---
 
-## 3. Quick reference
+## 3. Referencia rápida
 
-| Project | Install & dev | Default port | Env var | Build output |
+| Proyecto | Instalar y desarrollo | Puerto por defecto | Variable de entorno | Salida de compilación |
 | :-- | :-- | :-- | :-- | :-- |
-| `gnu-cms-admin` | `npm ci && npm run dev` | 5173 | `VITE_BASE_URL` | `dist/` — **SPA, needs rewrite fallback** |
-| `landing-gnu` | `npm ci && npm run dev` | 4321 | `CMS_API_URL` | `dist/` — plain static |
-| `gas-gnu` | `npm ci && npm run dev` | 4321 | `CMS_API_URL` | `dist/` — plain static |
-| `tectuus` | `npm ci && npm run dev` | 4321 | `CMS_API_URL` | `dist/` — plain static |
-| `trainin` | `npm ci && npm run dev` | 4321 | `CMS_API_URL` | `dist/` — plain static |
+| `gnu-cms-admin` | `npm ci && npm run dev` | 5173 | `VITE_BASE_URL` | `dist/` — **SPA, necesita fallback de reescritura** |
+| `landing-gnu` | `npm ci && npm run dev` | 4321 | `CMS_API_URL` | `dist/` — estático plano |
+| `gas-gnu` | `npm ci && npm run dev` | 4321 | `CMS_API_URL` | `dist/` — estático plano |
+| `tectuus` | `npm ci && npm run dev` | 4321 | `CMS_API_URL` | `dist/` — estático plano |
+| `trainin` | `npm ci && npm run dev` | 4321 | `CMS_API_URL` | `dist/` — estático plano |
 
-Astro auto-increments the port when 4321 is taken, so running two sites at once gives you 4321 and 4322. Nothing pins the port — pass `--port` if a script depends on it.
+Astro incrementa el puerto automáticamente cuando el 4321 está ocupado, así que correr dos sitios a la vez te da 4321 y 4322. Nada fija el puerto — pasa `--port` si algún script depende de él.
 
 ### Scripts
 
-Astro projects: `dev`, `build`, `preview`, `astro`.
-Admin: `dev`, `build`, `preview`, `lint` (oxlint).
+Proyectos Astro: `dev`, `build`, `preview`, `astro`.
+Panel: `dev`, `build`, `preview`, `lint` (oxlint).
 
-There is **no test script anywhere in this repo.** No unit, integration or E2E tests exist on the frontend side. (The CMS backend has PHPUnit feature tests, documented in the `*-docs/` folders, but that code is not in this repo.)
+**No hay ningún script de pruebas en este repositorio.** No existen pruebas unitarias, de integración ni E2E del lado del frontend. (El backend del CMS tiene pruebas de funcionalidad en PHPUnit, documentadas en las carpetas `*-docs/`, pero ese código no está en este repositorio.)
 
 ---
 
-## 4. Environment variables
+## 4. Variables de entorno
 
-### Astro sites — `CMS_API_URL`
+### Sitios Astro — `CMS_API_URL`
 
 ```env
 # <project>/.env
 CMS_API_URL=https://gnu-headless-cms.165.227.59.215.sslip.io/api/public/<site-slug>/
 ```
 
-- **Trailing slash is required.** `fetch.ts` does raw string concatenation: `fetch(BASE_URL + suffix)`.
-- Includes the site slug — that's what scopes a build to one site.
-- Read via `import.meta.env.CMS_API_URL`, falls back to `http://localhost:3000/`.
-- The media origin is derived from it: `new URL(BASE_URL).origin + "/storage/" + path` (`mediaUrl()`).
-- **Build-time only.** Changing it on a server after the fact does nothing. Point it somewhere else → rebuild.
+- **La diagonal final es obligatoria.** `fetch.ts` concatena cadenas tal cual: `fetch(BASE_URL + suffix)`.
+- Incluye el slug del sitio — eso es lo que limita una compilación a un solo sitio.
+- Se lee con `import.meta.env.CMS_API_URL` y, si falta, usa `http://localhost:3000/`.
+- El origen de los medios se deriva de ella: `new URL(BASE_URL).origin + "/storage/" + path` (`mediaUrl()`).
+- **Solo en tiempo de compilación.** Cambiarla en un servidor después no hace nada. Si la apuntas a otro lado → vuelve a compilar.
 
-Current values, all four pointing at the same host:
+Valores actuales, los cuatro apuntan al mismo host:
 
 ```
 landing-gnu  → .../api/public/gnu/
@@ -115,45 +113,45 @@ tectuus      → .../api/public/tectuus/
 trainin      → .../api/public/traninn-logistic/
 ```
 
-### Admin — `VITE_BASE_URL`
+### Panel — `VITE_BASE_URL`
 
 ```env
 # gnu-cms-admin/.env
 VITE_BASE_URL=https://gnu-headless-cms.165.227.59.215.sslip.io
 ```
 
-- **Origin only, no trailing slash, no `/api`.** Every call appends its own `/api/admin/...` path.
-- Must be prefixed `VITE_` or Vite won't expose it to client code.
-- It is baked into the bundle at build time *and* copied into the persisted zustand store as `tenantDomain` on login. A user who logged in before a `VITE_BASE_URL` change keeps talking to the **old** host until they log out or clear `localStorage` — see §11.
+- **Solo el origen, sin diagonal final, sin `/api`.** Cada llamada agrega su propia ruta `/api/admin/...`.
+- Debe llevar el prefijo `VITE_` o Vite no la expone al código del cliente.
+- Se incrusta en el bundle en tiempo de compilación *y* se copia al store persistido de zustand como `tenantDomain` al iniciar sesión. Un usuario que inició sesión antes de un cambio de `VITE_BASE_URL` sigue hablando con el host **anterior** hasta que cierra sesión o limpia `localStorage` — ver §11.
 
-### ⚠️ Reserved env var names — never use these
+### ⚠️ Nombres de variables de entorno reservados — nunca los uses
 
 `BASE_URL`, `MODE`, `DEV`, `PROD`, `SSR`, `SITE`, `ASSETS_PREFIX`.
 
-Astro/Vite own them. A custom `.env` entry named `BASE_URL` is silently overridden with `"/"` — no error, no warning. This is why the variable is `CMS_API_URL` and not the more obvious name.
+Son de Astro/Vite. Una entrada propia en `.env` llamada `BASE_URL` se sobrescribe en silencio con `"/"` — sin error, sin advertencia. Por eso la variable se llama `CMS_API_URL` y no el nombre más obvio.
 
-### Secrets hygiene
+### Higiene de secretos
 
-- Astro `.gitignore`s all list `.env` — good.
-- **`gnu-cms-admin/.gitignore` does not, and `gnu-cms-admin/.env` is committed to git.** It currently holds only a public hostname, so nothing is leaking today, but the moment anyone adds a key there it goes straight into history. Add `.env` to that `.gitignore` and commit a `.env.example` instead.
+- Todos los `.gitignore` de Astro incluyen `.env` — bien.
+- **`gnu-cms-admin/.gitignore` no lo incluye, y `gnu-cms-admin/.env` está versionado en git.** Hoy solo contiene un hostname público, así que no se está filtrando nada, pero en cuanto alguien agregue ahí una llave, se va directo al historial. Agrega `.env` a ese `.gitignore` y versiona un `.env.example` en su lugar.
 
 ---
 
-## 5. Local development
+## 5. Desarrollo local
 
 ```bash
-cd landing-gnu        # or gas-gnu / tectuus / trainin / gnu-cms-admin
+cd landing-gnu        # o gas-gnu / tectuus / trainin / gnu-cms-admin
 npm ci
-cp .env.example .env  # (doesn't exist yet — create .env by hand, see §4)
+cp .env.example .env  # (todavía no existe — crea .env a mano, ver §4)
 npm run dev
 ```
 
-- Astro's dev server **re-fetches CMS content on every request**, so content edits show up on refresh without restarting. This is the one place the sites behave dynamically; production does not.
-- The admin needs a login. Auth is `POST /api/admin/auth/login` with `{email, password}`; the returned `access_token` is persisted in `localStorage` under the key `gnu-cms-session`.
+- El servidor de desarrollo de Astro **vuelve a obtener el contenido del CMS en cada petición**, así que los cambios de contenido aparecen al recargar sin reiniciar. Este es el único lugar donde los sitios se comportan de forma dinámica; producción no.
+- El panel requiere login. La autenticación es `POST /api/admin/auth/login` con `{email, password}`; el `access_token` que regresa se persiste en `localStorage` bajo la llave `gnu-cms-session`.
 
-### Background dev servers
+### Servidores de desarrollo en segundo plano
 
-All four `AGENTS.md` files specify background mode for automated/agent use:
+Los cuatro archivos `AGENTS.md` indican el modo en segundo plano para uso automatizado/por agentes:
 
 ```bash
 npx astro dev --background
@@ -162,26 +160,26 @@ npx astro dev logs
 npx astro dev stop
 ```
 
-Dev logs land in `<project>/.astro/dev.log`.
+Los logs del servidor de desarrollo quedan en `<project>/.astro/dev.log`.
 
-### Working against a local CMS
+### Trabajar contra un CMS local
 
-Point `CMS_API_URL` / `VITE_BASE_URL` at your local backend. Nothing else needs to change. If the CMS is unreachable, `fetchData()` catches the error, logs it and returns `undefined` — so each site falls back to whatever its components do with empty data. That differs sharply per site (see §9), and on `trainin` it means **most of the page silently renders nothing**, which looks like a broken build but isn't.
+Apunta `CMS_API_URL` / `VITE_BASE_URL` a tu backend local. No hace falta cambiar nada más. Si el CMS no responde, `fetchData()` atrapa el error, lo registra en el log y regresa `undefined` — así que cada sitio cae en lo que sus componentes hagan con datos vacíos. Eso varía mucho entre sitios (ver §9), y en `trainin` significa que **la mayor parte de la página no renderiza nada, en silencio**, lo cual parece una compilación rota pero no lo es.
 
 ---
 
-## 6. Build & deploy
+## 6. Compilación y despliegue
 
-### 6.1 Astro sites
+### 6.1 Sitios Astro
 
 ```bash
 cd <project>
 npm ci
-npm run build      # fetches CMS content, writes dist/
-npm run preview    # serve dist/ locally exactly as deployed
+npm run build      # obtiene el contenido del CMS, escribe dist/
+npm run preview    # sirve dist/ localmente exactamente como se despliega
 ```
 
-`dist/` is plain HTML/CSS/JS. No Node runtime required in production.
+`dist/` es HTML/CSS/JS plano. No se necesita runtime de Node en producción.
 
 **Nginx (VPS):**
 
@@ -199,15 +197,15 @@ server {
 }
 ```
 
-The `$uri.html` fallback matters: Astro emits `/contacto/index.html` for `/contacto`, but a flat-file layout can also produce `contacto.html`. Without it some routes 404.
+El fallback `$uri.html` importa: Astro genera `/contacto/index.html` para `/contacto`, pero una estructura de archivos planos también puede producir `contacto.html`. Sin él, algunas rutas dan 404.
 
-**Static/serverless hosts (Vercel, Netlify, Cloudflare Pages, Azure Static Web Apps):**
-- Build command `npm run build`, output directory `dist`.
-- Set `CMS_API_URL` as a **build-time** env var in the platform's project settings.
-- Azure SWA: app location `/`, output location `dist`, variable under Configuration → Environment variables.
-- Because each project is a separate app rooted in a subdirectory, set the platform's "root directory"/"app location" to that subfolder — there is no monorepo config to do it for you.
+**Hosts estáticos/serverless (Vercel, Netlify, Cloudflare Pages, Azure Static Web Apps):**
+- Comando de compilación `npm run build`, directorio de salida `dist`.
+- Configura `CMS_API_URL` como variable de entorno **en tiempo de compilación** en la configuración del proyecto en la plataforma.
+- Azure SWA: app location `/`, output location `dist`, variable en Configuration → Environment variables.
+- Como cada proyecto es una app separada con raíz en un subdirectorio, configura el "root directory"/"app location" de la plataforma en esa subcarpeta — no hay configuración de monorepo que lo haga por ti.
 
-### 6.2 The admin SPA
+### 6.2 La SPA del panel
 
 ```bash
 cd gnu-cms-admin
@@ -215,7 +213,7 @@ npm ci
 npm run build
 ```
 
-`BrowserRouter` with no `basename` means **every route must fall back to `index.html`**, or refreshing on `/tectuus/productos` 404s.
+`BrowserRouter` sin `basename` significa que **toda ruta debe caer en `index.html`**, o recargar en `/tectuus/productos` da 404.
 
 **Nginx:**
 
@@ -228,7 +226,7 @@ server {
     index index.html;
 
     location / {
-        try_files $uri $uri/ /index.html;   # SPA fallback
+        try_files $uri $uri/ /index.html;   # fallback de la SPA
     }
 
     location /assets/ {
@@ -242,18 +240,18 @@ server {
 }
 ```
 
-**Serve the admin over HTTPS only** — it sends a bearer token on every request.
+**Sirve el panel solo por HTTPS** — manda un bearer token en cada petición.
 
-**S3 + CloudFront:** bucket static hosting with index document *and* error document both `index.html`; behind CloudFront/OAC add a custom error response mapping 403 and 404 → `/index.html` with HTTP 200 (an OAC-backed origin ignores the bucket's error-document setting). Redeploy with `aws s3 sync dist/ s3://bucket --delete`, then invalidate `/index.html`.
+**S3 + CloudFront:** hosting estático del bucket con index document *y* error document en `index.html`; detrás de CloudFront/OAC agrega una custom error response que mapee 403 y 404 → `/index.html` con HTTP 200 (un origen con OAC ignora la configuración de error document del bucket). Vuelve a desplegar con `aws s3 sync dist/ s3://bucket --delete` y luego invalida `/index.html`.
 
-### 6.3 Publishing a content change (end to end)
+### 6.3 Publicar un cambio de contenido (de principio a fin)
 
-1. Editor saves in the admin → CMS database updated immediately.
-2. Someone runs `npm run build` in the affected Astro project → content is fetched and baked into HTML **at this moment**.
-3. `dist/` is deployed.
-4. Only now is the change visible to visitors.
+1. El editor guarda en el panel → la base de datos del CMS se actualiza de inmediato.
+2. Alguien corre `npm run build` en el proyecto Astro afectado → el contenido se obtiene y se incrusta en el HTML **en este momento**.
+3. Se despliega `dist/`.
+4. Solo hasta ahora el cambio es visible para los visitantes.
 
-A minimal redeploy script, per site:
+Un script mínimo de redespliegue, por sitio:
 
 ```bash
 #!/usr/bin/env bash
@@ -266,199 +264,199 @@ npm run build
 rsync -a --delete dist/ "/var/www/$SITE/dist/"
 ```
 
-Note `npm run build` **exits 0 even if the CMS is unreachable** — `fetchData()` swallows the error. A deploy pipeline will happily publish a content-less site. If you automate this, add a smoke check between build and deploy, e.g. grep `dist/index.html` for a string that only appears when real CMS content rendered, and fail the job if it's missing.
+Ojo: `npm run build` **termina con código 0 aunque el CMS no responda** — `fetchData()` se traga el error. Un pipeline de despliegue publicará tan campante un sitio sin contenido. Si automatizas esto, agrega una verificación rápida entre la compilación y el despliegue, p. ej. hacer grep en `dist/index.html` de un texto que solo aparece cuando se renderizó contenido real del CMS, y hacer fallar el job si no está.
 
-### 6.4 Infrastructure that does not exist yet
+### 6.4 Infraestructura que todavía no existe
 
-Worth knowing before you promise anything:
+Conviene saberlo antes de prometer cualquier cosa:
 
-- **No CI/CD.** No `.github/workflows`, no `Dockerfile`, no `docker-compose`, no `*.toml`, no `_redirects`, no deploy scripts anywhere in the repo.
-- **No CMS→rebuild webhook.** Rebuilds are triggered by hand from the admin's **Reconstruir página** button, served by `build-server/` (see its README). It must run on the host that serves the sites; it runs `npm run build` in `/var/www/html/sitios-cms/<folder>/code` (the Astro project, `node_modules` installed) and copies `code/dist/` over everything in `<folder>` except `code/` (folders: `gnu`, `gnu-gas-natural`, `traninn-logistic`, `tectuus`).
-- **No tests, no linting in the Astro projects** (only the admin has `oxlint`).
-- **No staging environment** — all four `.env` files point at the one production CMS host.
+- **No hay CI/CD.** Ni `.github/workflows`, ni `Dockerfile`, ni `docker-compose`, ni `*.toml`, ni `_redirects`, ni scripts de despliegue en ninguna parte del repositorio.
+- **No hay webhook CMS→recompilación.** Las recompilaciones se disparan a mano desde el botón **Reconstruir página** del panel, que atiende `build-server/` (ver su README). Debe correr en el host que sirve los sitios; corre `npm run build` en `/var/www/html/sitios-cms/<folder>/code` (el proyecto Astro, con `node_modules` instalado) y copia `code/dist/` sobre todo lo que hay en `<folder>` excepto `code/` (carpetas: `gnu`, `gnu-gas-natural`, `traninn-logistic`, `tectuus`).
+- **No hay pruebas ni linting en los proyectos Astro** (solo el panel tiene `oxlint`).
+- **No hay entorno de staging** — los cuatro `.env` apuntan al único host del CMS de producción.
 
 ---
 
-## 7. Where things live
+## 7. Dónde vive cada cosa
 
-### 7.1 Astro sites — canonical layout
+### 7.1 Sitios Astro — estructura canónica
 
-`landing-gnu`, `gas-gnu` and `tectuus` follow this. **`trainin` does not** — see 7.2.
+`landing-gnu`, `gas-gnu` y `tectuus` la siguen. **`trainin` no** — ver 7.2.
 
 ```
 <project>/
-├── public/                     # copied verbatim to dist/ (favicon.svg, favicon.ico)
+├── public/                     # se copia tal cual a dist/ (favicon.svg, favicon.ico)
 ├── src/
-│   ├── assets/images/noimg.jpg # fallback image, goes through Astro's asset pipeline
+│   ├── assets/images/noimg.jpg # imagen de respaldo, pasa por el pipeline de assets de Astro
 │   ├── components/
-│   │   ├── SectionRenderer.astro   # maps CMS section "type" → component
-│   │   └── sections/                # one component per section type
-│   ├── config/seo.ts           # site name, titles, canonical domain, OG defaults
-│   ├── functions/fetch.ts      # REST client: fetchData/sendData/updateData, mediaUrl, BASE_URL
-│   ├── layouts/Layout.astro    # header, nav, footer, WhatsApp FAB; fetches /menu and /globals
-│   ├── pages/                  # file-based routing
+│   │   ├── SectionRenderer.astro   # mapea el "type" de sección del CMS → componente
+│   │   └── sections/                # un componente por tipo de sección
+│   ├── config/seo.ts           # nombre del sitio, títulos, dominio canónico, valores OG por defecto
+│   ├── functions/fetch.ts      # cliente REST: fetchData/sendData/updateData, mediaUrl, BASE_URL
+│   ├── layouts/Layout.astro    # header, nav, footer, botón flotante de WhatsApp; obtiene /menu y /globals
+│   ├── pages/                  # ruteo basado en archivos
 │   ├── styles/
-│   │   ├── tokens.css          # design tokens (:root custom properties)
-│   │   └── global.css          # @import "./tokens.css" + every component class
+│   │   ├── tokens.css          # design tokens (custom properties en :root)
+│   │   └── global.css          # @import "./tokens.css" + todas las clases de componentes
 │   └── types/                  # globals.ts, menu.ts, page.ts, catalog.ts
-├── astro.config.mjs            # empty defineConfig({}) in all four
-├── tsconfig.json               # extends astro/tsconfigs/strict
+├── astro.config.mjs            # defineConfig({}) vacío en los cuatro
+├── tsconfig.json               # extiende astro/tsconfigs/strict
 ├── .env
-├── AGENTS.md                   # dev-server conventions
-└── GUIDELINES.md               # design language (identical in all 5 projects)
+├── AGENTS.md                   # convenciones del servidor de desarrollo
+└── GUIDELINES.md               # lenguaje de diseño (idéntico en los 5 proyectos)
 ```
 
-Project-specific extras:
+Extras por proyecto:
 
-- `tectuus`: `src/functions/catalog.ts` (product/category fetching + `formatPrice`), `src/components/ProductCatalog.astro`, `public/placeholder-plate.svg`.
-- `gas-gnu`: `src/components/sections/ServiceScheduling.astro` (appointment widget, the only site with one).
-- `landing-gnu`: also carries `inspiration/`, `gnu-docs/`, `DESIGN-apple.md`, `gaseco-schema` — all gitignored scratch material, not part of the build.
-- Every site has a `<site>-docs/` folder of Markdown blueprints describing the CMS contract (which sections each page has, endpoint payloads, seeder decisions). **These are the best reference for the API shape** and are worth reading before touching section rendering.
+- `tectuus`: `src/functions/catalog.ts` (obtención de productos/categorías + `formatPrice`), `src/components/ProductCatalog.astro`, `public/placeholder-plate.svg`.
+- `gas-gnu`: `src/components/sections/ServiceScheduling.astro` (widget de citas, el único sitio que lo tiene).
+- `landing-gnu`: además trae `inspiration/`, `gnu-docs/`, `DESIGN-apple.md`, `gaseco-schema` — todo material de borrador ignorado por git, no forma parte de la compilación.
+- Cada sitio tiene una carpeta `<site>-docs/` con blueprints en Markdown que describen el contrato con el CMS (qué secciones tiene cada página, payloads de los endpoints, decisiones de los seeders). **Son la mejor referencia de la forma de la API** y vale la pena leerlos antes de tocar el renderizado de secciones.
 
-### 7.2 `trainin` — the odd one out
+### 7.2 `trainin` — el diferente
 
 ```
 trainin/
-├── assets/images/noimg.jpg     # ⚠ at project root, NOT src/assets — unused by the build
+├── assets/images/noimg.jpg     # ⚠ en la raíz del proyecto, NO en src/assets — la compilación no lo usa
 ├── src/
-│   ├── components/             # ⚠ FLAT — no sections/ subfolder
-│   │   ├── PageSections.astro  # ⚠ the SectionRenderer equivalent, different name
+│   ├── components/             # ⚠ PLANO — sin subcarpeta sections/
+│   │   ├── PageSections.astro  # ⚠ el equivalente de SectionRenderer, con otro nombre
 │   │   ├── Hero.astro Clientes.astro Contacto.astro Simulador.astro …
-│   │   ├── Header.astro Footer.astro WhatsAppButton.astro   # ⚠ split out of Layout
-│   │   └── Servicios.astro Ubicaciones.astro   # ⚠ dead code, imported by nothing
+│   │   ├── Header.astro Footer.astro WhatsAppButton.astro   # ⚠ separados del Layout
+│   │   └── Servicios.astro Ubicaciones.astro   # ⚠ código muerto, nadie los importa
 │   ├── functions/  fetch.ts, globals.ts, blog.ts
 │   ├── layouts/Layout.astro
 │   ├── pages/
 │   ├── styles/
-│   │   ├── tokens.css          # ⚠ tokens AND all global classes in one file
-│   │   └── motion.css          # reveal/stagger animations
+│   │   ├── tokens.css          # ⚠ tokens Y todas las clases globales en un solo archivo
+│   │   └── motion.css          # animaciones reveal/stagger
 │   └── types/globals.ts
-├── response.json               # ⚠ stray API dump committed at root
-└── (no src/config/seo.ts)      # ⚠ no SEO config — see §9
+├── response.json               # ⚠ volcado suelto de la API versionado en la raíz
+└── (no src/config/seo.ts)      # ⚠ sin configuración de SEO — ver §9
 ```
 
-Also: `trainin/package.json` has **no `devDependencies`** — no `@astrojs/check`, no `typescript` — yet ships a `tsconfig.json`. `npx astro check` will not work there until those are added.
+Además: `trainin/package.json` **no tiene `devDependencies`** — ni `@astrojs/check`, ni `typescript` — y aun así trae un `tsconfig.json`. `npx astro check` no va a funcionar ahí hasta que se agreguen.
 
-### 7.3 The admin
+### 7.3 El panel
 
 ```
 gnu-cms-admin/
 ├── src/
-│   ├── main.jsx                # React root + <BrowserRouter>
-│   ├── App.jsx                 # the whole <Routes> tree — manual, no file routing
-│   ├── index.css               # literally just: @import "tailwindcss";
+│   ├── main.jsx                # raíz de React + <BrowserRouter>
+│   ├── App.jsx                 # todo el árbol de <Routes> — manual, sin ruteo por archivos
+│   ├── index.css               # literalmente solo: @import "tailwindcss";
 │   ├── components/
 │   │   ├── form-fields.jsx     # Field, ImageField, CharHint, WordHint, DynamicItem,
 │   │   │                       #   AddButton, fieldError, inputClass, MAX_UPLOAD_BYTES
-│   │   ├── page-sections-editor.jsx   # ★ the shared section editor (see below)
+│   │   ├── page-sections-editor.jsx   # ★ el editor de secciones compartido (ver abajo)
 │   │   └── card.jsx
-│   ├── functions/fetch.jsx     # every REST call, all admin endpoints
+│   ├── functions/fetch.jsx     # todas las llamadas REST, todos los endpoints del panel
 │   ├── store/sessionStore.jsx  # zustand + persist → localStorage "gnu-cms-session"
 │   └── pages/
 │       ├── login/  home/
-│       ├── gnu/           # landing-gnu's editors  (site=gnu)
-│       ├── gas-natural/   # gas-gnu's editors      (site=gnu-vehicular)
-│       ├── trainin/       # trainin's editors      (site=traninn-logistic)
-│       └── tectuus/       # tectuus's editors      (site=tectuus)
-└── vite.config.js          # react() + tailwindcss() plugins, nothing else
+│       ├── gnu/           # editores de landing-gnu  (site=gnu)
+│       ├── gas-natural/   # editores de gas-gnu      (site=gnu-vehicular)
+│       ├── trainin/       # editores de trainin      (site=traninn-logistic)
+│       └── tectuus/       # editores de tectuus      (site=tectuus)
+└── vite.config.js          # plugins react() + tailwindcss(), nada más
 ```
 
-**Routing is manual.** Adding an admin page means creating `src/pages/<path>/index.jsx` *and* registering a `<Route>` in `App.jsx`. There is no filesystem router.
+**El ruteo es manual.** Agregar una página al panel implica crear `src/pages/<path>/index.jsx` *y* registrar una `<Route>` en `App.jsx`. No hay router basado en el sistema de archivos.
 
-**`page-sections-editor.jsx` is the workhorse.** It exports:
-- `PageSectionsEditor` — full page with back link + title. Most admin pages are a 10-line wrapper around it.
-- `SectionsFields` — headless variant, embedded by pages that also show their own data (leads inbox, appointments, product catalog).
+**`page-sections-editor.jsx` es el caballo de batalla.** Exporta:
+- `PageSectionsEditor` — página completa con liga de regreso + título. La mayoría de las páginas del panel son un wrapper de 10 líneas alrededor de él.
+- `SectionsFields` — variante sin chrome, embebida en páginas que también muestran sus propios datos (bandeja de leads, citas, catálogo de productos).
 
-Its props:
+Sus props:
 
-| Prop | Purpose |
+| Prop | Propósito |
 | :-- | :-- |
-| `site` | CMS site slug |
-| `page` | page slug for the `?page=` query |
-| `pageId` | **numeric** page id; filters client-side. Required because the API ignores `?page=` for some sites and returns every section for the whole site |
-| `includeGlobals` | also keep `page_id: null` sections (`contact_info`, `social_icons`, `whatsapp_button`) — pass on exactly one page per site |
+| `site` | slug del sitio en el CMS |
+| `page` | slug de la página para el query `?page=` |
+| `pageId` | id **numérico** de la página; filtra del lado del cliente. Es obligatorio porque la API ignora `?page=` en algunos sitios y regresa todas las secciones de todo el sitio |
+| `includeGlobals` | conserva también las secciones con `page_id: null` (`contact_info`, `social_icons`, `whatsapp_button`) — pásalo en exactamente una página por sitio |
 | `title`, `backTo` | chrome |
 
-It registers editors for 13 section types: `page_hero`, `feature_grid`, `rich_text`, `clients_showcase`, `stations_map`, `lead_capture_form`, `service_scheduling`, `banner_carousel`, `savings_simulator`, `contact_info`, `social_icons`, `whatsapp_button`, `image_gallery`. **Any other type falls back to a read-only JSON dump** — that's the symptom to look for when a new section type appears unstyled in the panel.
+Registra editores para 13 tipos de sección: `page_hero`, `feature_grid`, `rich_text`, `clients_showcase`, `stations_map`, `lead_capture_form`, `service_scheduling`, `banner_carousel`, `savings_simulator`, `contact_info`, `social_icons`, `whatsapp_button`, `image_gallery`. **Cualquier otro tipo cae en un volcado JSON de solo lectura** — ese es el síntoma a buscar cuando un tipo de sección nuevo aparece sin estilo en el panel.
 
-`pages/gas-natural/inicio/index.jsx` predates the shared component and **carries its own private copy of six section editors**, including a `testimonials` editor that the shared component does not have. Changes to shared editors do not propagate there.
+`pages/gas-natural/inicio/index.jsx` es anterior al componente compartido y **trae su propia copia privada de seis editores de sección**, incluido un editor de `testimonials` que el componente compartido no tiene. Los cambios a los editores compartidos no se propagan ahí.
 
-### 7.4 "Where do I change X"
+### 7.4 "¿Dónde cambio X?"
 
-| Change | File |
+| Cambio | Archivo |
 | :-- | :-- |
-| Brand colors, fonts, radii, shadows (a site) | `<site>/src/styles/tokens.css` |
-| Component classes, layout, breakpoints (a site) | `<site>/src/styles/global.css` (`trainin`: `tokens.css` + per-component `<style>`) |
-| Page `<title>` suffix, canonical domain, OG defaults | `<site>/src/config/seo.ts` (**absent in `trainin`**) |
-| Header nav, footer columns, WhatsApp FAB | `<site>/src/layouts/Layout.astro` (`trainin`: `components/Header.astro`, `Footer.astro`, `WhatsAppButton.astro`) |
-| Which component renders a CMS section type | `<site>/src/components/SectionRenderer.astro` (`trainin`: `components/PageSections.astro`) |
-| How a section type looks | `<site>/src/components/sections/<Type>.astro` |
-| CMS base URL, media URL resolution | `<site>/src/functions/fetch.ts` |
-| Add a route | new file in `<site>/src/pages/` |
+| Colores de marca, fuentes, radios, sombras (de un sitio) | `<site>/src/styles/tokens.css` |
+| Clases de componentes, layout, breakpoints (de un sitio) | `<site>/src/styles/global.css` (`trainin`: `tokens.css` + `<style>` por componente) |
+| Sufijo del `<title>` de la página, dominio canónico, valores OG por defecto | `<site>/src/config/seo.ts` (**no existe en `trainin`**) |
+| Nav del header, columnas del footer, botón flotante de WhatsApp | `<site>/src/layouts/Layout.astro` (`trainin`: `components/Header.astro`, `Footer.astro`, `WhatsAppButton.astro`) |
+| Qué componente renderiza un tipo de sección del CMS | `<site>/src/components/SectionRenderer.astro` (`trainin`: `components/PageSections.astro`) |
+| Cómo se ve un tipo de sección | `<site>/src/components/sections/<Type>.astro` |
+| URL base del CMS, resolución de URLs de medios | `<site>/src/functions/fetch.ts` |
+| Agregar una ruta | archivo nuevo en `<site>/src/pages/` |
 | Favicon | `<site>/public/favicon.svg` + `favicon.ico` |
-| Admin form fields for a section type | `gnu-cms-admin/src/components/page-sections-editor.jsx` |
-| Admin input primitives, upload limits, char hints | `gnu-cms-admin/src/components/form-fields.jsx` |
-| Admin API calls | `gnu-cms-admin/src/functions/fetch.jsx` |
-| Admin routes | `gnu-cms-admin/src/App.jsx` |
+| Campos del formulario del panel para un tipo de sección | `gnu-cms-admin/src/components/page-sections-editor.jsx` |
+| Primitivas de input del panel, límites de carga, contadores de caracteres | `gnu-cms-admin/src/components/form-fields.jsx` |
+| Llamadas a la API del panel | `gnu-cms-admin/src/functions/fetch.jsx` |
+| Rutas del panel | `gnu-cms-admin/src/App.jsx` |
 
 ---
 
-## 8. Theming & CSS
+## 8. Temas y CSS
 
-### 8.1 Astro sites — token-driven
+### 8.1 Sitios Astro — basados en tokens
 
-Each site owns a `src/styles/tokens.css` defining `:root` custom properties, `@import`ed at the top of `global.css`, which `Layout.astro` imports once. **No Tailwind on the public sites** — it's plain CSS with BEM-ish class names.
+Cada sitio tiene su propio `src/styles/tokens.css` que define custom properties en `:root`, importado con `@import` al inicio de `global.css`, que a su vez `Layout.astro` importa una vez. **No hay Tailwind en los sitios públicos** — es CSS plano con nombres de clase estilo BEM.
 
-Token groups (consistent across sites, values differ):
+Grupos de tokens (consistentes entre sitios, los valores cambian):
 
 ```
---font-display / --font-body        font stacks
---text-h1 / --text-h2 / …           fluid type scale, clamp()
---color-bg / --color-bg-alt         page grounds
---color-ink / --color-ink-2         dark surfaces (heroes, footers)
---color-primary / -alt / -light     brand
---color-accent                      secondary brand
---color-text / -60 / -40            text on light
---color-text-on-dark / -70 / -45    text on dark
---color-border / -hover / -on-dark  hairlines
---radius-sm … --radius-full         corner radii
---shadow-float / -cta / -card       elevation
---ease-out                          motion curve
+--font-display / --font-body        familias tipográficas
+--text-h1 / --text-h2 / …           escala tipográfica fluida, clamp()
+--color-bg / --color-bg-alt         fondos de página
+--color-ink / --color-ink-2         superficies oscuras (heroes, footers)
+--color-primary / -alt / -light     marca
+--color-accent                      marca secundaria
+--color-text / -60 / -40            texto sobre claro
+--color-text-on-dark / -70 / -45    texto sobre oscuro
+--color-border / -hover / -on-dark  líneas finas
+--radius-sm … --radius-full         radios de esquina
+--shadow-float / -cta / -card       elevación
+--ease-out                          curva de movimiento
 ```
 
-Current palettes:
+Paletas actuales:
 
-| Site | Primary | Ink | Accent | Fonts |
+| Sitio | Primario | Ink | Acento | Fuentes |
 | :-- | :-- | :-- | :-- | :-- |
-| `landing-gnu` / `gas-gnu` | `#1657c4` blue | `#0b2b5c` navy | `#4fa3e3` | system UI stack |
-| `tectuus` | `#163a64` navy | `#0a1e35` | `#2fa84c` green + `#3ec6ef` cyan "pen" | **Archivo + IBM Plex Sans** (Google Fonts) |
-| `trainin` | `#c8102e` red | `#201d1e` near-black | — | system UI stack |
+| `landing-gnu` / `gas-gnu` | `#1657c4` azul | `#0b2b5c` azul marino | `#4fa3e3` | fuentes del sistema |
+| `tectuus` | `#163a64` azul marino | `#0a1e35` | `#2fa84c` verde + `#3ec6ef` cian "pluma" | **Archivo + IBM Plex Sans** (Google Fonts) |
+| `trainin` | `#c8102e` rojo | `#201d1e` casi negro | — | fuentes del sistema |
 
-**To rebrand a site:** edit `tokens.css` only. That is the intended seam and it mostly holds — but audit first, because it isn't airtight:
+**Para cambiar la marca de un sitio:** edita solo `tokens.css`. Ese es el punto de corte previsto y casi siempre funciona — pero revisa primero, porque no es hermético:
 
-- `gas-gnu/src/styles/global.css` hardcodes `rgba(11, 43, 92, …)` in the page-hero scrim gradient instead of referencing `--color-ink`.
-- `trainin` component `<style>` blocks hardcode `rgba(200, 16, 46, …)` (the red) in several places.
-- The WhatsApp green `#25d366` is hardcoded in every site — correct, it's a third-party brand color.
-- `tectuus` loads its fonts via a `<link>` to Google Fonts in `Layout.astro`, not via tokens. Changing the family means editing both `tokens.css` and that link.
+- `gas-gnu/src/styles/global.css` tiene en duro `rgba(11, 43, 92, …)` en el degradado del velo del page-hero en vez de usar `--color-ink`.
+- Los bloques `<style>` de los componentes de `trainin` tienen en duro `rgba(200, 16, 46, …)` (el rojo) en varios lugares.
+- El verde de WhatsApp `#25d366` está en duro en todos los sitios — es correcto, es un color de marca de terceros.
+- `tectuus` carga sus fuentes con un `<link>` a Google Fonts en `Layout.astro`, no por tokens. Cambiar la familia implica editar tanto `tokens.css` como ese link.
 
-Practical check after a token change: `grep -n "#[0-9a-fA-F]\{6\}\|rgba(" src/styles/global.css src/components/**/*.astro` and confirm every remaining literal is intentional.
+Verificación práctica después de cambiar un token: `grep -n "#[0-9a-fA-F]\{6\}\|rgba(" src/styles/global.css src/components/**/*.astro` y confirma que cada literal restante es intencional.
 
-`tectuus` deserves a warning: its design language is deliberate (cyan is used *only* as 1px linework and tick marks, never as fill; green means "action" and nothing decorative is green). The rationale is written at the top of its `tokens.css`. Read it before recoloring.
+`tectuus` merece una advertencia: su lenguaje de diseño es deliberado (el cian se usa *solo* como líneas de 1px y marcas de graduación, nunca como relleno; el verde significa "acción" y nada decorativo es verde). La justificación está escrita al inicio de su `tokens.css`. Léela antes de cambiar colores.
 
-### 8.2 The admin — Tailwind v4, no theme
+### 8.2 El panel — Tailwind v4, sin tema
 
-`index.css` is one line: `@import "tailwindcss";`. There is **no `tailwind.config.js` and no `@theme` block**, so no design tokens are registered with Tailwind. Every brand color is an inline arbitrary value:
+`index.css` es una sola línea: `@import "tailwindcss";`. **No hay `tailwind.config.js` ni bloque `@theme`**, así que no hay design tokens registrados en Tailwind. Cada color de marca es un valor arbitrario en línea:
 
 ```
-#863bff  ×36   brand purple
-#0b0611  ×25   background
-#47bfff  ×16   gradient end
+#863bff  ×36   morado de marca
+#0b0611  ×25   fondo
+#47bfff  ×16   final del degradado
 #8900ff  ×10   …
 ```
 
-spread across 10 files. `GUIDELINES.md` documents these as CSS custom properties, but **that mapping was never implemented** — the tokens in that document don't exist in the code.
+repartidos en 10 archivos. `GUIDELINES.md` los documenta como custom properties de CSS, pero **ese mapeo nunca se implementó** — los tokens de ese documento no existen en el código.
 
-Consequence: **rebranding the admin today is a find-and-replace across 10 files.** If theming the admin is on the roadmap, the fix is small and worth doing first — add a `@theme` block to `index.css`:
+Consecuencia: **hoy, cambiar la marca del panel es un buscar-y-reemplazar en 10 archivos.** Si darle tema al panel está en el roadmap, el arreglo es pequeño y vale la pena hacerlo primero — agrega un bloque `@theme` a `index.css`:
 
 ```css
 @import "tailwindcss";
@@ -470,133 +468,133 @@ Consequence: **rebranding the admin today is a find-and-replace across 10 files.
 }
 ```
 
-then replace `bg-[#0b0611]` → `bg-ink`, `from-[#863bff]` → `from-brand`, etc. After that the admin themes from one block, like the sites do from `tokens.css`.
+y luego reemplaza `bg-[#0b0611]` → `bg-ink`, `from-[#863bff]` → `from-brand`, etc. Después de eso el panel toma su tema de un solo bloque, como los sitios lo toman de `tokens.css`.
 
-### 8.3 Shared design language
+### 8.3 Lenguaje de diseño compartido
 
-`GUIDELINES.md` is byte-identical in all five projects (265 lines): tokens, typography, buttons, cards, form fields, with Tailwind equivalents in parentheses. It describes the **admin's** dark purple language — the public sites each diverged into their own palette deliberately. Don't treat it as the spec for the public sites.
+`GUIDELINES.md` es idéntico byte por byte en los cinco proyectos (265 líneas): tokens, tipografía, botones, tarjetas, campos de formulario, con equivalentes de Tailwind entre paréntesis. Describe el lenguaje oscuro y morado del **panel** — cada sitio público se fue deliberadamente por su propia paleta. No lo tomes como la especificación de los sitios públicos.
 
 ---
 
-## 9. Per-site behavioural differences that matter operationally
+## 9. Diferencias de comportamiento por sitio que importan en la operación
 
-These are the things that make "it works on site A" not transfer to site B.
+Estas son las cosas que hacen que "funciona en el sitio A" no aplique al sitio B.
 
 | | `landing-gnu` | `gas-gnu` | `tectuus` | `trainin` |
 | :-- | :-- | :-- | :-- | :-- |
-| Missing-content behaviour | fallbacks | **heavy fallbacks** | full fallback homepage | **none — blocks vanish** |
-| Missing-image placeholder | `noimg.jpg` grey | `noimg.jpg` grey | `placeholder-plate.svg` blank plate | nothing rendered |
-| `src/config/seo.ts` | yes | yes | yes | **no** |
-| OG / canonical tags | yes | yes | yes | **none at all** |
-| Blog | yes | yes | no | yes |
-| Product catalog | no | no | **yes** | no |
-| Appointments widget | no | **yes** | no | no |
-| Savings simulator | yes | yes | no | yes |
-| Globals editable in admin | yes | **no** | yes | yes |
+| Comportamiento sin contenido | respaldos | **muchos respaldos** | portada de respaldo completa | **ninguno — los bloques desaparecen** |
+| Placeholder de imagen faltante | `noimg.jpg` gris | `noimg.jpg` gris | `placeholder-plate.svg` placa en blanco | no se renderiza nada |
+| `src/config/seo.ts` | sí | sí | sí | **no** |
+| Etiquetas OG / canonical | sí | sí | sí | **ninguna** |
+| Blog | sí | sí | no | sí |
+| Catálogo de productos | no | no | **sí** | no |
+| Widget de citas | no | **sí** | no | no |
+| Simulador de ahorro | sí | sí | no | sí |
+| Globales editables en el panel | sí | **no** | sí | sí |
 
-Two consequences worth internalising:
+Dos consecuencias que vale la pena interiorizar:
 
-- On **`trainin`**, an empty CMS response produces a near-blank page rather than a placeholder-filled one. When debugging a `trainin` build that "lost its content", check the API first — the site is behaving as designed.
-- On **`gas-gnu`**, the opposite: the homepage renders fake testimonials, a fake blog strip and a hardcoded 60% savings rate when the CMS is empty. A build with a broken API **looks fine**. This is why the smoke check in §6.3 matters most for this site.
-
----
-
-## 10. Common tasks
-
-### Add a new CMS section type end to end
-
-1. **Backend** declares the type and its schema (not in this repo).
-2. **Public site** — add a component in `src/components/sections/`, then a `case "<type>":` in `SectionRenderer.astro` (`PageSections.astro` on `trainin`). Unknown types are skipped silently, so the site never breaks while you work.
-3. **Admin** — write a `<Type>Editor({ content, onChange, errors })` in `page-sections-editor.jsx`, register it in `SECTION_EDITORS`, and add a Spanish label in `SECTION_LABELS`. Until you do, the panel shows a read-only JSON dump.
-4. Repeat step 2 for **every site** that will use the type — there is no shared component package.
-5. If `gas-gnu`'s homepage needs it, also add it to the **private copy** in `pages/gas-natural/inicio/index.jsx`.
-6. Update the relevant `DOCUMENTACION-CONTENIDO-*.txt` with the image sizes and character limits.
-
-### Add a page to a public site
-
-1. Backend creates the page + sections and publishes it (`is_published`). The `/menu` endpoint is derived from the `pages` table, so the nav updates itself.
-2. Create `src/pages/<path>/index.astro` — copy an existing interior page; they're all ~20 lines: fetch `pages/<slug>`, hand `sections` to the renderer.
-3. **The Astro path and the CMS slug are independent.** e.g. `gas-gnu/src/pages/nuestros-servicios/instala-tu-equipo-de-gnv/cotiza-tu-equipo.astro` fetches `pages/cotiza-tu-equipo`. Get this wrong and you get an empty page, not an error.
-4. Admin: add `src/pages/<site>/<page>/index.jsx` wrapping `PageSectionsEditor` with the right `site`, `page`, **`pageId`** and `backTo`; register the `<Route>` in `App.jsx`; add it to that site's `select-page.jsx` list.
-
-Finding the numeric `pageId`: `GET /api/admin/sections?site=<slug>` with a bearer token and read `page_id` off the section belonging to your page. Omitting `pageId` is what causes the `trainin` Contacto bug in §11.
-
-### Add a fifth site
-
-1. `npm create astro@latest -- --template minimal`, then copy `src/functions/fetch.ts`, `src/types/`, `src/config/seo.ts`, `src/styles/`, `Layout.astro` and `SectionRenderer.astro` from **`tectuus`** — it's the most complete and most consistent of the four.
-2. Create `.env` with the new site's `CMS_API_URL`.
-3. Admin: new `src/pages/<site>/` folder, a `select-page.jsx`, routes in `App.jsx`, and a card on `pages/home/index.jsx`.
-4. Copy `GUIDELINES.md` and `AGENTS.md` across; give it a real `README.md` (three of the four still ship the stock Astro starter readme).
+- En **`trainin`**, una respuesta vacía del CMS produce una página casi en blanco en lugar de una llena de placeholders. Cuando estés depurando una compilación de `trainin` que "perdió su contenido", revisa la API primero — el sitio se está comportando como fue diseñado.
+- En **`gas-gnu`**, lo contrario: la portada renderiza testimonios falsos, una franja de blog falsa y un ahorro del 60% en duro cuando el CMS está vacío. Una compilación con la API rota **se ve bien**. Por eso la verificación rápida de §6.3 importa sobre todo para este sitio.
 
 ---
 
-## 11. Known traps
+## 10. Tareas comunes
 
-Ordered roughly by how much time they'll cost you.
+### Agregar un tipo de sección nuevo del CMS de punta a punta
 
-1. **Blog pagination is broken in static builds** — `landing-gnu/src/pages/blog/index.astro:32` and `gas-gnu/src/pages/blog/index.astro:32` both read `Astro.url.searchParams.get("page")`. With no SSR adapter, search params are empty at build time, so every `?page=N` link serves the page-1 HTML. Either add `getStaticPaths` with real `/blog/page/N` routes, or paginate client-side the way `tectuus`'s `ProductCatalog.astro` handles `?category=`.
-2. **`handleUnauthorized()` is called but never defined** — `gnu-cms-admin/src/functions/fetch.jsx:345`. On a 401 it throws a `ReferenceError`, caught by the outer `catch`, which fires `alert('Error al obtener datos ', error)`. An expired token therefore shows a generic alert instead of redirecting to login. Either define it (clear the token, navigate to `/login`) or drop the branch.
-3. **`SectionsFields` without `pageId` shows every section of the whole site** — the API ignores `?page=` for at least `traninn-logistic`. `pages/trainin/contacto/index.jsx:129` omits it, so that screen lets an editor modify the homepage while believing they're editing `/contacto`. Every other screen passes a `pageId`.
-4. **Section `PUT` is a full replacement, not a patch** — `PUT /api/admin/sections/{id}` takes the entire `content` object, and arrays (`slides`, `items`, `logos`) are replaced wholesale. This is why every editor holds the full content object in local state. Send a partial object and you delete the rest.
-5. **No shared logic in `.astro` frontmatter** — keep reusable functions in plain `.ts` under `src/functions/`. Astro scopes top-level `const`/`let` per-component in a way that leaves a constant `undefined` inside an `export function` in the same frontmatter. (`landing-gnu/functions/fetch.astro` — an empty 0-byte file at that project's root, outside `src/` — is the abandoned remains of this attempt; safe to delete.)
-6. **Reserved env var names** — §4. Silent override, no error.
-7. **`dist/` is committed to git** (84 files across all five projects). The `# dist/` line in every `.gitignore` is commented out. Builds create diff noise and can be deployed stale. Uncomment and `git rm -r --cached */dist` when someone has time to coordinate it.
-8. **`gnu-cms-admin/.env` is committed** — §4.
-9. **A stale `tenantDomain` outlives a config change** — it's persisted in `localStorage` at login. Changing `VITE_BASE_URL` doesn't move existing sessions. Tell users to log out, or version the zustand store.
-10. **`trainin` has no devDependencies** — `npx astro check` won't run there.
-11. **Two stray route files publish junk on `trainin`** — `src/pages/nosotros/index.astro` contains the literal text `sobre nosotros`, `src/pages/servicios/index.astro` contains `serv`. Both are live routes. Delete them.
-12. **Stray files committed at project roots** — `trainin/response.json` (an API dump), `trainin/assets/images/noimg.jpg` (outside `src/`, so unused by the build), and the empty `landing-gnu/functions/fetch.astro`.
-13. **Favicons are the stock Astro icon in all four sites**, byte-identical. On `tectuus` that file is also used as the header/footer **logo**, so the Astro rocket is on every page.
-14. **`gas-gnu`'s homepage admin editors are a private fork** — `pages/gas-natural/inicio/index.jsx` duplicates six section editors. Fixes to the shared ones don't reach it.
-15. **The build exits 0 on CMS failure** — §6.3.
+1. El **backend** declara el tipo y su esquema (no está en este repositorio).
+2. **Sitio público** — agrega un componente en `src/components/sections/` y luego un `case "<type>":` en `SectionRenderer.astro` (`PageSections.astro` en `trainin`). Los tipos desconocidos se omiten en silencio, así que el sitio nunca se rompe mientras trabajas.
+3. **Panel** — escribe un `<Type>Editor({ content, onChange, errors })` en `page-sections-editor.jsx`, regístralo en `SECTION_EDITORS` y agrega una etiqueta en español en `SECTION_LABELS`. Mientras no lo hagas, el panel muestra un volcado JSON de solo lectura.
+4. Repite el paso 2 en **cada sitio** que vaya a usar el tipo — no hay un paquete de componentes compartido.
+5. Si la portada de `gas-gnu` lo necesita, agrégalo también a la **copia privada** en `pages/gas-natural/inicio/index.jsx`.
+6. Actualiza el `DOCUMENTACION-CONTENIDO-*.txt` correspondiente con los tamaños de imagen y los límites de caracteres.
+
+### Agregar una página a un sitio público
+
+1. El backend crea la página + sus secciones y la publica (`is_published`). El endpoint `/menu` se deriva de la tabla `pages`, así que la navegación se actualiza sola.
+2. Crea `src/pages/<path>/index.astro` — copia una página interior existente; todas tienen ~20 líneas: obtienen `pages/<slug>` y le pasan `sections` al renderer.
+3. **La ruta de Astro y el slug del CMS son independientes.** p. ej. `gas-gnu/src/pages/nuestros-servicios/instala-tu-equipo-de-gnv/cotiza-tu-equipo.astro` obtiene `pages/cotiza-tu-equipo`. Si te equivocas obtienes una página vacía, no un error.
+4. Panel: agrega `src/pages/<site>/<page>/index.jsx` envolviendo `PageSectionsEditor` con los `site`, `page`, **`pageId`** y `backTo` correctos; registra la `<Route>` en `App.jsx`; agrégala a la lista de `select-page.jsx` de ese sitio.
+
+Cómo encontrar el `pageId` numérico: `GET /api/admin/sections?site=<slug>` con un bearer token y lee el `page_id` de la sección que pertenece a tu página. Omitir `pageId` es lo que causa el bug de Contacto de `trainin` en §11.
+
+### Agregar un quinto sitio
+
+1. `npm create astro@latest -- --template minimal`, luego copia `src/functions/fetch.ts`, `src/types/`, `src/config/seo.ts`, `src/styles/`, `Layout.astro` y `SectionRenderer.astro` de **`tectuus`** — es el más completo y el más consistente de los cuatro.
+2. Crea `.env` con el `CMS_API_URL` del sitio nuevo.
+3. Panel: carpeta nueva `src/pages/<site>/`, un `select-page.jsx`, rutas en `App.jsx` y una tarjeta en `pages/home/index.jsx`.
+4. Copia `GUIDELINES.md` y `AGENTS.md`; dale un `README.md` de verdad, siguiendo el de los otros sitios.
 
 ---
 
-## 12. API surface
+## 11. Trampas conocidas
+
+Ordenadas más o menos por cuánto tiempo te van a costar.
+
+1. **La paginación del blog está rota en las compilaciones estáticas** — `landing-gnu/src/pages/blog/index.astro:32` y `gas-gnu/src/pages/blog/index.astro:32` leen `Astro.url.searchParams.get("page")`. Sin adaptador SSR, los search params están vacíos en tiempo de compilación, así que cada liga `?page=N` sirve el HTML de la página 1. O agregas `getStaticPaths` con rutas reales `/blog/page/N`, o paginas del lado del cliente como `ProductCatalog.astro` de `tectuus` maneja `?category=`.
+2. **`handleUnauthorized()` se llama pero nunca se define** — `gnu-cms-admin/src/functions/fetch.jsx:345`. Ante un 401 lanza un `ReferenceError`, que atrapa el `catch` externo, el cual dispara `alert('Error al obtener datos ', error)`. Por eso un token expirado muestra una alerta genérica en vez de redirigir al login. O la defines (limpiar el token, navegar a `/login`) o quitas esa rama.
+3. **`SectionsFields` sin `pageId` muestra todas las secciones de todo el sitio** — la API ignora `?page=` por lo menos para `traninn-logistic`. `pages/trainin/contacto/index.jsx:129` lo omite, así que esa pantalla deja que un editor modifique la portada creyendo que está editando `/contacto`. Todas las demás pantallas pasan un `pageId`.
+4. **El `PUT` de secciones es un reemplazo completo, no un patch** — `PUT /api/admin/sections/{id}` recibe el objeto `content` completo, y los arreglos (`slides`, `items`, `logos`) se reemplazan enteros. Por eso cada editor guarda el objeto de contenido completo en su estado local. Si mandas un objeto parcial, borras el resto.
+5. **Nada de lógica compartida en el frontmatter de `.astro`** — deja las funciones reutilizables en `.ts` plano dentro de `src/functions/`. Astro limita el alcance de los `const`/`let` de nivel superior por componente de una forma que deja una constante en `undefined` dentro de un `export function` del mismo frontmatter. (`landing-gnu/functions/fetch.astro` — un archivo vacío de 0 bytes en la raíz de ese proyecto, fuera de `src/` — es lo que quedó de ese intento abandonado; se puede borrar sin problema.)
+6. **Nombres de variables de entorno reservados** — §4. Se sobrescriben en silencio, sin error.
+7. **`dist/` está versionado en git** (84 archivos entre los cinco proyectos). La línea `# dist/` en cada `.gitignore` está comentada. Las compilaciones generan ruido en los diffs y pueden desplegarse desactualizadas. Descoméntala y corre `git rm -r --cached */dist` cuando alguien tenga tiempo de coordinarlo.
+8. **`gnu-cms-admin/.env` está versionado** — §4.
+9. **Un `tenantDomain` viejo sobrevive a un cambio de configuración** — se persiste en `localStorage` al iniciar sesión. Cambiar `VITE_BASE_URL` no mueve las sesiones existentes. Pide a los usuarios que cierren sesión, o versiona el store de zustand.
+10. **`trainin` no tiene devDependencies** — `npx astro check` no corre ahí.
+11. **Dos archivos de ruta sueltos publican basura en `trainin`** — `src/pages/nosotros/index.astro` contiene el texto literal `sobre nosotros`, `src/pages/servicios/index.astro` contiene `serv`. Las dos son rutas en vivo. Bórralas.
+12. **Archivos sueltos versionados en la raíz de los proyectos** — `trainin/response.json` (un volcado de la API), `trainin/assets/images/noimg.jpg` (fuera de `src/`, así que la compilación no lo usa) y el `landing-gnu/functions/fetch.astro` vacío.
+13. **Los favicons son el ícono de ejemplo de Astro en los cuatro sitios**, idénticos byte por byte. En `tectuus` ese archivo también se usa como **logo** del header/footer, así que el cohete de Astro aparece en todas las páginas.
+14. **Los editores del panel para la portada de `gas-gnu` son un fork privado** — `pages/gas-natural/inicio/index.jsx` duplica seis editores de sección. Los arreglos a los compartidos no le llegan.
+15. **La compilación termina con código 0 cuando falla el CMS** — §6.3.
+
+---
+
+## 12. Superficie de la API
 
 Base: `https://gnu-headless-cms.165.227.59.215.sslip.io`
 
-### Public — no auth, read-only, consumed at build time
+### Pública — sin auth, solo lectura, se consume en tiempo de compilación
 
 `{base}/api/public/{site}/…`
 
-| Endpoint | Used by |
+| Endpoint | Lo usa |
 | :-- | :-- |
-| `pages/{slug}` | every page — returns `{slug, path, title, sections[]}` |
-| `menu` | `Layout.astro` nav + footer |
-| `globals` | contact info, socials, WhatsApp button |
+| `pages/{slug}` | todas las páginas — regresa `{slug, path, title, sections[]}` |
+| `menu` | nav + footer de `Layout.astro` |
+| `globals` | información de contacto, redes sociales, botón de WhatsApp |
 | `blog?page=N`, `blog/{slug}` | `landing-gnu`, `gas-gnu`, `trainin` |
-| `product-categories`, `products?page=N`, `products/{slug}` | `tectuus` only |
-| `stations` | `gas-gnu`, `trainin` map pins |
-| `savings-simulator?fuel=&quantity=` | `gas-gnu` (server-side math) |
-| `appointments/availability?station=&date=` | `gas-gnu` only |
+| `product-categories`, `products?page=N`, `products/{slug}` | solo `tectuus` |
+| `stations` | pines del mapa de `gas-gnu`, `trainin` |
+| `savings-simulator?fuel=&quantity=` | `gas-gnu` (cálculo del lado del servidor) |
+| `appointments/availability?station=&date=` | solo `gas-gnu` |
 
-Public **writes** (the only two, both rate-limited `throttle:10,1` — 10 req/min/IP):
+**Escrituras** públicas (las únicas dos, ambas con rate limit `throttle:10,1` — 10 peticiones/min/IP):
 
-- `POST leads` — `{name, email, phone, message, source, details{}}`. `source` must match a published page slug or it 422s. Anything outside the four core fields must be nested in `details` and is validated against that form's declared `fields[]`.
-- `POST appointments` — `gas-gnu` only.
+- `POST leads` — `{name, email, phone, message, source, details{}}`. `source` debe coincidir con el slug de una página publicada o da 422. Todo lo que no sea uno de los cuatro campos base debe ir anidado en `details` y se valida contra los `fields[]` declarados en ese formulario.
+- `POST appointments` — solo `gas-gnu`.
 
 ### Admin — `Authorization: Bearer <jwt>`
 
 `{base}/api/admin/…`
 
-`auth/login`, `auth/logout`, `sections` (index/show/**update only** — no create/delete), `pages` (update `is_published` only), `blog-posts` (full CRUD), `product-categories` (full CRUD, **409** on delete if it still has products), `products` (full CRUD), `leads` (read), `appointments` (read + delete), `media` (POST multipart, returns a ready-to-use absolute `url`).
+`auth/login`, `auth/logout`, `sections` (index/show/**solo update** — sin create/delete), `pages` (solo actualizar `is_published`), `blog-posts` (CRUD completo), `product-categories` (CRUD completo, **409** al borrar si todavía tiene productos), `products` (CRUD completo), `leads` (lectura), `appointments` (lectura + borrado), `media` (POST multipart, regresa una `url` absoluta lista para usarse).
 
-**The editability contract**, enforced server-side and worth understanding before promising a feature: the admin manages *data*, never *structure*. Sections cannot be created, deleted, reordered or retyped. Pages cannot be created, deleted, renamed or re-pathed — only published/unpublished. `lead_capture_form.fields` is deliberately excluded from the update schema so `array_merge` preserves the seeded value. Anything structural is a backend seeder change.
+**El contrato de editabilidad**, que se aplica del lado del servidor y que conviene entender antes de prometer una funcionalidad: el panel administra *datos*, nunca *estructura*. Las secciones no se pueden crear, borrar, reordenar ni cambiar de tipo. Las páginas no se pueden crear, borrar, renombrar ni cambiar de ruta — solo publicar/despublicar. `lead_capture_form.fields` está excluido a propósito del esquema de actualización para que `array_merge` conserve el valor del seeder. Cualquier cosa estructural es un cambio de seeder en el backend.
 
-**Uploads:** `MAX_UPLOAD_BYTES = 5 MB`, enforced client-side in `form-fields.jsx` before the request and hard-enforced by the server. `ImageField` also measures and reports width/height and warns above 2 MB. No compression or resizing happens anywhere — what's uploaded is what ships.
+**Cargas:** `MAX_UPLOAD_BYTES = 5 MB`, se valida del lado del cliente en `form-fields.jsx` antes de la petición y el servidor lo aplica de forma estricta. `ImageField` además mide y reporta el ancho/alto y advierte arriba de 2 MB. No hay compresión ni redimensionado en ningún lado — lo que se sube es lo que se publica.
 
 ---
 
-## 13. Suggested priorities
+## 13. Prioridades sugeridas
 
-Cheap, high-value, in rough order:
+Baratas y de alto valor, más o menos en orden:
 
-1. Fix `handleUnauthorized` (#2) and the missing `pageId` on `trainin` Contacto (#3) — both are one-liners with real user impact.
-2. Delete the stray `trainin` routes and `response.json` (#11, #12).
-3. Add `.env` to the admin's `.gitignore` and ship a `.env.example` (#8).
-4. Un-commit `dist/` (#7).
-5. Ship real favicons (#13) — blocks the `tectuus` logo problem too.
-6. Add `@theme` to the admin's `index.css` (§8.2) before any rebrand request arrives.
-7. Give `gas-gnu`/`tectuus`/`trainin` real `README.md`s; add `src/config/seo.ts` to `trainin`.
-8. Wire one CI job that builds all four sites on push, with the content smoke check from §6.3 — that alone would have caught most of what's in §11.
+1. Arreglar `handleUnauthorized` (#2) y el `pageId` faltante en Contacto de `trainin` (#3) — los dos son de una línea y tienen impacto real en los usuarios.
+2. Borrar las rutas sueltas de `trainin` y `response.json` (#11, #12).
+3. Agregar `.env` al `.gitignore` del panel y entregar un `.env.example` (#8).
+4. Sacar `dist/` del control de versiones (#7).
+5. Poner favicons reales (#13) — eso también resuelve el problema del logo de `tectuus`.
+6. Agregar `@theme` al `index.css` del panel (§8.2) antes de que llegue cualquier petición de cambio de marca.
+7. Agregar `src/config/seo.ts` a `trainin`.
+8. Conectar un job de CI que compile los cuatro sitios en cada push, con la verificación rápida de contenido de §6.3 — eso solo habría atrapado casi todo lo que hay en §11.

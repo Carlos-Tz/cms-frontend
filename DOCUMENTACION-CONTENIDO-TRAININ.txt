@@ -4,6 +4,7 @@
  Sitio en el CMS (slug): traninn-logistic
  Seccion del panel: menu principal > "Trainin"
  Fecha de elaboracion: 2026-09-16
+ Ultima actualizacion: 2026-10-26
 ==============================================================================
 
 PROPOSITO DE ESTE DOCUMENTO
@@ -15,26 +16,45 @@ diseno no se rompa.
 
 *** LA REGLA MAS IMPORTANTE DE ESTE SITIO ***
 A diferencia de los otros tres sitios, Trainin Logistic NO tiene contenido de
-relleno: si un campo se deja vacio, ESE BLOQUE SIMPLEMENTE NO SE PINTA.
-  - Un "Encabezado de pagina" sin titulo hace que la pagina salga SIN
-    encabezado, no con un titulo generico.
+relleno en las secciones del CMS: si un campo opcional se deja vacio, ESE
+BLOQUE SIMPLEMENTE NO SE PINTA.
   - Un "Texto enriquecido" sin titulo sale sin encabezado.
-  - Una "Cuadricula de caracteristicas", una "Galeria" o un bloque de
-    "Clientes" sin elementos no se pintan.
+  - Una "Cuadricula de caracteristicas", una "Galeria de imagenes" o un
+    "Carrusel de banners" sin elementos no se pintan.
+  - Un "Encabezado de pagina" sin titulo no se pinta (el servidor ya no
+    deja guardarlo vacio, ver 2.1).
 Es una decision de diseno deliberada, pero significa que aqui llenar los
 campos no es opcional: lo que no se captura, no existe en el sitio.
 
+*** SEGUNDA REGLA: LOS CAMBIOS NO SALEN SOLOS ***
+El sitio publico es estatico: se "construye" a partir del CMS. Guardar una
+seccion en el panel NO cambia el sitio en ese momento. Despues de guardar,
+hay que ir a la pantalla principal "Trainin" y, en el recuadro "Publicar
+cambios", pulsar "Reconstruir sitio". Tarda unos minutos; al terminar
+aparece "Sitio actualizado" con la fecha y hora. Si dice "Fallo la
+reconstruccion", avisar a desarrollo (el boton "Ver detalles" muestra el
+error).
+
 IMPORTANTE - LIMITES REALES DEL SISTEMA (leer antes de continuar):
-  * El servidor (CMS externo) RECHAZA archivos de imagen mayores a 5 MB.
-  * El panel SI avisa antes de subir si el archivo pesa mas de 5 MB, y
-    muestra las dimensiones reales (ancho x alto) y el peso de la imagen que
-    se acaba de elegir.
-  * El panel muestra un contador de caracteres debajo de cada campo de texto
-    ("123/180 caracteres - recomendado ~140"). Es una GUIA: se pone en color
-    ambar al pasar el maximo sugerido, pero NO impide guardar.
+  * El servidor (CMS externo) RECHAZA archivos de imagen mayores a 20 MB.
+  * OJO: los textos de ayuda del panel todavia dicen "max. 5 MB" y el aviso
+    de error del panel tambien menciona 5 MB. Ese dato esta desactualizado:
+    el limite real del servidor es 20 MB (el panel solo frena antes de
+    subir los archivos de mas de 25 MB). Ver PENDIENTES, punto 1.
+  * Al elegir una imagen, el panel muestra sus dimensiones reales (ancho x
+    alto) y su peso; lo marca en ambar si pesa mas de 2 MB.
+  * El panel muestra un contador de caracteres debajo de muchos campos de
+    texto ("123/180 caracteres - recomendado ~140"). Es una GUIA: se pone en
+    color ambar al pasar el maximo sugerido, pero NO impide guardar.
   * El panel NO valida las dimensiones ni la relacion de aspecto.
   * Las imagenes se muestran "tal cual" se suben, sin compresion ni
     redimensionado automatico.
+  * Algunos campos SI son obligatorios para el servidor: si se dejan vacios,
+    al pulsar "Guardar cambios" aparece un error en rojo junto al campo y
+    no se guarda nada. Se indican en cada seccion como "(obligatorio)".
+  * Los campos de enlace (botones del carrusel, video, redes sociales,
+    enlace de cliente) deben ser una direccion COMPLETA que empiece con
+    https:// . Una ruta corta como "/contacto" es rechazada al guardar.
 
 FORMATOS DE IMAGEN ACEPTADOS
 ------------------------------------------------------------------------------
@@ -42,9 +62,20 @@ FORMATOS DE IMAGEN ACEPTADOS
   * Logos e iconos con transparencia             -> PNG (.png)
   * Evitar: HEIC, TIFF, BMP, RAW.
   * WebP es aceptable; ante la duda usar JPG/PNG.
-  * Peso maximo por archivo: 5 MB (limite duro del servidor).
+  * Peso maximo por archivo: 20 MB (limite duro del servidor).
     Recomendado: menos de 500 KB - 1 MB por imagen (comprimir con TinyPNG o
-    Squoosh antes de subir).
+    Squoosh antes de subir). Que el servidor acepte 20 MB no significa que
+    convenga: una imagen pesada hace lenta la pagina.
+
+IMAGENES OBLIGATORIAS (no se pueden "quitar")
+------------------------------------------------------------------------------
+En tres tipos de seccion la imagen de cada elemento es obligatoria para el
+servidor: diapositivas del "Carrusel de banners", logos de "Clientes" e
+imagenes de la "Galeria de imagenes". En esos campos el panel NO muestra el
+boton "x" para quitar la imagen; muestra el aviso "Esta imagen es
+obligatoria - para quitarla, elimina este elemento completo". Para cambiarla
+basta con subir otra encima; para quitarla hay que eliminar la diapositiva,
+el logo o la imagen completa.
 
 ==============================================================================
 MAPA DEL SITIO Y DONDE SE EDITA CADA PAGINA
@@ -57,49 +88,70 @@ Panel: "Trainin" > se elige una de estas 6 entradas:
                         Logistica, Carga pesada)
   Sobre nosotros     -> submenu con 4 paginas (Portada, Que hacemos,
                         Proposito empresarial, Nuestra historia)
-  Ubicaciones        -> pagina /ubicaciones
-  Contacto           -> bandeja de mensajes + secciones editables
+  Ubicaciones        -> pagina /ubicaciones (incluye el alta de estaciones)
+  Contacto           -> bandeja de mensajes + secciones de /contacto
   Blog               -> alta / edicion / borrado de articulos
 
-Paginas del sitio publico y secciones que trae cada una:
+*** NOMBRES EN EL PANEL vs NOMBRES EN EL SITIO ***
+Seis paginas se muestran en el sitio con un nombre distinto al del panel.
+El nombre del sitio esta fijado en el codigo (ver 4.3) y gana sobre lo que
+diga el CMS, incluido el titulo del "Encabezado de pagina":
 
-  RUTA DEL SITIO                             SECCIONES (en orden)
-  ------------------------------------------ ---------------------------------
-  /                                          banner_carousel,
-  (Inicio)                                   savings_simulator,
-                                             rich_text,
-                                             clients_showcase,
-                                             lead_capture_form
-  /nuestros-servicios                        page_hero, rich_text
-  /nuestros-servicios/transporte-de-gnc      page_hero, rich_text, feature_grid
-  /nuestros-servicios/logistica              page_hero, rich_text, feature_grid
-  /nuestros-servicios/carga-pesada           page_hero, rich_text, feature_grid
-  /sobre-nosotros                            page_hero, rich_text,
-                                             clients_showcase
-  /sobre-nosotros/que-hacemos                page_hero, banner_carousel,
-                                             rich_text, image_gallery
-  /sobre-nosotros/proposito-empresarial      page_hero, rich_text,
-                                             image_gallery
-  /sobre-nosotros/nuestra-historia           page_hero, banner_carousel,
-                                             rich_text, image_gallery
-  /ubicaciones                               page_hero, stations_map
-  /contacto                                  page_hero, lead_capture_form
-  /blog                                      (los articulos; el encabezado es
-                                             fijo, ver seccion 4)
-  /blog/<slug>                               contenido del articulo
+  Panel                      Sitio publico (menu, pie, titulo de la pagina)
+  -------------------------- ----------------------------------------------
+  Transporte de GNC          Transporte especializado de GNC
+  Logistica                  Planeacion logistica
+  Carga pesada               Servicio dedicado de transporte
+  Que hacemos                Filosofia empresarial
+  Proposito empresarial      Compromiso que nos mueve, vision que nos guia
+  Nuestra historia           Por que traninn?
+
+Paginas del sitio publico y secciones que trae cada una (en orden). Lo
+marcado [OCULTA] existe en el panel y se puede editar, pero HOY el sitio no
+la muestra. Lo marcado [FIJO] no viene del panel: esta escrito en el codigo.
+
+  RUTA DEL SITIO                          SECCIONES
+  --------------------------------------- ------------------------------------
+  /                                       banner_carousel,
+  (Inicio)                                [FIJO] banda de servicios (4.6),
+                                          savings_simulator [OCULTA],
+                                          rich_text,
+                                          [FIJO] "Detras de cada entrega..."
+                                          (4 tarjetas con foto, ver 4.5),
+                                          clients_showcase [OCULTA],
+                                          lead_capture_form
+  /nuestros-servicios                     page_hero, rich_text,
+                                          [FIJO] tarjetas de sub-paginas (2.7)
+  /nuestros-servicios/transporte-de-gnc   page_hero, rich_text,
+                                          feature_grid [OCULTA]
+  /nuestros-servicios/logistica           page_hero, rich_text, feature_grid
+  /nuestros-servicios/carga-pesada        page_hero, rich_text,
+                                          feature_grid [OCULTA]
+  /sobre-nosotros                         page_hero, rich_text,
+                                          clients_showcase [OCULTA],
+                                          [FIJO] tarjetas de sub-paginas (2.7)
+  /sobre-nosotros/que-hacemos             page_hero, banner_carousel,
+                                          rich_text, image_gallery
+  /sobre-nosotros/proposito-empresarial   page_hero, rich_text,
+                                          image_gallery
+  /sobre-nosotros/nuestra-historia        page_hero, banner_carousel,
+                                          rich_text, image_gallery
+  /ubicaciones                            page_hero, stations_map
+  /contacto                               page_hero, lead_capture_form
+  /blog                                   (los articulos; el encabezado es
+                                          fijo, ver seccion 3)
+  /blog/<slug>                            contenido del articulo
 
 NOTA: el orden y la cantidad de secciones los define un desarrollador. Desde
-el panel NO se pueden agregar, quitar ni reordenar secciones: solo se llena
-el contenido de las que ya existen. Lo unico que se crea y se borra desde el
-panel son los articulos del blog.
+el panel NO se pueden agregar, quitar, reordenar ni ocultar secciones: solo
+se llena el contenido de las que ya existen. Lo unico que se crea y se borra
+desde el panel son los articulos del blog y las estaciones del mapa.
 
-*** AVISO SOBRE LA PANTALLA "CONTACTO" DEL PANEL ***
-La pantalla Trainin > Contacto hoy NO filtra por pagina: muestra TODAS las
-secciones del sitio, no solo las de /contacto. Es decir, desde ahi se pueden
-editar por error secciones de la portada o de Sobre nosotros. Fijarse en la
-etiqueta y en el numero de "Posicion" de cada tarjeta antes de guardar, o
-mejor, editar cada pagina desde su propia entrada del menu. Ver PENDIENTES
-TECNICOS, punto 1.
+NOTA sobre las secciones [OCULTA]: el panel no avisa que estan ocultas.
+Editarlas no rompe nada, pero el cambio no se vera en el sitio mientras
+desarrollo no las vuelva a activar. Ojo con una excepcion: los TITULOS de
+las tarjetas del feature_grid de Transporte de GNC y Carga pesada SI se ven,
+como vinetas en las tarjetas de /nuestros-servicios (ver 2.7).
 
 ==============================================================================
 SECCION 1: PAGINA DE INICIO (portada, ruta "/")
@@ -108,15 +160,19 @@ Ruta admin: Trainin > Inicio
 
 --- 1.1 Carrusel de banners (banner_carousel) --------------------------------
 Es el hero de la portada. Ocupa min(38rem, 82vh) de alto, a sangre completa.
-Con dos o mas diapositivas aparecen los puntos de navegacion.
-  Campo "Imagen":
+Con dos o mas diapositivas aparecen flechas y puntos de navegacion.
+Debajo del carrusel aparece una banda con los nombres de los servicios que
+se desplaza sola (no se edita aqui, ver 4.6).
+  Campo "Imagen" (obligatorio, no se puede quitar):
     - Tamano recomendado: 2400 x 1000 px (relacion aprox. 2.4:1)
-    - Formato: JPG - Peso: menos de 1 MB (maximo 5 MB)
+    - Formato: JPG - Peso: menos de 1 MB (maximo 20 MB)
     - Se recorta a pantalla completa (object-fit: cover) y ademas tiene un
       movimiento lento de acercamiento. El CENTRO de la imagen es lo que
       siempre se ve: evitar texto o rostros cerca de los bordes.
   Campo "Titulo":
-    - Recomendado 45 caracteres / maximo sugerido 60 (contenedor ~40 rem).
+    - Recomendado 45 caracteres / maximo sugerido 60.
+    - Si el titulo tiene dos frases ("Primera frase. Segunda frase"), cada
+      frase se pinta en su propio renglon.
     - OJO: en este sitio el titulo de la diapositiva es SIEMPRE un H1. Si se
       capturan varias diapositivas, la pagina queda con varios H1, lo cual
       no es ideal para buscadores (ver PENDIENTES, punto 2). Mientras se
@@ -125,6 +181,7 @@ Con dos o mas diapositivas aparecen los puntos de navegacion.
   Campo "Subtitulo":
     - Recomendado 90 caracteres / maximo sugerido 120 (contenedor ~34 rem).
   Campo "Enlace del boton" (link_url) y "Texto del boton" (link_label):
+    - Enlace: direccion completa con https:// (ver LIMITES).
     - Texto del boton: 2-4 palabras. Recomendado 20 / maximo 25 caracteres.
     - El boton solo aparece si se llenan LOS DOS campos. Si falta uno, la
       diapositiva sale sin boton (y aqui no hay boton de respaldo).
@@ -133,18 +190,19 @@ Con dos o mas diapositivas aparecen los puntos de navegacion.
   en la seccion siguiente: no se muestra ningun hero.
 
   NOTA para las paginas de Sobre nosotros: "Que hacemos" y "Nuestra
-  historia" tambien llevan un carrusel, pero como NO es la primera seccion
-  (va despues del encabezado de pagina) se pinta mas chico: alto
-  min(22rem, 45vh), del ancho del contenido y con esquinas redondeadas. La
-  misma imagen de 2400x1000 sirve, solo se recorta mas.
+  historia" tambien traen un carrusel (hoy vacio, por eso no se ve). Como
+  NO es la primera seccion (va despues del encabezado de pagina) se pinta
+  mas chico: alto min(22rem, 45vh), del ancho del contenido, con margen
+  alrededor y esquinas redondeadas. La misma imagen de 2400x1000 sirve,
+  solo se recorta mas (queda aprox. 3.6:1).
 
---- 1.2 Simulador de ahorro (savings_simulator) ------------------------------
-Calculadora de ahorro. En este sitio compara el costo del FLETE, asi que sus
-precios de referencia son propios y distintos a los de los otros sitios. No
-usa imagenes.
+--- 1.2 Simulador de ahorro (savings_simulator) [OCULTA] ---------------------
+HOY ESTA SECCION NO SE MUESTRA EN EL SITIO (desarrollo la oculto en todo el
+sitio). Sigue apareciendo en el panel y se puede editar, pero el cambio no
+se ve. Si se vuelve a activar, aplican estas reglas:
   Campo "Titulo" (obligatorio): recomendado 50 / maximo 70 caracteres.
   Campo "Introduccion": recomendado 120 / maximo 160 caracteres.
-  Por cada combustible de la tabla:
+  Por cada combustible (todos los campos obligatorios):
     - "Slug": identificador sin espacios ni acentos (ej. gas-natural,
       diesel, gasolina). El renglon de referencia DEBE llamarse exactamente
       "gas-natural".
@@ -152,80 +210,89 @@ usa imagenes.
       caracteres.
     - "Precio por unidad": numero con punto decimal.
     - "Unidad": texto corto (litro, m3, kg).
-    - "Factor de equivalencia": siempre 1 para gas natural; para los demas,
-      cuantos m3 de gas natural equivalen a 1 unidad de ese combustible.
-  *** CRITICO - SIN RELLENO ***
-  El calculo se hace enteramente con estos datos. Si falta el renglon
-  "gas-natural", o si los demas combustibles tienen precio 0, la lista de
-  combustibles del simulador se queda VACIA y el visitante no puede calcular
-  nada. Mantener siempre: un renglon "gas-natural" con precio y factor 1, y
-  al menos un combustible mas con precio mayor a 0.
+    - "Factor de equivalencia": mayor a 0; siempre 1 para gas natural.
+  Mantener siempre un renglon "gas-natural" con precio y factor 1, y al
+  menos un combustible mas con precio mayor a 0; sin eso el simulador no
+  puede calcular nada.
 
 --- 1.3 Texto enriquecido (rich_text) ----------------------------------------
-Es el bloque de texto de la portada y el unico lugar del sitio donde se puede
-poner un VIDEO.
+Es el bloque de texto de la portada. En este sitio el texto enriquecido es
+el unico lugar donde se puede poner un VIDEO, y tambien puede llevar una
+IMAGEN al lado del texto (ver "Portada del video").
   Campo "Titulo": recomendado 50 / maximo 70 caracteres. Vacio = sin
-    encabezado.
-  Campo "Contenido (HTML)": se guarda EXACTAMENTE como se escribe.
+    encabezado (hoy el de la portada esta vacio a proposito). Dos frases
+    separadas por punto se pintan en dos renglones.
+  Campo "Contenido (HTML)" (obligatorio): se guarda EXACTAMENTE como se
+    escribe.
     - Recomendado 300-1500 caracteres (1-4 parrafos).
-    - El contenedor tiene un ancho maximo de ~48 rem (~768 px).
+    - Sin imagen al lado, el texto tiene un ancho maximo de ~48 rem
+      (~768 px). Con imagen, el texto ocupa la columna izquierda.
     - Si no se sabe HTML, escribir texto plano y separar parrafos con
       <p>...</p>. NO pegar HTML copiado de Word o Google Docs.
-    - Nota: muchas paginas de este sitio traen todavia el texto de arranque
-      "<p>Contenido pendiente de redactar.</p>". No es un error del sitio:
-      es contenido que falta escribir desde el panel. Conviene recorrer las
-      11 paginas y reemplazarlo.
-  Campo "Video (URL)" (opcional): URL de YouTube o Vimeo (se aceptan
-    youtube.com/watch?v=, youtu.be/, /shorts/, vimeo.com/).
-    - Se convierte solo a un reproductor 16:9.
-    - El video arranca SOLO y SIN SONIDO al cargar la pagina.
+  Campo "Video (URL)" (opcional): URL completa de YouTube o Vimeo (se
+    aceptan youtube.com/watch?v=, youtu.be/, /shorts/, vimeo.com/).
+    - Se convierte solo a un reproductor 16:9 debajo del texto.
+    - SIN "Portada del video": el video arranca SOLO y SIN SONIDO al cargar
+      la pagina.
+    - CON "Portada del video": se muestra la imagen con un boton de "play";
+      el video solo se carga cuando el visitante hace clic (recomendado: la
+      pagina carga mas rapido).
+  Campo "Portada del video" (image_video_url, opcional). Tiene DOS usos:
+    a) Si hay video: es la imagen previa del reproductor.
+       1280 x 720 px (16:9), JPG, menos de 500 KB.
+    b) Si NO hay video: la imagen se muestra AL LADO DEL TEXTO (columna
+       derecha, un poco mas ancha que el texto), con esquinas redondeadas.
+       Se estira a la altura del texto y se recorta (cover), asi que se
+       pierden bordes: usar una imagen horizontal con el motivo al centro,
+       aprox. 1600 x 1000 px, JPG, menos de 800 KB. En celular pasa arriba
+       del texto en formato 16:10. Hoy se usa asi en "Logistica".
 
---- 1.4 Clientes (clients_showcase) ------------------------------------------
-Este sitio tiene DOS bloques de clientes independientes: uno en la portada y
-otro en /sobre-nosotros. Editar uno NO cambia el otro.
+--- 1.4 Clientes (clients_showcase) [OCULTA] ---------------------------------
+HOY ESTA SECCION NO SE MUESTRA EN EL SITIO (oculta temporalmente en todo el
+sitio, tanto en la portada como en /sobre-nosotros). El contenido actual es
+de ejemplo ("Cliente de ejemplo", "ACME SA. de C.V.", "pendiente de
+redactar"): conviene reemplazarlo ANTES de que se vuelva a activar.
+Hay DOS bloques de clientes independientes (portada y /sobre-nosotros);
+editar uno NO cambia el otro.
 
-La seccion tiene dos modos y el sitio elige solo cual usar:
+Cuando se active, la seccion tiene dos modos y el sitio elige solo cual usar:
   MODO A - rejilla de logos: cuando NINGUN cliente tiene descripcion ni cita.
   MODO B - tarjetas con testimonio: en cuanto AL MENOS UN cliente tiene
     descripcion o cita. Basta con que uno la tenga para que TODA la seccion
     cambie de aspecto: conviene decidir un modo y aplicarlo a todos.
 
   Campo "Titulo de la seccion": recomendado 50 / maximo 70 caracteres.
-    Si se deja vacio, la seccion se pinta sin encabezado.
   Por cada cliente:
-    Campo "Logo":
-      *** ATENCION: la recomendacion depende del modo. ***
-      - MODO A (solo logos): la imagen se recorta a relacion 3:2 y se
-        RELLENA el recuadro (object-fit: cover), no se ajusta. Un PNG de
-        logo con transparencia queda recortado y descuadrado. Para este
-        modo funciona mejor una imagen de 600 x 400 px (3:2) con el logo
-        centrado sobre fondo blanco o claro, tratada como una "placa".
-      - MODO B (tarjetas): el logo si se muestra completo (contain) en un
-        recuadro de 96 x 48 px, alineado a la izquierda. Ahi si conviene un
-        PNG horizontal con fondo transparente, 800 x 500 px o similar.
+    Campo "Logo" (obligatorio, no se puede quitar):
+      - MODO A (solo logos): la imagen se recorta a 3:2 y RELLENA el
+        recuadro. Usar 600 x 400 px con el logo centrado sobre fondo blanco
+        o claro, tratado como una "placa".
+      - MODO B (tarjetas): el logo se muestra completo en un recuadro de
+        96 x 48 px. Conviene un PNG horizontal con fondo transparente,
+        800 x 500 px o similar (es lo que sugiere el panel).
       - Peso: menos de 300 KB.
-    Campo "Nombre" (obligatorio): 3-30 caracteres, maximo 40. Es tambien el
-      texto alternativo del logo.
-    Campo "Enlace" (opcional): sitio del cliente; se abre en pestana nueva.
+    Campo "Nombre" (obligatorio): 3-30 caracteres, maximo 40.
+    Campo "Enlace" (opcional): direccion completa con https://.
     Campo "Descripcion": recomendado 100 / maximo 160 caracteres.
     Campo "Cita / testimonio": recomendado 120 / maximo 200 caracteres. NO
       escribir comillas.
     Campo "Autor de la cita": nombre y cargo de quien lo dijo.
 
 --- 1.5 Formulario de contacto (lead_capture_form) ---------------------------
-Es la banda oscura del final de la portada. Los mensajes llegan al panel en
-Trainin > Contacto.
-  Campo "Titulo": recomendado 40 / maximo 60 caracteres. Vacio = sin titulo.
+Es la banda oscura del final de la portada. A la izquierda lleva el titulo,
+la introduccion, el boton "Escribir por WhatsApp" y los Datos de contacto
+del sitio (punto 1.6); a la derecha, el formulario. Los mensajes llegan al
+panel en Trainin > Contacto.
+  Campo "Titulo" (obligatorio): recomendado 40 / maximo 60 caracteres.
   Campo "Introduccion": recomendado 120 / maximo 160 caracteres.
-  Campo "Texto del boton": 2-4 palabras (ej. "Enviar mensaje").
-    OJO: aqui NO hay texto de respaldo. Si se deja vacio, el boton de enviar
-    sale SIN TEXTO. Es obligatorio en la practica.
-  Campo "Campos del formulario" (fields): BLOQUEADO, solo informativo.
+  Campo "Texto del boton" (obligatorio, maximo 60): 2-4 palabras (ej.
+    "Enviar mensaje"). El servidor ya no deja guardarlo vacio.
+  Campo "Campos del formulario": BLOQUEADO, solo informativo.
     En Trainin los dos formularios piden: Nombre, Correo electronico,
-    Telefono y Mensaje (nombre y correo obligatorios para el visitante). El
-    servidor RECHAZA cualquier campo extra.
-  El boton "Escribir por WhatsApp" que aparece junto al formulario usa el
-  numero del bloque "Boton de WhatsApp" (punto 1.6) y su texto es fijo.
+    Telefono y Mensaje (nombre y correo obligatorios para el visitante). Las
+    etiquetas y los textos de ejemplo de cada campo son fijos en el codigo.
+  El boton "Escribir por WhatsApp" usa el numero del bloque "Boton de
+  WhatsApp" (punto 1.6) y su texto es fijo. Si no hay numero, no aparece.
 
 --- 1.6 Datos de contacto, Redes sociales y Boton de WhatsApp ----------------
 Estos tres bloques se editan DENTRO de "Trainin > Inicio" (aparecen debajo de
@@ -235,32 +302,33 @@ las secciones de la portada), pero aplican a TODO el sitio.
     - "Direccion" (obligatorio), "Telefono" (obligatorio), "Correo"
       (obligatorio), "Horario", "Informacion adicional" (recomendado 150 /
       maximo 280 caracteres).
-    - Se muestran SOLO en la columna "Contacto" del pie de pagina. El
-      telefono y el correo se convierten en enlaces para llamar y escribir.
-    *** SIN RELLENO ***: lo que se deje vacio simplemente no aparece. Si no
-    se captura nada, la columna "Contacto" del pie queda con un solo enlace,
-    "WhatsApp directo".
-    NOTA: estos datos NO se muestran en la pagina /contacto, solo en el pie.
+    - Se muestran en DOS lugares: la columna "Contacto" del pie de pagina y
+      la columna izquierda de los dos formularios de contacto (portada y
+      /contacto). El telefono y el correo se convierten en enlaces para
+      llamar y escribir.
+    *** SIN RELLENO ***: lo que se deje vacio (Horario, Informacion
+    adicional) simplemente no aparece.
 
   Redes sociales (social_icons):
-    - Por cada red: se elige la red de una lista y se pega el enlace.
-    - *** IMPORTANTE ***: aunque el panel ofrece facebook, instagram,
-      twitter, linkedin, youtube y tiktok, este sitio SOLO sabe dibujar
-      facebook, instagram y linkedin. Si se captura twitter, youtube o
-      tiktok, NO se muestra nada (ni en el encabezado ni en el pie). Ver
-      PENDIENTES, punto 3.
-    *** RELLENO ***: si no se captura ninguna red, se muestran iconos de
-    Facebook / Instagram / LinkedIn que enlazan a "#" (no van a ningun
-    lado). Hay que reemplazarlos por los perfiles reales.
+    - Por cada red: se elige la red de una lista (facebook, instagram,
+      twitter, linkedin, youtube, tiktok) y se pega el enlace completo
+      (obligatorio, con https://). Las seis redes se dibujan en el sitio
+      (twitter sale con el logo de X).
+    - Los iconos aparecen en el encabezado (escritorio) y en el pie.
+    *** RELLENO ***: si se borran TODAS las redes, el sitio muestra iconos
+    de Facebook / Instagram / LinkedIn que enlazan a "#" (no van a ningun
+    lado). Mantener siempre al menos una red real.
 
   Boton de WhatsApp (whatsapp_button):
-    - "Telefono" (obligatorio): con codigo de pais, sin espacios ni signos
-      (ej. 524431234567).
+    - "Telefono" (obligatorio): con codigo de pais (ej. 524431234567). El
+      sitio ignora espacios, guiones y el signo +.
     - "Mensaje prellenado": el texto que ya aparece escrito al abrir el chat.
-    *** RELLENO ***: si no se captura telefono, el boton flotante y el
-    enlace "WhatsApp directo" del pie apuntan a wa.me/000000000000, que no
-    es un numero valido: el visitante llega a un error de WhatsApp. Es lo
-    mas urgente de llenar.
+    - Este numero alimenta: el boton verde flotante, el boton "Escribenos"
+      del encabezado, el enlace "WhatsApp directo" del pie y el boton
+      "Escribir por WhatsApp" de los formularios. Si no hay numero, todos
+      esos botones desaparecen (ya no apuntan a un numero falso).
+    *** REVISAR ***: el numero guardado hoy (+52 443 000 0000) parece de
+    prueba. Confirmar el numero real de WhatsApp de la empresa.
 
 ==============================================================================
 SECCION 2: PAGINAS INTERIORES
@@ -270,101 +338,177 @@ SECCION 2: PAGINAS INTERIORES
 
 --- 2.1 Encabezado de pagina (page_hero) -------------------------------------
 Es el banner superior de toda pagina interior. Todas lo llevan.
-  Campo "Titulo" (obligatorio de verdad): recomendado 40 / maximo 55
-    caracteres. Es el H1 de la pagina.
-    *** Si se deja vacio, la seccion COMPLETA no se pinta: la pagina
-    arranca sin encabezado y sin titulo visible. ***
-  Campo "Subtitulo": recomendado 90 / maximo 110 caracteres (contenedor
-    ~34 rem).
+  Campo "Titulo" (obligatorio): recomendado 40 / maximo 55 caracteres. Es
+    el H1 de la pagina. Dos frases separadas por punto se pintan en dos
+    renglones.
+    *** OJO ***: en las 6 paginas de la tabla "NOMBRES EN EL PANEL vs
+    NOMBRES EN EL SITIO" el titulo que se ve lo fija el codigo, no este
+    campo: cambiarlo aqui NO cambia el banner. En Portada de Nuestros
+    servicios, Portada de Sobre nosotros, Ubicaciones y Contacto, este
+    campo SI es el titulo que se ve.
+  Campo "Subtitulo": NO se muestra en el banner (por decision de diseno el
+    banner lleva solo el titulo). PERO en las 6 sub-paginas de Nuestros
+    servicios y Sobre nosotros el subtitulo SI se usa: es la frase grande
+    de la tarjeta de esa pagina en /nuestros-servicios o /sobre-nosotros
+    (ver 2.7). Recomendado 60 / maximo 90 caracteres. Se puede forzar un
+    salto de renglon escribiendo "|" (ej. "Primera linea | Segunda linea").
   Campo "Imagen":
     - 2400 x 900 px (relacion aprox. 2.6:1), JPG, menos de 1 MB.
-    - Se recorta a cover detras del texto, con un velo oscuro encima.
-      Preferir tonos medios u oscuros; las fotos muy claras pierden
-      contraste.
+    - Se recorta a cover detras del titulo, muy oscurecida (se ve al ~35%)
+      y con una franja diagonal roja a la derecha. Preferir fotos con buen
+      contraste y tonos medios; los detalles finos casi no se notan.
+    - Tiene un movimiento lento de desplazamiento.
     - Si se deja vacia, el encabezado sale como una banda oscura solida.
+    - En las 6 sub-paginas esta misma imagen se reutiliza como la foto
+      grande de su tarjeta en /nuestros-servicios o /sobre-nosotros (2.7).
 
 --- 2.2 Texto enriquecido (rich_text) ----------------------------------------
-Mismas reglas que el punto 1.3. Es el bloque principal de contenido de casi
-todas las paginas interiores.
+Mismas reglas que el punto 1.3 (titulo, contenido, video y "Portada del
+video" con sus dos usos). Es el bloque principal de contenido de todas las
+paginas interiores (menos Ubicaciones y Contacto).
 
 --- 2.3 Cuadricula de caracteristicas (feature_grid) -------------------------
-Solo en las 3 sub-paginas de Nuestros servicios ("Que incluye ..."). Si no
-tiene tarjetas, la seccion no se pinta.
+Existe en las 3 sub-paginas de Nuestros servicios, pero HOY SOLO SE MUESTRA
+EN "LOGISTICA". En Transporte de GNC y Carga pesada esta oculta; aun asi,
+los TITULOS de sus tarjetas se usan como vinetas en /nuestros-servicios
+(2.7). Si no tiene tarjetas, la seccion no se pinta.
   Campo "Titulo de la seccion": recomendado 50 / maximo 70 caracteres.
   Por cada tarjeta:
     Campo "Icono":
-      - El panel sugiere 96 x 96 px (1:1) PNG transparente, menos de 50 KB.
-      - En este sitio el icono se muestra un poco mas grande que en los
-        otros (hasta 40 px de alto) y se ajusta completo (contain), no se
-        recorta. Un PNG cuadrado de 96x96 o de 128x128 funciona bien.
-      - Si se deja vacio, la tarjeta sale sin icono (aqui no se dibuja
-        ningun icono generico de respaldo).
+      *** ATENCION: en este sitio NO es un icono. ***
+      - El texto de ayuda del panel ("96x96 px ... se muestra muy
+        pequeno") NO aplica a Trainin (PENDIENTES, punto 3).
+      - Aqui la imagen se muestra como un BANNER ancho que ocupa toda la
+        parte superior de la tarjeta, en relacion fija 2048:768 (8:3),
+        recortada (cover).
+      - Tamano recomendado: 2048 x 768 px, JPG, menos de 500 KB. Todas las
+        tarjetas de la cuadricula conviene que lleven imagen.
+      - Si se deja vacia, la tarjeta sale sin foto: lleva un numero (01,
+        02...) y un icono que el sitio elige solo segun las palabras del
+        titulo y del texto (ruta, flota, gas, seguridad...).
     Campo "Titulo" (obligatorio): recomendado 30 / maximo 40 caracteres.
-    Campo "Texto": recomendado 140 / maximo 180 caracteres.
+    Campo "Texto" (obligatorio para el servidor, aunque el panel no lo
+      marque): recomendado 140 / maximo 180 caracteres. Con "|" se fuerza
+      un salto de renglon; asi se usa hoy en Logistica para poner una
+      frase corta arriba y el detalle abajo ("Frase | Detalle").
 
 --- 2.4 Galeria de imagenes (image_gallery) ----------------------------------
-Solo en las 3 sub-paginas de Sobre nosotros. Si no tiene imagenes, la seccion
-no se pinta.
+En las 3 sub-paginas de Sobre nosotros. Si no tiene imagenes, la seccion no
+se pinta (hoy "Nuestra historia" esta vacia y no se ve).
   Campo "Titulo de la seccion": recomendado 50 / maximo 70 caracteres.
-  Por cada imagen:
-    Campo "Imagen":
+  Por cada imagen se pinta una tarjeta: la foto arriba y un recuadro blanco
+  con texto que se monta sobre la parte baja de la foto.
+    Campo "Imagen" (obligatorio, no se puede quitar):
       - Tamano recomendado: 1200 x 900 px (relacion 4:3), JPG, menos de
         800 KB. (El panel sugiere 1200x800; la relacion real del sitio es
         4:3, asi que 1200x900 es lo exacto.)
-      - Se recorta a 4:3 (cover): el centro es lo que siempre se ve.
-      - Subir todas las imagenes de una galeria con la misma proporcion para
-        que la rejilla quede pareja.
-    Campo "Descripcion (caption)": pie de foto. 40-80 caracteres. Vacio = sin
-      pie.
+      - Se recorta a 4:3 (cover): el centro es lo que siempre se ve. La
+        franja de abajo queda tapada en parte por el recuadro de texto.
+      - Subir todas las imagenes de una galeria con la misma proporcion.
+    Campo "Descripcion (caption)": maximo 255 caracteres (limite del
+      servidor). Se puede escribir de dos formas:
+      - "Titulo: descripcion" -> lo que va antes de los dos puntos sale
+        como titulo de la tarjeta y el resto como texto (asi esta en
+        Proposito empresarial). Titulo de 1-3 palabras; descripcion de
+        100-200 caracteres.
+      - Sin dos puntos -> todo sale como titulo (asi esta en Que hacemos).
+        Recomendado 1-4 palabras.
+      Vacio = la tarjeta sale sin recuadro de texto.
     Campo "Texto alternativo (alt)": para lectores de pantalla y buscadores.
-      Si se deja vacio, el sitio usa el pie de foto; si tampoco hay pie, la
-      imagen queda sin descripcion. Conviene llenarlo siempre.
+      Si se deja vacio, el sitio usa el titulo de la tarjeta (lo que va
+      antes de los dos puntos). Conviene llenarlo siempre.
 
---- 2.5 Mapa de ubicaciones (stations_map) -----------------------------------
-Solo en /ubicaciones. Muestra a la izquierda una lista de bases y a la
-derecha un mapa con un pin por cada base.
+--- 2.5 Mapa de estaciones (stations_map) ------------------------------------
+Solo en /ubicaciones (Trainin > Ubicaciones). Muestra a la izquierda la
+lista de estaciones/bases y a la derecha un mapa de Google.
   Campo "Titulo": recomendado 40 / maximo 60 caracteres. Vacio = sin
     encabezado.
-  Campo "Centro del mapa": se fija haciendo clic en el mapa del panel, o se
-    escribe "lat,lng". Si se deja vacio, el mapa se centra solo en la
-    primera base de la lista.
-  Campo "Zoom": numero de 1 a 20. Si se deja vacio se usa 11. 10-14 es un
-    buen rango para una ciudad.
-  *** IMPORTANTE ***
-  - Los PINES y la lista de bases (nombre, direccion, horario, telefono) NO
-    salen de esta seccion: son datos de "estaciones" del sitio y hoy NO se
-    editan desde el panel. Para dar de alta, cambiar o quitar una base hay
-    que pedirlo a desarrollo.
-  - Si no hay ninguna base dada de alta y tampoco se captura un centro, el
-    bloque se queda sin mapa.
+  Campo "Centro del mapa" (obligatorio): se fija haciendo clic en el mapa
+    del panel, o se escribe "latitud,longitud".
+  Campo "Zoom" (obligatorio): numero entero de 0 a 22. 10-14 es un buen
+    rango para una ciudad.
+  *** COMO SE USAN CENTRO Y ZOOM EN ESTE SITIO ***
+  - El mapa muestra UNA estacion a la vez (la primera de la lista). Si hay
+    varias, cada nombre de la lista se vuelve un boton que cambia el mapa a
+    esa estacion.
+  - Mientras haya al menos una estacion, el "Centro del mapa" NO se usa, y
+    el zoom nunca baja de 14 (un zoom menor no tiene efecto).
+  - El centro solo se usa si no hay ninguna estacion activa.
+  - Cada estacion lleva un enlace fijo "Como llegar" que abre Google Maps
+    con la ruta.
   - El mapa mide 26 rem de alto en escritorio y 20 rem en movil.
 
+  ESTACIONES (boton "Editar estaciones", dentro de la misma tarjeta):
+    Ahora SI se dan de alta, editan y borran desde el panel.
+    - "Nombre" (obligatorio): es lo que se ve como titulo en la lista.
+    - "Direccion" (obligatorio).
+    - "Telefono" y "Horario" (ej. "Lunes a viernes, 8:00 a 16:30").
+    - "Latitud" y "Longitud" (obligatorios): se escriben o se fijan con un
+      clic en el mapa del panel.
+    - Casilla "Activa": solo las activas se muestran en el sitio.
+    - La estacion creada mas recientemente sale PRIMERO en la lista y es la
+      que el mapa muestra al abrir la pagina.
+    - Borrar una estacion pide confirmacion y no se puede deshacer.
+    *** REVISAR ***: hoy hay una sola estacion ("Traininn Logistics
+    Morelia"); desarrollo detecto que sus coordenadas quedan ~1.5 km de las
+    que indico el cliente. Verificar el punto en el mapa del panel.
+
 --- 2.6 Formulario de contacto de /contacto ----------------------------------
-Mismas reglas que el punto 1.5. Los mensajes de esta pagina llegan
-etiquetados como "contacto" y los de la portada como "inicio", asi se
-distingue de donde vino cada uno en la bandeja del panel.
+Mismas reglas que el punto 1.5 (tambien muestra los Datos de contacto al
+lado). Se edita en Trainin > Contacto, debajo de la bandeja de mensajes, en
+"Secciones de la pagina Contacto" (ahora esa lista muestra SOLO las
+secciones de /contacto: el encabezado y el formulario).
+
+  La bandeja muestra Nombre, Email, Telefono, Mensaje y Fecha de cada
+  mensaje, 20 por pagina. Internamente cada mensaje se guarda con la pagina
+  de origen ("inicio" o "contacto"), pero la bandeja HOY no muestra esa
+  columna, asi que desde el panel no se distingue de cual formulario vino.
 
   *** NOTA ***: el aviso por correo al recibir un mensaje NO esta
   implementado. La unica forma de enterarse de un mensaje nuevo es entrar a
   la bandeja del panel (Trainin > Contacto). Conviene revisarla con
   frecuencia.
 
+--- 2.7 Tarjetas de sub-paginas (/nuestros-servicios y /sobre-nosotros) -----
+Al final de /nuestros-servicios y de /sobre-nosotros hay un bloque con una
+tarjeta grande por cada sub-pagina (foto ancha y un recuadro con texto,
+alternando izquierda y derecha). NO es una seccion del panel: se arma sola
+con datos de cada sub-pagina. Para cambiarla hay que editar la sub-pagina:
+  - Foto: la "Imagen" del Encabezado de pagina de la sub-pagina (2.1). Se
+    recorta a una franja ancha de unos 27 rem de alto (aprox. 3:1); la
+    imagen de 2400x900 sirve. Sin imagen, sale un panel oscuro con un icono.
+  - Etiqueta superior: el nombre de la pagina (fijo, ver 4.3).
+  - Frase grande: el "Subtitulo" del Encabezado de pagina de la sub-pagina.
+    Si esta vacio, se repite el nombre de la pagina.
+  - Vinetas (solo en servicios): los TITULOS de las primeras 4 tarjetas del
+    feature_grid de la sub-pagina, aunque ese feature_grid este oculto en
+    su propia pagina.
+  - Enlace "Ver pagina completa": fijo.
+  El encabezado del bloque es fijo en el codigo: "Nuestros servicios" en
+  /nuestros-servicios y "Conoce Traninn Logistic" en /sobre-nosotros. El
+  orden de las tarjetas de servicios tambien es fijo: Transporte de GNC,
+  Carga pesada, Logistica (igual que en el menu).
+
 ==============================================================================
 SECCION 3: BLOG
 Ruta admin: Trainin > Blog
 Ruta sitio: /blog y /blog/<slug>
 ==============================================================================
-Es la unica parte del panel donde SI se puede crear y BORRAR contenido.
+Es la unica parte del panel donde SI se puede crear y BORRAR contenido
+(ademas de las estaciones del mapa).
 
-  Campo "Slug": se genera solo al crear; solo se ve y se edita al editar uno
-    existente. Minusculas, sin espacios ni acentos, con guiones. OJO:
-    cambiarlo ROMPE el enlace anterior.
+  Campo "Slug": se genera solo a partir del titulo al crear; solo se ve y se
+    edita al editar uno existente. Minusculas, sin espacios ni acentos, con
+    guiones. OJO: cambiarlo ROMPE el enlace anterior.
   Campo "Titulo" (obligatorio): recomendado 60 / maximo 90 caracteres. Es
     tambien el titulo de la pestana del navegador.
-  Campo "Extracto": recomendado 140 / maximo 180 caracteres. Se usa como
-    resumen en la lista y como descripcion para buscadores.
-  Campo "Contenido (HTML)": el panel muestra un contador de PALABRAS con
-    recomendacion de 800-2500 palabras. Se guarda tal cual se escribe.
+  Campo "Extracto": recomendado 140 / maximo 180 caracteres (el servidor
+    acepta hasta 500). Se usa como resumen en la lista, como subtitulo en
+    el articulo y como descripcion para buscadores. En la lista, "|" fuerza
+    un salto de renglon.
+  Campo "Contenido (HTML)" (obligatorio): el panel muestra un contador de
+    PALABRAS con recomendacion de 800-2500 palabras. Se guarda tal cual se
+    escribe.
     *** OJO ***: el sitio ya pinta el titulo del articulo arriba. Si dentro
     del contenido se vuelve a escribir el titulo como encabezado principal
     (<h1>), el articulo queda con el titulo repetido. Empezar el contenido
@@ -374,72 +518,109 @@ Es la unica parte del panel donde SI se puede crear y BORRAR contenido.
     - Se usa en dos lugares: como miniatura en la lista (recortada a 16:10)
       y como imagen grande del articulo (16:9, ancho maximo ~56 rem). Una
       sola imagen de 1344x756 sirve para ambos.
-    - Si se deja vacia, la tarjeta y el articulo salen sin imagen (no hay
-      imagen generica de respaldo en este sitio).
-  Campo "Fecha de publicacion": selector de fecha y hora. Se muestra sobre el
-    titulo del articulo ("4 de septiembre de 2026"). Si se deja vacio, no se
-    muestra fecha y en el panel aparece como "Sin publicar".
+    - En la miniatura de la lista se monta encima una etiqueta roja con la
+      fecha (abajo a la izquierda): dejar esa esquina sin texto importante.
+    - Si se deja vacia, la tarjeta y el articulo salen sin imagen (y la
+      tarjeta tampoco muestra la fecha).
+  Campo "Fecha de publicacion": selector de fecha y hora.
+    *** IMPORTANTE ***: un articulo SIN fecha, o con fecha FUTURA, NO se
+    publica: no aparece en /blog ni tiene pagina propia. En el panel sale
+    como "Sin publicar". Ademas, como el sitio se reconstruye a mano (ver
+    "SEGUNDA REGLA"), un articulo programado a futuro solo aparece cuando
+    se reconstruye el sitio despues de esa fecha.
+    La fecha se muestra como "4 de septiembre de 2026".
 
-  El encabezado de /blog (el titulo "Blog") es FIJO en el codigo: esta
-  pagina no tiene un page_hero editable desde el panel, a diferencia de los
-  otros sitios. Si no hay articulos, la pagina muestra "Aun no hay entradas
-  publicadas."
+  El encabezado de /blog (titulo "Blog" e imagen de fondo) es FIJO en el
+  codigo: esta pagina no tiene Encabezado de pagina editable desde el
+  panel. Si no hay articulos, la pagina muestra "Aun no hay entradas
+  publicadas." Todos los articulos se listan en una sola pagina, en
+  tarjetas de 3 por renglon.
 
   La entrada "Blog" del menu tambien es fija en el codigo (el CMS no la
-  incluye en el menu).
+  incluye en el menu) y va siempre al final.
 
   Borrar un articulo pide confirmacion y NO se puede deshacer.
 
 ==============================================================================
 SECCION 4: CONTENIDO FIJO EN EL CODIGO (no editable desde el panel)
 ==============================================================================
+Todo lo de esta seccion se cambia pidiendolo a desarrollo.
 
 --- 4.1 Favicon (icono de la pestana del navegador) --------------------------
-  Son 2 archivos fijos (favicon.svg y favicon.ico) y HOY siguen siendo el
-  icono generico de ejemplo que trae Astro (identico, byte por byte, en los
-  4 sitios del proyecto).
-  Se necesita: el isotipo final de Trainin Logistic en .svg y .ico.
+  Es el monograma "TL" de Traninn (archivo logo.png), el mismo que se usa
+  en el logotipo. Ya no es el icono generico de Astro.
 
 --- 4.2 Logotipo -------------------------------------------------------------
-  El logo del encabezado y del pie es TEXTO con colores
-  ("TRAN" en rojo + "INN" + "LOGISTIC" en gris), no una imagen. No hay campo
-  para subir un logotipo grafico.
-  NOTA DE NOMBRE: el sitio se escribe "Traninn Logistic" en los textos del
-  codigo (pie de pagina, titulo por defecto), el panel lo llama "Trainin
-  Logistic" y la carpeta del proyecto se llama "trainin". Conviene definir
-  una sola forma oficial y unificarla.
+  El logo del encabezado y del pie es una IMAGEN fija (monograma + "TRANINN
+  LOGISTIC"), con una version para fondo claro (encabezado) y otra para
+  fondo oscuro (pie). No hay campo para cambiarlo desde el panel.
+  NOTA DE NOMBRE: el sitio se escribe "Traninn Logistic" en el codigo y el
+  logo, el panel lo llama "Trainin Logistic", la carpeta del proyecto se
+  llama "trainin" y la estacion del mapa se llama "Traininn Logistics".
+  Conviene definir una sola forma oficial y unificarla.
 
---- 4.3 Titulos de pestana y SEO ---------------------------------------------
-  Este sitio NO tiene archivo de configuracion de SEO (a diferencia de
-  gas-gnu y tectuus). Consecuencias:
-    - Titulo por defecto de la portada: "Traninn Logistic - Transporte de
-      GNC, logistica y carga pesada", escrito en el codigo.
-    - En las paginas interiores, el titulo de la pestana es SOLO el nombre
-      de la pagina (ej. "Contacto"), sin el nombre de la empresa detras.
-    - NO se generan etiquetas para compartir en redes sociales (Open Graph
-      / Twitter) ni enlace canonico. Si alguien comparte una pagina del
-      sitio en Facebook, WhatsApp o LinkedIn, sale sin imagen, sin titulo
-      util y sin descripcion.
-  Ver PENDIENTES, punto 4.
+--- 4.3 Nombres de pagina, menu y titulos de pestana -------------------------
+  - Los nombres de las paginas (menu, columnas del pie, etiqueta de las
+    tarjetas de 2.7 y titulo de la pestana) NO se editan desde el panel:
+    vienen de la configuracion del CMS, y seis de ellos estan reemplazados
+    en el codigo del sitio (tabla "NOMBRES EN EL PANEL vs NOMBRES EN EL
+    SITIO" al inicio). Para cambiar un nombre hay que pedirlo a desarrollo.
+  - El orden del submenu de servicios tambien esta fijado en el codigo:
+    Transporte de GNC, Carga pesada, Logistica.
+  - Si el CMS no responde, se usa un menu de emergencia: Inicio, Nuestros
+    servicios, Sobre nosotros, Ubicaciones (sin Contacto) + Blog.
+  - Las columnas del pie se arman solas: una por cada entrada del menu que
+    tenga sub-paginas.
+  - SEO: este sitio NO tiene archivo de configuracion de SEO (a diferencia
+    de gas-gnu y tectuus).
+      * Titulo de la portada: "Traninn Logistic - Transporte de GNC,
+        logistica y carga pesada", escrito en el codigo.
+      * En las paginas interiores el titulo de la pestana es SOLO el nombre
+        de la pagina (ej. "Contacto"), sin el nombre de la empresa.
+      * Todas las paginas comparten la misma descripcion para buscadores,
+        fija en el codigo; solo los articulos del blog usan su extracto.
+      * NO se generan etiquetas para compartir en redes sociales (Open
+        Graph / Twitter) ni enlace canonico: al compartir una pagina en
+        Facebook, WhatsApp o LinkedIn sale sin imagen.
+    Ver PENDIENTES, punto 4.
 
---- 4.4 Menu de navegacion ---------------------------------------------------
-  El menu viene del CMS (se arma con las paginas publicadas) y las columnas
-  del pie se arman solas: una por cada entrada del menu que tenga
-  sub-paginas. La entrada "Blog" se agrega aparte, en el codigo.
-  Si el CMS no responde, se usa un menu de emergencia: Inicio, Nuestros
-  servicios, Sobre nosotros, Ubicaciones (sin Contacto).
-
---- 4.5 Textos fijos del pie de pagina ---------------------------------------
-  - Frase bajo el logo: "Transporte de GNC, logistica y carga pesada con
-    cobertura nacional."
-  - Enlace "WhatsApp directo" de la columna Contacto.
+--- 4.4 Textos fijos del encabezado y del pie --------------------------------
+  - Boton "Escribenos" del encabezado (va al WhatsApp del punto 1.6).
+  - Frase bajo el logo del pie: "Transporte de GNC, logistica y carga
+    pesada con cobertura nacional."
+  - Enlace "WhatsApp directo" de la columna Contacto del pie.
+  - Primer enlace de cada columna del pie: "Ver <nombre de la seccion>".
   - Linea inferior: "© <ano> Traninn Logistic. Todos los derechos
     reservados." El ano se calcula solo.
   - Este pie NO tiene enlaces de "Aviso de privacidad" ni "Terminos y
     condiciones", ni siquiera como texto. Si la empresa los necesita, hay
     que crear las paginas y agregarlos.
 
---- 4.6 Paginas sueltas /nosotros y /servicios -------------------------------
+--- 4.5 Bloque "Detras de cada entrega, hay una operacion bien coordinada" ---
+  En la portada, justo despues del Texto enriquecido, hay un bloque de 4
+  filas alternadas (foto + texto): Eficiencia, Operacion responsable,
+  Seguridad y control, Atencion y seguimiento. Encabezado, fotos, etiquetas
+  ("01 / Planeacion"...), antetitulos, titulos y textos estan escritos en el
+  codigo porque el CMS no tiene un tipo de seccion para este bloque. Para
+  cambiar cualquier texto o foto hay que pedirlo a desarrollo.
+
+--- 4.6 Banda de servicios en movimiento (portada) ---------------------------
+  Debajo del carrusel de la portada hay una banda roja que se desplaza con
+  los nombres de los servicios. Toma solos los nombres de las sub-paginas
+  de Nuestros servicios (con los nombres de la tabla de 4.3); no tiene
+  campos en el panel.
+
+--- 4.7 Otros textos fijos ---------------------------------------------------
+  - Encabezados de las tarjetas de sub-paginas ("Nuestros servicios",
+    "Conoce Traninn Logistic") y el enlace "Ver pagina completa" (2.7).
+  - Etiquetas y textos de ejemplo de los campos del formulario ("Tu
+    nombre", "Cuentanos brevemente que necesitas"...), el boton "Escribir
+    por WhatsApp" y los mensajes de envio ("Enviando...", "Gracias! Un
+    asesor de Traninn Logistic te contactara muy pronto.").
+  - Blog: "Leer mas", "Volver al blog", "Aun no hay entradas publicadas."
+  - Mapa: "Como llegar".
+
+--- 4.8 Paginas sueltas /nosotros y /servicios -------------------------------
   Hoy existen en el sitio dos direcciones que NO deberian estar publicadas:
   /nosotros y /servicios. No muestran una pagina: muestran solo las palabras
   sueltas "sobre nosotros" y "serv" sobre fondo blanco. Son archivos de
@@ -456,17 +637,20 @@ Banner del carrusel (portada)   | 2400 x 1000 px     | 2.4:1    | JPG     | 1 MB
 Banner en pagina interior       | 2400 x 1000 px     | 2.4:1    | JPG     | 1 MB
   (se recorta mas alto)         |                    |          |         |
 Encabezado de pagina interior   | 2400 x 900 px      | 2.6:1    | JPG     | 1 MB
-Logo de cliente - MODO A        | 600 x 400 px       | 3:2 (*)  | JPG     | 300 KB
-  (rejilla, se RECORTA)         |                    |          |         |
-Logo de cliente - MODO B        | 800 x 500 px       | 16:10    | PNG**   | 300 KB
-  (tarjetas, se ajusta)         |                    |          |         |
-Icono de tarjeta (feature_grid) | 96 x 96 px         | 1:1      | PNG**   | 50 KB
+  (tambien foto de tarjeta 2.7) |                    |          |         |
+Portada del video (con video)   | 1280 x 720 px      | 16:9     | JPG     | 500 KB
+Imagen junto al texto           | 1600 x 1000 px     | 16:10(*) | JPG     | 800 KB
+  (Portada del video sin video) |                    |          |         |
+Imagen de tarjeta (feature_grid)| 2048 x 768 px      | 8:3      | JPG     | 500 KB
+  (campo "Icono")               |                    |          |         |
 Imagen de galeria               | 1200 x 900 px      | 4:3      | JPG     | 800 KB
 Portada de articulo de blog     | 1344 x 756 px      | 16:9     | JPG     | 800 KB
-(*) En el modo de rejilla el logo se RECORTA a 3:2: usar una placa con el
-    logo centrado sobre fondo claro, no un PNG transparente suelto.
+Logo cliente A (rejilla)[OCULTA]| 600 x 400 px       | 3:2      | JPG     | 300 KB
+Logo cliente B (tarjeta)[OCULTA]| 800 x 500 px       | 16:10    | PNG**   | 300 KB
+(*) Se recorta a la altura del texto: la relacion final varia. Dejar el
+    motivo al centro.
 (**) PNG con fondo transparente.
-Limite absoluto del servidor para cualquier imagen: 5 MB.
+Limite absoluto del servidor para cualquier imagen: 20 MB.
 
 ==============================================================================
 TABLA RESUMEN RAPIDA DE TEXTOS
@@ -477,74 +661,96 @@ Titulo de banner del carrusel            | 45 caracteres      | 60
 Subtitulo de banner del carrusel         | 90 caracteres      | 120
 Texto de boton del banner                | 2-4 palabras       | 25 caracteres
 Titulo de encabezado de pagina interior  | 40 caracteres      | 55
-Subtitulo de encabezado interior         | 90 caracteres      | 110
+Subtitulo de encabezado (solo tarjetas)  | 60 caracteres      | 90
 Titulo de seccion (general)              | 50 caracteres      | 70
 Titulo de tarjeta (feature_grid)         | 30 caracteres      | 40
 Texto de tarjeta (feature_grid)          | 140 caracteres     | 180
-Nombre de cliente                        | 30 caracteres      | 40
-Descripcion de cliente                   | 100 caracteres     | 160
-Cita / testimonio de cliente             | 120 caracteres     | 200
-Titulo del simulador                     | 50 caracteres      | 70
-Introduccion del simulador               | 120 caracteres     | 160
 Titulo del formulario de contacto        | 40 caracteres      | 60
 Introduccion del formulario              | 120 caracteres     | 160
-Texto del boton de enviar                | 2-4 palabras       | obligatorio
-Titulo del mapa de ubicaciones           | 40 caracteres      | 60
+Texto del boton de enviar                | 2-4 palabras       | 60 (obligatorio)
+Titulo del mapa de estaciones            | 40 caracteres      | 60
 Informacion adicional (contacto)         | 150 caracteres     | 280
-Pie de foto de galeria                   | 40-80 caracteres   | 120
+Caption de galeria "Titulo: texto"       | 1-3 pal. + 100-200 | 255 (servidor)
+Caption de galeria solo titulo           | 1-4 palabras       | 40
 Titulo de articulo de blog               | 60 caracteres      | 90
 Extracto de blog                         | 140 caracteres     | 180
 Contenido de texto enriquecido           | 300-1500 caracteres| sin limite duro
 Contenido de blog                        | 800-2500 palabras  | sin limite duro
+(Secciones ocultas: nombre de cliente 30/40, descripcion 100/160, cita
+ 120/200; titulo del simulador 50/70, introduccion 120/160.)
 
-NOTA FINAL: ninguno de estos limites es forzado por el sistema. El panel
-avisa con un contador, pero deja guardar. Son recomendaciones de diseno.
-Lo que si tiene consecuencia real es dejar un campo VACIO: en este sitio el
-bloque correspondiente desaparece.
+TRUCOS DE RENGLONES (funcionan solo en este sitio):
+  - En los TITULOS (banner, encabezado de pagina, titulos de seccion), dos
+    frases separadas por ". " salen en dos renglones.
+  - En el texto de las tarjetas del feature_grid, el subtitulo de los
+    encabezados de las sub-paginas (frase de la tarjeta 2.7) y el extracto
+    del blog (en la lista), "|" fuerza un salto de renglon y no se ve.
+  - En cualquier otro campo, un "|" se ve tal cual.
+
+NOTA FINAL: los limites de caracteres de esta tabla no los fuerza el
+sistema. El panel avisa con un contador, pero deja guardar. Son
+recomendaciones de diseno. Lo que si tiene consecuencia real es dejar un
+campo opcional VACIO (en este sitio el bloque correspondiente desaparece) y
+olvidar pulsar "Reconstruir sitio" despues de guardar.
 
 ==============================================================================
 PENDIENTES TECNICOS DETECTADOS (para reportar a desarrollo, no para el editor)
 ==============================================================================
-1. La pantalla Trainin > Contacto del panel no filtra por pagina y muestra
-   TODAS las secciones del sitio (la API ignora el filtro de pagina para
-   traninn-logistic; el resto de las pantallas lo compensan pasando un
-   pageId, esta no). Riesgo real de que el editor modifique la portada
-   creyendo que edita /contacto. Falta pasarle su pageId.
+1. Limite de subida desactualizado en el panel: el servidor acepta hasta
+   20 MB, pero los textos de ayuda de todas las imagenes dicen "max. 5 MB",
+   el panel bloquea a partir de 25 MB (no de 20) y su mensaje de error dice
+   que el limite es 5 MB. Un archivo de 20-25 MB pasa el panel y lo rechaza
+   el servidor.
 2. Hero.astro pinta un <h1> por CADA diapositiva del carrusel: una portada
-   con 3 banners queda con 3 H1, y en las paginas de Sobre nosotros el
-   carrusel agrega un H1 mas ademas del encabezado de pagina. Deberia ser
-   H1 solo en la primera diapositiva de la primera seccion, como ya hacen
-   tectuus y gas-gnu.
-3. El sitio solo dibuja iconos de facebook, instagram y linkedin, pero el
-   panel deja capturar twitter, youtube y tiktok. Lo que se capture de esas
-   tres se guarda y no se muestra en ningun lado, sin aviso al editor.
-4. El sitio no tiene configuracion de SEO: no genera og:image, og:title,
-   descripcion social ni enlace canonico, y el titulo de las paginas
-   interiores no lleva el nombre de la empresa. Al compartir cualquier
-   pagina en redes sale sin imagen ni descripcion. Es el unico de los
-   cuatro sitios sin src/config/seo.ts.
+   con 3 banners queda con 3 H1, y en Que hacemos / Nuestra historia el
+   carrusel (si se llena) agrega un H1 mas ademas del encabezado de pagina.
+   Deberia ser H1 solo en la primera diapositiva de la primera seccion.
+3. El campo "Icono" del feature_grid se muestra en Trainin como banner de
+   2048x768, pero el texto de ayuda del panel (comun a todos los sitios)
+   dice 96x96 y "se muestra muy pequeno". Ademas el servidor exige el
+   "Texto" de cada tarjeta y el panel no lo marca como obligatorio.
+4. El sitio no tiene configuracion de SEO: no genera og:image, og:title ni
+   enlace canonico, todas las paginas comparten la misma meta descripcion
+   y el titulo de las paginas interiores no lleva el nombre de la empresa.
+   Es el unico de los cuatro sitios sin src/config/seo.ts.
 5. Quedaron dos archivos de prueba publicados: src/pages/nosotros/index.astro
    (contiene el texto "sobre nosotros") y src/pages/servicios/index.astro
    (contiene "serv"). Generan las rutas /nosotros y /servicios con texto
    suelto. Hay que borrarlos.
-6. Favicon: sigue siendo el icono por defecto de Astro, identico en los 4
-   sitios del proyecto. Falta el logo final en .svg y .ico.
-7. El nombre de la marca esta escrito de tres formas distintas ("Traninn
-   Logistic" en el codigo, "Trainin Logistic" en el panel, "trainin" en la
-   carpeta). Definir la forma oficial y unificarla.
-8. Las bases/estaciones que alimentan el mapa y la lista de /ubicaciones no
-   tienen formulario en el panel: se dan de alta solo desde el backend.
-9. El texto del boton de enviar del formulario no tiene valor de respaldo:
-   si el campo queda vacio, el boton sale sin texto.
-10. RichText.astro acepta una imagen lateral (relacion 4:5) que ningun
-    contenido del CMS le pasa: o se conecta a un campo del panel, o se
-    quita.
-11. El pie de pagina no tiene enlaces legales (aviso de privacidad,
+6. Secciones ocultas desde el codigo (PageSections.astro): savings_simulator
+   y clients_showcase en todo el sitio, y feature_grid en transporte-de-gnc
+   y carga-pesada. El panel las sigue mostrando como editables sin ningun
+   aviso. Falta poder ocultar/despublicar una seccion desde el panel, o al
+   menos marcarlas.
+7. Nombres de pagina y orden del submenu de servicios fijados en
+   src/functions/labels.ts (TITLE_OVERRIDES / ORDER_OVERRIDES) porque el
+   panel no permite editar title ni position. En esas 6 paginas el
+   page_hero.title del panel no tiene efecto visible. Lo ideal: actualizar
+   el seeder o hacer editable el titulo y quitar los reemplazos.
+8. Contenido en duro por falta de tipo de seccion en el CMS:
+   OperationHighlights.astro (bloque de 4 tarjetas con foto de la
+   portada), encabezados de ChildPageCards, encabezado e imagen de /blog
+   (blog-hero.webp) y la entrada "Blog" del menu. Ver
+   trainin/technical_debt.md.
+9. page_hero.subtitle se edita en el panel pero no se pinta en el banner;
+   solo se usa como frase de las tarjetas de sub-paginas. El panel no lo
+   explica.
+10. La bandeja de Contacto no muestra la pagina de origen del mensaje
+    (inicio / contacto), aunque el servidor la guarda.
+11. El nombre de la marca esta escrito de cuatro formas distintas
+    ("Traninn Logistic", "Trainin Logistic", "trainin", "Traininn
+    Logistics"). Definir la forma oficial y unificarla.
+12. Mapa de Google sin API key: se usa una forma de insercion no
+    documentada que muestra un solo punto a la vez. Con una API key se
+    podria usar la via oficial.
+13. El pie de pagina no tiene enlaces legales (aviso de privacidad,
     terminos y condiciones), ni siquiera como texto.
-12. No hay aviso por correo cuando llega un mensaje del formulario: la unica
+14. No hay aviso por correo cuando llega un mensaje del formulario: la unica
     via es la bandeja del panel.
-13. Muchas paginas siguen con el texto de arranque "Contenido pendiente de
-    redactar." Es contenido por escribir desde el panel, no un bug, pero
-    conviene hacer una revision completa antes de dar el sitio por
-    terminado.
+15. Contenido por revisar en el CMS (no es bug de codigo): numero de
+    WhatsApp aparentemente de prueba (+524430000000); coordenadas de la
+    estacion de Morelia ~1.5 km fuera de las indicadas por el cliente;
+    image_gallery de Nuestra historia vacia; textos "Contenido pendiente de
+    redactar" y clientes de ejemplo en las secciones hoy ocultas (feature
+    grid de Transporte de GNC y Carga pesada, Clientes).
 ==============================================================================

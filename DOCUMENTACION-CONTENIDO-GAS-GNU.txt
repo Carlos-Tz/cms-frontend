@@ -4,6 +4,7 @@
  Sitio en el CMS (slug): gnu-vehicular
  Seccion del panel: menu principal > "Gas natural vehicular"
  Fecha de elaboracion: 2026-09-16
+ Ultima actualizacion: 2026-10-26
 ==============================================================================
 
 PROPOSITO DE ESTE DOCUMENTO
@@ -14,21 +15,33 @@ formato recomendado de las imagenes, y la longitud de texto recomendada para
 que el diseno no se rompa.
 
 Es el equivalente de DOCUMENTACION-CONTENIDO-LANDING-GNU.txt pero para el
-sitio "gas-gnu". Los tipos de seccion son casi los mismos, pero NO todas las
-paginas ni todos los bloques son iguales: conviene leer las secciones 1 y 2 de
-este documento aunque ya se conozca la guia del sitio institucional.
+sitio "gas-gnu". El sitio reutiliza el diseno del sitio institucional, pero
+NO todas las paginas ni todos los bloques son iguales: conviene leer las
+secciones 1 y 2 de este documento aunque ya se conozca la guia del sitio
+institucional.
+
+IMPORTANTE - LOS CAMBIOS NO SE VEN SOLOS:
+  El sitio publico se genera a partir del CMS. Guardar una seccion en el
+  panel NO cambia el sitio en el momento: hay que entrar a "Gas natural
+  vehicular" y usar el recuadro "Publicar cambios" > boton "Reconstruir
+  sitio". La reconstruccion tarda unos minutos.
 
 IMPORTANTE - LIMITES REALES DEL SISTEMA (leer antes de continuar):
-  * El servidor (CMS externo) RECHAZA archivos de imagen mayores a 5 MB.
-  * El panel SI avisa antes de subir si el archivo pesa mas de 5 MB, y
-    muestra las dimensiones reales (ancho x alto) y el peso de la imagen que
-    se acaba de elegir. Ese aviso sirve para comparar contra los tamanos
-    recomendados de esta guia.
+  * El servidor (CMS externo) RECHAZA archivos de imagen mayores a 20 MB.
+    OJO: los textos de ayuda del panel todavia dicen "max. 5 MB"; ese dato
+    es viejo (ver PENDIENTES TECNICOS). El limite real es 20 MB, pero lo
+    recomendado sigue siendo mucho menos (ver abajo).
+  * Al elegir una imagen, el panel muestra sus dimensiones reales (ancho x
+    alto) y su peso. Si pesa mas de 2 MB el aviso sale en color ambar. Ese
+    aviso sirve para comparar contra los tamanos recomendados de esta guia.
   * El panel muestra un contador de caracteres debajo de cada campo de texto
     ("123/180 caracteres - recomendado ~140"). Ese contador es una GUIA: se
     pone en color ambar cuando se pasa el maximo sugerido, pero NO impide
     guardar. Si se ignora, el sitio guarda el texto igual y el diseno se ve
     apretado o cortado.
+  * Algunos campos SI son obligatorios para el servidor (marcados con * en
+    el panel). Si se dejan vacios, al guardar aparece "El campo ... es
+    obligatorio" y no se guarda nada de esa seccion.
   * El panel NO valida las dimensiones ni la relacion de aspecto de la
     imagen. Si se sube una imagen con otra proporcion, el sitio la recorta
     (object-fit: cover) o la deja descuadrada, segun el bloque.
@@ -41,36 +54,54 @@ FORMATOS DE IMAGEN ACEPTADOS
 El campo de carga acepta cualquier archivo de imagen (accept image/*).
   * Fotografias (banners, portadas, fondos)  -> JPG (.jpg/.jpeg)
   * Logos e iconos con transparencia         -> PNG (.png)
+  * GIF animado: aceptado en el carrusel de la portada y en los encabezados
+    de pagina. El sitio lo muestra COMPLETO (sin recortarlo) y rellena los
+    lados con una copia desenfocada.
   * Evitar: HEIC, TIFF, BMP, RAW.
   * WebP es aceptable; ante la duda usar JPG/PNG.
-  * Peso maximo por archivo: 5 MB (limite duro del servidor).
+  * Peso maximo por archivo: 20 MB (limite duro del servidor).
     Recomendado: menos de 500 KB - 1 MB por imagen (comprimir con TinyPNG o
     Squoosh antes de subir).
+
+IMAGENES OBLIGATORIAS (no se pueden "quitar")
+------------------------------------------------------------------------------
+En el carrusel de banners (y en clientes / galeria, si algun dia se
+habilitan) cada elemento DEBE tener imagen. En esos campos el panel no
+muestra el boton para quitar la imagen y avisa: "Esta imagen es obligatoria
+- para quitarla, elimina este elemento completo". Para sacar una imagen hay
+que eliminar el banner completo (o reemplazar la imagen por otra).
 
 ==============================================================================
 MAPA DEL SITIO Y DONDE SE EDITA CADA PAGINA
 ==============================================================================
 Panel: "Gas natural vehicular" > se elige una de estas 5 entradas:
 
-  Inicio             -> edita la portada (/)
-  Nuestros servicios -> lleva a un submenu con 6 paginas
-  Ubicaciones        -> lleva a un submenu con 5 paginas
+  Inicio             -> edita la portada (/) y, al final de la pantalla,
+                        "Contenido del sitio" (datos de contacto, redes
+                        sociales y boton de WhatsApp, ver SECCION 4)
+  Nuestros servicios -> lleva a un submenu con 6 entradas (Portada + 5
+                        paginas)
+  Ubicaciones        -> lleva a un submenu con 5 entradas (Portada + 4
+                        paginas)
   Contacto           -> bandeja de mensajes + secciones de la pagina /contacto
   Blog               -> alta / edicion / borrado de articulos
 
-Paginas del sitio publico y secciones que trae cada una:
+Paginas del sitio publico y secciones del CMS que trae cada una (verificado
+contra el CMS en vivo el 2026-10-26):
 
   RUTA DEL SITIO                                  SECCIONES (en orden)
   ----------------------------------------------- ----------------------------
   /                                               banner_carousel,
   (Inicio)                                        savings_simulator,
-                                                  feature_grid (recompensas),
+                                                  feature_grid (recompensas)*,
                                                   testimonials,
                                                   stations_map,
                                                   lead_capture_form
   /nuestros-servicios                             page_hero, rich_text
+                                                  (+ tarjetas de servicios)
   /nuestros-servicios/instala-tu-equipo-de-gnv    page_hero, rich_text,
-                                                  feature_grid
+                                                  feature_grid* (+ tarjetas
+                                                  de sus 2 sub-paginas)
   .../instala-tu-equipo-de-gnv/cotiza-tu-equipo   page_hero, rich_text,
                                                   lead_capture_form
   .../instala-tu-equipo-de-gnv/financiamiento     page_hero, rich_text,
@@ -81,6 +112,8 @@ Paginas del sitio publico y secciones que trae cada una:
   /nuestros-servicios/estaciones-moviles          page_hero, rich_text,
                                                   feature_grid
   /ubicaciones                                    page_hero, stations_map
+                                                  (+ tarjetas de sus 4
+                                                  sub-paginas)
   /ubicaciones/estaciones-morelia                 page_hero, rich_text
   /ubicaciones/estacion-uruapan                   page_hero, rich_text
   /ubicaciones/agenda-tu-verificacion             page_hero, service_scheduling
@@ -90,25 +123,58 @@ Paginas del sitio publico y secciones que trae cada una:
   /blog                                           page_hero (+ los articulos)
   /blog/<slug>                                    contenido del articulo
 
+  * Secciones que EXISTEN en el panel pero HOY NO SE VEN en el sitio:
+    - feature_grid de Inicio ("Programa de recompensas"): el bloque esta
+      desactivado en el codigo de la portada (ver 1.3).
+    - feature_grid de "Instala tu equipo de GNV" ("Que se instala?"):
+      oculto a proposito porque sus tarjetas tienen "-" como texto (ver 2.3).
+
 NOTA: el orden y la cantidad de secciones los define un desarrollador. Desde
 el panel NO se pueden agregar, quitar ni reordenar secciones: solo se llena
 el contenido de las que ya existen.
+
+NOTA SOBRE TITULOS DE PAGINA: el nombre de cada pagina que se ve en el menu,
+en el pie de pagina, en la pestana del navegador y en la etiqueta de las
+tarjetas (ej. "Flotillas empresariales") NO se edita desde el panel: viene
+de la estructura del CMS y solo lo cambia un desarrollador. Lo que SI se
+edita es el contenido de las secciones (por ejemplo el "Titulo" del
+encabezado de pagina, que es el texto grande de arriba). Caso especial: la
+pagina "Estaciones moviles" se muestra en el sitio como "Estaciones de
+suministro de GNV" por un ajuste del codigo (ver PENDIENTES).
 
 ==============================================================================
 SECCION 1: PAGINA DE INICIO (portada, ruta "/")
 Ruta admin: Gas natural vehicular > Inicio
 ==============================================================================
+La portada NO muestra las secciones en el orden del panel: el codigo arma un
+orden propio. Orden real en el sitio, de arriba hacia abajo:
+
+  1. Carrusel de banners ................ editable (1.1)
+  2. Banda de cifras .................... FIJA en el codigo (1.7)
+  3. Simulador de ahorro ................ editable (1.2)
+  4. Texto "Haz que cada kilometro te
+     cueste menos" ...................... FIJO en el codigo (1.7)
+  5. Nuestros servicios (tarjetas) ...... se edita en cada pagina de
+                                          servicio (1.8)
+  6. Testimonios ........................ editable (1.4)
+  7. Ubicaciones (mapa + estaciones) .... editable (1.5)
+  8. Blog (ultimos 3 articulos) ......... automatico (1.9)
+  9. Contacto (formulario) .............. editable (1.6)
 
 --- 1.1 Carrusel de banners (banner_carousel) --------------------------------
-Es el hero de la portada: ocupa casi toda la pantalla al entrar al sitio y
-las diapositivas cambian solas cada 5 segundos.
-  Campo "Imagen":
+Es el hero de la portada: ocupa el ancho completo al entrar al sitio y las
+diapositivas cambian solas cada 5 segundos.
+  Campo "Imagen" (OBLIGATORIO, no se puede quitar; ver arriba):
     - Tamano recomendado: 2400 x 1000 px (relacion aprox. 2.4:1)
-    - Formato: JPG - Peso: menos de 1 MB (maximo 5 MB)
-    - La imagen se recorta a pantalla completa (object-fit: cover) en un
-      bloque de alto min(88vh, 720px). El CENTRO de la imagen es lo que
-      siempre se ve; evitar texto o rostros cerca de los bordes izquierdo y
-      derecho porque se recortan en pantallas angostas.
+    - Formato: JPG - Peso: menos de 1 MB (maximo 20 MB)
+    - El bloque toma la proporcion aprox. 2.4:1, con un alto minimo de
+      ~28 rem y como maximo lo que queda de pantalla bajo el encabezado. La
+      foto se recorta (object-fit: cover) y tiene un acercamiento lento
+      continuo. El CENTRO de la imagen es lo que siempre se ve; evitar texto
+      o rostros cerca de los bordes porque se recortan en pantallas angostas.
+    - Un GIF animado se muestra completo, sin recorte ni acercamiento.
+    - La imagen del PRIMER banner es tambien la que se ve al compartir la
+      portada en redes sociales.
   Campo "Titulo":
     - Recomendado 45 caracteres / maximo sugerido 60.
     - El contenedor mide ~34 rem (~544 px). El titulo de la PRIMERA
@@ -116,14 +182,19 @@ las diapositivas cambian solas cada 5 segundos.
   Campo "Subtitulo":
     - Recomendado 90 caracteres / maximo sugerido 120 (contenedor ~30 rem).
   Campo "Enlace del boton" (link_url):
-    - URL completa (https://...) o ruta interna (/contacto, /#simulador).
+    - Debe ser una URL COMPLETA que empiece con https:// (ej.
+      https://.../nuestros-servicios/instala-tu-equipo-de-gnv/cotiza-tu-equipo).
+      El servidor RECHAZA rutas cortas como "/contacto" o "#simulador".
+    - Si el enlace lleva a otro dominio, se abre en pestana nueva.
   Campo "Texto del boton" (link_label):
     - 2-4 palabras. Recomendado 20 / maximo 25 caracteres.
     - IMPORTANTE: el boton solo aparece si se llenan LOS DOS campos (enlace
       y texto). Si falta uno, la diapositiva sale sin boton.
+  Junto al boton, cada diapositiva muestra el logotipo blanco de GNU (fijo).
   *** RELLENO (mock) ***
-  Si no hay ninguna diapositiva capturada, el sitio muestra 3 diapositivas
-  de ejemplo fijas en el codigo, con la imagen generica gris:
+  Si no hay ninguna diapositiva capturada (o el CMS no responde al
+  reconstruir), el sitio muestra 3 diapositivas de ejemplo fijas en el
+  codigo, con la imagen generica gris:
     - "Ahorra hasta un 60% en combustible con GNV"
     - "Instalacion con 20% de descuento este mes"
     - "Financiamiento a 12 meses sin intereses"
@@ -131,102 +202,150 @@ las diapositivas cambian solas cada 5 segundos.
 
 --- 1.2 Simulador de ahorro (savings_simulator) ------------------------------
 Calculadora "cuanto ahorro si me cambio a GNV". No usa imagenes.
-  Campo "Titulo": recomendado 50 / maximo 70 caracteres.
+  Campo "Titulo" (obligatorio): recomendado 50 / maximo 70 caracteres.
   Campo "Introduccion": recomendado 120 / maximo 160 caracteres.
-  Por cada combustible de la tabla:
+  Por cada combustible de la tabla (todos los campos son obligatorios):
     - "Slug": identificador sin espacios ni acentos (ej. gas-natural,
-      gasolina-magna, diesel). El renglon del gas natural DEBE llamarse
-      exactamente "gas-natural": es la base del comparativo.
-    - "Nombre visible": lo que ve el visitante en la lista (ej. "Gasolina
-      Magna"). 10-20 caracteres.
+      gasolina, diesel). El renglon del gas natural DEBE llamarse
+      exactamente "gas-natural": es la base del comparativo y no aparece en
+      la lista que ve el visitante.
+    - "Nombre visible": lo que ve el visitante en la lista (ej. "Gasolina").
+      10-20 caracteres.
     - "Precio por unidad": numero con punto decimal (ej. 24.50).
     - "Unidad": texto corto (ej. litro, m3, kg).
-    - "Factor de equivalencia": numero decimal. Siempre 1 para gas natural;
-      para los demas, cuantos m3 de gas natural equivalen a 1 unidad de ese
-      combustible.
-  *** RELLENO (mock) ***
-  - Si la tabla de precios esta vacia, la lista de combustibles muestra una
-    sola opcion llamada "Gasolina" con precio 0.
-  - Si no hay precios validos o el servidor de calculo no responde, la
-    calculadora usa una tasa fija de 60% de ahorro. El numero que ve el
+    - "Factor de equivalencia": numero decimal mayor que 0. Siempre 1 para
+      gas natural; para los demas, cuantos m3 de gas natural equivalen a 1
+      unidad de ese combustible.
+  ESTE MISMO SIMULADOR (titulo, introduccion y precios) alimenta el boton
+  flotante "Calcula tu ahorro" que aparece en TODAS las paginas del sitio.
+  *** IMPORTANTE ***
+  - Si la tabla no tiene al menos un combustible ademas de "gas-natural",
+    el bloque del simulador DESAPARECE de la portada y el boton flotante
+    tampoco se muestra.
+  - Si falta el renglon "gas-natural" o el servidor de calculo no responde,
+    la calculadora usa una tasa fija de 60% de ahorro. El numero que ve el
     visitante entonces NO es real. Mantener los precios capturados y
     actualizados es lo que hace que el simulador diga la verdad.
+  - El simulador abre ya calculado con un gasto de ejemplo de $20,000 MXN
+    mensuales (fijo en el codigo).
 
---- 1.3 Cuadricula de caracteristicas (feature_grid) -------------------------------
-En el panel esta etiquetado "Cuadricula de caracteristicas". En la portada de
-este sitio alimenta el bloque "Programa de recompensas".
-  Campo "Titulo de la seccion": recomendado 50 / maximo 70 caracteres.
-  Por cada tarjeta:
-    Campo "Icono":
-      - 96 x 96 px (cuadrado 1:1), PNG con fondo transparente, menos de 50 KB.
-      - Se muestra MUY pequeno (24 x 24 px en pantalla): debe ser un glifo
-        simple de un solo color, nunca una fotografia ni un logo con texto.
-      - Si se deja vacio, el sitio dibuja un icono generico de flama.
-    Campo "Titulo": recomendado 30 / maximo 40 caracteres.
-    Campo "Texto": recomendado 140 / maximo 180 caracteres (2-3 lineas).
-  *** RELLENO (mock) ***
-  Si esta seccion no tiene ninguna tarjeta, la portada muestra en su lugar un
-  bloque "Programa de recompensas" con 3 beneficios de ejemplo escritos en el
-  codigo ("Acumula puntos por cada carga...", etc.) y un boton
-  "Quiero inscribirme" que apunta a /#contacto.
+--- 1.3 Cuadricula de caracteristicas (feature_grid) - "Programa de
+        recompensas" ---------------------------------------------------------
+En el panel esta etiquetado "Cuadricula de caracteristicas" y hoy tiene el
+titulo "Programa de recompensas".
+  *** HOY NO SE MUESTRA EN EL SITIO ***
+  El bloque de recompensas esta desactivado en el codigo de la portada:
+  lo que se capture aqui no aparece en ningun lado (tampoco el bloque de
+  relleno). Se puede seguir editando para tenerlo listo, pero volver a
+  mostrarlo requiere un desarrollador (ver PENDIENTES).
+  Si se reactiva, aplican las mismas reglas que el punto 2.3.
 
 --- 1.4 Testimonios (testimonials) -------------------------------------------
 Solo existe en la portada de este sitio.
   Campo "Titulo de la seccion": recomendado 50 / maximo 70 caracteres.
+    Encima del titulo aparece la etiqueta fija "Historias que nos mueven".
+    Si se deja vacio se usa "Clientes que ya ahorran con GNV".
   Por cada testimonio:
     Campo "Foto": 400 x 400 px (cuadrado 1:1), JPG, menos de 200 KB.
-      *** OJO: hoy el sitio publico NO muestra esta foto. Ver PENDIENTES
-      TECNICOS, punto 3. Se puede dejar vacia sin que se rompa nada. ***
-    Campo "Cita": recomendado 140 / maximo 220 caracteres. El sitio pone las
-      comillas automaticamente: no escribirlas.
-    Campo "Autor": nombre de la persona (3-30 caracteres).
+      - SI se muestra: en un circulo de ~80 px, en escala de grises. Centrar
+        el rostro, porque se recorta en circulo.
+      - Si se deja vacia, el circulo muestra las iniciales del autor.
+    Campo "Cita" (obligatorio): recomendado 140 / maximo 220 caracteres. El
+      sitio pone las comillas automaticamente (y quita las que se escriban).
+    Campo "Autor" (obligatorio): nombre de la persona (3-30 caracteres).
     Campo "Cargo / rol": ej. "Flotilla de taxis, Morelia" (hasta 40).
+  Con 3 o mas testimonios, las tarjetas avanzan solas en una cinta continua
+  (marquesina); con 1 o 2 se muestran fijas.
   *** RELLENO (mock) ***
   Si no hay testimonios capturados, se muestran 3 testimonios inventados
-  (Ricardo Pena, Lupita Camacho, Juan Osorio). Son personas ficticias: hay
-  que reemplazarlos por testimonios reales cuanto antes.
+  (Ricardo Pena, Lupita Camacho, Juan Osorio). Son personas ficticias: no
+  dejar la seccion vacia.
 
 --- 1.5 Mapa de estaciones (stations_map) ------------------------------------
 Aparece en la portada (bloque "Ubicaciones") y tambien en /ubicaciones y en
 /contacto, cada uno con su propio contenido.
-  Campo "Titulo": recomendado 40 / maximo 60 caracteres.
-  Campo "Centro del mapa": se fija haciendo clic en el mapa del panel (queda
-    como "19.702800,-101.192000"), o se escribe a mano una direccion o unas
-    coordenadas "lat,lng".
-  Campo "Zoom": numero de 1 a 20. 10-14 es un buen rango para una ciudad.
+  Campo "Titulo": recomendado 40 / maximo 60 caracteres. Si se deja vacio,
+    el bloque sale sin encabezado.
+  Campo "Centro del mapa" (obligatorio): coordenadas "latitud,longitud"
+    (ej. "19.702800,-101.192000"). Se puede escribir o hacer clic en el mapa
+    del panel. El servidor RECHAZA direcciones escritas: solo coordenadas.
+  Campo "Zoom" (obligatorio): numero entero de 0 a 22. 10-14 es un buen
+    rango para una ciudad.
   El panel muestra una vista previa igual a la que se ve en el sitio.
-  *** IMPORTANTE ***
-  - Mientras no se guarde un centro, el sitio muestra el texto "Mapa no
-    disponible" en lugar del mapa.
-  - Este bloque dibuja UN solo mapa centrado en un punto, NO una lista de
-    estaciones con varios pines. Las estaciones (Morelia, Uruapan) son datos
-    aparte y hoy no se editan desde el panel.
-  - El mapa se dibuja en un recuadro de relacion 16:10.
+  ESTACIONES (debajo del mapa, en el mismo recuadro del panel):
+    Cada bloque de mapa muestra, junto al mapa, la lista de estaciones
+    activas del sitio, con botones "Ver en el mapa" y "Como llegar". Las
+    estaciones se dan de alta, editan o borran ahi mismo:
+      - "Nombre" (obligatorio), "Direccion" (obligatorio), "Telefono",
+        "Horario" (ej. "Lunes a sabado, 7:00 a 22:00"), "Latitud" y
+        "Longitud" (obligatorios; tambien con clic en el mapa) y la casilla
+        "Activa (se muestra en el sitio publico)".
+      - La lista de estaciones es UNA SOLA para todo el sitio: la que se
+        edita desde cualquier mapa es la misma en los tres lugares.
+      - El orden lo pone el sistema (por fecha de alta); no se reordena
+        desde el panel.
+    *** OJO: renombrar o agregar estaciones afecta la Agenda de
+    verificacion (ver 2.5). ***
+  - El mapa se dibuja en un recuadro panoramico (16:5) cuando no hay
+    estaciones; con lista, se ajusta al alto de la lista.
 
 --- 1.6 Formulario de contacto (lead_capture_form) ---------------------------
 Es el formulario del final de la portada. Los mensajes llegan al panel en
 Gas natural vehicular > Contacto.
-  Campo "Titulo": recomendado 40 / maximo 60 caracteres.
-  Campo "Introduccion": recomendado 120 / maximo 160 caracteres.
-  Campo "Texto del boton": 2-4 palabras (ej. "Enviar mensaje").
+  Campo "Titulo" (obligatorio): recomendado 40 / maximo 60 caracteres. En la
+    portada es el encabezado grande de la columna izquierda.
+  Campo "Introduccion": recomendado 120 / maximo 160 caracteres (parrafo
+    bajo el titulo).
+  Campo "Texto del boton" (obligatorio): 2-4 palabras (ej. "Enviar
+    mensaje").
   Campo "Campos del formulario" (fields): BLOQUEADO, solo informativo.
     Define que campos pide el formulario y el servidor valida contra esa
-    lista. Cambiarlo requiere un desarrollador; si no coincidieran, el
-    formulario dejaria de enviar sin avisar al visitante.
+    lista. Cambiarlo requiere un desarrollador.
+  Fijo en el codigo: la etiqueta "Contacto", el titulo de la tarjeta del
+  formulario "Cotiza sin compromiso" y las etiquetas de cada campo. Junto al
+  formulario se muestran los datos de contacto del sitio (SECCION 4).
+  NOTA: el titulo e introduccion de ESTA seccion son los unicos que se ven;
+  en las demas paginas con formulario se usa un texto fijo (ver 2.4).
 
 --- 1.7 Bloques de la portada que NO se editan desde el panel ----------------
-Estos bloques SE VEN en la portada pero hoy no tienen ningun campo en el
-panel: su contenido esta fijo en el codigo (ver tambien SECCION 5).
-  - Banda de cifras bajo el hero: "+5,000 equipos instalados", "60% ahorro
-    promedio", "24/7 estaciones activas".
-  - Bloque "Nuestros Servicios" ("Todo lo que necesitas para moverte con
-    GNV") con sus 5 tarjetas. Siempre muestra el texto fijo del codigo.
-  - Bloque "Blog" de la portada: hoy muestra 4 titulos de ejemplo
-    ("Verificacion anual...", "Transporte sostenible...", "Seguridad del
-    GNV...", "GN vs. otros combustibles...") que NO enlazan a ningun
-    articulo. No se alimenta de los articulos reales del blog.
-  - Titulo y texto del bloque "Contacto" ("Hablemos de tu conversion a GNV"
-    y su parrafo).
+Estos bloques SE VEN en la portada pero no tienen ningun campo en el panel:
+su contenido esta fijo en el codigo (ver tambien SECCION 5).
+  - Banda de cifras bajo el hero: "+1,500 autos convertidos a gas natural",
+    "50% ahorro frente a la gasolina", "3 Estaciones de GNV para acompanar
+    tus recorridos" y el boton "Conoce nuestros servicios".
+  - Texto "Haz que cada kilometro te cueste menos" (4 parrafos y el
+    subtitulo "Quieres saber cuanto podrias ahorrar?").
+  - Encabezados de bloque: "Nuestros servicios / Todo lo que necesitas para
+    moverte con GNV", "Blog / Explora el mundo del GNV / Conoce nuestros
+    articulos..." y el boton "Ver todo el blog".
+
+--- 1.8 Tarjetas "Nuestros servicios" de la portada --------------------------
+NO se editan en la pantalla Inicio. Hay una tarjeta grande por cada pagina
+publicada bajo "Nuestros servicios" (hoy: Instala tu equipo de GNV,
+Flotillas empresariales, Estaciones moviles), y cada una toma su contenido
+de la propia pagina de servicio:
+  - Foto de la tarjeta  -> "Imagen" del Encabezado de pagina (page_hero) de
+                           ese servicio. Se recorta a 4:3 en pantallas
+                           chicas y a lo ancho en pantallas grandes.
+  - Titulo grande       -> "Subtitulo" del Encabezado de pagina de ese
+                           servicio (si esta vacio, se usa el nombre de la
+                           pagina).
+  - Etiqueta pequena    -> nombre de la pagina (no editable).
+  - Lista de puntos     -> "Titulo" de las primeras 4 tarjetas de la
+                           Cuadricula de caracteristicas de ese servicio.
+                           OJO: esto aplica aunque esa cuadricula este
+                           oculta en su propia pagina (caso "Instala tu
+                           equipo de GNV").
+  - Boton "Ver pagina completa": fijo.
+Ojo: el Subtitulo del encabezado tambien es la descripcion para buscadores
+de esa pagina; cambiarlo cambia las dos cosas.
+Las mismas tarjetas se repiten en /nuestros-servicios ("Explora Nuestros
+servicios").
+
+--- 1.9 Bloque "Blog" de la portada ------------------------------------------
+Automatico: muestra los 3 articulos publicados mas recientes (portada,
+fecha, titulo, extracto). Si no hay articulos publicados, el bloque no
+aparece. Se controla desde Gas natural vehicular > Blog (SECCION 3).
 
 ==============================================================================
 SECCION 2: PAGINAS INTERIORES
@@ -234,89 +353,170 @@ SECCION 2: PAGINAS INTERIORES
  Contacto, Blog)
 ==============================================================================
 Todas se editan igual: se entra a la pagina en el panel y se llena cada
-bloque que ya exista ahi.
+bloque que ya exista ahi. Para "Nuestros servicios" y "Ubicaciones" la
+pagina principal se edita en la entrada "Portada" de su submenu.
 
 --- 2.1 Encabezado de pagina (page_hero) -------------------------------------
 Es el banner superior de toda pagina interior. Todas las paginas interiores
 de este sitio lo llevan.
   Campo "Titulo" (obligatorio): recomendado 40 / maximo 55 caracteres.
-    Es el H1 de la pagina. Si se deja vacio, la pagina se queda sin titulo
-    visible.
-  Campo "Subtitulo": recomendado 90 / maximo 110 caracteres.
+    Es el H1 (texto grande) de la pagina. OJO: no cambia el nombre de la
+    pagina en el menu ni en la pestana del navegador (ver NOTA SOBRE
+    TITULOS DE PAGINA).
+  Campo "Subtitulo": recomendado 90 / maximo 110 caracteres (contenedor
+    ~34 rem). Tambien se usa como:
+      - descripcion de la pagina para buscadores y redes sociales;
+      - texto de la tarjeta de esa pagina en las paginas "Portada" que
+        listan sus sub-paginas, y titulo de su tarjeta en "Nuestros
+        servicios" (ver 1.8).
   Campo "Imagen":
-    - 2400 x 900 px (relacion aprox. 2.6:1), JPG, menos de 1 MB.
-    - Se muestra al 50% de opacidad detras del texto, con un velo azul
-      oscuro encima. Fotos muy claras o con fondo blanco pierden contraste:
-      preferir tonos medios u oscuros.
-    - Si se deja vacia, el encabezado sale como una banda azul solida (no se
-      rompe nada).
+    - 2400 x 900 px (relacion 8:3, aprox. 2.67:1), JPG, menos de 1 MB.
+    - Se muestra a color completo (sin oscurecer) detras del titulo, con un
+      acercamiento lento continuo; el titulo va en blanco con sombra.
+      Preferir fotos de tonos medios u oscuros en el centro para que el
+      titulo se lea. (El texto de ayuda del panel dice que se oscurece:
+      ya no es asi.)
+    - En pantallas angostas el bloque crece en alto y la foto se recorta por
+      los lados: mantener lo importante al centro.
+    - Tambien es la imagen de la tarjeta de esa pagina (recortada a 4:3) y
+      la que se ve al compartir la pagina en redes.
+    - Un GIF animado se muestra completo (proporcion ideal 5:2).
+    - Si se deja vacia, el encabezado sale sobre fondo claro con manchas de
+      color suaves (no se rompe nada), y la tarjeta de esa pagina usa la
+      imagen generica gris.
 
 --- 2.2 Texto enriquecido (rich_text) ----------------------------------------
 Es el bloque de contenido largo de casi todas las paginas interiores
 (descripcion del servicio, informacion de una estacion, facturacion, etc.).
   Campo "Titulo": recomendado 50 / maximo 70 caracteres. Se puede dejar
     vacio y el bloque sale sin encabezado.
-  Campo "Contenido (HTML)": se guarda EXACTAMENTE como se escribe.
+    Si se escribe TODO EN MAYUSCULAS, el sitio lo muestra como etiqueta
+    pequena (no como titulo grande).
+  Campo "Contenido (HTML)" (obligatorio):
     - Recomendado 300-1500 caracteres (1-4 parrafos).
-    - El contenedor tiene un ancho maximo de ~46 rem (~736 px). Textos muy
-      largos generan mucho scroll pero no rompen el diseno.
+    - Sin video ni imagen, el contenedor tiene un ancho maximo de ~52 rem
+      (~830 px); con video o imagen, el texto ocupa media pantalla al lado.
+      Textos muy largos generan mucho scroll pero no rompen el diseno.
     - Si no se sabe HTML, escribir texto plano y separar parrafos con
-      <p>...</p>. NO pegar HTML copiado de Word o Google Docs: arrastra
-      estilos que descuadran la tipografia del sitio.
-  Campo "Video (URL)" (opcional): URL de YouTube o Vimeo (formatos
+      <p>...</p>. Evitar pegar HTML copiado de Word o Google Docs.
+    - El sitio "limpia" el contenido al publicarlo: recupera parrafos y
+      subtitulos de texto pegado desde PDF, convierte un <h1> en subtitulo,
+      convierte listas de renglones cortos (4 o mas) en lista con palomitas,
+      abre en pestana nueva los enlaces externos y hace desplazables las
+      tablas anchas. Aun asi, conviene revisar como se ve tras publicar.
+  Campo "Video (URL)" (opcional): URL completa de YouTube o Vimeo (formatos
     reconocidos: youtube.com/watch?v=, youtu.be/, /shorts/, vimeo.com/).
-    - Se convierte solo a un reproductor de relacion 16:9. No hace falta
-      subir imagen.
+    - Se convierte solo a un reproductor 16:9, a un lado del texto.
     - El video arranca SOLO y SIN SONIDO al cargar la pagina. Tenerlo en
       cuenta al elegir el video.
+  Campo "Portada del video" (opcional):
+    - 1280 x 720 px (16:9), JPG, menos de 500 KB.
+    - EN ESTE SITIO solo se usa cuando NO hay video: se muestra como imagen
+      en el mismo lugar que ocuparia el video (recortada a 16:9). Si hay
+      video, esta imagen se ignora. (El texto de ayuda del panel dice que se
+      muestra antes de reproducir el video: en este sitio no es asi.)
 
 --- 2.3 Cuadricula de caracteristicas (feature_grid) -------------------------
-Mismas reglas que el punto 1.3 (icono 96x96 PNG transparente, titulo 30,
-texto 140). En las paginas interiores se usa para listar "que incluye" cada
-servicio.
+Se usa en Financiamiento, Flotillas empresariales y Estaciones moviles
+(y existe, oculta, en Instala tu equipo de GNV y en Inicio).
+  Campo "Titulo de la seccion": recomendado 50 / maximo 70 caracteres.
+    Opcional.
+  Por cada tarjeta:
+    Campo "Icono":
+      - 96 x 96 px (cuadrado 1:1), PNG con fondo transparente, menos de
+        50 KB. Se muestra pequeno (~44 x 44 px en pantalla): debe ser un
+        glifo simple, nunca un logo con texto.
+      - Si se sube una imagen que NO es aproximadamente cuadrada (una foto
+        horizontal, por ejemplo), el sitio la trata como fotografia y la
+        muestra como banner 16:9 en la parte superior de la tarjeta.
+      - Si se deja vacio, el sitio dibuja un icono generico de flama.
+    Campo "Titulo" (obligatorio): recomendado 30 / maximo 40 caracteres.
+      Ojo: los 4 primeros titulos tambien son la lista de puntos de la
+      tarjeta de ese servicio en la portada (ver 1.8).
+    Campo "Texto" (obligatorio): recomendado 140 / maximo 180 caracteres
+      (2-3 lineas).
+  *** NO usar "." o "-" como texto de relleno ***
+  El servidor obliga a llenar "Texto", y hoy dos paginas tienen relleno:
+    - Estaciones moviles: las 3 tarjetas tienen "." -> se ven sin texto. El
+      parrafo que aparece bajo su titulo lo agrega el codigo (fijo).
+    - Instala tu equipo de GNV ("Que se instala?"): las 3 tarjetas tienen
+      "-" -> la seccion completa esta OCULTA hasta que se escriba el texto
+      real (luego un desarrollador debe reactivarla).
+  Si la seccion no tiene tarjetas, no se muestra.
 
 --- 2.4 Formulario de contacto (lead_capture_form) ---------------------------
-Mismas reglas que el punto 1.6. Aparece en /contacto, en
-/nuestros-servicios/flotillas-empresariales y en
-.../instala-tu-equipo-de-gnv/cotiza-tu-equipo.
-  Cada formulario etiqueta sus mensajes con la pagina de la que vino, asi se
-  distinguen en la bandeja del panel.
-  Las paginas "Cotiza tu equipo" y "Flotillas empresariales" pueden pedir
-  campos extra (descripcion del vehiculo, numero de unidades). Esa lista es
-  el campo bloqueado "fields": no se cambia desde el panel.
+Aparece en /contacto, en /nuestros-servicios/flotillas-empresariales y en
+.../instala-tu-equipo-de-gnv/cotiza-tu-equipo (ademas de la portada, 1.6).
+  *** IMPORTANTE: en estas 3 paginas el "Titulo" y la "Introduccion" del
+  panel NO se muestran. ***
+  Todas usan el mismo texto fijo en el codigo:
+    "Tienes dudas? Hablemos de tu vehiculo" / "No necesitas conocer todos
+    los detalles tecnicos para comenzar..."
+  (es el mismo texto que hoy tiene capturado la portada). El campo "Titulo"
+  sigue siendo obligatorio para poder guardar, pero no cambia nada en el
+  sitio. Lo que SI se usa de cada pagina es el "Texto del boton" y los
+  campos bloqueados.
+  Las paginas "Cotiza tu equipo" y "Flotillas empresariales" piden campos
+  extra (descripcion del vehiculo, numero de unidades). Esa lista es el
+  campo bloqueado "fields": no se cambia desde el panel.
+  Bandeja de mensajes (Contacto en el panel): muestra Nombre, Email,
+  Telefono, Mensaje y Fecha de TODOS los formularios del sitio juntos. Hoy
+  NO muestra de que pagina vino cada mensaje ni los campos extra (vehiculo,
+  numero de unidades), aunque el sistema si los guarda (ver PENDIENTES).
 
 --- 2.5 Agenda de verificacion (service_scheduling) --------------------------
 Solo en /ubicaciones/agenda-tu-verificacion. Es el widget donde el visitante
 elige estacion, fecha y horario para su verificacion.
   Campo "Titulo" (obligatorio): recomendado 40 / maximo 60 caracteres.
   Campo "Introduccion": recomendado 120 / maximo 160 caracteres.
-  Campo "Mensaje de confirmacion" (obligatorio): lo que lee el visitante
-    despues de reservar. Recomendado 70 / maximo 100 caracteres.
-    Si se deja vacio se usa "Tu cita quedo registrada. Te esperamos."
-  *** FIJO EN EL CODIGO ***
-  - Los horarios disponibles (10:00-12:00, 12:00-14:00, 14:00-16:00, de
-    lunes a sabado, domingo cerrado) NO se editan desde el panel.
-  - Las estaciones que aparecen en el selector son "Estacion Morelia" y
-    "Estacion Uruapan", fijas en el codigo. Agregar una estacion nueva a la
-    agenda requiere un desarrollador.
-  - Si el sistema no logra leer las estaciones, el bloque se sustituye por
-    el texto "Agenda no disponible por el momento. Contactanos directamente
-    para programar tu verificacion."
+  Campo "Mensaje de confirmacion" (obligatorio): recomendado 70 / maximo
+    100 caracteres.
+    OJO: hoy el sitio muestra primero el mensaje que manda el servidor
+    ("Tu cita quedo registrada. Te esperamos."), asi que el texto de este
+    campo practicamente nunca se ve (ver PENDIENTES).
+  *** FIJO (no se edita desde el panel) ***
+  - Los horarios: 10:00-12:00, 12:00-14:00 y 14:00-16:00, de lunes a
+    sabado. Domingos y fechas pasadas no tienen horarios. Los define el
+    servidor del CMS.
+  - Las estaciones del selector salen de la lista de estaciones (ver 1.5),
+    PERO hoy el sitio solo reconoce 3 estaciones por su nombre EXACTO:
+      "Estacion GNU Gas Natural Salida Quiroga Morelia, Michoacan",
+      "Estacion GNU Gas Natural Salida Charo Morelia, Michoacan",
+      "Estacion Blue GAS Uruapan, Michoacan" (con sus acentos).
+    Si se renombra una de ellas en el panel, desaparece de la agenda; una
+    estacion nueva tampoco aparece. Si ninguna coincide, el bloque se
+    sustituye por "Agenda no disponible por el momento. Contactanos
+    directamente para programar tu verificacion." Avisar a desarrollo
+    ANTES de renombrar o agregar estaciones.
   Las citas reservadas se consultan en el panel: Ubicaciones > Agenda tu
   verificacion.
 
---- 2.6 Clientes (clients_showcase) ------------------------------------------
-El sitio publico SI sabe dibujar este bloque (logos en escala de grises que
-se colorean al pasar el mouse; 800 x 500 px / 16:10 / PNG transparente,
-menos de 300 KB), pero hoy este tipo de seccion NO esta dado de alta para el
-sitio de Gas Natural Vehicular, asi que no aparece en el panel y el bloque
-nunca se pinta. Si el cliente quiere una franja de logos aqui, hay que
-pedirlo a desarrollo.
+--- 2.6 Tarjetas de sub-paginas (Portadas de Nuestros servicios,
+        Instala tu equipo de GNV y Ubicaciones) -------------------------------
+Debajo de sus secciones, estas paginas muestran una tarjeta por cada
+sub-pagina publicada. Las tarjetas no tienen campos propios:
+  - /nuestros-servicios: las tarjetas grandes de servicios (igual que 1.8).
+  - /nuestros-servicios/instala-tu-equipo-de-gnv y /ubicaciones: tarjeta
+    con la imagen del encabezado de la sub-pagina (recortada a 4:3), el
+    nombre de la pagina y, debajo, el Subtitulo de su encabezado.
+  El titulo del bloque ("Conoce mas / Explora ...") es fijo.
+  Si una pagina se despublica en el CMS, su tarjeta y su entrada del menu
+  desaparecen solas.
+
+--- 2.7 Clientes (clients_showcase) ------------------------------------------
+El sitio publico SI sabe dibujar este bloque en la portada (logos en escala
+de grises que se colorean al pasar el mouse, en cinta continua a partir de
+4 logos), pero hoy este sitio NO tiene ninguna seccion de clientes en el
+CMS, asi que no aparece en el panel y el bloque nunca se pinta. Si el
+cliente quiere una franja de logos aqui, hay que pedirlo a desarrollo.
+Referencia si se habilita: logo PNG transparente, menos de 300 KB, en un
+recuadro 2:1 (800 x 400 px; ver PENDIENTES sobre el texto de ayuda del
+panel, que dice 800 x 500). La imagen de cada logo seria obligatoria.
 
 ==============================================================================
 SECCION 3: BLOG
 Ruta admin: Gas natural vehicular > Blog
-Ruta sitio: /blog y /blog/<slug>
+Ruta sitio: /blog, /blog/pagina/2, ... y /blog/<slug>
 ==============================================================================
 Esta es la unica parte del panel donde SI se puede crear y BORRAR contenido
 (los articulos), ademas de editarlo.
@@ -327,124 +527,148 @@ Esta es la unica parte del panel donde SI se puede crear y BORRAR contenido
     OJO: cambiar el slug de un articulo publicado ROMPE el enlace anterior.
   Campo "Titulo" (obligatorio): recomendado 60 / maximo 90 caracteres.
   Campo "Extracto": recomendado 140 / maximo 180 caracteres. Se usa como
-    resumen en la lista de articulos y como descripcion para buscadores y
-    redes sociales.
+    resumen en la lista de articulos, como entrada destacada bajo el titulo
+    del articulo y como descripcion para buscadores y redes sociales.
   Campo "Contenido (HTML)": el panel muestra un contador de PALABRAS con
-    recomendacion de 800-2500 palabras. Se guarda tal cual se escribe; no
-    pegar HTML de Word.
+    recomendacion de 800-2500 palabras. El sitio calcula solo el tiempo de
+    lectura. Los subtitulos (<h2>) arman automaticamente un indice "En este
+    articulo" cuando hay 2 o mas. Si se pega texto desde un PDF, el sitio
+    intenta recuperar parrafos y subtitulos; aun asi, revisar el resultado.
   Campo "Imagen de portada":
     - 1344 x 756 px (relacion 16:9), JPG, menos de 800 KB.
-    - Se usa en dos lugares: como miniatura en la lista (recortada a una
-      tira de 9 rem de alto) y como imagen grande del articulo (16:9, ancho
-      maximo ~42 rem). Una sola imagen de 1344x756 sirve para ambos.
+    - Se usa en dos lugares: como miniatura en la lista, en la portada del
+      sitio y en "Mas articulos" (recortada a 4:3: se pierden un poco los
+      lados) y como imagen grande del articulo (16:9 completa). Mantener lo
+      importante al centro.
     - Tambien es la imagen que se ve cuando alguien comparte el articulo en
       redes sociales.
     - Si se deja vacia, se muestra la imagen generica gris "sin imagen".
   Campo "Fecha de publicacion": selector de fecha y hora. Si se deja vacio,
-    el articulo aparece como "Sin publicar" en el panel.
+    el articulo queda "Sin publicar" y NO aparece en el sitio. Un articulo
+    con fecha futura tampoco aparece hasta esa fecha (y hasta la siguiente
+    reconstruccion del sitio).
 
   El encabezado de la pagina /blog (titulo, subtitulo e imagen de fondo) es
-  un page_hero y se edita como cualquier otro (ver 2.1). Si no se llena, el
-  sitio muestra "Blog" / "Noticias y articulos sobre el gas natural
-  vehicular."
+  un page_hero y se edita como cualquier otro (ver 2.1). Si el CMS no lo
+  entrega, el sitio muestra "Blog" / "Noticias y articulos sobre el gas
+  natural vehicular."
 
-  La lista pagina de a varios articulos con botones "Anteriores /
-  Siguientes"; eso es automatico.
+  La lista muestra 12 articulos por pagina, del mas reciente al mas
+  antiguo, con botones "Anteriores / Siguientes"; eso es automatico.
+  Al final de cada articulo aparecen 3 articulos mas ("Mas articulos").
 
   Borrar un articulo pide confirmacion y NO se puede deshacer.
 
 ==============================================================================
 SECCION 4: DATOS DE CONTACTO, REDES SOCIALES Y BOTON DE WHATSAPP
+Ruta admin: Gas natural vehicular > Inicio > al final, "Contenido del sitio"
 ==============================================================================
-Estos tres bloques son datos del sitio COMPLETO (aparecen en el pie de pagina
-de todas las paginas y en el boton flotante de WhatsApp), no de una pagina en
-particular.
+Estos tres bloques son datos del sitio COMPLETO, no de una pagina en
+particular. Se editan al final de la pantalla Inicio, en el apartado
+"Contenido del sitio" (su texto menciona tambien testimonios, pero en este
+sitio los testimonios estan arriba, en la portada).
 
-*** ATENCION - VERIFICAR CON DESARROLLO ***
-En el panel de Gas Natural Vehicular hoy NO se ve un formulario para "Datos
-de contacto", "Redes sociales" ni "Boton de WhatsApp" (a diferencia de los
-sitios Tectuus y Trainin Logistic, donde si aparecen dentro de Inicio). Ver
-PENDIENTES TECNICOS, punto 1. Mientras no exista ese formulario, el sitio
-publico muestra estos valores de relleno:
-
-  - Correo: hola@gnu-gnv.mx (de relleno)
-  - Direccion, telefono, horario e informacion adicional: no se muestran
-    (esas lineas simplemente no aparecen en el pie de pagina).
-  - Redes sociales: iconos de Facebook / Instagram / Twitter que enlazan a
-    "#" (no van a ningun lado).
-  - Boton flotante de WhatsApp: usa el numero de relleno 5210000000000, que
-    NO es una linea real de la empresa. Hoy ese boton esta visible en todas
-    las paginas del sitio.
-
-Cuando el formulario este disponible, los campos son:
-  Datos de contacto: Direccion, Telefono, Correo, Horario, Informacion
-    adicional (recomendado 150 / maximo 280 caracteres).
+  Datos de contacto:
+    - "Direccion" (obligatorio): se vuelve enlace a Google Maps.
+    - "Telefono" (obligatorio): se vuelve enlace para llamar.
+    - "Correo" (obligatorio, correo valido).
+    - "Horario" (opcional).
+    - "Informacion adicional" (opcional): recomendado 150 / maximo 280
+      caracteres.
+    Se muestran en el pie de pagina de todas las paginas y junto a cada
+    formulario de contacto.
   Redes sociales: por cada red se elige la red de una lista (facebook,
-    instagram, twitter, linkedin, youtube, tiktok) y se pega el enlace.
-    IMPORTANTE: en este sitio solo se dibujan los iconos de facebook,
-    instagram, linkedin, youtube y twitter; si se captura tiktok no se
-    muestra nada.
-  Boton de WhatsApp: Telefono con codigo de pais y SIN espacios ni signos
-    (ej. 524430000000) y "Mensaje prellenado" (el texto que aparece ya
-    escrito al abrir el chat).
+    instagram, twitter, linkedin, youtube, tiktok) y se pega el enlace
+    COMPLETO (https://..., obligatorio). Las 6 redes tienen icono. Los
+    iconos aparecen en el encabezado (escritorio), en el menu movil y en el
+    pie de pagina.
+    Si no hay ninguna red capturada, el sitio muestra iconos de Facebook,
+    Instagram, LinkedIn y YouTube que no llevan a ningun lado ("#").
+  Boton de WhatsApp:
+    - "Telefono" (obligatorio): con codigo de pais y SIN espacios ni signos
+      (ej. 524430000000).
+    - "Mensaje prellenado": el texto que aparece ya escrito al abrir el chat.
+    El boton flotante verde aparece en todas las paginas y tambien como
+    "Escribenos por WhatsApp" junto a los formularios. Si no hay numero, el
+    boton no se muestra.
+
+  *** VERIFICAR (2026-10-26) ***
+  En el CMS en vivo el numero de WhatsApp parece todavia uno de ejemplo
+  (lleva una serie de ceros) y solo hay Facebook e Instagram capturados.
+  Confirmar con el cliente el numero real.
 
 ==============================================================================
 SECCION 5: CONTENIDO FIJO EN EL CODIGO (no editable desde el panel)
 ==============================================================================
-Todo lo de esta seccion aplica a TODO el sitio y hoy no tiene ningun campo en
-el panel. Hay que confirmarlo o entregarle a un desarrollador el contenido
-definitivo.
+Todo lo de esta seccion no tiene ningun campo en el panel. Hay que
+confirmarlo o entregarle a un desarrollador el contenido definitivo.
 
 --- 5.1 Favicon (icono de la pestana del navegador) --------------------------
-  Son 2 archivos fijos en el proyecto (favicon.svg y favicon.ico) y HOY
-  siguen siendo el icono generico de ejemplo que trae Astro (es el mismo
-  archivo, byte por byte, en los 4 sitios del proyecto).
-  Se necesita: el logo/isotipo final en .svg (preferido) y .ico.
+  Es un archivo fijo del proyecto (favicon.png, tambien usado como icono al
+  guardar el sitio en la pantalla de inicio del telefono). Cambiarlo
+  requiere un desarrollador.
 
 --- 5.2 Nombre del sitio y titulos de pestana / SEO --------------------------
   Estan en un archivo de configuracion del codigo (src/config/seo.ts):
-    - Nombre del sitio: "GNU Gas Natural Vehicular"
-    - Titulo por defecto de la portada: "GNU - Gas Natural Vehicular -
-      Convierte tu auto a GNV y ahorra"
-    - Descripcion por defecto para buscadores.
+    - Nombre del sitio: "GNU Gas Natural Vehicular" (se agrega al final del
+      titulo de cada pestana: "<Pagina> - GNU Gas Natural Vehicular").
+    - Titulo de la portada: "GNU - Gas Natural Vehicular - Convierte tu auto
+      a GNV y ahorra".
+    - Descripcion por defecto para buscadores (las paginas interiores usan
+      el Subtitulo de su encabezado; los articulos, su extracto).
     - Dominio de produccion: https://www.gnu-gnv.mx  <- CONFIRMAR que es el
       dominio final; de el dependen los enlaces canonicos y lo que se ve al
       compartir en redes.
-    - Imagen para compartir en redes (og:image): NO existe. Hace falta una
-      imagen de 1200 x 630 px para que el sitio no se comparta sin imagen.
+    - Imagen para compartir en redes: cada pagina usa su propia imagen (la
+      del primer banner en la portada, la del encabezado en las interiores,
+      la portada en los articulos). NO hay imagen por defecto: una pagina
+      sin imagen se comparte sin imagen. Se recomienda una de 1200 x 630 px.
     - Cuenta de Twitter/X del sitio: no configurada.
 
---- 5.3 Logotipo y menu ------------------------------------------------------
-  - El logo del encabezado y del pie de pagina es TEXTO ("GNU Gas Natural
-    Vehicular"), no una imagen. No hay campo para subir un logo.
-  - El menu de navegacion SI viene del CMS (se arma con las paginas
-    publicadas). Si el CMS no responde, se usa un menu de emergencia con
-    anclas de la portada (Inicio, Nuestros Servicios, Ubicaciones, Contacto,
+--- 5.3 Logotipo, menu y botones del encabezado ------------------------------
+  - El logotipo es una IMAGEN fija del proyecto (version azul en el
+    encabezado, version blanca en el pie y en los banners). No hay campo
+    para subir un logo.
+  - El menu de navegacion viene del CMS (se arma con las paginas
+    publicadas). Los nombres del menu son los titulos de pagina (no
+    editables en el panel). Si el CMS no responde al reconstruir, se usa un
+    menu de emergencia (Inicio, Nuestros Servicios, Ubicaciones, Contacto,
     Blog).
-  - Los dos botones del encabezado, "Agenda tu verificacion" y "Cotiza tu
-    equipo", son fijos y apuntan a /#contacto y /#servicios (anclas de la
-    portada), NO a las paginas /ubicaciones/agenda-tu-verificacion ni
-    /nuestros-servicios/.../cotiza-tu-equipo. Ver PENDIENTES, punto 6.
+  - Los botones del encabezado "Agenda tu verificacion" y "Cotiza tu
+    equipo" (y "Cotiza tu equipo" del menu movil) tienen texto fijo y
+    llevan a /ubicaciones/agenda-tu-verificacion y a
+    .../instala-tu-equipo-de-gnv/cotiza-tu-equipo. Si alguna de esas
+    paginas se despublica, el boton lleva al formulario de la portada.
 
 --- 5.4 Textos fijos del pie de pagina ---------------------------------------
   - Frase bajo el logo: "Gas Natural Vehicular - energia mas limpia y
     economica para tu movilidad."
-  - Columna "Servicios": "Instala tu equipo", "Financiamiento", "Flotillas
-    empresariales" - las 3 apuntan a la misma ancla /#servicios, no a sus
-    paginas reales.
-  - Enlace "Ver todas las estaciones" apunta a /#ubicaciones.
+  - Columnas "Navegacion" (menu del CMS), "Servicios" (todas las paginas de
+    servicio, cada una con su enlace real) y "Contacto" (datos de la
+    SECCION 4) + enlace fijo "Ver todas las estaciones" a /ubicaciones.
   - "Aviso de privacidad - Terminos y condiciones": HOY es solo texto, NO
     son enlaces. Si la empresa tiene (o necesita redactar) esos documentos,
     hay que crear las paginas y convertir el texto en enlaces.
   - El ano del copyright SI se calcula solo: no hay que actualizarlo cada
     ano.
 
---- 5.5 Imagen "sin foto" (placeholder generico) -----------------------------
-  Cuando falta una imagen (diapositiva sin imagen, portada de blog sin
-  imagen), el sitio muestra una imagen generica gris en vez de dejar el
-  hueco. Es normal, pero es la senal de que falta subir la imagen real.
-  Conviene revisar periodicamente el sitio en vivo y que no quede ninguna
-  visible.
+--- 5.5 Otros textos fijos dentro de las paginas -----------------------------
+  - Portada: banda de cifras, texto "Haz que cada kilometro..." y
+    encabezados de bloque (ver 1.7).
+  - Texto de la columna izquierda de los formularios de /contacto, Cotiza
+    tu equipo y Flotillas (ver 2.4), y el titulo de tarjeta "Cotiza sin
+    compromiso" de todos los formularios.
+  - Parrafo bajo "Abastece tu vehiculo en nuestras estaciones de GNV" en
+    Estaciones moviles (ver 2.3).
+  - Etiquetas de los campos de los formularios, de la agenda y del
+    simulador, y el boton flotante "Calcula tu ahorro".
+
+--- 5.6 Imagen "sin foto" (placeholder generico) -----------------------------
+  Cuando falta una imagen (portada de blog sin imagen, tarjeta de una
+  pagina cuyo encabezado no tiene imagen, banners de relleno), el sitio
+  muestra una imagen generica gris en vez de dejar el hueco. Es normal,
+  pero es la senal de que falta subir la imagen real. Conviene revisar
+  periodicamente el sitio en vivo y que no quede ninguna visible.
 
 ==============================================================================
 TABLA RESUMEN RAPIDA DE IMAGENES
@@ -452,15 +676,16 @@ TABLA RESUMEN RAPIDA DE IMAGENES
 Elemento                        | Tamano recomendado | Relacion | Formato | Peso max
 --------------------------------|--------------------|----------|---------|---------
 Banner del carrusel (portada)   | 2400 x 1000 px     | 2.4:1    | JPG     | 1 MB
-Encabezado de pagina interior   | 2400 x 900 px      | 2.6:1    | JPG     | 1 MB
+Encabezado de pagina interior   | 2400 x 900 px      | 8:3      | JPG     | 1 MB
+Imagen/portada de texto enriq.  | 1280 x 720 px      | 16:9     | JPG     | 500 KB
 Icono de tarjeta (feature_grid) | 96 x 96 px         | 1:1      | PNG*    | 50 KB
 Foto de testimonio              | 400 x 400 px       | 1:1      | JPG     | 200 KB
-Logo de cliente (si se habilita)| 800 x 500 px       | 16:10    | PNG*    | 300 KB
+Logo de cliente (si se habilita)| 800 x 400 px       | 2:1      | PNG*    | 300 KB
 Portada de articulo de blog     | 1344 x 756 px      | 16:9     | JPG     | 800 KB
 Imagen para compartir en redes  | 1200 x 630 px      | 1.91:1   | JPG     | 500 KB
-  (hoy no existe, ver 5.2)      |                    |          |         |
+  (por defecto no existe, 5.2)  |                    |          |         |
 * PNG con fondo transparente cuando aplique (logos e iconos).
-Limite absoluto del servidor para cualquier imagen: 5 MB.
+Limite absoluto del servidor para cualquier imagen: 20 MB.
 
 ==============================================================================
 TABLA RESUMEN RAPIDA DE TEXTOS
@@ -478,62 +703,73 @@ Texto de tarjeta (feature_grid)          | 140 caracteres     | 180
 Cita de testimonio                       | 140 caracteres     | 220
 Titulo del simulador                     | 50 caracteres      | 70
 Introduccion del simulador               | 120 caracteres     | 160
-Titulo del formulario de contacto        | 40 caracteres      | 60
-Introduccion del formulario              | 120 caracteres     | 160
+Titulo del formulario (solo portada)     | 40 caracteres      | 60
+Introduccion del formulario (solo port.) | 120 caracteres     | 160
 Titulo del mapa de estaciones            | 40 caracteres      | 60
+Titulo de la agenda de verificacion      | 40 caracteres      | 60
 Mensaje de confirmacion de cita          | 70 caracteres      | 100
+Informacion adicional (contacto)         | 150 caracteres     | 280
 Titulo de articulo de blog               | 60 caracteres      | 90
 Extracto de blog                         | 140 caracteres     | 180
 Contenido de texto enriquecido           | 300-1500 caracteres| sin limite duro
 Contenido de blog                        | 800-2500 palabras  | sin limite duro
 
-NOTA FINAL: ninguno de estos limites es forzado por el sistema. El panel
-avisa con un contador, pero deja guardar. Son recomendaciones de diseno para
-que el texto no se vea cortado, apretado ni desbordado.
+NOTA FINAL: ninguno de estos limites de longitud es forzado por el sistema.
+El panel avisa con un contador, pero deja guardar. Son recomendaciones de
+diseno para que el texto no se vea cortado, apretado ni desbordado. Lo que
+SI fuerza el servidor es que los campos obligatorios no queden vacios y que
+los enlaces y correos tengan formato valido.
 
 ==============================================================================
 PENDIENTES TECNICOS DETECTADOS (para reportar a desarrollo, no para el editor)
 ==============================================================================
-1. El panel de este sitio no expone formularios para "Datos de contacto",
-   "Redes sociales" ni "Boton de WhatsApp". La pantalla de Inicio pide las
-   secciones filtrando por pagina, no incluye las secciones globales y
-   ademas no tiene editor registrado para esos tres tipos. Consecuencia: el
-   pie de pagina muestra el correo de relleno hola@gnu-gnv.mx, iconos
-   sociales que van a "#" y un boton de WhatsApp con el numero falso
-   5210000000000. Es lo mas urgente del sitio.
-2. El bloque "Blog" de la portada no lee los articulos reales: siempre
-   muestra 4 titulos de ejemplo que no enlazan a nada. O se conecta al
-   listado real, o se quita de la portada.
-3. La seccion "Testimonios" tiene campo "Foto" en el panel, pero el
-   componente del sitio publico no la usa (solo pinta cita, autor y rol).
-   Ademas el panel guarda el nombre en "author" y el sitio lo lee como
-   "name": confirmar que el nombre del testimonio realmente se muestre. Son
-   dos campos que el editor llena y que hoy no se ven.
-4. El bloque "Nuestros Servicios" de la portada siempre usa las 5 tarjetas
-   fijas del codigo: el unico feature_grid de la portada esta asignado a la
-   "Cuadricual de caracteristicas". Si el cliente quiere editar los servicios de
-   la portada hace falta una segunda seccion feature_grid.
-5. La banda de cifras de la portada (+5,000 equipos instalados / 60% ahorro
-   promedio / 24/7) esta fija en el codigo y son cifras de ejemplo: hay que
-   confirmarlas con el cliente o quitarlas.
-6. Botones y enlaces del encabezado y del pie apuntan a anclas de la portada
-   (/#servicios, /#contacto, /#ubicaciones) en vez de a las paginas reales
-   que ya existen (/nuestros-servicios, /contacto, /ubicaciones).
-7. Favicon: sigue siendo el icono por defecto de Astro, identico en los 4
-   sitios del proyecto. Falta el logo final en .svg y .ico.
-8. Falta la imagen para compartir en redes (og:image, 1200x630) y confirmar
-   el dominio de produccion https://www.gnu-gnv.mx.
-9. Las estaciones de la agenda de verificacion ("Estacion Morelia" = 3,
-   "Estacion Uruapan" = 4) estan mapeadas a mano en el codigo porque el
-   endpoint publico de estaciones no expone el id. Agregar una estacion
-   nueva obliga a tocar codigo.
-10. Los horarios de la agenda (3 bloques, lunes a sabado) estan fijos en el
-    codigo por decision de diseno; queda anotado por si el cliente pide
-    cambiarlos.
+(Detalle tecnico en gas-gnu/technical_debt.md.)
+1. Verificar con el cliente el numero real de WhatsApp: el del CMS en vivo
+   parece de ejemplo. Solo hay Facebook e Instagram capturados.
+2. El feature_grid "Programa de recompensas" de Inicio esta desactivado en
+   el codigo de la portada: lo que se capture no se ve. Decidir si se
+   reactiva o se quita del CMS.
+3. La banda de cifras de la portada (+1,500 / 50% / 3 estaciones) y el
+   texto "Haz que cada kilometro te cueste menos" estan fijos en el codigo.
+   El CMS de produccion no tiene esas secciones para la portada (el tipo
+   stats_band existe en el codigo del CMS pero no en la base en vivo ni
+   tiene editor en el panel). Confirmar las cifras con el cliente.
+4. El Titulo e Introduccion del formulario de contacto se ignoran en
+   /contacto, Cotiza tu equipo y Flotillas (texto unico fijo). O se
+   aceptan como texto unico y se quitan del CMS, o se vuelven a leer del
+   CMS.
+5. La bandeja de mensajes del panel no muestra la pagina de origen ni los
+   campos extra (vehiculo, numero de unidades) de cada mensaje.
+6. Tarjetas con texto de relleno: Estaciones moviles ("." + parrafo
+   inyectado por el codigo) e Instala tu equipo de GNV ("-", seccion
+   oculta). Falta capturar el texto real y luego quitar los parches del
+   codigo. Ademas, feature_grid no tiene campo de introduccion.
+7. "Estaciones moviles" se renombra en pantalla a "Estaciones de suministro
+   de GNV" por codigo (despues de cargar la pagina). Si ese es el nombre
+   definitivo, cambiar el titulo de la pagina en el CMS y quitar el parche.
+   Los titulos de pagina no se pueden editar desde el panel.
+8. Agenda de verificacion: el endpoint publico de estaciones no expone el
+   id, asi que el sitio reconoce las estaciones por su nombre exacto (3
+   estaciones). Renombrar o agregar estaciones en el panel las saca de la
+   agenda sin aviso. Exponer el id en el endpoint publico.
+9. Agenda: el "Mensaje de confirmacion" del CMS queda tapado por el mensaje
+   fijo del servidor. Mostrar primero el del CMS.
+10. Textos de ayuda del panel desactualizados: dicen "max. 5 MB" (el
+    servidor acepta hasta 20 MB y el panel deja pasar hasta 25 MB, asi que
+    un archivo de 20-25 MB pasa el panel y lo rechaza el servidor); el de
+    Encabezado dice que la imagen se oscurece (ya no); el de Portada del
+    video dice que se ve antes del video (en este sitio solo se ve sin
+    video); el de Texto enriquecido dice ~736 px (el sitio usa ~830 px); el
+    de logo de cliente dice 800x500 16:10 (el sitio usa un recuadro 2:1).
 11. "Aviso de privacidad" y "Terminos y condiciones" del pie son texto sin
     enlace: faltan las paginas legales.
-12. El logo del sitio es texto, no imagen. Confirmar si el cliente espera su
-    logotipo grafico en el encabezado.
-13. El tipo clients_showcase no esta declarado para este sitio, aunque el
-    front ya lo sabe dibujar. Confirmar si se quiere o se descarta.
+12. Falta una imagen por defecto para compartir en redes (1200x630) y
+    confirmar el dominio de produccion https://www.gnu-gnv.mx.
+13. Si el CMS no responde durante una reconstruccion, el sitio se publica
+    igual con contenido de relleno (banners, testimonios ficticios, menu de
+    emergencia, correo hola@gnu-gnv.mx). Conviene que la reconstruccion
+    falle en ese caso.
+14. El tipo clients_showcase no tiene seccion para este sitio, aunque el
+    front ya lo sabe dibujar en la portada. Confirmar si se quiere o se
+    descarta.
 ==============================================================================

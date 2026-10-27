@@ -1,175 +1,175 @@
-# Tectuus — Site
+# Tectuus — Sitio
 
-Astro static site for Tectuus, the industrial-equipment line of GNU Gas Natural (EDRM, compressors, valves). Content (page sections, menu, contact info, social links, WhatsApp button) and the **product catalog** (categories and products) are managed in the headless CMS through [gnu-cms-admin](../gnu-cms-admin/README.md), and pulled in over REST **at build time**, then rendered to plain HTML/CSS/JS.
+Sitio estático en Astro para Tectuus, la línea de equipo industrial de GNU Gas Natural (EDRM, compresores, válvulas). El contenido (secciones de página, menú, datos de contacto, redes sociales, botón de WhatsApp) y el **catálogo de productos** (categorías y productos) se administran en el CMS headless desde [gnu-cms-admin](../gnu-cms-admin/README.md), se traen por REST **en tiempo de compilación** y se renderizan a HTML/CSS/JS plano.
 
-Tectuus has **no blog**. In the admin and the CMS the site is addressed as `tectuus` everywhere (admin route prefix, CMS slug and `build-server` site name are all the same).
+Tectuus **no tiene blog**. En el admin y en el CMS el sitio se identifica como `tectuus` en todos lados (el prefijo de ruta del admin, el slug del CMS y el nombre de sitio en `build-server` son el mismo).
 
-## Project Structure
+## Estructura del proyecto
 
 ```text
 /
-├── public/                         # Copied as-is: favicon.svg/.ico, placeholder-plate.svg (image fallback)
+├── public/                         # Se copia tal cual: favicon.svg/.ico, placeholder-plate.svg (imagen de respaldo)
 ├── src/
-│   ├── assets/images/              # Images processed by Astro's asset pipeline
+│   ├── assets/images/              # Imágenes procesadas por el pipeline de assets de Astro
 │   ├── components/
-│   │   ├── SectionRenderer.astro   # Maps a CMS section "type" to its component in sections/
-│   │   ├── sections/               # One component per CMS section type
-│   │   ├── ProductCatalog.astro    # Catalog grid + category chips + search, filtered in the browser
-│   │   └── nav/                    # NavItem / NavItemMobile (dropdowns for menu children)
-│   ├── config/seo.ts               # Site-wide SEO defaults (site name, default title/description, siteUrl)
+│   │   ├── SectionRenderer.astro   # Asocia cada "type" de sección del CMS con su componente en sections/
+│   │   ├── sections/               # Un componente por tipo de sección del CMS
+│   │   ├── ProductCatalog.astro    # Rejilla del catálogo + chips de categoría + búsqueda, filtrados en el navegador
+│   │   └── nav/                    # NavItem / NavItemMobile (desplegables para los hijos del menú)
+│   ├── config/seo.ts               # Valores SEO por defecto del sitio (nombre, título/descripción por defecto, siteUrl)
 │   ├── functions/
-│   │   ├── fetch.ts                # Low-level REST client (fetchData/sendData/updateData, mediaUrl, FALLBACK_IMAGE)
-│   │   └── catalog.ts              # Catalog access (fetchCategories, fetchAllProducts, fetchProduct, orderByPrefix, formatPrice)
-│   ├── layouts/Layout.astro        # Shared shell: header, nav, footer, WhatsApp button, SEO tags
-│   ├── pages/                      # File-based routing — each .astro file here is a route
-│   │   ├── index.astro             # Inicio (CMS page `inicio`, with a curated offline fallback)
-│   │   ├── sobre-nosotros/         # CMS page `sobre-nosotros`
-│   │   ├── productos/              # index (CMS hero + catalog) and [slug] (one page per product)
-│   │   └── contacto/               # CMS page `contacto`
-│   ├── styles/                     # global.css, tokens.css (design tokens)
-│   └── types/                      # page.ts, menu.ts, globals.ts, catalog.ts — API response shapes
-├── tectuus-docs/                   # Functional docs for each page (Inicio, Quiénes somos, catálogo, leads)
-├── GUIDELINES.md                   # Design language shared with the admin and the other sites
-├── astro.config.mjs                # Default config (static output, no adapter)
-├── .env                            # CMS_API_URL (not committed)
+│   │   ├── fetch.ts                # Cliente REST de bajo nivel (fetchData/sendData/updateData, mediaUrl, FALLBACK_IMAGE)
+│   │   └── catalog.ts              # Acceso al catálogo (fetchCategories, fetchAllProducts, fetchProduct, orderByPrefix, formatPrice)
+│   ├── layouts/Layout.astro        # Estructura compartida: header, nav, footer, botón de WhatsApp, etiquetas SEO
+│   ├── pages/                      # Ruteo basado en archivos — cada archivo .astro aquí es una ruta
+│   │   ├── index.astro             # Inicio (página `inicio` del CMS, con un respaldo offline curado)
+│   │   ├── sobre-nosotros/         # Página `sobre-nosotros` del CMS
+│   │   ├── productos/              # index (hero del CMS + catálogo) y [slug] (una página por producto)
+│   │   └── contacto/               # Página `contacto` del CMS
+│   ├── styles/                     # global.css, tokens.css (tokens de diseño)
+│   └── types/                      # page.ts, menu.ts, globals.ts, catalog.ts — formas de las respuestas de la API
+├── tectuus-docs/                   # Documentación funcional de cada página (Inicio, Quiénes somos, catálogo, leads)
+├── GUIDELINES.md                   # Lenguaje de diseño compartido con el admin y los demás sitios
+├── astro.config.mjs                # Configuración por defecto (salida estática, sin adapter)
+├── .env                            # CMS_API_URL (no se sube al repositorio)
 └── package.json
 ```
 
-Reusable, non-component logic must live in a plain `.ts` file, not a `.astro` file. See [Notes & gotchas](#notes--gotchas).
+La lógica reutilizable que no es un componente debe vivir en un archivo `.ts` plano, no en un archivo `.astro`. Ver [Notas y advertencias](#notas-y-advertencias).
 
-## Environment configuration
+## Configuración del entorno
 
-The site reads the CMS base URL from a single env var:
+El sitio lee la URL base del CMS de una sola variable de entorno:
 
 ```env
 # .env
 CMS_API_URL=https://gnu-headless-cms.165.227.59.215.sslip.io/api/public/tectuus/
 ```
 
-- Create `.env` in the project root before running dev or build. It is **not** committed to git.
-- `src/functions/fetch.ts` reads it via `import.meta.env.CMS_API_URL` and falls back to `http://localhost:3000/` if unset. Keep the trailing slash: endpoints are appended directly (`BASE_URL + "pages/inicio"`).
-- **This is a build-time value.** The site builds to static output (no server adapter), so every CMS call happens during `npm run build`, and the HTML in `dist/` keeps whatever `CMS_API_URL` pointed to then. To point at a different CMS, edit `.env` and rebuild. The one exception is the lead form, which POSTs to the same base URL from the visitor's browser.
-- Don't name a custom env var `BASE_URL`. Vite/Astro reserve that name and silently override it with `"/"`. The same applies to `MODE`, `DEV`, `PROD`, `SSR`, `SITE` and `ASSETS_PREFIX`. (`fetch.ts` *exports* a constant called `BASE_URL`; that's a plain JS name, not an env var, and is fine.)
+- Crea `.env` en la raíz del proyecto antes de correr el servidor de desarrollo o la compilación. **No** se sube a git.
+- `src/functions/fetch.ts` la lee con `import.meta.env.CMS_API_URL` y, si no está definida, usa `http://localhost:3000/`. Conserva la diagonal final: los endpoints se concatenan directamente (`BASE_URL + "pages/inicio"`).
+- **Es un valor de tiempo de compilación.** El sitio compila a salida estática (sin adapter de servidor), así que todas las llamadas al CMS ocurren durante `npm run build`, y el HTML en `dist/` se queda con lo que apuntaba `CMS_API_URL` en ese momento. Para apuntar a otro CMS, edita `.env` y vuelve a compilar. La única excepción es el formulario de leads, que hace POST a la misma URL base desde el navegador del visitante.
+- No nombres una variable de entorno propia `BASE_URL`. Vite/Astro reservan ese nombre y lo sobrescriben en silencio con `"/"`. Lo mismo aplica para `MODE`, `DEV`, `PROD`, `SSR`, `SITE` y `ASSETS_PREFIX`. (`fetch.ts` *exporta* una constante llamada `BASE_URL`; es un nombre de JS normal, no una variable de entorno, y no hay problema.)
 
-## How the site talks to the CMS
+## Cómo se comunica el sitio con el CMS
 
-Pages call [src/functions/fetch.ts](src/functions/fetch.ts) and [src/functions/catalog.ts](src/functions/catalog.ts) directly; there is no memoizing wrapper like `landing-gnu`'s `src/lib/cms.ts`.
+Las páginas llaman directamente a [src/functions/fetch.ts](src/functions/fetch.ts) y [src/functions/catalog.ts](src/functions/catalog.ts); no hay un wrapper con memoización como el `src/lib/cms.ts` de `landing-gnu`.
 
-| Function | Endpoint | Use |
+| Función | Endpoint | Uso |
 | :------- | :------- | :-- |
-| `fetchData("pages/{slug}")` | `GET pages/{slug}` | A page's sections (`{ type, content }[]`), rendered in API order by `SectionRenderer` |
-| `fetchData("menu")` | `GET menu` | Nav tree (in `Layout.astro`) |
-| `fetchData("globals")` | `GET globals` | Footer contact info, social links, WhatsApp button (in `Layout.astro`) |
-| `fetchCategories()` | `GET product-categories` | Catalog filter chips and the Productos submenu |
-| `fetchAllProducts()` | `GET products?page=N` | Every active product, walking all pages (12 per page, capped at 25 pages) |
-| `fetchProduct(slug)` | `GET products/{slug}` | A product's full detail (description, all images); 404s for inactive products |
-| `sendData("leads", …)` | `POST leads` | Lead form submission, sent **from the browser** at runtime |
+| `fetchData("pages/{slug}")` | `GET pages/{slug}` | Las secciones de una página (`{ type, content }[]`), renderizadas en el orden de la API por `SectionRenderer` |
+| `fetchData("menu")` | `GET menu` | Árbol de navegación (en `Layout.astro`) |
+| `fetchData("globals")` | `GET globals` | Datos de contacto del footer, redes sociales, botón de WhatsApp (en `Layout.astro`) |
+| `fetchCategories()` | `GET product-categories` | Chips de filtro del catálogo y el submenú de Productos |
+| `fetchAllProducts()` | `GET products?page=N` | Todos los productos activos, recorriendo todas las páginas (12 por página, con tope de 25 páginas) |
+| `fetchProduct(slug)` | `GET products/{slug}` | El detalle completo de un producto (descripción, todas las imágenes); da 404 para productos inactivos |
+| `sendData("leads", …)` | `POST leads` | Envío del formulario de leads, mandado **desde el navegador** en tiempo de ejecución |
 
-All requests return the envelope `{ status, data, meta }`. A failed request is logged and returns `undefined`, and every page has a fallback for that case (see below). `mediaUrl(path)` resolves CMS-relative media paths to `<CMS origin>/storage/<path>`; absolute and root-relative paths pass through unchanged.
+Todas las peticiones regresan el sobre `{ status, data, meta }`. Una petición fallida se registra en el log y regresa `undefined`, y cada página tiene un respaldo para ese caso (ver abajo). `mediaUrl(path)` resuelve las rutas de medios relativas al CMS a `<CMS origin>/storage/<path>`; las rutas absolutas y las relativas a la raíz pasan sin cambios.
 
-### Section types
+### Tipos de sección
 
-[SectionRenderer.astro](src/components/SectionRenderer.astro) maps each section `type` to a component. Unknown types are skipped, so a new CMS section type never breaks a page.
+[SectionRenderer.astro](src/components/SectionRenderer.astro) asocia cada `type` de sección con un componente. Los tipos desconocidos se omiten, así que un tipo de sección nuevo en el CMS nunca rompe una página.
 
-| `type` | Component | Rendered only if |
+| `type` | Componente | Se renderiza solo si |
 | :-- | :-- | :-- |
-| `banner_carousel` | `BannerCarousel` | it has slides. Only a carousel that is the page's first section gets the `<h1>` |
-| `page_hero` | `PageHero` | it has a title |
-| `rich_text` | `RichText` | always (title, HTML body, optional video) |
-| `feature_grid` | `FeatureGrid` | it has items |
-| `image_gallery` | `ImageGallery` | it has images |
-| `clients_showcase` | `ClientsShowcase` | it has logos |
-| `lead_capture_form` | `LeadCaptureForm` | always. Sits on the dark ("ink") band unless it's one of the first two sections |
+| `banner_carousel` | `BannerCarousel` | tiene slides. Solo el carrusel que es la primera sección de la página lleva el `<h1>` |
+| `page_hero` | `PageHero` | tiene título |
+| `rich_text` | `RichText` | siempre (título, cuerpo HTML, video opcional) |
+| `feature_grid` | `FeatureGrid` | tiene elementos |
+| `image_gallery` | `ImageGallery` | tiene imágenes |
+| `clients_showcase` | `ClientsShowcase` | tiene logos |
+| `lead_capture_form` | `LeadCaptureForm` | siempre. Va sobre la banda oscura ("ink") salvo que sea una de las dos primeras secciones |
 
-To add a new CMS-driven block:
+Para agregar un bloque nuevo controlado por el CMS:
 
-1. Create a component in `src/components/sections/`.
-2. Add a case for its `type` in `SectionRenderer.astro`.
-3. Have the CMS emit sections of that `type`.
+1. Crea un componente en `src/components/sections/`.
+2. Agrega un caso para su `type` en `SectionRenderer.astro`.
+3. Haz que el CMS emita secciones de ese `type`.
 
-### Lead forms
+### Formularios de leads
 
-`LeadCaptureForm` posts to `POST leads` with the page slug as `source`, which is how the admin's Contacto inbox ("Origen" column) tells the homepage, `/contacto` and product-page forms apart. `source` must match a published page of the site or the API answers `422`. `name`, `email`, `phone` and `message` are columns of `leads`; any other field the CMS declares in the section's `fields[]` is sent inside `details`. The route is throttled (`429` after 10 requests per minute).
+`LeadCaptureForm` hace POST a `POST leads` con el slug de la página como `source`, que es como la bandeja de Contacto del admin (columna "Origen") distingue los formularios de la página de inicio, de `/contacto` y de las páginas de producto. `source` debe coincidir con una página publicada del sitio o la API responde `422`. `name`, `email`, `phone` y `message` son columnas de `leads`; cualquier otro campo que el CMS declare en `fields[]` de la sección se manda dentro de `details`. La ruta tiene límite de peticiones (`429` después de 10 peticiones por minuto).
 
-Product pages always use `source: "productos"`.
+Las páginas de producto siempre usan `source: "productos"`.
 
-## Product catalog
+## Catálogo de productos
 
-The catalog is a data domain, not a set of page sections: categories and products are their own collections in the CMS, created and deleted in the admin's Tectuus → Productos screen.
+El catálogo es un dominio de datos, no un conjunto de secciones de página: las categorías y los productos son colecciones propias en el CMS, que se crean y se borran en la pantalla Tectuus → Productos del admin.
 
-- **`/productos`** renders the `productos` page's own sections (its hero) and then `ProductCatalog`, which receives **every** category and active product at build time. Category chips and the search box filter the cards **in the browser**, since a static page can't forward `?category=`/`?q=` to the API. This also makes the search accent-insensitive, which the API's plain `LIKE` search isn't (`medicion` finds `medición`).
-- Filters are kept in the URL (`/productos?category=edrm`), so filtered views can be shared. The Productos submenu links to these URLs.
-- Every category gets a chip, even one with no products yet, and selecting it shows an empty state.
-- **`/productos/[slug]`** is generated by `getStaticPaths()` from `fetchAllProducts()`: one static page per **active** product. Each page then calls `fetchProduct(slug)` for the description and full image gallery, falling back to the listing data (first image, no description) if that call fails. Pages include a breadcrumb, a thumbnail gallery and a "Solicita una cotización" lead form.
-- **Ordering**: the CMS has no sort field for categories or products, so editors order them with a numeric prefix on the name (`1 - EDRM`, `2 - Compresores`; `1 - EDRM-500`). The prefix only sets the order and is never shown on the site. Keep the `N - Name` format (number, dash).
-  - **Categories** are sorted by the prefix in `fetchCategories()`, so the chips, shelves and Productos submenu all share one order. Categories without a prefix keep API order after the numbered ones.
-  - **Products** are sorted within their category by `orderByPrefix()`, on the catalog shelves and on the product page (title, "Más de …" list). A category is only reordered when **every** product in it has a prefix and no two share a number. Otherwise the whole category keeps the server's order and names unchanged, prefixes included.
-- **Prices**: `price` is a decimal string in MXN. `null` (or anything non-numeric) shows **"Precio a cotizar"**, which is normal for industrial equipment. Formatting is `es-MX` currency.
-- **Adding, renaming, deactivating or deleting a product (or category) in the admin requires a rebuild**, like any other content change. Until then, a new product has no page, and a removed one still has its old page in `dist/`.
+- **`/productos`** renderiza las secciones propias de la página `productos` (su hero) y después `ProductCatalog`, que recibe **todas** las categorías y los productos activos en tiempo de compilación. Los chips de categoría y la caja de búsqueda filtran las tarjetas **en el navegador**, ya que una página estática no puede reenviar `?category=`/`?q=` a la API. Esto además hace que la búsqueda ignore acentos, cosa que la búsqueda simple con `LIKE` de la API no hace (`medicion` encuentra `medición`).
+- Los filtros se guardan en la URL (`/productos?category=edrm`), así que las vistas filtradas se pueden compartir. El submenú de Productos enlaza a estas URLs.
+- Cada categoría tiene su chip, aunque todavía no tenga productos, y al seleccionarla se muestra un estado vacío.
+- **`/productos/[slug]`** se genera con `getStaticPaths()` a partir de `fetchAllProducts()`: una página estática por cada producto **activo**. Después, cada página llama a `fetchProduct(slug)` para obtener la descripción y la galería completa de imágenes, y si esa llamada falla usa los datos del listado (primera imagen, sin descripción). Las páginas incluyen un breadcrumb, una galería de miniaturas y un formulario de leads "Solicita una cotización".
+- **Orden**: el CMS no tiene un campo de orden para categorías ni productos, así que los editores los ordenan con un prefijo numérico en el nombre (`1 - EDRM`, `2 - Compresores`; `1 - EDRM-500`). El prefijo solo define el orden y nunca se muestra en el sitio. Respeta el formato `N - Nombre` (número, guion).
+  - Las **categorías** se ordenan por el prefijo en `fetchCategories()`, así que los chips, los estantes y el submenú de Productos comparten un mismo orden. Las categorías sin prefijo conservan el orden de la API después de las numeradas.
+  - Los **productos** se ordenan dentro de su categoría con `orderByPrefix()`, en los estantes del catálogo y en la página de producto (título, lista "Más de …"). Una categoría solo se reordena cuando **todos** sus productos tienen prefijo y no hay dos con el mismo número. Si no, toda la categoría conserva el orden y los nombres del servidor, con todo y prefijos.
+- **Precios**: `price` es un string decimal en MXN. `null` (o cualquier valor no numérico) muestra **"Precio a cotizar"**, lo cual es normal para equipo industrial. El formato es moneda `es-MX`.
+- **Agregar, renombrar, desactivar o borrar un producto (o una categoría) en el admin requiere volver a compilar**, como cualquier otro cambio de contenido. Mientras tanto, un producto nuevo no tiene página y uno eliminado sigue con su página vieja en `dist/`.
 
-## Frontend-side overrides
+## Ajustes del lado del frontend
 
-Some display decisions live in this repo instead of the CMS. When something on the site doesn't match the admin, check here first.
+Algunas decisiones de presentación viven en este repositorio y no en el CMS. Cuando algo en el sitio no coincida con el admin, revisa aquí primero.
 
-| What | Where |
+| Qué | Dónde |
 | :--- | :---- |
-| Productos submenu built from the catalog categories (the CMS menu always returns Productos with no children) | `src/layouts/Layout.astro` |
-| Category and product order taken from a `N - ` name prefix, which is then hidden (see [Product catalog](#product-catalog)) | `fetchCategories()` / `orderByPrefix()` in `src/functions/catalog.ts` |
-| Fallback menu (Inicio, Sobre nosotros, Productos, Contacto) when `menu` is unreachable | `src/layouts/Layout.astro` |
-| Fallback social links (`#`) when `globals` has none; only facebook, instagram, linkedin, youtube and twitter have icons, others are dropped | `src/layouts/Layout.astro` |
-| Footer email fallback `contacto@tectuus.com`, footer tagline and copyright line | `src/layouts/Layout.astro` |
-| WhatsApp button hidden entirely when no phone number comes from `globals` | `src/layouts/Layout.astro` |
-| Homepage copy shown when `pages/inicio` is unreachable (carousel, clients, feature grid, form) | `src/pages/index.astro` |
-| Hero (and, on Contacto, a form) shown when a page's CMS data is missing | `src/pages/{sobre-nosotros,productos,contacto}/index.astro` |
-| Product page fallback description and quote-form copy | `src/pages/productos/[slug].astro` |
-| Missing or broken CMS images replaced by `public/placeholder-plate.svg` | `FALLBACK_IMAGE` in `fetch.ts` + an inline `error` listener in `Layout.astro` |
-| Site name, default title/description, canonical domain (`siteUrl`) | `src/config/seo.ts` |
+| Submenú de Productos armado a partir de las categorías del catálogo (el menú del CMS siempre regresa Productos sin hijos) | `src/layouts/Layout.astro` |
+| Orden de categorías y productos tomado de un prefijo `N - ` en el nombre, que luego se oculta (ver [Catálogo de productos](#catálogo-de-productos)) | `fetchCategories()` / `orderByPrefix()` en `src/functions/catalog.ts` |
+| Menú de respaldo (Inicio, Sobre nosotros, Productos, Contacto) cuando `menu` no responde | `src/layouts/Layout.astro` |
+| Redes sociales de respaldo (`#`) cuando `globals` no trae ninguna; solo facebook, instagram, linkedin, youtube y twitter tienen ícono, las demás se descartan | `src/layouts/Layout.astro` |
+| Correo de respaldo del footer `contacto@tectuus.com`, lema del footer y línea de copyright | `src/layouts/Layout.astro` |
+| Botón de WhatsApp oculto por completo cuando `globals` no trae número de teléfono | `src/layouts/Layout.astro` |
+| Textos de la página de inicio que se muestran cuando `pages/inicio` no responde (carrusel, clientes, feature grid, formulario) | `src/pages/index.astro` |
+| Hero (y, en Contacto, un formulario) que se muestra cuando faltan los datos del CMS de una página | `src/pages/{sobre-nosotros,productos,contacto}/index.astro` |
+| Descripción de respaldo de la página de producto y textos del formulario de cotización | `src/pages/productos/[slug].astro` |
+| Imágenes del CMS faltantes o rotas reemplazadas por `public/placeholder-plate.svg` | `FALLBACK_IMAGE` en `fetch.ts` + un listener `error` inline en `Layout.astro` |
+| Nombre del sitio, título/descripción por defecto, dominio canónico (`siteUrl`) | `src/config/seo.ts` |
 
-## 🧞 Commands
+## 🧞 Comandos
 
-| Command | Action |
+| Comando | Acción |
 | :------ | :----- |
-| `npm install` | Install dependencies |
-| `npm run dev` | Start local dev server at `localhost:4321` |
-| `npm run build` | Fetch content and the catalog from the CMS and build static output to `./dist/` |
-| `npm run preview` | Serve the built `./dist/` locally, exactly as it will be deployed |
-| `npm run astro ...` | Run CLI commands like `astro add`, `astro check` |
+| `npm install` | Instala las dependencias |
+| `npm run dev` | Inicia el servidor de desarrollo local en `localhost:4321` |
+| `npm run build` | Trae el contenido y el catálogo del CMS y compila la salida estática en `./dist/` |
+| `npm run preview` | Sirve localmente el `./dist/` compilado, tal como se va a desplegar |
+| `npm run astro ...` | Corre comandos del CLI como `astro add`, `astro check` |
 
-## Development
+## Desarrollo
 
 1. `npm install`
-2. Create `.env` with `CMS_API_URL` pointing at a reachable CMS (local or remote), ending in `/api/public/tectuus/`.
+2. Crea `.env` con `CMS_API_URL` apuntando a un CMS accesible (local o remoto), terminando en `/api/public/tectuus/`.
 3. `npm run dev`
 
-In dev, pages fetch from the CMS on every request (there's no memo cache), so CMS edits show up on reload.
+En desarrollo, las páginas consultan el CMS en cada petición (no hay caché de memoización), así que los cambios en el CMS aparecen al recargar.
 
-To check a production build without touching `dist/`, build to a temporary folder: `npx astro build --outDir <temp-dir>`.
+Para revisar una compilación de producción sin tocar `dist/`, compila a una carpeta temporal: `npx astro build --outDir <temp-dir>`.
 
-When starting the dev server for an automated/background task, use `astro dev --background`, and manage it with `astro dev status`, `astro dev logs` and `astro dev stop`.
+Cuando inicies el servidor de desarrollo para una tarea automatizada o en segundo plano, usa `astro dev --background` y adminístralo con `astro dev status`, `astro dev logs` y `astro dev stop`.
 
-## Building for production
+## Compilación para producción
 
 ```sh
 npm run build
-npm run preview   # verify locally before deploying
+npm run preview   # verifica localmente antes de desplegar
 ```
 
-This produces a fully static site in `dist/`, with no server runtime required. Content and the catalog are fetched at build time, so **any CMS content change needs a new build and deploy** to appear on the live site.
+Esto genera un sitio completamente estático en `dist/`, sin necesidad de un runtime de servidor. El contenido y el catálogo se traen en tiempo de compilación, así que **cualquier cambio de contenido en el CMS necesita una nueva compilación y un nuevo despliegue** para aparecer en el sitio en vivo.
 
-## Deployment
+## Despliegue
 
-`dist/` is a static bundle, so it can be hosted anywhere that serves static files. Two things apply to every target:
+`dist/` es un paquete estático, así que se puede hospedar en cualquier lugar que sirva archivos estáticos. Dos cosas aplican para cualquier destino:
 
-- **Folder URLs**: each page is built as a folder with an `index.html` (e.g. `/productos/<slug>/` is `dist/productos/<slug>/index.html`). The host must serve `index.html` for a folder URL, not only at the root.
-- **Cache headers**: HTML should be revalidated on every visit (`Cache-Control: no-cache`) so visitors get new builds right away. Files under `/_astro/` have content hashes in their names and can be cached for a year (`public, max-age=31536000, immutable`).
+- **URLs de carpeta**: cada página se compila como una carpeta con un `index.html` (p. ej. `/productos/<slug>/` es `dist/productos/<slug>/index.html`). El hosting debe servir `index.html` para una URL de carpeta, no solo en la raíz.
+- **Encabezados de caché**: el HTML debe revalidarse en cada visita (`Cache-Control: no-cache`) para que los visitantes reciban las compilaciones nuevas de inmediato. Los archivos bajo `/_astro/` llevan hashes de contenido en el nombre y se pueden cachear un año (`public, max-age=31536000, immutable`).
 
-For AWS S3 + CloudFront, Azure (Blob or Static Web Apps) and Vercel/Netlify/Cloudflare Pages, follow the recipes in [`../landing-gnu/README.md#deployment`](../landing-gnu/README.md#deployment), using this site's `CMS_API_URL` and domain.
+Para AWS S3 + CloudFront, Azure (Blob o Static Web Apps) y Vercel/Netlify/Cloudflare Pages, sigue las recetas de [`../landing-gnu/README.md#despliegue`](../landing-gnu/README.md#despliegue), usando el `CMS_API_URL` y el dominio de este sitio.
 
-### VPS with nginx
+### VPS con nginx
 
-1. Install Node `>=22.12.0` (per `package.json` engines), or build elsewhere and ship only `dist/`.
-2. Set `.env` with the correct `CMS_API_URL`, then run `npm ci && npm run build`.
-3. Serve `dist/` with nginx (replace the domain and path with yours):
+1. Instala Node `>=22.12.0` (según los engines de `package.json`), o compila en otro lado y sube solo `dist/`.
+2. Configura `.env` con el `CMS_API_URL` correcto y luego corre `npm ci && npm run build`.
+3. Sirve `dist/` con nginx (reemplaza el dominio y la ruta por los tuyos):
 
    ```nginx
    server {
@@ -181,35 +181,35 @@ For AWS S3 + CloudFront, Azure (Blob or Static Web Apps) and Vercel/Netlify/Clou
 
        location / {
            try_files $uri $uri/ $uri.html =404;
-           # Always revalidate HTML so visitors get new builds (cheap 304s via ETag).
+           # Siempre revalidar el HTML para que los visitantes reciban las compilaciones nuevas (304 baratos vía ETag).
            add_header Cache-Control "no-cache";
        }
 
-       # Hashed build assets never change under the same name.
+       # Los assets compilados con hash nunca cambian bajo el mismo nombre.
        location /_astro/ {
            add_header Cache-Control "public, max-age=31536000, immutable";
        }
    }
    ```
 
-4. Reload nginx: `sudo nginx -t && sudo systemctl reload nginx`.
-5. To redeploy, rebuild and copy the new `dist/` over the old one. No restart is needed.
+4. Recarga nginx: `sudo nginx -t && sudo systemctl reload nginx`.
+5. Para volver a desplegar, compila de nuevo y copia el `dist/` nuevo encima del anterior. No hace falta reiniciar nada.
 
-### Rebuilding from the admin
+### Reconstruir desde el admin
 
-Editors can rebuild the site themselves with the **Reconstruir sitio** button on the Tectuus page list in `gnu-cms-admin`. It calls [`../build-server`](../build-server/README.md) (site name `tectuus`), which runs `npm run build` in this project's `CODE_PATH` and replaces the served `PUBLIC_PATH` with the new `dist/`. This only works when the site is served from the machine running `build-server`; for other hosts, rebuild and deploy manually or from CI.
+Los editores pueden reconstruir el sitio por su cuenta con el botón **Reconstruir sitio** en la lista de páginas de Tectuus en `gnu-cms-admin`. Este llama a [`../build-server`](../build-server/README.md) (nombre de sitio `tectuus`), que corre `npm run build` en el `CODE_PATH` de este proyecto y reemplaza el `PUBLIC_PATH` servido con el `dist/` nuevo. Esto solo funciona cuando el sitio se sirve desde la máquina donde corre `build-server`; para otros hostings, compila y despliega a mano o desde CI.
 
-## Content guide
+## Guía de contenido
 
-Recommended image sizes and text lengths per section, for editors: [`../DOCUMENTACION-CONTENIDO-TECTUUS.txt`](../DOCUMENTACION-CONTENIDO-TECTUUS.txt). Functional notes on each page (Inicio, Quiénes somos, catálogo, lead capture) are in [`tectuus-docs/`](./tectuus-docs/).
+Tamaños de imagen y longitudes de texto recomendados por sección, para editores: [`../DOCUMENTACION-CONTENIDO-TECTUUS.txt`](../DOCUMENTACION-CONTENIDO-TECTUUS.txt). Las notas funcionales de cada página (Inicio, Quiénes somos, catálogo, captura de leads) están en [`tectuus-docs/`](./tectuus-docs/).
 
-## Notes & gotchas
+## Notas y advertencias
 
-- **Static output, build-time data**: every CMS fetch (pages, menu, globals, catalog) runs at `astro build`, not per request in production. Env var changes on the server do nothing without a rebuild.
-- **No request memoization**: `Layout.astro` fetches `menu`, `globals` and `product-categories` for every page it renders, so a build makes those requests once per page (including once per product page). Fine at the current catalog size; worth a cache like `landing-gnu`'s `src/lib/cms.ts` if the catalog grows.
-- **A failed catalog request doesn't fail the build**: `fetchAllProducts()` returns whatever it collected so far, so an API outage during a build can publish a partial (or empty) catalog and drop product pages. Check the build log for `Error fetching data` before deploying.
-- **Reserved env var names**: never use `BASE_URL` (or `MODE`, `DEV`, `PROD`, `SSR`, `SITE`, `ASSETS_PREFIX`) for a custom `.env` value.
-- **No shared logic in `.astro` files**: keep reusable, non-UI functions in `.ts` files (`src/functions/`, `src/config/`). Astro scopes top-level `const`/`let` in a component's frontmatter differently from `export function` in the same frontmatter, so a plain constant can be `undefined` inside an exported function at runtime.
-- **Media URLs**: CMS-relative media paths go through `mediaUrl()`. Don't hardcode the CMS host elsewhere. Seeded `media/placeholder-*` paths 404 and are swapped for the placeholder plate in the browser.
-- **Canonical URLs** are built from `seo.siteUrl` (`https://www.tectuus.mx`). Update it in `src/config/seo.ts` if the production domain is different.
-- **`dist/` is tracked in git** (the `dist/` line in `.gitignore` is commented out). Build to a temp folder when you only want to check a build, so you don't churn tracked files.
+- **Salida estática, datos en tiempo de compilación**: todas las consultas al CMS (páginas, menú, globals, catálogo) se ejecutan en `astro build`, no por petición en producción. Cambiar variables de entorno en el servidor no hace nada sin volver a compilar.
+- **Sin memoización de peticiones**: `Layout.astro` consulta `menu`, `globals` y `product-categories` en cada página que renderiza, así que una compilación hace esas peticiones una vez por página (incluida una vez por cada página de producto). Está bien con el tamaño actual del catálogo; si el catálogo crece, vale la pena una caché como el `src/lib/cms.ts` de `landing-gnu`.
+- **Una petición fallida del catálogo no hace fallar la compilación**: `fetchAllProducts()` regresa lo que haya juntado hasta ese momento, así que una caída de la API durante una compilación puede publicar un catálogo parcial (o vacío) y perder páginas de producto. Revisa el log de la compilación en busca de `Error fetching data` antes de desplegar.
+- **Nombres de variables de entorno reservados**: nunca uses `BASE_URL` (ni `MODE`, `DEV`, `PROD`, `SSR`, `SITE`, `ASSETS_PREFIX`) para un valor propio de `.env`.
+- **Nada de lógica compartida en archivos `.astro`**: mantén las funciones reutilizables que no son de UI en archivos `.ts` (`src/functions/`, `src/config/`). Astro maneja el alcance de los `const`/`let` de nivel superior en el frontmatter de un componente de forma distinta a un `export function` en el mismo frontmatter, así que una constante normal puede ser `undefined` dentro de una función exportada en tiempo de ejecución.
+- **URLs de medios**: las rutas de medios relativas al CMS pasan por `mediaUrl()`. No pongas el host del CMS en duro en ningún otro lado. Las rutas `media/placeholder-*` de los seeders dan 404 y se cambian por la imagen de respaldo en el navegador.
+- **Las URLs canónicas** se arman a partir de `seo.siteUrl` (`https://www.tectuus.mx`). Actualízala en `src/config/seo.ts` si el dominio de producción es otro.
+- **`dist/` está versionado en git** (la línea `dist/` en `.gitignore` está comentada). Compila a una carpeta temporal cuando solo quieras revisar una compilación, para no modificar archivos versionados.

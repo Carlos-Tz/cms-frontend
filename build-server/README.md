@@ -1,38 +1,38 @@
-# build-server: install on the production server
+# build-server: instalación en el servidor de producción
 
-## Real values on this server
+## Valores reales en este servidor
 
-| What | Value | Notes |
+| Qué | Valor | Notas |
 |---|---|---|
-| Service folder | `/home/frontend/build-server` | Outside `/var/www/html`, so nginx never serves it |
-| Service user | `frontend` | |
-| Admin URL | `https://administracion-cms.165.227.59.215.sslip.io` | |
-| nginx configs | `/etc/nginx/conf.d/*.conf` | There is **no** `sites-enabled/` on this server |
-| gnu code | `/home/frontend/landing-gnu` | `CODE_PATH`: `npm run build` runs here |
-| gnu web root | `/var/www/html/sitios-cms/gnu` | `PUBLIC_PATH`: emptied and refilled with `dist/` |
+| Carpeta del servicio | `/home/frontend/build-server` | Fuera de `/var/www/html`, así nginx nunca la sirve |
+| Usuario del servicio | `frontend` | |
+| URL del admin | `https://administracion-cms.165.227.59.215.sslip.io` | |
+| Configuraciones de nginx | `/etc/nginx/conf.d/*.conf` | En este servidor **no** existe `sites-enabled/` |
+| Código de gnu | `/home/frontend/landing-gnu` | `CODE_PATH`: aquí corre `npm run build` |
+| Raíz web de gnu | `/var/www/html/sitios-cms/gnu` | `PUBLIC_PATH`: se vacía y se vuelve a llenar con `dist/` |
 
 > [!IMPORTANT]
-> **Golden rule:** the service runs as `frontend`. Anything you do by hand in a `CODE_PATH`
-> (`npm ci`, `git pull`, `npm run build`) must also run as `frontend`, **not as root**:
+> **Regla de oro:** el servicio corre como `frontend`. Todo lo que hagas a mano en un `CODE_PATH`
+> (`npm ci`, `git pull`, `npm run build`) también debe correr como `frontend`, **no como root**:
 >
 > ```bash
 > sudo -u frontend -i
 > ```
 >
-> If root creates files there (`.astro/`, `node_modules/`, `dist/`), "Reconstruir sitio" fails with:
+> Si root crea archivos ahí (`.astro/`, `node_modules/`, `dist/`), "Reconstruir sitio" falla con:
 >
 > ```
 > EACCES: permission denied, open '/home/frontend/landing-gnu/.astro/content.d.ts'
 > ```
 >
-> Fix it with the `chown` commands in [step 1](#1-copy-the-folder-and-configure-it).
+> Arréglalo con los comandos `chown` del [paso 1](#1-copia-la-carpeta-y-configúrala).
 
 ---
 
-## 1. Copy the folder and configure it
+## 1. Copia la carpeta y configúrala
 
-Copy this `build-server` folder (`server.mjs`, `.env.example`, …) to `/home/frontend/build-server`
-(with `scp` or `rsync`), then on the server:
+Copia esta carpeta `build-server` (`server.mjs`, `.env.example`, …) a `/home/frontend/build-server`
+(con `scp` o `rsync`) y luego, en el servidor:
 
 ```bash
 chown -R frontend:frontend /home/frontend/build-server
@@ -42,7 +42,7 @@ cp .env.example .env
 nano .env
 ```
 
-In `.env` set:
+En `.env` define:
 
 ```ini
 ALLOWED_ORIGINS=https://administracion-cms.165.227.59.215.sslip.io
@@ -50,54 +50,54 @@ VITE_GNU_CODE_PATH=/home/frontend/landing-gnu
 VITE_GNU_PUBLIC_PATH=/var/www/html/sitios-cms/gnu
 ```
 
-- `ALLOWED_ORIGINS` must be the real admin URL, not `localhost:5173`.
-- Fill in the other sites' pairs once they exist. If a pair is empty, that site's build fails safely.
+- `ALLOWED_ORIGINS` debe ser la URL real del admin, no `localhost:5173`.
+- Llena los pares de los otros sitios cuando existan. Si un par está vacío, la compilación de ese sitio falla de forma segura.
 
 > [!CAUTION]
-> **Never** set a `PUBLIC_PATH` to a folder that contains other things (e.g. `/var/www/html/sitios-cms`
-> itself). Its whole content is replaced after every build.
+> **Nunca** apuntes un `PUBLIC_PATH` a una carpeta que contenga otras cosas (p. ej. la propia
+> `/var/www/html/sitios-cms`). Todo su contenido se reemplaza después de cada compilación.
 
-Still as `frontend`, check:
+Todavía como `frontend`, verifica:
 
 ```bash
-node -v                                      # 22.12 or newer. build-server itself has no npm install.
-which node                                   # write this down, it goes in the unit file (step 2)
-cd /home/frontend/landing-gnu && npm ci      # each CODE_PATH needs its node_modules
+node -v                                      # 22.12 o más reciente. build-server en sí no necesita npm install.
+which node                                   # anótalo, va en el archivo de la unidad (paso 2)
+cd /home/frontend/landing-gnu && npm ci      # cada CODE_PATH necesita su node_modules
 ```
 
-Back as root (`exit`), give `frontend` ownership of every `CODE_PATH` and `PUBLIC_PATH`:
+De vuelta como root (`exit`), dale a `frontend` la propiedad de cada `CODE_PATH` y `PUBLIC_PATH`:
 
 ```bash
 chown -R frontend:frontend /home/frontend/landing-gnu
 chown -R frontend:frontend /var/www/html/sitios-cms/gnu
 ```
 
-Test a build by hand, as `frontend` (this is exactly what the button does):
+Prueba una compilación a mano, como `frontend` (esto es exactamente lo que hace el botón):
 
 ```bash
 sudo -u frontend -i bash -c 'cd /home/frontend/landing-gnu && npm run build'
 ```
 
-Test the service by hand:
+Prueba el servicio a mano:
 
 ```bash
 sudo -u frontend -i bash -c 'cd /home/frontend/build-server && npm start'
 ```
 
-You should see `build-server escuchando en http://localhost:4400` with the gnu paths listed.
-Stop it with <kbd>Ctrl</kbd>+<kbd>C</kbd>.
+Deberías ver `build-server escuchando en http://localhost:4400` con las rutas de gnu listadas.
+Detenlo con <kbd>Ctrl</kbd>+<kbd>C</kbd>.
 
 ---
 
-## 2. Run it as a systemd service
+## 2. Córrelo como servicio de systemd
 
 ```bash
 nano /etc/systemd/system/build-server.service
 ```
 
-Paste **one** of these. Use the exact path `which node` printed in step 1.
+Pega **una** de estas. Usa la ruta exacta que imprimió `which node` en el paso 1.
 
-### a) `which node` printed `/usr/bin/node`
+### a) `which node` imprimió `/usr/bin/node`
 
 ```ini
 [Unit]
@@ -116,14 +116,14 @@ Environment=ASTRO_TELEMETRY_DISABLED=1
 WantedBy=multi-user.target
 ```
 
-### b) `which node` printed an nvm path
+### b) `which node` imprimió una ruta de nvm
 
-For example `/home/frontend/.nvm/versions/node/vXX.X.X/bin/node`. Replace `v22.12.0` with your
-real version on **both** lines.
+Por ejemplo `/home/frontend/.nvm/versions/node/vXX.X.X/bin/node`. Reemplaza `v22.12.0` con tu
+versión real en **ambas** líneas.
 
 > [!WARNING]
-> The `PATH` line is required. systemd doesn't read `.bashrc`, so without it the build fails
-> with `npm: not found`.
+> La línea `PATH` es obligatoria. systemd no lee `.bashrc`, así que sin ella la compilación falla
+> con `npm: not found`.
 
 ```ini
 [Unit]
@@ -143,108 +143,108 @@ Environment=PATH=/home/frontend/.nvm/versions/node/v22.12.0/bin:/usr/bin:/bin
 WantedBy=multi-user.target
 ```
 
-### Start it
+### Arráncalo
 
 ```bash
 systemctl daemon-reload
-systemctl enable --now build-server     # start now and on every boot
-systemctl status build-server           # must say "active (running)"
-journalctl -u build-server -f           # live logs, incl. build failures
+systemctl enable --now build-server     # arranca ahora y en cada inicio
+systemctl status build-server           # debe decir "active (running)"
+journalctl -u build-server -f           # logs en vivo, incl. compilaciones fallidas
 ```
 
-If `status` says `failed`, run `journalctl -u build-server -n 50`. It's usually a wrong `ExecStart`
-path or a missing `/home/frontend/build-server/.env`.
+Si `status` dice `failed`, corre `journalctl -u build-server -n 50`. Normalmente es una ruta de `ExecStart`
+equivocada o falta `/home/frontend/build-server/.env`.
 
-After editing `.env` or the unit file, or copying in a new `server.mjs`:
+Después de editar `.env` o el archivo de la unidad, o de copiar un `server.mjs` nuevo:
 
 ```bash
-systemctl daemon-reload                 # only needed if the unit file changed
+systemctl daemon-reload                 # solo hace falta si cambió el archivo de la unidad
 systemctl restart build-server
 ```
 
 ---
 
-## 3. Make it reachable from the browser (nginx)
+## 3. Hazlo accesible desde el navegador (nginx)
 
-The admin calls the build-server from the editor's browser, so it must be a public HTTPS URL:
+El admin llama al build-server desde el navegador del editor, así que debe ser una URL HTTPS pública:
 
-- `http://localhost:4400` would point at the editor's own computer (`ERR_CONNECTION_REFUSED`).
-- An HTTPS admin can't call plain `http://` (mixed content).
+- `http://localhost:4400` apuntaría a la propia computadora del editor (`ERR_CONNECTION_REFUSED`).
+- Un admin en HTTPS no puede llamar a `http://` plano (contenido mixto).
 
-The file is `/etc/nginx/conf.d/administracion-cms.conf`. Ignore `*.bak-*` and `*.disabled` files.
+El archivo es `/etc/nginx/conf.d/administracion-cms.conf`. Ignora los archivos `*.bak-*` y `*.disabled`.
 
 > [!WARNING]
-> Back it up **outside** `conf.d`. nginx loads every `conf.d/*.conf`, so a backup named
-> `something.conf` would load as a duplicate site.
+> Respáldalo **fuera** de `conf.d`. nginx carga todos los `conf.d/*.conf`, así que un respaldo llamado
+> `algo.conf` se cargaría como un sitio duplicado.
 
 ```bash
 cp /etc/nginx/conf.d/administracion-cms.conf /root/administracion-cms.conf.bak-$(date +%Y%m%d-%H%M)
 ```
 
-Find the HTTPS server block (the one with `listen 443 ssl`):
+Encuentra el bloque server de HTTPS (el que tiene `listen 443 ssl`):
 
 ```bash
 grep -n "listen\|server_name\|location" /etc/nginx/conf.d/administracion-cms.conf
 ```
 
-On this server it's the **first** block (`server_name` on line 2, `listen 443` on line 11).
-The second block (`listen 80`) is Certbot's redirect. Don't touch it.
+En este servidor es el **primer** bloque (`server_name` en la línea 2, `listen 443` en la línea 11).
+El segundo bloque (`listen 80`) es la redirección de Certbot. No lo toques.
 
 ```bash
 nano +2 /etc/nginx/conf.d/administracion-cms.conf
 ```
 
-Right after the `server_name` line, at the same level as `location / {` (not inside it), add:
+Justo después de la línea `server_name`, al mismo nivel que `location / {` (no dentro de él), agrega:
 
 ```nginx
 location /build-server/ {
-    proxy_pass http://127.0.0.1:4400/;   # keep BOTH trailing slashes
+    proxy_pass http://127.0.0.1:4400/;   # conserva AMBAS diagonales finales
     proxy_read_timeout 60s;
 }
 ```
 
-Then:
+Luego:
 
 ```bash
 nginx -t && systemctl reload nginx
 ```
 
-In `gnu-cms-admin/.env` (no trailing slash):
+En `gnu-cms-admin/.env` (sin diagonal final):
 
 ```ini
 VITE_BUILD_SERVER_URL=https://administracion-cms.165.227.59.215.sslip.io/build-server
 ```
 
-It's read at build time, so rebuild and redeploy the admin afterwards.
+Se lee en tiempo de compilación, así que después vuelve a compilar y desplegar el admin.
 
-Keep port `4400` closed in the firewall. It should only be reachable through nginx.
+Mantén el puerto `4400` cerrado en el firewall. Solo debe ser accesible a través de nginx.
 
 ---
 
-## 4. Check it
+## 4. Verifícalo
 
 ```bash
 curl -i http://127.0.0.1:4400/builds/gnu
 curl -i https://administracion-cms.165.227.59.215.sslip.io/build-server/builds/gnu
 ```
 
-Both should return **401** (no token). That means the service is running and reachable. The
-admin's button sends the real token.
+Ambos deben regresar **401** (sin token). Eso significa que el servicio está corriendo y es accesible. El
+botón del admin manda el token real.
 
-| Result | Meaning |
+| Resultado | Significado |
 |---|---|
-| `401` | Working |
-| `404` | The `location` block is in the wrong server block (port 80 or another domain) |
-| `502` | The service isn't running: `systemctl status build-server` |
-| `EACCES` in the button's error | Files owned by root: redo the `chown` in step 1 |
+| `401` | Funciona |
+| `404` | El bloque `location` está en el bloque server equivocado (puerto 80 u otro dominio) |
+| `502` | El servicio no está corriendo: `systemctl status build-server` |
+| `EACCES` en el error del botón | Archivos propiedad de root: repite el `chown` del paso 1 |
 
 ---
 
-## 5. After changing `/home/frontend/build-server/.env`
+## 5. Después de cambiar `/home/frontend/build-server/.env`
 
-`.env` is read only once, when the service starts. Saving the file changes nothing until you restart.
+`.env` se lee una sola vez, cuando arranca el servicio. Guardar el archivo no cambia nada hasta que reinicies.
 
-Edit it as `frontend`, so the file stays owned by `frontend`:
+Edítalo como `frontend`, para que el archivo siga siendo propiedad de `frontend`:
 
 ```bash
 sudo -u frontend -i
@@ -253,247 +253,247 @@ exit
 ```
 
 > [!CAUTION]
-> Before restarting, make sure no build is running. Restarting kills a build in progress, and that
-> site's web root can be left half-published. This must print nothing:
+> Antes de reiniciar, asegúrate de que no haya ninguna compilación corriendo. Reiniciar mata una compilación en curso, y la
+> raíz web de ese sitio puede quedar publicada a medias. Esto no debe imprimir nada:
 >
 > ```bash
 > pgrep -u frontend -af "astro build"
 > ```
 
-Restart and confirm:
+Reinicia y confirma:
 
 ```bash
 systemctl restart build-server
-systemctl status build-server              # must say "active (running)"
-journalctl -u build-server -n 20           # startup lines list the paths it loaded
-curl -i http://127.0.0.1:4400/builds/gnu   # expect 401
+systemctl status build-server              # debe decir "active (running)"
+journalctl -u build-server -n 20           # las líneas de arranque listan las rutas que cargó
+curl -i http://127.0.0.1:4400/builds/gnu   # se espera 401
 ```
 
-### Extra steps, depending on what you changed
+### Pasos extra, según lo que hayas cambiado
 
-**Added or changed a site's `CODE_PATH` / `PUBLIC_PATH`**
+**Agregaste o cambiaste el `CODE_PATH` / `PUBLIC_PATH` de un sitio**
 
-- The folders must already exist, and the code folder needs `node_modules`:
+- Las carpetas ya deben existir, y la carpeta del código necesita `node_modules`:
   ```bash
   sudo -u frontend -i bash -c 'cd <CODE_PATH> && npm ci'
   ```
-- Give `frontend` ownership of both (as root):
+- Dale a `frontend` la propiedad de ambas (como root):
   ```bash
   chown -R frontend:frontend <CODE_PATH> <PUBLIC_PATH>
   ```
-- `PUBLIC_PATH` must be that site's own folder (e.g. `/var/www/html/sitios-cms/gnu`), never a
-  parent folder like `/var/www/html/sitios-cms`. Its content is replaced on every build.
-- Test the build by hand as `frontend` before using the button (see step 1).
+- `PUBLIC_PATH` debe ser la carpeta propia de ese sitio (p. ej. `/var/www/html/sitios-cms/gnu`), nunca una
+  carpeta padre como `/var/www/html/sitios-cms`. Su contenido se reemplaza en cada compilación.
+- Prueba la compilación a mano como `frontend` antes de usar el botón (ver paso 1).
 
-**Changed `PORT`**
+**Cambiaste `PORT`**
 
-- Update the `proxy_pass` port in `/etc/nginx/conf.d/administracion-cms.conf` (step 3), then:
+- Actualiza el puerto de `proxy_pass` en `/etc/nginx/conf.d/administracion-cms.conf` (paso 3) y luego:
   ```bash
   nginx -t && systemctl reload nginx
   ```
 
-**Changed `ALLOWED_ORIGINS` or `CMS_BASE_URL`**
+**Cambiaste `ALLOWED_ORIGINS` o `CMS_BASE_URL`**
 
-- Nothing else: the restart is enough. The admin doesn't need a rebuild.
+- Nada más: basta con reiniciar. El admin no necesita volver a compilarse.
 
 > [!NOTE]
-> The admin's `VITE_BUILD_SERVER_URL` is **not** in this file. It lives in `gnu-cms-admin/.env` and
-> needs an admin rebuild and redeploy (step 3), not a build-server restart.
+> El `VITE_BUILD_SERVER_URL` del admin **no** está en este archivo. Vive en `gnu-cms-admin/.env` y
+> requiere volver a compilar y desplegar el admin (paso 3), no reiniciar el build-server.
 
 ---
 
-## 6. Things DevOps / the webmaster should know
+## 6. Lo que DevOps / el webmaster debe saber
 
-### How a rebuild works
+### Cómo funciona una reconstrucción
 
-When an editor clicks "Reconstruir sitio", the service:
+Cuando un editor hace clic en "Reconstruir sitio", el servicio:
 
-1. Validates the editor's token by calling the CMS (`CMS_BASE_URL/api/admin/sections`).
-2. Runs `npm run build` in the site's `CODE_PATH`.
-3. Checks that `dist/index.html` exists and isn't empty.
-4. **Deletes everything** in `PUBLIC_PATH` and copies `dist/` into it.
+1. Valida el token del editor llamando al CMS (`CMS_BASE_URL/api/admin/sections`).
+2. Corre `npm run build` en el `CODE_PATH` del sitio.
+3. Verifica que `dist/index.html` exista y no esté vacío.
+4. **Borra todo** en `PUBLIC_PATH` y copia `dist/` ahí.
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Editor as Editor (browser)
+    actor Editor as Editor (navegador)
     participant Nginx as nginx<br/>administracion-cms…/build-server/
-    participant BS as build-server<br/>127.0.0.1:4400 (user frontend)
-    participant CMS as CMS API<br/>CMS_BASE_URL
+    participant BS as build-server<br/>127.0.0.1:4400 (usuario frontend)
+    participant CMS as API del CMS<br/>CMS_BASE_URL
     participant Code as CODE_PATH<br/>/home/frontend/landing-gnu
     participant Pub as PUBLIC_PATH<br/>/var/www/html/sitios-cms/gnu
 
     Editor->>Nginx: POST /build-server/builds/gnu<br/>Authorization: Bearer token
     Nginx->>BS: POST /builds/gnu
     BS->>CMS: GET /api/admin/sections?site=gnu
-    alt token rejected
+    alt token rechazado
         CMS-->>BS: 401 / 403
         BS-->>Editor: 401 "Tu sesión expiró"
-    else build already running for this site
+    else ya hay una compilación corriendo para este sitio
         BS-->>Editor: 409
     else token OK
         CMS-->>BS: 200
-        BS-->>Editor: 202 (build started)
+        BS-->>Editor: 202 (compilación iniciada)
         BS->>Code: npm run build
-        Code->>CMS: astro build reads the site content
-        Code-->>BS: dist/ written
-        BS->>Code: check dist/index.html exists and isn't empty
-        BS->>Pub: delete everything, then copy dist/ in
-        Note over Pub: live site is empty/partial<br/>for a moment here
+        Code->>CMS: astro build lee el contenido del sitio
+        Code-->>BS: dist/ escrito
+        BS->>Code: verifica que dist/index.html exista y no esté vacío
+        BS->>Pub: borra todo y luego copia dist/ ahí
+        Note over Pub: el sitio en vivo queda vacío/parcial<br/>por un momento aquí
     end
-    loop every few seconds until success / error
+    loop cada pocos segundos hasta éxito / error
         Editor->>Nginx: GET /build-server/builds/gnu
         Nginx->>BS: GET /builds/gnu
-        BS-->>Editor: status, step, last log lines, error
+        BS-->>Editor: estado, paso, últimas líneas del log, error
     end
 ```
 
 > [!NOTE]
-> The diagram is Mermaid. GitHub and GitLab draw it automatically; in VS Code, install the
-> "Markdown Preview Mermaid Support" extension to see it in the preview.
+> El diagrama es Mermaid. GitHub y GitLab lo dibujan automáticamente; en VS Code, instala la
+> extensión "Markdown Preview Mermaid Support" para verlo en la vista previa.
 
-What follows from that:
+Lo que se desprende de eso:
 
-- **The live site is whatever code is in `CODE_PATH`.** To deploy a code change, update `CODE_PATH`
-  (`git pull` as `frontend`), then rebuild with the button or by hand. Anything uncommitted or
-  half-pulled there goes live on the next click.
-- **Never edit files directly in `PUBLIC_PATH`.** They're wiped on the next rebuild. Anything that has
-  to survive (e.g. `robots.txt`, verification files, `.well-known/`) belongs in the site's `public/` folder.
-- **Publishing is not atomic.** For a moment during step 4 the folder is empty or partial, so visitors can
-  get a 404 for a second. If the process dies mid-copy, the site stays half-published until the next
-  successful rebuild.
-- **There's no automatic rollback.** The previous version isn't kept. To roll back, check out the previous
-  commit in `CODE_PATH` and rebuild, or keep your own backup of `PUBLIC_PATH`.
-- **A build that "succeeds" isn't always correct.** If the CMS is down during the build, the site can still
-  produce an `index.html` with missing content, and it gets published. Check the site after a rebuild
-  that happened during a CMS outage.
-- **Build status lives in memory.** A restart clears the progress/last-error shown in the admin. Real logs
-  are in `journalctl -u build-server`.
-- **One build per site at a time** (a second click gets a 409), but **different sites can build at the
-  same time.** Each Astro build can use 1 GB+ of RAM. On a small server, add swap or ask editors not to
-  rebuild several sites at once. An out-of-memory kill shows as `terminó con código 137` or `señal SIGKILL`;
-  confirm with `dmesg | grep -i oom`.
+- **El sitio en vivo es el código que esté en `CODE_PATH`.** Para desplegar un cambio de código, actualiza `CODE_PATH`
+  (`git pull` como `frontend`) y luego reconstruye con el botón o a mano. Cualquier cosa sin commit o
+  a medio pull ahí sale en vivo con el siguiente clic.
+- **Nunca edites archivos directamente en `PUBLIC_PATH`.** Se borran en la siguiente reconstrucción. Todo lo que
+  deba sobrevivir (p. ej. `robots.txt`, archivos de verificación, `.well-known/`) va en la carpeta `public/` del sitio.
+- **La publicación no es atómica.** Por un momento durante el paso 4 la carpeta está vacía o parcial, así que los visitantes pueden
+  recibir un 404 por un segundo. Si el proceso muere a mitad de la copia, el sitio queda publicado a medias hasta la siguiente
+  reconstrucción exitosa.
+- **No hay rollback automático.** La versión anterior no se guarda. Para regresar, haz checkout del commit anterior
+  en `CODE_PATH` y reconstruye, o guarda tu propio respaldo de `PUBLIC_PATH`.
+- **Una compilación "exitosa" no siempre es correcta.** Si el CMS está caído durante la compilación, el sitio aún puede
+  producir un `index.html` con contenido faltante, y se publica. Revisa el sitio después de una reconstrucción
+  que haya ocurrido durante una caída del CMS.
+- **El estado de la compilación vive en memoria.** Un reinicio borra el progreso/último error que muestra el admin. Los logs reales
+  están en `journalctl -u build-server`.
+- **Una compilación por sitio a la vez** (un segundo clic recibe un 409), pero **sitios distintos pueden compilar al
+  mismo tiempo.** Cada compilación de Astro puede usar 1 GB+ de RAM. En un servidor pequeño, agrega swap o pide a los editores que no
+  reconstruyan varios sitios a la vez. Un kill por falta de memoria aparece como `terminó con código 137` o `señal SIGKILL`;
+  confírmalo con `dmesg | grep -i oom`.
 
-### Security
+### Seguridad
 
-- **The service listens on all interfaces**, not only `127.0.0.1`. The firewall is what keeps port `4400`
-  private. Check it's closed from outside: `curl -m 5 http://<server-ip>:4400/builds/gnu` from your own
-  computer must time out.
-- **Anyone who can log in to the admin can trigger rebuilds.** There's no rate limit. That's fine for a
-  handful of editors. If it becomes a problem, add nginx `limit_req` to the `/build-server/` location.
-- **Settings in the unit file win over `.env`.** If a variable is set with `Environment=` in the unit file,
-  the `.env` value for it is ignored. Keep site settings in `.env` only.
-- **Error messages in the admin include server paths and build output.** Fine for trusted editors; keep it
-  in mind before giving admin access to outsiders.
+- **El servicio escucha en todas las interfaces**, no solo en `127.0.0.1`. El firewall es lo que mantiene privado el puerto `4400`.
+  Verifica que esté cerrado desde fuera: `curl -m 5 http://<server-ip>:4400/builds/gnu` desde tu propia
+  computadora debe agotar el tiempo de espera.
+- **Cualquiera que pueda iniciar sesión en el admin puede disparar reconstrucciones.** No hay límite de frecuencia. Está bien para un
+  puñado de editores. Si se vuelve un problema, agrega `limit_req` de nginx a la location `/build-server/`.
+- **Lo que está en el archivo de la unidad gana sobre `.env`.** Si una variable se define con `Environment=` en el archivo de la unidad,
+  el valor de `.env` para ella se ignora. Mantén la configuración de los sitios solo en `.env`.
+- **Los mensajes de error en el admin incluyen rutas del servidor y salida de la compilación.** Está bien para editores de confianza; tenlo
+  en cuenta antes de darle acceso al admin a gente de fuera.
 
-### This server (RHEL-family Linux with SELinux)
+### Este servidor (Linux de la familia RHEL con SELinux)
 
-The server uses `/etc/nginx/conf.d/`, which points to a RHEL/CentOS/Rocky/Alma system. Check with
-`cat /etc/os-release` and `getenforce`. If `getenforce` prints `Enforcing`:
+El servidor usa `/etc/nginx/conf.d/`, lo que indica un sistema RHEL/CentOS/Rocky/Alma. Verifícalo con
+`cat /etc/os-release` y `getenforce`. Si `getenforce` imprime `Enforcing`:
 
-- **nginx may not be allowed to proxy to port 4400.** Symptom: 502, and `/var/log/nginx/error.log` shows
-  `connect() to 127.0.0.1:4400 failed (13: Permission denied)`. Fix:
+- **Puede que nginx no tenga permiso de hacer proxy al puerto 4400.** Síntoma: 502, y `/var/log/nginx/error.log` muestra
+  `connect() to 127.0.0.1:4400 failed (13: Permission denied)`. Solución:
   ```bash
   setsebool -P httpd_can_network_connect 1
   ```
-- **nginx may not be allowed to read published files.** Symptom: 403 on the public site after a rebuild.
-  Fix the labels:
+- **Puede que nginx no tenga permiso de leer los archivos publicados.** Síntoma: 403 en el sitio público después de una reconstrucción.
+  Arregla las etiquetas:
   ```bash
   restorecon -Rv /var/www/html/sitios-cms
   ```
-- The firewall is `firewalld`. List what's open with `firewall-cmd --list-all`. `4400` must not appear.
+- El firewall es `firewalld`. Lista lo que está abierto con `firewall-cmd --list-all`. `4400` no debe aparecer.
 
-### Maintenance
+### Mantenimiento
 
-- **Upgrading Node with nvm changes its path.** Update `ExecStart` and `PATH` in the unit file, then
-  `systemctl daemon-reload && systemctl restart build-server`. Otherwise the service keeps the old Node, or
-  fails if the old version was removed. Also re-run `npm ci` in every `CODE_PATH`.
-- **Certbot renewals don't remove the `location /build-server/` block**, but re-check it after running
-  `certbot --nginx` again for that domain.
-- **Disk space:** each `CODE_PATH` holds `node_modules/` and `dist/`. Check with `df -h` and
+- **Actualizar Node con nvm cambia su ruta.** Actualiza `ExecStart` y `PATH` en el archivo de la unidad y luego
+  `systemctl daemon-reload && systemctl restart build-server`. Si no, el servicio se queda con el Node anterior, o
+  falla si la versión anterior se eliminó. También vuelve a correr `npm ci` en cada `CODE_PATH`.
+- **Las renovaciones de Certbot no quitan el bloque `location /build-server/`**, pero revísalo de nuevo después de correr
+  `certbot --nginx` otra vez para ese dominio.
+- **Espacio en disco:** cada `CODE_PATH` contiene `node_modules/` y `dist/`. Revísalo con `df -h` y
   `du -sh /home/frontend/*`.
-- **Logs** go to journald, which rotates them on its own. Size: `journalctl --disk-usage`.
-- **Adding a new site** isn't just `.env`: the site list (`gnu`, `gas-natural`, `trainin`, `tectuus`) is
-  fixed in `server.mjs` (`SITES`). Note the variable spelling for trainin is `VITE_TRANINN_*`.
+- **Los logs** van a journald, que los rota por su cuenta. Tamaño: `journalctl --disk-usage`.
+- **Agregar un sitio nuevo** no es solo `.env`: la lista de sitios (`gnu`, `gas-natural`, `trainin`, `tectuus`) está
+  fija en `server.mjs` (`SITES`). Ojo: la variable de trainin se escribe `VITE_TRANINN_*`.
 
 ---
 
-## 7. Deploying on Azure
+## 7. Despliegue en Azure
 
-The build-server needs three things on **the same machine**: the site's source code with `node_modules`
-(`CODE_PATH`), a folder the web server serves (`PUBLIC_PATH`), and a long-running Node process that can run
-`npm run build`. That rules out most "serverless" options, so here are the choices from simplest to most
-involved.
+El build-server necesita tres cosas en **la misma máquina**: el código fuente del sitio con `node_modules`
+(`CODE_PATH`), una carpeta que sirva el servidor web (`PUBLIC_PATH`) y un proceso de Node de larga duración que pueda correr
+`npm run build`. Eso descarta la mayoría de las opciones "serverless", así que aquí van las alternativas, de la más simple a la más
+compleja.
 
-### Option A: Azure Linux VM (recommended)
+### Opción A: VM Linux en Azure (recomendada)
 
-The same setup as this README, on a VM:
+La misma configuración de este README, en una VM:
 
-1. **Create the VM.** Ubuntu 24.04 LTS, at least 2 vCPU / 4 GB RAM (e.g. `Standard_B2s`) because of the Astro
-   builds. Give it a static public IP and a DNS name.
-2. **Network Security Group:** allow inbound `22` (SSH, ideally only from your office IP), `80` and `443`.
-   **Don't open `4400`.** Inside the VM, also enable `ufw`:
+1. **Crea la VM.** Ubuntu 24.04 LTS, al menos 2 vCPU / 4 GB de RAM (p. ej. `Standard_B2s`) por las
+   compilaciones de Astro. Dale una IP pública estática y un nombre DNS.
+2. **Network Security Group:** permite entrada en `22` (SSH, idealmente solo desde la IP de tu oficina), `80` y `443`.
+   **No abras `4400`.** Dentro de la VM, habilita también `ufw`:
    ```bash
    ufw allow OpenSSH && ufw allow 'Nginx Full' && ufw enable
    ```
-3. **Install the software:**
+3. **Instala el software:**
    ```bash
    apt update && apt install -y nginx git certbot python3-certbot-nginx
    adduser frontend
-   sudo -u frontend -i   # then install nvm and Node 22 for this user
+   sudo -u frontend -i   # luego instala nvm y Node 22 para este usuario
    ```
-4. **Follow steps 1–5 of this README**, with these Ubuntu differences:
+4. **Sigue los pasos 1–5 de este README**, con estas diferencias de Ubuntu:
 
-   | This server (RHEL) | Ubuntu on Azure |
+   | Este servidor (RHEL) | Ubuntu en Azure |
    |---|---|
-   | `/etc/nginx/conf.d/<site>.conf` | `/etc/nginx/sites-available/<site>`, enabled with `ln -s` into `sites-enabled/` |
-   | Back up outside `conf.d` | Back up outside `sites-enabled/` (same reason) |
-   | nginx runs as `nginx` | nginx runs as `www-data` |
-   | SELinux (`setsebool`, `restorecon`) | AppArmor, nothing to do |
-   | `firewalld` | `ufw` + the Azure NSG |
+   | `/etc/nginx/conf.d/<site>.conf` | `/etc/nginx/sites-available/<site>`, habilitado con `ln -s` hacia `sites-enabled/` |
+   | Respaldar fuera de `conf.d` | Respaldar fuera de `sites-enabled/` (misma razón) |
+   | nginx corre como `nginx` | nginx corre como `www-data` |
+   | SELinux (`setsebool`, `restorecon`) | AppArmor, no hay nada que hacer |
+   | `firewalld` | `ufw` + el NSG de Azure |
 
-5. **HTTPS:** `certbot --nginx -d admin.yourdomain.com -d gnu.yourdomain.com`. Point the DNS records at the
-   VM's public IP first.
-6. **Backups:** enable Azure Backup for the VM, or at least snapshot the OS disk before big changes.
+5. **HTTPS:** `certbot --nginx -d admin.yourdomain.com -d gnu.yourdomain.com`. Antes, apunta los registros DNS a la
+   IP pública de la VM.
+6. **Respaldos:** habilita Azure Backup para la VM, o al menos toma un snapshot del disco del sistema operativo antes de cambios grandes.
 
-### Option B: VM for builds + Azure Storage static website for the public sites
+### Opción B: VM para compilaciones + sitio web estático de Azure Storage para los sitios públicos
 
-Use this if you want the public sites on Azure Storage (`$web` container), optionally behind Azure Front
-Door, instead of nginx. The build-server still runs on a VM (Option A). Only `PUBLIC_PATH` changes: mount
-the `$web` container on the VM with **BlobFuse2** and point `PUBLIC_PATH` at the mount.
+Usa esta si quieres los sitios públicos en Azure Storage (contenedor `$web`), opcionalmente detrás de Azure Front
+Door, en lugar de nginx. El build-server sigue corriendo en una VM (Opción A). Solo cambia `PUBLIC_PATH`: monta
+el contenedor `$web` en la VM con **BlobFuse2** y apunta `PUBLIC_PATH` al punto de montaje.
 
-1. Create a Storage account (StorageV2), enable **Static website**, and note its `$web` container.
-2. On the VM, install BlobFuse2 and mount the container, e.g. at `/mnt/gnu-web`
-   (see Microsoft's "Mount an Azure Blob Storage container on Linux with BlobFuse2" guide). Make the mount
-   permanent (systemd or `/etc/fstab`) and readable/writable by `frontend`.
-3. In `.env`: `VITE_GNU_PUBLIC_PATH=/mnt/gnu-web`, then `systemctl restart build-server`.
-4. One storage account per site: `PUBLIC_PATH` gets fully wiped, so it must hold only that site.
+1. Crea una cuenta de Storage (StorageV2), habilita **Static website** y anota su contenedor `$web`.
+2. En la VM, instala BlobFuse2 y monta el contenedor, p. ej. en `/mnt/gnu-web`
+   (ver la guía de Microsoft "Mount an Azure Blob Storage container on Linux with BlobFuse2"). Haz que el montaje sea
+   permanente (systemd o `/etc/fstab`) y que `frontend` pueda leerlo y escribirlo.
+3. En `.env`: `VITE_GNU_PUBLIC_PATH=/mnt/gnu-web` y luego `systemctl restart build-server`.
+4. Una cuenta de Storage por sitio: `PUBLIC_PATH` se borra por completo, así que solo debe contener ese sitio.
 
 > [!WARNING]
-> - Publishing over BlobFuse2 is slower than to a local disk, and the "empty for a moment" window is longer.
-> - If Azure Front Door caches the site, new content won't show until the cache expires or you purge it:
+> - Publicar sobre BlobFuse2 es más lento que a un disco local, y la ventana de "vacío por un momento" es más larga.
+> - Si Azure Front Door cachea el sitio, el contenido nuevo no se verá hasta que expire la caché o la purgues:
 >   ```bash
 >   az afd endpoint purge --resource-group <rg> --profile-name <profile> --endpoint-name <endpoint> --content-paths '/*'
 >   ```
->   The build-server doesn't do this for you. Use short cache times for HTML, or purge by hand after a rebuild.
+>   El build-server no hace esto por ti. Usa tiempos de caché cortos para el HTML, o purga a mano después de una reconstrucción.
 
-### Option C: Azure App Service / Container Apps (not recommended)
+### Opción C: Azure App Service / Container Apps (no recomendada)
 
-Possible, but it fights how the service works:
+Es posible, pero va en contra de cómo funciona el servicio:
 
-- Build status is kept in memory, so it needs **exactly one instance** (no scale-out).
-- `CODE_PATH`, `PUBLIC_PATH` and `node_modules` must be on persistent storage (`/home` on App Service), and
-  something has to serve `PUBLIC_PATH` as a website.
-- Restarts and platform updates kill any running build.
+- El estado de la compilación se guarda en memoria, así que necesita **exactamente una instancia** (sin scale-out).
+- `CODE_PATH`, `PUBLIC_PATH` y `node_modules` deben estar en almacenamiento persistente (`/home` en App Service), y
+  algo tiene que servir `PUBLIC_PATH` como sitio web.
+- Los reinicios y las actualizaciones de la plataforma matan cualquier compilación en curso.
 
-Only consider it if a VM is not allowed.
+Considérala solo si no se permite una VM.
 
-### Admin and CORS on Azure
+### Admin y CORS en Azure
 
-- If the admin is hosted on a **different domain** from the `/build-server/` proxy (e.g. the admin on Azure
-  Static Web Apps, the build-server on a VM), put the admin's exact origin in `ALLOWED_ORIGINS`
-  (`https://<name>.azurestaticapps.net` and/or its custom domain, comma-separated).
-- `VITE_BUILD_SERVER_URL` must always be the public HTTPS URL of the proxy, never `localhost` or the VM's
-  private IP.
-- The VM must be able to reach `CMS_BASE_URL` over HTTPS (outbound is open by default in Azure; check it if
-  your NSG restricts outbound traffic). Every rebuild and every token check depends on it.
+- Si el admin está alojado en un **dominio distinto** al del proxy `/build-server/` (p. ej. el admin en Azure
+  Static Web Apps y el build-server en una VM), pon el origen exacto del admin en `ALLOWED_ORIGINS`
+  (`https://<name>.azurestaticapps.net` y/o su dominio propio, separados por comas).
+- `VITE_BUILD_SERVER_URL` siempre debe ser la URL HTTPS pública del proxy, nunca `localhost` ni la
+  IP privada de la VM.
+- La VM debe poder llegar a `CMS_BASE_URL` por HTTPS (la salida está abierta por defecto en Azure; revísalo si
+  tu NSG restringe el tráfico de salida). Cada reconstrucción y cada validación de token dependen de ello.

@@ -1,57 +1,57 @@
-# Blue Gas — UI & CSS Guidelines for Fleet Conversion Platform
+# Blue Gas — Lineamientos de UI y CSS para la plataforma de conversión de flotillas
 
-This document outlines the visual identity system, CSS configuration, and UI/UX strategies for the **Blue Gas** Astro web platform. The primary goal is to convert fleet managers (taxis, delivery trucks, and bus lines) by establishing trust, demonstrating high ROI, and highlighting environmental efficiency.
-
----
-
-## 1. Brand Color System
-
-Based on the **Blue Gas Manual de Identidad Corporativa**, the primary colors convey technology, clean air, and reliability, while secondary colors provide high-contrast visual cues for ROI, safety, and fleet categorization.
-
-### Primary Palette (Brand Identity & Core UI)
-* **Pantone 281 UP (Dark Navy)**: `#0B2545` — Base darks, primary text, dark cards, headers, trust badges.
-* **Pantone 2925 UP (Clean Air Cyan)**: `#2B9CDB` — Active states, icons, secondary CTAs, gradients.
-* **Pantone 2171 UP (Tech Ocean Blue)**: `#0082CA` — Primary brand color, main CTA buttons, interactive links.
-
-### Secondary Palette (Functional & Fleet Differentiating)
-* **Pantone 123 U (Eco Green)**: `#44B77B` — ROI calculation results, fuel savings, eco certifications, success states.
-* **Pantone 142 U (Amber Gold)**: `#F5B025` — High priority badges, payback alerts, fuel price comparisons, warnings.
-* **Pantone 2035 UP (Royal Purple)**: `#5C2D83` — Heavy-duty fleet tags (buses/trucks), premium services, financing options.
+Este documento describe el sistema de identidad visual, la configuración de CSS y las estrategias de UI/UX para la plataforma web en Astro de **Blue Gas**. El objetivo principal es convertir a los gerentes de flotillas (taxis, camiones de reparto y líneas de autobuses) generando confianza, demostrando un ROI alto y destacando la eficiencia ambiental.
 
 ---
 
-## 2. Astro & CSS Configuration
+## 1. Sistema de colores de marca
 
-### Global CSS (`src/styles/global.css`)
-Add these CSS custom properties to your global stylesheet to maintain theme consistency across all Astro pages and components.
+Con base en el **Manual de Identidad Corporativa de Blue Gas**, los colores primarios transmiten tecnología, aire limpio y confiabilidad, mientras que los colores secundarios dan señales visuales de alto contraste para el ROI, la seguridad y la categorización de flotillas.
+
+### Paleta primaria (identidad de marca y UI base)
+* **Pantone 281 UP (Azul marino oscuro)**: `#0B2545` — Fondos oscuros base, texto principal, tarjetas oscuras, encabezados, insignias de confianza.
+* **Pantone 2925 UP (Cian aire limpio)**: `#2B9CDB` — Estados activos, íconos, CTAs secundarios, degradados.
+* **Pantone 2171 UP (Azul océano tecnológico)**: `#0082CA` — Color principal de la marca, botones CTA principales, links interactivos.
+
+### Paleta secundaria (funcional y para diferenciar flotillas)
+* **Pantone 123 U (Verde eco)**: `#44B77B` — Resultados del cálculo de ROI, ahorro de combustible, certificaciones ecológicas, estados de éxito.
+* **Pantone 142 U (Ámbar dorado)**: `#F5B025` — Insignias de alta prioridad, alertas de recuperación de la inversión, comparativas de precio de combustible, advertencias.
+* **Pantone 2035 UP (Púrpura real)**: `#5C2D83` — Etiquetas de flotillas pesadas (autobuses/camiones), servicios premium, opciones de financiamiento.
+
+---
+
+## 2. Configuración de Astro y CSS
+
+### CSS global (`src/styles/global.css`)
+Agrega estas custom properties de CSS a tu hoja de estilos global para mantener la consistencia del tema en todas las páginas y componentes de Astro.
 
 ```css
 @import "tailwindcss";
 
 :root {
-  /* Brand Primary Colors */
+  /* Colores primarios de marca */
   --color-brand-navy: #0B2545;
   --color-brand-cyan: #2B9CDB;
   --color-brand-blue: #0082CA;
 
-  /* Brand Secondary Colors */
+  /* Colores secundarios de marca */
   --color-brand-purple: #5C2D83;
   --color-brand-green: #44B77B;
   --color-brand-amber: #F5B025;
 
-  /* Neutrals for UI */
+  /* Neutros para la UI */
   --color-bg-light: #F8FAFC;
   --color-surface: #FFFFFF;
   --color-text-main: #0F172A;
   --color-text-muted: #475569;
   --color-border: #E2E8F0;
 
-  /* Fonts */
+  /* Fuentes */
   --font-heading: 'Inter', system-ui, -apple-system, sans-serif;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Base resets & styles */
+/* Resets y estilos base */
 body {
   background-color: var(--color-bg-light);
   color: var(--color-text-main);
@@ -59,7 +59,7 @@ body {
   line-height: 1.6;
 }
 
-/* Glassmorphism background for conversion calculators */
+/* Fondo glassmorphism para las calculadoras de conversión */
 .glass-card {
   background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(12px);
@@ -73,8 +73,8 @@ body {
 }
 ```
 
-### Tailwind Config (`tailwind.config.mjs`)
-Extend Tailwind CSS to map directly to the brand guidelines.
+### Config de Tailwind (`tailwind.config.mjs`)
+Extiende Tailwind CSS para que se mapee directo a los lineamientos de la marca.
 
 ```javascript
 /** @type {import('tailwindcss').Config} */
@@ -108,44 +108,44 @@ export default {
 
 ---
 
-## 3. Targeted UI/UX Strategies for Fleet Clients
+## 3. Estrategias de UI/UX enfocadas en clientes con flotillas
 
-Fleet managers (taxis, trucks, buses) care about three main metrics: **Cost Savings (OPEX)**, **Payback Period**, and **Fleet Reliability/Uptime**.
+A los gerentes de flotillas (taxis, camiones, autobuses) les importan tres métricas principales: **Ahorro en costos (OPEX)**, **Periodo de recuperación de la inversión** y **Confiabilidad/disponibilidad de la flotilla**.
 
-### 1. Hero Section Strategy
-* **Headline Focus**: Focus on economic return and fleet efficiency (e.g., *"Reduce Your Fleet Operating Costs by up to 50% with CNG Conversion"*).
-* **CTA Dual Action**: 
-  * Primary Action (`#0082CA` button): "Calculate Fleet Savings".
-  * Secondary Action (`#2B9CDB` border): "Request Fleet Audit".
-* **Background Visual**: High-contrast dark navy background (`#0B2545`) with subtle tech line patterns representing clean gas flow and energy networks.
+### 1. Estrategia de la sección hero
+* **Enfoque del titular**: Centrarse en el retorno económico y la eficiencia de la flotilla (p. ej., *"Reduce hasta 50% los costos operativos de tu flotilla con la conversión a GNC"*).
+* **CTA de doble acción**: 
+  * Acción principal (botón `#0082CA`): "Calcula el ahorro de tu flotilla".
+  * Acción secundaria (borde `#2B9CDB`): "Solicita una auditoría de flotilla".
+* **Visual de fondo**: Fondo azul marino oscuro de alto contraste (`#0B2545`) con patrones sutiles de líneas tecnológicas que representen el flujo de gas limpio y las redes de energía.
 
-### 2. Fleet Segment Categorization
-Use secondary palette colors to visually segment solution offerings:
+### 2. Categorización por segmento de flotilla
+Usa los colores de la paleta secundaria para segmentar visualmente las soluciones que se ofrecen:
 
-| Fleet Type | Accent Color | Visual Focus | Key Value Metric |
+| Tipo de flotilla | Color de acento | Enfoque visual | Métrica de valor clave |
 | :--- | :--- | :--- | :--- |
-| **Taxi & Rideshare** | `#F5B025` (Amber Gold) | Daily fuel expense reduction | Fuel cost/km reduction & ROI in < 4 months |
-| **Buses & Urban Transport** | `#5C2D83` (Royal Purple) | Environmental compliance & long-term savings | Euro VI emissions compliance & urban route efficiency |
-| **Heavy-Duty & Logistics Trucks** | `#0082CA` (Tech Ocean Blue) | Diesel-to-CNG displacement | High-mileage monthly savings & engine lifespan |
+| **Taxis y transporte por aplicación** | `#F5B025` (Ámbar dorado) | Reducción del gasto diario en combustible | Reducción del costo de combustible/km y ROI en < 4 meses |
+| **Autobuses y transporte urbano** | `#5C2D83` (Púrpura real) | Cumplimiento ambiental y ahorro a largo plazo | Cumplimiento de emisiones Euro VI y eficiencia en rutas urbanas |
+| **Camiones pesados y de logística** | `#0082CA` (Azul océano tecnológico) | Sustitución de diésel por GNC | Ahorro mensual en alto kilometraje y vida útil del motor |
 
-### 3. Interactive Fuel Savings Calculator
-Place an interactive component prominently on the homepage:
-* Use **Eco Green (`#44B77B`)** for the final money saved counter to highlight immediate value.
-* Allow users to toggle between **Taxi**, **Bus**, and **Truck**.
-* Sliders for: *Number of Vehicles*, *Average Daily Mileage (km)*, and *Current Monthly Fuel Spend*.
+### 3. Calculadora interactiva de ahorro de combustible
+Coloca un componente interactivo en un lugar destacado de la página de inicio:
+* Usa **Verde eco (`#44B77B`)** para el contador final de dinero ahorrado y así resaltar el valor inmediato.
+* Permite a los usuarios alternar entre **Taxi**, **Autobús** y **Camión**.
+* Sliders para: *Número de vehículos*, *Kilometraje diario promedio (km)* y *Gasto mensual actual en combustible*.
 
 ---
 
-## 4. Reusable Astro UI Component Examples
+## 4. Ejemplos de componentes de UI reutilizables en Astro
 
-### Component A: Hero Section (`src/components/Hero.astro`)
+### Componente A: Sección hero (`src/components/Hero.astro`)
 
 ```astro
 ---
 ---
 
 <section class="relative bg-bluegas-navy text-white py-20 px-6 overflow-hidden">
-  <!-- Subtle decorative light arc mirroring brand manual -->
+  <!-- Arco de luz decorativo sutil que replica el manual de marca -->
   <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full border border-bluegas-cyan/20 pointer-events-none"></div>
   <div class="absolute -top-16 -right-16 w-96 h-96 rounded-full border border-bluegas-blue/30 pointer-events-none"></div>
 
@@ -171,7 +171,7 @@ Place an interactive component prominently on the homepage:
       </div>
     </div>
 
-    <!-- Quick Stats Card -->
+    <!-- Tarjeta de cifras rápidas -->
     <div class="lg:col-span-5 bg-white/5 border border-white/10 p-6 rounded-2xl backdrop-blur-md">
       <h3 class="text-lg font-semibold text-bluegas-cyan mb-4">Proven Fleet Impact</h3>
       <div class="space-y-4">
@@ -189,7 +189,7 @@ Place an interactive component prominently on the homepage:
 </section>
 ```
 
-### Component B: Fleet Segment Card (`src/components/FleetCard.astro`)
+### Componente B: Tarjeta de segmento de flotilla (`src/components/FleetCard.astro`)
 
 ```astro
 ---
@@ -233,9 +233,9 @@ const borderAccent = {
 
 ---
 
-## 5. Summary Checklist forastro Developers
+## 5. Checklist de resumen para desarrolladores de Astro
 
-1. **Accessibility & Contrast**: Ensure text placed on `#0B2545` (Navy) is white or light slate (`#F8FAFC`). Use dark text on `#44B77B` or `#F5B025` buttons.
-2. **Performance**: Use Astro's static site generation (SSG) for fast rendering on mobile devices used by field fleet managers.
-3. **Interactive Islands**: Implement the savings calculator using React, Vue, or vanilla JS wrapped in an Astro client directive (`client:visible`).
-4. **Trust Signals**: Reserve space in the footer or sub-hero section for ISO certifications, gas equipment provider badges, and bank financing partners.
+1. **Accesibilidad y contraste**: Asegúrate de que el texto sobre `#0B2545` (azul marino) sea blanco o slate claro (`#F8FAFC`). Usa texto oscuro en botones `#44B77B` o `#F5B025`.
+2. **Rendimiento**: Usa la generación de sitios estáticos (SSG) de Astro para un renderizado rápido en los dispositivos móviles que usan los gerentes de flotilla en campo.
+3. **Islas interactivas**: Implementa la calculadora de ahorro con React, Vue o JS puro envuelto en una directiva de cliente de Astro (`client:visible`).
+4. **Señales de confianza**: Reserva espacio en el footer o en la sección sub-hero para certificaciones ISO, insignias de proveedores de equipo de gas y bancos aliados para financiamiento.

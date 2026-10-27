@@ -1,164 +1,164 @@
 # GNU Gas Natural — Landing
 
-Astro static site for GNU Gas Natural. Content (page sections, menu, blog posts, contact info, social links, stations, etc.) is authored in the headless CMS (gnu-cms-admin) and pulled in over REST **at build time**, then rendered to plain HTML/CSS/JS.
+Sitio estático en Astro para GNU Gas Natural. El contenido (secciones de página, menú, entradas del blog, datos de contacto, redes sociales, estaciones, etc.) se captura en el CMS headless (gnu-cms-admin) y se trae por REST **en tiempo de compilación**; después se renderiza a HTML/CSS/JS plano.
 
-## Project Structure
+## Estructura del proyecto
 
 ```text
 /
-├── public/                         # Static assets copied as-is (favicon, cursor, images)
+├── public/                         # Archivos estáticos que se copian tal cual (favicon, cursor, imágenes)
 ├── src/
-│   ├── assets/images/              # Images processed by Astro's asset pipeline (logos, seals, badges)
+│   ├── assets/images/              # Imágenes que procesa el pipeline de assets de Astro (logos, sellos, insignias)
 │   ├── components/
-│   │   ├── CmsPage.astro           # Renders a CMS page (GET pages/{slug}) in its section order
-│   │   ├── SectionRenderer.astro   # Maps a CMS section "type" to its component in sections/
-│   │   ├── sections/               # One component per CMS section type, plus home-only bands
-│   │   ├── BalancedGrid.astro      # Card grid with balanced rows + equal-height panels
-│   │   ├── CardBadge.astro         # Arrow badge on card panels
-│   │   ├── ServiceCards.astro      # "Explora …" poster cards on /nuestros-servicios and /sobre-nosotros
-│   │   ├── ChildPageCards.astro    # Child-page cards on /desarrollo-sostenible
-│   │   ├── BlogIndex.astro         # Blog listing (used by /blog and /blog/pagina/[page])
-│   │   ├── CertificacionesContent.astro  # Frontend-only content for /sobre-nosotros/certificaciones
-│   │   └── Simulator*.astro        # Savings simulator form/result and the floating button
+│   │   ├── CmsPage.astro           # Renderiza una página del CMS (GET pages/{slug}) en el orden de sus secciones
+│   │   ├── SectionRenderer.astro   # Relaciona cada "type" de sección del CMS con su componente en sections/
+│   │   ├── sections/               # Un componente por tipo de sección del CMS, más las bandas exclusivas de inicio
+│   │   ├── BalancedGrid.astro      # Cuadrícula de tarjetas con filas balanceadas + paneles de la misma altura
+│   │   ├── CardBadge.astro         # Insignia de flecha en los paneles de las tarjetas
+│   │   ├── ServiceCards.astro      # Tarjetas tipo póster "Explora …" en /nuestros-servicios y /sobre-nosotros
+│   │   ├── ChildPageCards.astro    # Tarjetas de páginas hijas en /desarrollo-sostenible
+│   │   ├── BlogIndex.astro         # Listado del blog (lo usan /blog y /blog/pagina/[page])
+│   │   ├── CertificacionesContent.astro  # Contenido solo del frontend para /sobre-nosotros/certificaciones
+│   │   └── Simulator*.astro        # Formulario/resultado del simulador de ahorro y el botón flotante
 │   ├── config/
-│   │   ├── labelOverrides.ts       # Nav/tab labels that differ from the CMS page title
-│   │   ├── menuOrder.ts            # Display order of menu children, per parent slug
-│   │   └── seo.ts                  # Site-wide SEO defaults
-│   ├── functions/fetch.ts          # Low-level REST client (fetchData/sendData/updateData, mediaUrl)
+│   │   ├── labelOverrides.ts       # Etiquetas de navegación/pestañas que difieren del título de la página en el CMS
+│   │   ├── menuOrder.ts            # Orden en que se muestran los hijos del menú, por slug del padre
+│   │   └── seo.ts                  # Valores SEO por defecto de todo el sitio
+│   ├── functions/fetch.ts          # Cliente REST de bajo nivel (fetchData/sendData/updateData, mediaUrl)
 │   ├── lib/
-│   │   ├── cms.ts                  # Typed, memoized CMS access (getPage, getMenu, getGlobals, childrenOf, …)
-│   │   ├── richText.ts             # Cleans up pasted rich text from the CMS
+│   │   ├── cms.ts                  # Acceso tipado y memoizado al CMS (getPage, getMenu, getGlobals, childrenOf, …)
+│   │   ├── richText.ts             # Limpia el texto enriquecido pegado desde el CMS
 │   │   ├── media.ts, social.ts, clientLogos.ts
-│   ├── layouts/Layout.astro        # Shared shell: header, nav, footer, floating buttons, SEO tags
-│   ├── pages/                      # File-based routing — each .astro file here is a route
-│   │   ├── index.astro             # Home: curated order, not the raw CMS section list
+│   ├── layouts/Layout.astro        # Estructura compartida: encabezado, navegación, pie, botones flotantes, etiquetas SEO
+│   ├── pages/                      # Rutas basadas en archivos: cada .astro aquí es una ruta
+│   │   ├── index.astro             # Inicio: orden curado, no la lista de secciones tal como viene del CMS
 │   │   ├── nuestros-servicios/     # + gnv, gnc, gnd
 │   │   ├── sobre-nosotros/         # + nuestra-historia, proposito-empresarial, valores, certificaciones
 │   │   ├── desarrollo-sostenible/  # + ecovadis, iniciativas-rse, voluntariado, distintivo-esr
 │   │   ├── blog/                   # index, [slug], pagina/[page]
 │   │   └── contacto/
-│   ├── styles/                     # global.css, tokens.css (design tokens)
+│   ├── styles/                     # global.css, tokens.css (tokens de diseño)
 │   └── types/globals.ts
-├── certificaciones_images/         # Source images + CAMPOS-BACKEND.md (fields the CMS still needs)
-├── NEW-FIELDS.md                   # Fields the frontend already renders but the CMS doesn't have yet
+├── certificaciones_images/         # Imágenes fuente + CAMPOS-BACKEND.md (campos que aún le faltan al CMS)
+├── NEW-FIELDS.md                   # Campos que el frontend ya renderiza pero que el CMS todavía no tiene
 ├── astro.config.mjs
-├── .env                            # CMS_API_URL (not committed)
+├── .env                            # CMS_API_URL (no se sube al repositorio)
 └── package.json
 ```
 
-Reusable, non-component logic must live in a plain `.ts` file, not a `.astro` file. See [Notes & gotchas](#notes--gotchas).
+La lógica reutilizable que no es un componente debe vivir en un archivo `.ts` plano, no en un `.astro`. Consulta [Notas y advertencias](#notas-y-advertencias).
 
-## Environment configuration
+## Configuración del entorno
 
-The site reads the CMS base URL from a single env var:
+El sitio lee la URL base del CMS de una sola variable de entorno:
 
 ```env
 # .env
 CMS_API_URL=https://gnu-headless-cms.165.227.59.215.sslip.io/api/public/gnu/
 ```
 
-- Create `.env` in the project root before running dev or build. It is **not** committed to git.
-- `src/functions/fetch.ts` reads it via `import.meta.env.CMS_API_URL` and falls back to `http://localhost:3000/` if unset.
-- **This is a build-time value.** The site builds to static output (no server adapter), so every CMS call happens during `npm run build`, and the HTML in `dist/` keeps whatever `CMS_API_URL` pointed to then. To point at a different CMS, edit `.env` and rebuild.
-- Don't name a custom env var `BASE_URL`. Vite/Astro reserve that name and silently override it with `"/"`. The same applies to `MODE`, `DEV`, `PROD`, `SSR`, `SITE` and `ASSETS_PREFIX`.
+- Crea `.env` en la raíz del proyecto antes de correr dev o build. **No** se sube a git.
+- `src/functions/fetch.ts` la lee con `import.meta.env.CMS_API_URL` y, si no está definida, usa `http://localhost:3000/`.
+- **Es un valor de tiempo de compilación.** El sitio se compila a salida estática (sin adaptador de servidor), así que todas las llamadas al CMS ocurren durante `npm run build`, y el HTML en `dist/` se queda con lo que apuntaba `CMS_API_URL` en ese momento. Para apuntar a otro CMS, edita `.env` y vuelve a compilar.
+- No nombres `BASE_URL` a una variable de entorno propia. Vite/Astro reservan ese nombre y lo sobrescriben en silencio con `"/"`. Lo mismo aplica para `MODE`, `DEV`, `PROD`, `SSR`, `SITE` y `ASSETS_PREFIX`.
 
-## How the site talks to the CMS
+## Cómo se comunica el sitio con el CMS
 
-Pages and components read the CMS through [src/lib/cms.ts](src/lib/cms.ts), which wraps the low-level client in [src/functions/fetch.ts](src/functions/fetch.ts):
+Las páginas y los componentes leen el CMS a través de [src/lib/cms.ts](src/lib/cms.ts), que envuelve al cliente de bajo nivel de [src/functions/fetch.ts](src/functions/fetch.ts):
 
-| Function | Endpoint | Use |
+| Función | Endpoint | Uso |
 | :------- | :------- | :-- |
-| `getPage(slug)` | `GET pages/{slug}` | A page's sections (`{ type, content }[]`) |
-| `getMenu()` | `GET menu` | Nav tree; children reordered per `config/menuOrder.ts` |
-| `getGlobals()` | `GET globals` | Footer contact info, social links, WhatsApp button, testimonials |
-| `getBlogList(page)`, `getAllBlogPosts()`, `getBlogPost(slug)` | `GET blog…` | Blog listing and posts |
-| `childrenOf(slug)` | (from `menu`) | A hub's published child pages, used for hub cards |
-| `sectionOf(page, type)`, `heroOf(page)` | — | Pick a section out of a loaded page |
+| `getPage(slug)` | `GET pages/{slug}` | Las secciones de una página (`{ type, content }[]`) |
+| `getMenu()` | `GET menu` | Árbol de navegación; los hijos se reordenan según `config/menuOrder.ts` |
+| `getGlobals()` | `GET globals` | Datos de contacto del pie, redes sociales, botón de WhatsApp, testimonios |
+| `getBlogList(page)`, `getAllBlogPosts()`, `getBlogPost(slug)` | `GET blog…` | Listado y entradas del blog |
+| `childrenOf(slug)` | (desde `menu`) | Las páginas hijas publicadas de un hub, para sus tarjetas |
+| `sectionOf(page, type)`, `heroOf(page)` | — | Sacan una sección de una página ya cargada |
 
-Responses are memoized per endpoint, so a full build makes one request per endpoint no matter how many pages use it. `fetch.ts` also exposes `sendData`/`updateData` (POST/PUT, used by forms) and `mediaUrl(path)`, which resolves CMS media paths to absolute URLs.
+Las respuestas se memoizan por endpoint, así que una compilación completa hace una sola petición por endpoint sin importar cuántas páginas lo usen. `fetch.ts` también expone `sendData`/`updateData` (POST/PUT, los usan los formularios) y `mediaUrl(path)`, que convierte las rutas de medios del CMS en URLs absolutas.
 
-Most routes are a single `<CmsPage slug="…" />`. [SectionRenderer.astro](src/components/SectionRenderer.astro) maps each section `type` to its component. To add a new CMS-driven block:
+La mayoría de las rutas son un solo `<CmsPage slug="…" />`. [SectionRenderer.astro](src/components/SectionRenderer.astro) relaciona cada `type` de sección con su componente. Para agregar un bloque nuevo controlado por el CMS:
 
-1. Create a component in `src/components/sections/`.
-2. Add a case for its `type` in `SectionRenderer.astro`.
-3. Have the CMS emit sections of that `type`.
+1. Crea un componente en `src/components/sections/`.
+2. Agrega un caso para su `type` en `SectionRenderer.astro`.
+3. Haz que el CMS emita secciones de ese `type`.
 
-The site also calls one endpoint live in the browser: the savings simulator fetches current prices from `GET savings-simulator?page=…` when a visitor calculates.
+El sitio también llama un endpoint en vivo desde el navegador: el simulador de ahorro trae los precios actuales de `GET savings-simulator?page=…` cuando un visitante hace un cálculo.
 
-## Frontend-side overrides
+## Ajustes del lado del frontend
 
-Some display decisions live in this repo instead of the CMS. When something on the site doesn't match the admin, check here first.
+Algunas decisiones de presentación viven en este repositorio y no en el CMS. Cuando algo del sitio no coincida con el panel, revisa aquí primero.
 
-| What | Where |
+| Qué | Dónde |
 | :--- | :---- |
-| Nav labels (e.g. Distintivo ESR → "Reconocimientos") | `src/config/labelOverrides.ts` |
-| Menu child order for Sobre nosotros and Desarrollo sostenible | `src/config/menuOrder.ts` |
-| Hide CMS sections on one page | `excludeTypes` on `<CmsPage>` (Propósito empresarial: `feature_grid`; GNC/GND: `savings_simulator`; Nuestros servicios: `clients_showcase`; Certificaciones: `feature_grid`) |
-| Savings simulator shown only on GNV, borrowed from the GNC page in the CMS | `insertSection` in `src/pages/nuestros-servicios/gnv/index.astro` |
-| Certificaciones page body (ISO 9001 block) | `src/components/CertificacionesContent.astro`, until the CMS fields in `certificaciones_images/CAMPOS-BACKEND.md` exist |
-| Stations list shown in reverse of the API order | `src/components/sections/StationsMap.astro` |
-| Hub section titles/subtitles ("Explora …" blocks) | The hub's own `src/pages/**/index.astro` |
+| Etiquetas de navegación (p. ej. Distintivo ESR → "Reconocimientos") | `src/config/labelOverrides.ts` |
+| Orden de los hijos del menú de Sobre nosotros y Desarrollo sostenible | `src/config/menuOrder.ts` |
+| Ocultar secciones del CMS en una página | `excludeTypes` en `<CmsPage>` (Propósito empresarial: `feature_grid`; GNC/GND: `savings_simulator`; Nuestros servicios: `clients_showcase`; Certificaciones: `feature_grid`) |
+| Simulador de ahorro que solo se muestra en GNV, tomado de la página GNC del CMS | `insertSection` en `src/pages/nuestros-servicios/gnv/index.astro` |
+| Cuerpo de la página Certificaciones (bloque ISO 9001) | `src/components/CertificacionesContent.astro`, hasta que existan en el CMS los campos de `certificaciones_images/CAMPOS-BACKEND.md` |
+| Lista de estaciones en orden inverso al de la API | `src/components/sections/StationsMap.astro` |
+| Títulos/subtítulos de las secciones de los hubs (bloques "Explora …") | El propio `src/pages/**/index.astro` del hub |
 
-## 🧞 Commands
+## 🧞 Comandos
 
-| Command | Action |
+| Comando | Acción |
 | :------ | :----- |
-| `npm install` | Install dependencies |
-| `npm run dev` | Start local dev server at `localhost:4321` |
-| `npm run build` | Fetch content from the CMS and build static output to `./dist/` |
-| `npm run preview` | Serve the built `./dist/` locally, exactly as it will be deployed |
-| `npm run astro ...` | Run CLI commands like `astro add`, `astro check` |
+| `npm install` | Instala las dependencias |
+| `npm run dev` | Levanta el servidor de desarrollo local en `localhost:4321` |
+| `npm run build` | Trae el contenido del CMS y compila la salida estática en `./dist/` |
+| `npm run preview` | Sirve localmente el `./dist/` compilado, tal como se va a desplegar |
+| `npm run astro ...` | Corre comandos del CLI como `astro add`, `astro check` |
 
-## Development
+## Desarrollo
 
 1. `npm install`
-2. Create `.env` with `CMS_API_URL` pointing at a reachable CMS (local or remote).
+2. Crea `.env` con `CMS_API_URL` apuntando a un CMS accesible (local o remoto).
 3. `npm run dev`
 
-**Restart the dev server to see CMS edits.** The memo cache in `src/lib/cms.ts` lives as long as the dev server process, so pages keep showing the content fetched on the first request until you restart. Frontend code changes still hot-reload.
+**Reinicia el servidor de desarrollo para ver los cambios del CMS.** La caché memoizada de `src/lib/cms.ts` dura lo que dure el proceso del servidor de desarrollo, así que las páginas siguen mostrando el contenido que se trajo en la primera petición hasta que lo reinicies. Los cambios en el código del frontend sí se recargan en caliente.
 
-To check a production build without touching `dist/`, build to a temporary folder: `npx astro build --outDir <temp-dir>`.
+Para revisar una compilación de producción sin tocar `dist/`, compila a una carpeta temporal: `npx astro build --outDir <temp-dir>`.
 
-When starting the dev server for an automated/background task, use `astro dev --background`, and manage it with `astro dev status`, `astro dev logs` and `astro dev stop`.
+Cuando levantes el servidor de desarrollo para una tarea automatizada o en segundo plano, usa `astro dev --background` y adminístralo con `astro dev status`, `astro dev logs` y `astro dev stop`.
 
-## Building for production
+## Compilar para producción
 
 ```sh
 npm run build
-npm run preview   # verify locally before deploying
+npm run preview   # verifica localmente antes de desplegar
 ```
 
-This produces a fully static site in `dist/`, with no server runtime required. Content is fetched at build time, so **any CMS content change needs a new build and deploy** to appear on the live site.
+Esto genera un sitio totalmente estático en `dist/`, sin necesidad de un runtime de servidor. El contenido se trae en tiempo de compilación, así que **cualquier cambio de contenido en el CMS necesita una nueva compilación y despliegue** para aparecer en el sitio en vivo.
 
-## Deployment
+## Despliegue
 
-`dist/` is a static bundle, so it can be hosted anywhere that serves static files. The site is deployed to AWS S3, Azure and a VPS with nginx; each is covered below.
+`dist/` es un paquete estático, así que se puede hospedar en cualquier lugar que sirva archivos estáticos. El sitio se despliega en AWS S3, Azure y un VPS con nginx; cada uno se explica abajo.
 
-Two things apply to every target:
+Dos cosas aplican a todos los destinos:
 
-- **Folder URLs**: each page is built as a folder with an `index.html` (e.g. `/sobre-nosotros/valores/` is `dist/sobre-nosotros/valores/index.html`). The host must serve `index.html` for a folder URL, not only at the root.
-- **Cache headers**: HTML should be revalidated on every visit (`Cache-Control: no-cache`) so visitors get new builds right away. Files under `/_astro/` have content hashes in their names and can be cached for a year (`public, max-age=31536000, immutable`).
+- **URLs de carpeta**: cada página se compila como una carpeta con un `index.html` (p. ej. `/sobre-nosotros/valores/` es `dist/sobre-nosotros/valores/index.html`). El hosting debe servir `index.html` para una URL de carpeta, no solo en la raíz.
+- **Encabezados de caché**: el HTML debe revalidarse en cada visita (`Cache-Control: no-cache`) para que los visitantes reciban las compilaciones nuevas de inmediato. Los archivos bajo `/_astro/` llevan un hash de contenido en el nombre y se pueden cachear por un año (`public, max-age=31536000, immutable`).
 
 ### AWS S3 (+ CloudFront)
 
-1. **Build** locally or in CI with `CMS_API_URL` set: `npm ci && npm run build`.
-2. **Upload** in two passes so each kind of file gets the right cache header, and `--delete` removes files from older builds:
+1. **Compila** localmente o en CI con `CMS_API_URL` definida: `npm ci && npm run build`.
+2. **Sube** en dos pasadas para que cada tipo de archivo reciba el encabezado de caché correcto, y para que `--delete` borre los archivos de compilaciones anteriores:
 
    ```sh
    BUCKET=s3://your-bucket
 
-   # Hashed assets: cache for a year.
+   # Assets con hash: caché de un año.
    aws s3 sync dist/_astro "$BUCKET/_astro" --delete \
      --cache-control "public, max-age=31536000, immutable"
 
-   # Everything else (HTML, public/ files): always revalidate.
+   # Todo lo demás (HTML, archivos de public/): revalidar siempre.
    aws s3 sync dist "$BUCKET" --delete --exclude "_astro/*" \
      --cache-control "no-cache"
    ```
 
-3. **Serve** it one of two ways:
-   - **S3 static website hosting (no CloudFront)**: enable it on the bucket with index document `index.html` and error document `404.html` if you add one. The website endpoint resolves folder URLs on its own. It's HTTP only, and the bucket must allow public reads.
-   - **CloudFront in front of a private bucket (recommended, HTTPS)**: use the bucket's REST endpoint as the origin with Origin Access Control, and set the default root object to `index.html`. The REST origin does **not** resolve folder URLs, so `/sobre-nosotros/` would return an error. Add this CloudFront Function on the *viewer request* event:
+3. **Sírvelo** de una de estas dos formas:
+   - **Hosting de sitio web estático de S3 (sin CloudFront)**: actívalo en el bucket con documento índice `index.html` y documento de error `404.html` si agregas uno. El endpoint de sitio web resuelve las URLs de carpeta por sí solo. Solo funciona con HTTP, y el bucket debe permitir lecturas públicas.
+   - **CloudFront delante de un bucket privado (recomendado, HTTPS)**: usa el endpoint REST del bucket como origen con Origin Access Control, y configura `index.html` como objeto raíz por defecto. El origen REST **no** resuelve las URLs de carpeta, así que `/sobre-nosotros/` devolvería un error. Agrega esta CloudFront Function en el evento *viewer request*:
 
      ```js
      function handler(event) {
@@ -173,7 +173,7 @@ Two things apply to every target:
      }
      ```
 
-4. **After each deploy with CloudFront**, invalidate cached HTML so the edge serves the new build. `/_astro/*` files don't need it, since new builds use new file names:
+4. **Después de cada despliegue con CloudFront**, invalida el HTML en caché para que el edge sirva la compilación nueva. Los archivos de `/_astro/*` no lo necesitan, porque las compilaciones nuevas usan nombres de archivo nuevos:
 
    ```sh
    aws cloudfront create-invalidation --distribution-id <ID> --paths "/*"
@@ -181,12 +181,12 @@ Two things apply to every target:
 
 ### Azure
 
-Two options:
+Dos opciones:
 
-**Azure Storage static website (Blob)**, the closest match to S3:
+**Sitio web estático de Azure Storage (Blob)**, lo más parecido a S3:
 
-1. In the storage account, enable *Static website* with index document `index.html`. Azure creates a `$web` container, and the index document also applies to subfolders, so folder URLs work.
-2. Upload in two passes, in this order. The first uploads everything with `no-cache`; the second re-uploads `_astro/` with the long cache header:
+1. En la cuenta de almacenamiento, activa *Static website* con documento índice `index.html`. Azure crea un contenedor `$web`, y el documento índice también aplica a las subcarpetas, así que las URLs de carpeta funcionan.
+2. Sube en dos pasadas, en este orden. La primera sube todo con `no-cache`; la segunda vuelve a subir `_astro/` con el encabezado de caché largo:
 
    ```sh
    ACCOUNT=yourstorageaccount
@@ -199,15 +199,15 @@ Two options:
      --content-cache-control "public, max-age=31536000, immutable"
    ```
 
-   `upload-batch` doesn't delete files from older builds. Clear stale files with `az storage blob delete-batch` or `azcopy sync --delete-destination=true`.
+   `upload-batch` no borra los archivos de compilaciones anteriores. Limpia los archivos viejos con `az storage blob delete-batch` o `azcopy sync --delete-destination=true`.
 
-3. For HTTPS on a custom domain, put **Azure Front Door** (or Azure CDN) in front, and purge it after each deploy.
+3. Para HTTPS en un dominio propio, pon **Azure Front Door** (o Azure CDN) delante y purga su caché después de cada despliegue.
 
-**Azure Static Web Apps**, a managed build and hosting service:
+**Azure Static Web Apps**, un servicio administrado de compilación y hosting:
 
-1. Create the resource pointed at this repo/branch, with app location `/` and output location `dist`. Every push then builds and deploys automatically.
-2. Add `CMS_API_URL` under *Configuration → Environment variables*. It's read at build time.
-3. Folder URLs work out of the box. Set cache headers in a `staticwebapp.config.json` placed in `public/`, so it's copied into `dist/`:
+1. Crea el recurso apuntando a este repositorio/rama, con ubicación de la app `/` y ubicación de salida `dist`. A partir de ahí, cada push compila y despliega automáticamente.
+2. Agrega `CMS_API_URL` en *Configuration → Environment variables*. Se lee en tiempo de compilación.
+3. Las URLs de carpeta funcionan desde el principio. Define los encabezados de caché en un `staticwebapp.config.json` dentro de `public/`, para que se copie a `dist/`:
 
    ```json
    {
@@ -221,19 +221,19 @@ Two options:
    }
    ```
 
-4. CMS content changes don't push to the repo, so trigger a redeploy from the Azure portal or a GitHub Actions `workflow_dispatch` after content edits.
+4. Los cambios de contenido en el CMS no hacen push al repositorio, así que dispara un nuevo despliegue desde el portal de Azure o con un `workflow_dispatch` de GitHub Actions después de editar contenido.
 
-### Other static hosts (Vercel, Netlify, Cloudflare Pages)
+### Otros hostings estáticos (Vercel, Netlify, Cloudflare Pages)
 
-1. Set `CMS_API_URL` as a build-time environment variable in the platform's project settings.
-2. Build command: `npm run build`; output directory: `dist`.
-3. Trigger a new deploy whenever CMS content changes.
+1. Define `CMS_API_URL` como variable de entorno de tiempo de compilación en la configuración del proyecto en la plataforma.
+2. Comando de compilación: `npm run build`; directorio de salida: `dist`.
+3. Dispara un nuevo despliegue cada vez que cambie el contenido del CMS.
 
-### VPS with nginx
+### VPS con nginx
 
-1. Install Node `>=22.12.0` (per `package.json` engines), or build elsewhere and ship only `dist/`.
-2. Set `.env` with the correct `CMS_API_URL`, then run `npm ci && npm run build`.
-3. Serve `dist/` with nginx:
+1. Instala Node `>=22.12.0` (según `engines` en `package.json`), o compila en otro lado y sube solo `dist/`.
+2. Configura `.env` con el `CMS_API_URL` correcto y luego corre `npm ci && npm run build`.
+3. Sirve `dist/` con nginx:
 
    ```nginx
    server {
@@ -245,27 +245,27 @@ Two options:
 
        location / {
            try_files $uri $uri/ $uri.html =404;
-           # Always revalidate HTML so visitors get new builds (cheap 304s via ETag).
+           # Revalidar siempre el HTML para que los visitantes reciban las compilaciones nuevas (304 baratos vía ETag).
            add_header Cache-Control "no-cache";
        }
 
-       # Hashed build assets never change under the same name.
+       # Los assets compilados con hash nunca cambian bajo el mismo nombre.
        location /_astro/ {
            add_header Cache-Control "public, max-age=31536000, immutable";
        }
    }
    ```
 
-4. Reload nginx: `sudo nginx -t && sudo systemctl reload nginx`.
-5. To redeploy, rebuild and copy the new `dist/` over the old one. No restart is needed.
+4. Recarga nginx: `sudo nginx -t && sudo systemctl reload nginx`.
+5. Para volver a desplegar, compila de nuevo y copia el `dist/` nuevo encima del anterior. No hace falta reiniciar nada.
 
-Without the `Cache-Control` header on HTML, browsers guess how long to keep pages and can show an older build after a deploy. The nginx server at `gnu.165.227.59.215.sslip.io` currently sends no such header.
+Sin el encabezado `Cache-Control` en el HTML, los navegadores adivinan cuánto tiempo conservar las páginas y pueden mostrar una compilación anterior después de un despliegue. El servidor nginx de `gnu.165.227.59.215.sslip.io` hoy no envía ese encabezado.
 
-## Notes & gotchas
+## Notas y advertencias
 
-- **Static output, build-time data**: every CMS fetch runs once at `astro build`, not per request in production. Env var changes on the server do nothing without a rebuild.
-- **Reserved env var names**: never use `BASE_URL` (or `MODE`, `DEV`, `PROD`, `SSR`, `SITE`, `ASSETS_PREFIX`) for a custom `.env` value.
-- **No shared logic in `.astro` files**: keep reusable, non-UI functions in `.ts` files (`src/lib/`, `src/functions/`, `src/config/`). Astro scopes top-level `const`/`let` in a component's frontmatter differently from `export function` in the same frontmatter, so a plain constant can be `undefined` inside an exported function at runtime.
-- **Media URLs**: CMS-relative media paths are resolved through `mediaUrl()` against the CMS origin under `/storage/<path>`. Don't hardcode the CMS host elsewhere.
-- **Hero media sizes**: the home carousel is sized for 1138×474 banners (800×340 also fits, with thin side strips). Inner page heroes expect 2048×768 images and 800×320 GIFs. GIFs are always shown whole (no crop, no zoom) over a blurred copy of themselves.
-- **Missing CMS fields**: fields the frontend already supports but the CMS doesn't expose yet are listed in `NEW-FIELDS.md` and `certificaciones_images/CAMPOS-BACKEND.md`.
+- **Salida estática, datos en tiempo de compilación**: cada fetch al CMS corre una sola vez en `astro build`, no en cada petición en producción. Cambiar variables de entorno en el servidor no tiene efecto sin volver a compilar.
+- **Nombres de variables de entorno reservados**: nunca uses `BASE_URL` (ni `MODE`, `DEV`, `PROD`, `SSR`, `SITE`, `ASSETS_PREFIX`) para un valor propio en `.env`.
+- **Nada de lógica compartida en archivos `.astro`**: deja las funciones reutilizables que no son de UI en archivos `.ts` (`src/lib/`, `src/functions/`, `src/config/`). Astro maneja el alcance de los `const`/`let` de nivel superior en el frontmatter de un componente de forma distinta a un `export function` en el mismo frontmatter, así que una constante simple puede ser `undefined` dentro de una función exportada en tiempo de ejecución.
+- **URLs de medios**: las rutas de medios relativas del CMS se resuelven con `mediaUrl()` contra el origen del CMS bajo `/storage/<path>`. No pongas en duro el host del CMS en ningún otro lugar.
+- **Tamaños de medios del hero**: el carrusel de inicio está dimensionado para banners de 1138×474 (800×340 también cabe, con franjas laterales delgadas). Los heroes de las páginas internas esperan imágenes de 2048×768 y GIFs de 800×320. Los GIFs siempre se muestran completos (sin recorte ni zoom) sobre una copia desenfocada de sí mismos.
+- **Campos faltantes en el CMS**: los campos que el frontend ya soporta pero que el CMS todavía no expone están listados en `NEW-FIELDS.md` y `certificaciones_images/CAMPOS-BACKEND.md`.

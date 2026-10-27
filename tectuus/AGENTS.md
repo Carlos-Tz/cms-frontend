@@ -1,22 +1,22 @@
-## Development
+## Desarrollo
 
-When starting the dev server, use background mode:
+Al iniciar el servidor de desarrollo, usa el modo en segundo plano:
 
 ```
 astro dev --background
 ```
 
-Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
+Administra el servidor en segundo plano con `astro dev stop`, `astro dev status` y `astro dev logs`.
 
-## Documentation
+## Documentación
 
-Full documentation: https://docs.astro.build
+Documentación completa: https://docs.astro.build
 
-Consult these guides before working on related tasks:
+Consulta estas guías antes de trabajar en tareas relacionadas:
 
-- [Adding pages, dynamic routes, or middleware](https://docs.astro.build/en/guides/routing/)
-- [Working with Astro components](https://docs.astro.build/en/basics/astro-components/)
-- [Using React, Vue, Svelte, or other framework components](https://docs.astro.build/en/guides/framework-components/)
-- [Adding or managing content](https://docs.astro.build/en/guides/content-collections/)
-- [Adding styles or using Tailwind](https://docs.astro.build/en/guides/styling/)
-- [Supporting multiple languages](https://docs.astro.build/en/guides/internationalization/)
+- [Agregar páginas, rutas dinámicas o middleware](https://docs.astro.build/en/guides/routing/)
+- [Trabajar con componentes de Astro](https://docs.astro.build/en/basics/astro-components/)
+- [Usar componentes de React, Vue, Svelte u otros frameworks](https://docs.astro.build/en/guides/framework-components/)
+- [Agregar o administrar contenido](https://docs.astro.build/en/guides/content-collections/)
+- [Agregar estilos o usar Tailwind](https://docs.astro.build/en/guides/styling/)
+- [Soportar varios idiomas](https://docs.astro.build/en/guides/internationalization/)

@@ -1,26 +1,26 @@
 # GNU CMS Admin
 
-React + Vite app using Tailwind CSS v4 (`@tailwindcss/vite`, no config file — utilities used directly) and `react-router` v8 (import from `"react-router"`, not `react-router-dom`).
+App de React + Vite con Tailwind CSS v4 (`@tailwindcss/vite`, sin archivo de configuración — las utilidades se usan directamente) y `react-router` v8 (importa de `"react-router"`, no de `react-router-dom`).
 
-## Server layout (production)
+## Estructura del servidor (producción)
 
-Each public site lives as two **independent** directories on the server — not nested, no shared parent folder:
+Cada sitio público vive como dos directorios **independientes** en el servidor — no anidados, sin carpeta padre compartida:
 
 ```
-<CODE_PATH>/              ← the Astro project (package.json, src/, node_modules/ installed) — the build runs here
-└── dist/                   produced by `npm run build`
+<CODE_PATH>/              ← el proyecto de Astro (package.json, src/, node_modules/ instalados) — aquí corre la compilación
+└── dist/                   generado por `npm run build`
 
-<PUBLIC_PATH>/            ← what the web server actually serves
+<PUBLIC_PATH>/            ← lo que el servidor web realmente sirve
 ├── _astro/                ┐
-├── blog/ contacto/…       │ fully replaced with the contents of <CODE_PATH>/dist/ after a rebuild
+├── blog/ contacto/…       │ reemplazado por completo con el contenido de <CODE_PATH>/dist/ después de una reconstrucción
 └── index.html             ┘
 ```
 
-`administracion-cms` (this admin's own Vite build output) and `build-server` are deployed separately and aren't part of this per-site CODE_PATH/PUBLIC_PATH pair.
+`administracion-cms` (la salida de la compilación de Vite de este mismo admin) y `build-server` se despliegan por separado y no forman parte de este par CODE_PATH/PUBLIC_PATH por sitio.
 
-Admin route prefix → repo project (`CODE_PATH`) → CMS slug (the names don't match — see `build-server/README.md`):
+Prefijo de ruta del admin → proyecto del repo (`CODE_PATH`) → slug del CMS (los nombres no coinciden — ver `build-server/README.md`):
 
-| Admin route | Repo project | CMS slug |
+| Ruta del admin | Proyecto del repo | Slug del CMS |
 | :-- | :-- | :-- |
 | `/gnu` | `landing-gnu` | `gnu` |
 | `/gas-natural` | `gas-gnu` | `gnu-vehicular` |
@@ -29,35 +29,35 @@ Admin route prefix → repo project (`CODE_PATH`) → CMS slug (the names don't 
 
 ## "Reconstruir sitio"
 
-`src/components/rebuild-site-button.jsx` (on each site's `select-page.jsx`) publishes saved CMS edits. The browser can't run `npm run build` or touch the server's filesystem, so the button calls the separate `build-server/` service (`VITE_BUILD_SERVER_URL`, see `src/functions/fetch.jsx` → `rebuildSite` / `getRebuildStatus`) — only that URL belongs in this admin's `.env`; the actual `CODE_PATH`/`PUBLIC_PATH` filesystem paths live in `build-server`'s own `.env` (`VITE_<SITE>_CODE_PATH` / `VITE_<SITE>_PUBLIC_PATH`), never shipped to the browser. The service runs `npm run build` in `CODE_PATH`, then fully replaces the contents of `PUBLIC_PATH` with `CODE_PATH/dist/`. See `../build-server/README.md`.
+`src/components/rebuild-site-button.jsx` (en el `select-page.jsx` de cada sitio) publica las ediciones guardadas en el CMS. El navegador no puede correr `npm run build` ni tocar el sistema de archivos del servidor, así que el botón llama al servicio independiente `build-server/` (`VITE_BUILD_SERVER_URL`, ver `src/functions/fetch.jsx` → `rebuildSite` / `getRebuildStatus`) — solo esa URL va en el `.env` de este admin; las rutas reales del sistema de archivos `CODE_PATH`/`PUBLIC_PATH` viven en el `.env` propio de `build-server` (`VITE_<SITE>_CODE_PATH` / `VITE_<SITE>_PUBLIC_PATH`) y nunca se envían al navegador. El servicio corre `npm run build` en `CODE_PATH` y luego reemplaza por completo el contenido de `PUBLIC_PATH` con `CODE_PATH/dist/`. Ver `../build-server/README.md`.
 
-## Routing
+## Rutas
 
-- `src/App.jsx` owns the top-level `<Routes>` and renders the landing page directly.
-- Route components live under `src/pages/<name>/index.jsx` and are routed at `/<name>` (e.g. `pages/login` → `/login`, `pages/home` → `/home`), not `/pages/<name>`.
-- `BrowserRouter` wraps `<App />` in `src/main.jsx`.
+- `src/App.jsx` es dueño del `<Routes>` de nivel superior y renderiza directamente la landing page.
+- Los componentes de ruta viven en `src/pages/<name>/index.jsx` y se enrutan en `/<name>` (p. ej. `pages/login` → `/login`, `pages/home` → `/home`), no en `/pages/<name>`.
+- `BrowserRouter` envuelve a `<App />` en `src/main.jsx`.
 
-## Design system
+## Sistema de diseño
 
-Dark, violet/blue brand derived from `public/favicon.svg` and `public/icons.svg`.
+Marca oscura en violeta/azul, derivada de `public/favicon.svg` y `public/icons.svg`.
 
-**Colors**
-- Background: `#0b0611`
-- Primary accent (violet): `#863bff` / `#7e14ff`
-- Secondary accent (blue): `#47bfff`
-- Light accent text (e.g. eyebrow labels): `#c9a3ff`
-- Body copy on dark bg: `text-white` at reduced opacity (`text-white/60`, `/70`, `/40`) rather than gray tones
+**Colores**
+- Fondo: `#0b0611`
+- Acento primario (violeta): `#863bff` / `#7e14ff`
+- Acento secundario (azul): `#47bfff`
+- Texto de acento claro (p. ej. etiquetas eyebrow): `#c9a3ff`
+- Texto de cuerpo sobre fondo oscuro: `text-white` con opacidad reducida (`text-white/60`, `/70`, `/40`) en lugar de tonos grises
 
-**Components**
-- Primary CTA: pill button (`rounded-full`), gradient `from-[#863bff] to-[#47bfff]`, `shadow-lg shadow-[#863bff]/30`, `hover:brightness-110`
-- Secondary/nav button: `rounded-full border border-white/15`, hover to `border-white/30`
-- Cards/panels: "glass" style — `rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm`
+**Componentes**
+- CTA primario: botón tipo píldora (`rounded-full`), degradado `from-[#863bff] to-[#47bfff]`, `shadow-lg shadow-[#863bff]/30`, `hover:brightness-110`
+- Botón secundario/de navegación: `rounded-full border border-white/15`, en hover cambia a `border-white/30`
+- Tarjetas/paneles: estilo "glass" — `rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm`
 - Inputs: `rounded-lg border border-white/15 bg-white/5`, `focus:border-[#863bff]`
-- Headline gradient text: wrap the emphasized phrase in `bg-gradient-to-r from-[#863bff] to-[#47bfff] bg-clip-text text-transparent`
-- `src/components/card.jsx` — reusable card (title, subtitle, status dot, circular arrow icon button). Status is semantic, not brand color: `active` emerald, `pending` amber, `draft` white/40, `error` rose. Reuse this set for any new status states instead of inventing new colors.
+- Texto de encabezado con degradado: envuelve la frase enfatizada en `bg-gradient-to-r from-[#863bff] to-[#47bfff] bg-clip-text text-transparent`
+- `src/components/card.jsx` — tarjeta reutilizable (título, subtítulo, punto de estado, botón con ícono de flecha circular). El estado es semántico, no color de marca: `active` esmeralda, `pending` ámbar, `draft` white/40, `error` rosa. Reutiliza este conjunto para cualquier estado nuevo en lugar de inventar colores nuevos.
 
-**Assets**
-- `public/favicon.svg` doubles as the small logo mark in page headers.
-- `src/assets/hero.png` is the hero illustration on the landing page.
+**Recursos**
+- `public/favicon.svg` también funciona como el logo pequeño en los encabezados de página.
+- `src/assets/hero.png` es la ilustración hero de la landing page.
 
-Keep new pages consistent with this palette and component set rather than introducing new colors or button styles.
+Mantén las páginas nuevas consistentes con esta paleta y este conjunto de componentes en lugar de introducir colores o estilos de botón nuevos.

@@ -1,42 +1,42 @@
-# GNU CMS — Design Guidelines
+# GNU CMS — Lineamientos de diseño
 
-Design language used by the GNU CMS Admin panel (`gnu-cms-admin`), for the page projects it manages — Página web GNU, Gas natural vehicular, Trainnin Logistic, Tectuus — to follow so the admin and the published sites feel like one product.
+Lenguaje de diseño que usa el panel de administración de GNU CMS (`gnu-cms-admin`), para que lo sigan los proyectos de páginas que administra — Página web GNU, Gas natural vehicular, Trainnin Logistic, Tectuus — y así el admin y los sitios publicados se sientan como un solo producto.
 
-The admin is built with React + Tailwind CSS v4. The page projects are built with **Astro** and plain CSS (no Tailwind), so everything below is given as **CSS custom properties and vanilla class recipes** you can drop into a global stylesheet or a shared `<Layout>` — plus the Tailwind utility equivalent in parentheses, for cross-reference.
+El admin está hecho con React + Tailwind CSS v4. Los proyectos de páginas están hechos con **Astro** y CSS plano (sin Tailwind), así que todo lo de abajo se da como **custom properties de CSS y recetas de clases en CSS puro** que puedes poner en una hoja de estilos global o en un `<Layout>` compartido — más el equivalente en utilidades de Tailwind entre paréntesis, como referencia cruzada.
 
 ## 1. Tokens
 
-Add these to a global stylesheet (e.g. `src/styles/tokens.css`, imported once from your base `Layout.astro`):
+Agrega esto a una hoja de estilos global (p. ej. `src/styles/tokens.css`, importada una sola vez desde tu `Layout.astro` base):
 
 ```css
 :root {
-  /* Background */
+  /* Fondo */
   --color-bg: #0b0611;
 
-  /* Brand */
+  /* Marca */
   --color-primary: #863bff;
   --color-primary-alt: #7e14ff;
   --color-accent: #47bfff;
-  --color-primary-tint: #c9a3ff; /* eyebrow labels, small accents on dark bg */
-  --color-primary-soft: #ede6ff; /* brand tint on light backgrounds */
+  --color-primary-tint: #c9a3ff; /* etiquetas eyebrow, acentos pequeños sobre fondo oscuro */
+  --color-primary-soft: #ede6ff; /* tinte de marca sobre fondos claros */
 
-  /* Status */
+  /* Estado */
   --color-status-active: #34d399; /* emerald-400 */
   --color-status-pending: #fbbf24; /* amber-400 */
   --color-status-draft: rgba(255, 255, 255, 0.4);
   --color-status-error: #fb7185; /* rose-400 */
 
-  /* Text on dark backgrounds */
+  /* Texto sobre fondos oscuros */
   --color-text: #ffffff;
   --color-text-60: rgba(255, 255, 255, 0.6);
   --color-text-40: rgba(255, 255, 255, 0.4);
 
-  /* Borders / surfaces on dark backgrounds */
+  /* Bordes / superficies sobre fondos oscuros */
   --color-border: rgba(255, 255, 255, 0.15);
   --color-border-hover: rgba(255, 255, 255, 0.3);
   --color-surface: rgba(255, 255, 255, 0.05);
 
-  /* Radius & shadow */
+  /* Radio y sombra */
   --radius-lg: 1rem; /* rounded-2xl */
   --radius-md: 0.5rem; /* rounded-lg */
   --radius-full: 999px;
@@ -44,14 +44,14 @@ Add these to a global stylesheet (e.g. `src/styles/tokens.css`, imported once fr
 }
 ```
 
-Brand gradient: `linear-gradient(to right, var(--color-primary), var(--color-accent))` (Tailwind: `bg-gradient-to-r from-[#863bff] to-[#47bfff]`).
+Degradado de marca: `linear-gradient(to right, var(--color-primary), var(--color-accent))` (Tailwind: `bg-gradient-to-r from-[#863bff] to-[#47bfff]`).
 
-## 2. Typography
+## 2. Tipografía
 
-- Body font: system UI stack (no custom webfont currently in use) — `font-family: system-ui, -apple-system, "Segoe UI", sans-serif;`
-- Headlines: bold, tight tracking. `font-weight: 700; letter-spacing: -0.01em;`
-- Sizes roughly follow: hero `2.25–3rem`, section heading `1.5rem`, card title `1rem`, body `0.875–1rem`, hint/meta text `0.75rem`.
-- Emphasis phrases inside a headline use the brand gradient as text fill:
+- Fuente del cuerpo: stack de system UI (por ahora no se usa ninguna webfont personalizada) — `font-family: system-ui, -apple-system, "Segoe UI", sans-serif;`
+- Títulos: en negritas, con tracking cerrado. `font-weight: 700; letter-spacing: -0.01em;`
+- Los tamaños siguen más o menos esto: hero `2.25–3rem`, título de sección `1.5rem`, título de tarjeta `1rem`, cuerpo `0.875–1rem`, texto de ayuda/meta `0.75rem`.
+- Las frases de énfasis dentro de un título usan el degradado de marca como relleno del texto:
 
 ```css
 .gradient-text {
@@ -62,9 +62,9 @@ Brand gradient: `linear-gradient(to right, var(--color-primary), var(--color-acc
 }
 ```
 
-## 3. Components
+## 3. Componentes
 
-### Primary CTA button
+### Botón CTA principal
 
 ```css
 .btn-primary {
@@ -84,7 +84,7 @@ Brand gradient: `linear-gradient(to right, var(--color-primary), var(--color-acc
 
 (Tailwind: `rounded-full bg-gradient-to-r from-[#863bff] to-[#47bfff] px-6 py-3 text-sm font-semibold shadow-lg shadow-[#863bff]/30 hover:brightness-110`)
 
-### Secondary / nav button
+### Botón secundario / de navegación
 
 ```css
 .btn-secondary {
@@ -102,9 +102,9 @@ Brand gradient: `linear-gradient(to right, var(--color-primary), var(--color-acc
 }
 ```
 
-### Danger / destructive button
+### Botón de peligro / destructivo
 
-Same shape as secondary, but rose-tinted:
+Misma forma que el secundario, pero con tono rose:
 
 ```css
 .btn-danger {
@@ -120,9 +120,9 @@ Same shape as secondary, but rose-tinted:
 }
 ```
 
-### Card / panel ("glass" surface)
+### Tarjeta / panel (superficie "glass")
 
-Used for feature cards, dashboard cards, form sections.
+Se usa en tarjetas de características, tarjetas del dashboard y secciones de formularios.
 
 ```css
 .card {
@@ -134,7 +134,7 @@ Used for feature cards, dashboard cards, form sections.
 }
 ```
 
-A dashboard-style card adds a title, subtitle, a status dot + label, and a circular icon button:
+Una tarjeta estilo dashboard agrega un título, un subtítulo, un punto de estado + etiqueta y un botón circular con ícono:
 
 ```html
 <div class="card card--item">
@@ -175,9 +175,9 @@ A dashboard-style card adds a title, subtitle, a status dot + label, and a circu
 .status-label--error { color: #fda4af; }
 ```
 
-Status colors are **semantic**, not brand colors — reuse this exact 4-state set (`active` / `pending` / `draft` / `error`) for any content-state indicator instead of inventing new ones.
+Los colores de estado son **semánticos**, no colores de marca — reutiliza exactamente este conjunto de 4 estados (`active` / `pending` / `draft` / `error`) para cualquier indicador de estado de contenido en lugar de inventar nuevos.
 
-### Form fields
+### Campos de formulario
 
 ```css
 .field label {
@@ -215,7 +215,7 @@ Status colors are **semantic**, not brand colors — reuse this exact 4-state se
 }
 ```
 
-Grouped fields sit inside a `.card` acting as a `<fieldset>`, with a small-caps brand-tinted legend:
+Los campos agrupados van dentro de una `.card` que funciona como `<fieldset>`, con un legend en versalitas y con tinte de marca:
 
 ```css
 .field-group legend {
@@ -227,9 +227,9 @@ Grouped fields sit inside a `.card` acting as a `<fieldset>`, with a small-caps 
 }
 ```
 
-### Pill / eyebrow label
+### Etiqueta pill / eyebrow
 
-Small tag used above headlines (e.g. "Open source CMS"):
+Etiqueta pequeña que va arriba de los títulos (p. ej. "Open source CMS"):
 
 ```css
 .eyebrow {
@@ -248,18 +248,18 @@ Small tag used above headlines (e.g. "Open source CMS"):
 
 ## 4. Layout
 
-- Page container: `max-width: 72rem` (`max-w-6xl`), centered, `padding: 0 1.5rem`.
-- Section rhythm: generous vertical spacing between sections (`4–6rem` between major sections, `1.5–2rem` between fields/cards within one).
-- Grids: feature/card rows use `grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))` (or fixed 2/3/4-column breakpoints) with `gap: 1.5rem`.
-- Hero sections: two-column on desktop (copy left, illustration right), single column stacked on mobile.
+- Contenedor de página: `max-width: 72rem` (`max-w-6xl`), centrado, `padding: 0 1.5rem`.
+- Ritmo entre secciones: espaciado vertical generoso entre secciones (`4–6rem` entre secciones principales, `1.5–2rem` entre campos/tarjetas dentro de una misma sección).
+- Grids: las filas de características/tarjetas usan `grid-template-columns: repeat(auto-fit, minmax(220px, 1fr))` (o breakpoints fijos de 2/3/4 columnas) con `gap: 1.5rem`.
+- Secciones hero: dos columnas en escritorio (texto a la izquierda, ilustración a la derecha), una sola columna apilada en móvil.
 
-## 5. Assets
+## 5. Recursos
 
-- Reuse the GNU CMS mark (`public/favicon.svg` in the admin repo) as the shared logo icon in headers.
-- Keep the violet/blue brand gradient as the one recurring visual signature (buttons, headline emphasis, focus rings) — don't introduce additional accent colors outside the status set above.
+- Reutiliza la marca de GNU CMS (`public/favicon.svg` en el repo del admin) como ícono de logo compartido en los encabezados.
+- Mantén el degradado violeta/azul de la marca como la única firma visual recurrente (botones, énfasis en títulos, anillos de foco) — no introduzcas colores de acento adicionales fuera del conjunto de estados de arriba.
 
-## 6. Using this in an Astro project
+## 6. Cómo usar esto en un proyecto Astro
 
-- Put the `:root` tokens in a global stylesheet imported once from your base layout, so every page and component can reference `var(--color-*)`.
-- Prefer the class recipes above (`.btn-primary`, `.card`, `.field`, etc.) over ad hoc inline styles, so a change to a token cascades everywhere.
-- These pages currently skew light-themed with a green accent (see the legacy admin form in `sample.astro`) — moving to this dark violet/blue system is an intentional rebrand to match the CMS admin, not an incremental tweak.
+- Pon los tokens de `:root` en una hoja de estilos global importada una sola vez desde tu layout base, para que cualquier página o componente pueda usar `var(--color-*)`.
+- Prefiere las recetas de clases de arriba (`.btn-primary`, `.card`, `.field`, etc.) en lugar de estilos inline improvisados, para que un cambio en un token se propague a todos lados.
+- Hoy estas páginas tienden a un tema claro con acento verde (ver el formulario del admin anterior en `sample.astro`) — pasar a este sistema oscuro violeta/azul es un rebranding intencional para empatar con el admin del CMS, no un ajuste incremental.

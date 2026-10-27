@@ -2988,6 +2988,20 @@ html:has(.confirmation-modal[open]) {
   animation: none;
 }
 
+/* Phones and small tablets: a wide GIF shown whole is only a thin band in a
+   portrait banner, so GIFs fill it (cover) like photos do, still without the
+   zoom. The blurred fill copy has nothing left to fill and is dropped. */
+@media (max-width: 768px) {
+  .hero-slide__img--gif,
+  .page-hero__img--gif {
+    object-fit: cover;
+  }
+
+  .hero-slide__img-fill {
+    display: none;
+  }
+}
+
 .page-hero__content {
   position: relative;
   z-index: 2;
@@ -3583,6 +3597,56 @@ html:has(.confirmation-modal[open]) {
   }
 }
 
+/* Phones: the brand block centers; Navegación and Servicios always sit side
+   by side (auto-fit dropped them to one column under ~360px); links get
+   bigger tap targets; the bottom bar stacks; and the footer leaves room for
+   the floating simulator / WhatsApp buttons over its last lines. */
+@media (max-width: 600px) {
+  .site-footer {
+    padding: 3rem 0 6.5rem;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 2.25rem 1.5rem;
+  }
+
+  .footer-grid > :first-child {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .footer-brand {
+    justify-content: center;
+  }
+
+  .footer-tagline {
+    margin-inline: auto;
+  }
+
+  .social-row {
+    justify-content: center;
+  }
+
+  .footer-heading {
+    margin-bottom: 0.625rem;
+  }
+
+  .footer-link {
+    padding: 0.45rem 0;
+  }
+
+  .footer-bottom {
+    margin-top: 2.25rem;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.5rem;
+  }
+}
+
 .footer-heading {
   font-size: 0.75rem;
   font-weight: 700;
@@ -3602,8 +3666,12 @@ html:has(.confirmation-modal[open]) {
   transition: color 0.15s ease, transform 0.25s var(--ease-out);
 }
 
-a.footer-link:hover {
-  transform: translateX(4px);
+/* Hover nudge only for real pointers: on touch screens :hover sticks to the
+   last tapped link and left it shifted out of line. */
+@media (hover: hover) {
+  a.footer-link:hover {
+    transform: translateX(4px);
+  }
 }
 
 a.footer-link:hover {
@@ -3612,6 +3680,12 @@ a.footer-link:hover {
 
 .footer-contact {
   font-style: normal;
+}
+
+.footer-tagline {
+  margin-top: 1.5rem;
+  max-width: 16rem;
+  font-size: 0.875rem;
 }
 
 .social-row {
@@ -4964,9 +5038,46 @@ body:not(:has(.whatsapp-fab)) .sim-fab {
   justify-self: start;
 }
 
+/* The title stops short of the logo pinned in the card's top-right corner
+   (.card__brand-logo), so a long title wraps instead of running under it. */
+.lead-form__title {
+  padding-right: 3.5rem;
+}
+
 @media (max-width: 520px) {
   .lead-band form {
     grid-template-columns: 1fr;
+  }
+
+  /* Phones: tighter card padding, a smaller logo, and a full-width button
+     that's easy to tap. */
+  .lead-band .card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .lead-band .card .card__brand-logo {
+    top: 1.25rem;
+    right: 1.25rem;
+    height: 2.25rem;
+  }
+
+  .lead-band .card .lead-form__title {
+    font-size: 1.25rem;
+    padding-right: 3rem;
+  }
+
+  .lead-band form > button {
+    justify-self: stretch;
+    justify-content: center;
+  }
+}
+
+/* iOS Safari zooms the page when a focused field's text is under 16px. */
+@media (max-width: 768px) {
+  .field input,
+  .field select,
+  .field textarea {
+    font-size: 16px;
   }
 }
 

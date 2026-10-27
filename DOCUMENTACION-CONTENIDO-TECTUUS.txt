@@ -4,6 +4,7 @@
  Sitio en el CMS (slug): tectuus
  Seccion del panel: menu principal > "Tectuus"
  Fecha de elaboracion: 2026-09-16
+ Ultima actualizacion: 2026-10-26
 ==============================================================================
 
 PROPOSITO DE ESTE DOCUMENTO
@@ -15,16 +16,21 @@ imagenes, y la longitud de texto recomendada para que el diseno no se rompa.
 Tectuus es el sitio mas distinto de los cuatro: no tiene blog, no tiene
 simulador de ahorro ni mapa, y en cambio es el unico con un CATALOGO DE
 PRODUCTOS (categorias y productos que se dan de alta y se borran desde el
-panel). Las recomendaciones de imagen TAMBIEN son distintas: aqui casi todo
-se recorta a 4:3, no a los formatos panoramicos de los otros sitios.
+panel). Las recomendaciones de imagen tambien tienen sus particularidades:
+la galeria y las fotos de producto se recortan a 4:3, la imagen junto al
+texto enriquecido a 16:9, y el carrusel y los encabezados son panoramicos.
 Leer la seccion 4 con atencion aunque ya se conozcan las otras guias.
 
 IMPORTANTE - LIMITES REALES DEL SISTEMA (leer antes de continuar):
-  * El servidor (CMS externo) RECHAZA archivos de imagen mayores a 5 MB.
-  * El panel SI avisa antes de subir si el archivo pesa mas de 5 MB, y
-    muestra las dimensiones reales (ancho x alto) y el peso de la imagen que
-    se acaba de elegir. Ese aviso sirve para comparar contra los tamanos
+  * El servidor (CMS externo) RECHAZA archivos de imagen mayores a 20 MB.
+  * El panel bloquea antes de subir los archivos de mas de 25 MB (el mensaje
+    que muestra todavia dice "5 MB": es un texto viejo, el limite real del
+    servidor es 20 MB). Al elegir una imagen, el panel muestra sus
+    dimensiones reales (ancho x alto) y su peso, y pone ese dato en color
+    ambar si pesa mas de 2 MB. Sirve para comparar contra los tamanos
     recomendados de esta guia.
+  * Las ayudas de los campos de imagen del panel dicen "max. 5 MB": tomarlo
+    como recomendacion, no como limite.
   * El panel muestra un contador de caracteres debajo de cada campo de texto
     ("123/180 caracteres - recomendado ~140"). Es una GUIA: se pone en color
     ambar al pasar el maximo sugerido, pero NO impide guardar.
@@ -32,53 +38,73 @@ IMPORTANTE - LIMITES REALES DEL SISTEMA (leer antes de continuar):
     imagen.
   * Las imagenes se muestran "tal cual" se suben, sin compresion ni
     redimensionado automatico.
+  * PUBLICAR: nada de lo que se guarda en el panel aparece al instante en el
+    sitio publico. El sitio se genera de forma estatica: despues de guardar
+    hay que entrar a "Tectuus" (la pantalla donde se elige la pagina) y
+    pulsar "Reconstruir sitio" en el recuadro "Publicar cambios". Tarda unos
+    minutos; al terminar muestra "Sitio actualizado" con la fecha y hora.
 
 ALGO PROPIO DE TECTUUS: LA "PLACA EN BLANCO"
 ------------------------------------------------------------------------------
 Cuando una imagen falta o el archivo no existe en el servidor, este sitio no
 muestra la imagen gris "sin foto" de los otros sitios: muestra una PLACA EN
 BLANCO (un recuadro liso, placeholder-plate.svg).
-Excepcion importante: en la seccion de CLIENTES, si el logo no carga, en su
-lugar se escribe el NOMBRE del cliente. Un nombre entre logos se lee como un
-cliente mas; una placa en blanco se lee como un error. Es a proposito, pero
-igual significa que falta subir ese logo.
+Excepciones:
+  - En la seccion de CLIENTES, si el logo no carga, en su lugar se escribe el
+    NOMBRE del cliente. Un nombre entre logos se lee como un cliente mas; una
+    placa en blanco se lee como un error. Es a proposito, pero igual
+    significa que falta subir ese logo.
+  - En el CATALOGO, un producto sin imagen no muestra placa: su tarjeta lleva
+    un icono de industria en lugar de la miniatura, y en su ficha
+    simplemente no aparece el bloque "Imagenes".
 
 FORMATOS DE IMAGEN ACEPTADOS
 ------------------------------------------------------------------------------
   * Fotografias de equipo, instalaciones, banners -> JPG (.jpg/.jpeg)
   * Logos e iconos con transparencia              -> PNG (.png)
-  * Evitar: HEIC, TIFF, BMP, RAW.
-  * WebP es aceptable; ante la duda usar JPG/PNG.
-  * Peso maximo por archivo: 5 MB (limite duro del servidor).
+  * WebP es aceptable; GIF tambien (el carrusel de la portada usa hoy un GIF
+    animado). Ante la duda usar JPG/PNG.
+  * El servidor NO acepta SVG. Evitar tambien HEIC, TIFF, BMP y RAW.
+  * Peso maximo por archivo: 20 MB (limite duro del servidor).
     Recomendado: menos de 500 KB - 1 MB por imagen (comprimir con TinyPNG o
-    Squoosh antes de subir).
+    Squoosh antes de subir). Un GIF animado puede pesar mas, pero conviene
+    mantenerlo por debajo de 2-3 MB porque es lo primero que carga la
+    portada.
 
 ==============================================================================
 MAPA DEL SITIO Y DONDE SE EDITA CADA PAGINA
 ==============================================================================
-Panel: "Tectuus" > se elige una de estas 4 entradas:
+Panel: "Tectuus" > se elige una de estas 4 entradas (en la misma pantalla
+esta el recuadro "Publicar cambios" con el boton "Reconstruir sitio"):
 
   Inicio          -> portada (/) + Datos de contacto, Redes sociales y
                      Boton de WhatsApp (secciones de TODO el sitio)
   Sobre nosotros  -> pagina /sobre-nosotros
-  Productos       -> categorias, productos y el encabezado de /productos
+  Productos       -> encabezado de /productos, categorias y productos
   Contacto        -> bandeja de mensajes + secciones de la pagina /contacto
 
 Paginas del sitio publico y secciones que trae cada una:
 
   RUTA DEL SITIO       SECCIONES (en orden)
   -------------------- ------------------------------------------------------
-  /                    banner_carousel, rich_text, clients_showcase,
-  (Inicio)             lead_capture_form
-  /sobre-nosotros      page_hero, rich_text, image_gallery
+  /                    banner_carousel, rich_text,
+  (Inicio)             [bloque FIJO "Ingenieria que transforma necesidades
+                       en soluciones", ver 5.5], clients_showcase,
+                       lead_capture_form
+  /sobre-nosotros      page_hero, rich_text (+ una segunda imagen FIJA, ver
+                       5.7), image_gallery (HOY OCULTA en el sitio, ver 2.3)
   /productos           page_hero  (+ el catalogo, que NO es una seccion)
-  /productos/<slug>    ficha del producto (no tiene secciones editables)
+  /productos/<slug>    ficha del producto + formulario de cotizacion FIJO
+                       (no tiene secciones editables, ver 4.5)
   /contacto            page_hero, lead_capture_form
 
 NOTA: el orden y la cantidad de secciones los define un desarrollador. Desde
-el panel NO se pueden agregar, quitar ni reordenar secciones: solo se llena
-el contenido de las que ya existen. En cambio, las CATEGORIAS y los
-PRODUCTOS si se crean, editan y borran desde el panel (seccion 4).
+el panel NO se pueden agregar, quitar ni reordenar secciones, ni ocultar una
+sola seccion: solo se llena el contenido de las que ya existen. En cambio,
+las CATEGORIAS y los PRODUCTOS si se crean, editan y borran desde el panel
+(seccion 4).
+Los titulos de las paginas (los que salen en el menu y en la pestana del
+navegador) tampoco se editan desde el panel.
 
 ==============================================================================
 SECCION 1: PAGINA DE INICIO (portada, ruta "/")
@@ -86,27 +112,36 @@ Ruta admin: Tectuus > Inicio
 ==============================================================================
 
 --- 1.1 Carrusel de banners (banner_carousel) --------------------------------
-Es el hero de la portada. Si hay una sola diapositiva, el sitio oculta las
-flechas y los puntos; con dos o mas, cambia solo cada 6 segundos y se puede
-deslizar con el dedo.
-  Campo "Imagen":
-    *** ATENCION: aqui la recomendacion del panel NO aplica tal cual. ***
-    El panel sugiere 2400 x 1000 px (2.4:1), que es lo correcto para los
-    otros sitios. En Tectuus la imagen del banner se recorta a relacion
-    4:3, no panoramica.
-    - Tamano recomendado para Tectuus: 1600 x 1200 px (relacion 4:3)
-    - Formato: JPG - Peso: menos de 1 MB (maximo 5 MB)
-    - Se recorta con object-fit: cover: el centro de la imagen es lo que
-      siempre se ve. Evitar texto o elementos importantes en los bordes.
+Es el hero de la portada. La imagen ocupa TODO el ancho de la pantalla como
+fondo, con un degradado oscuro desde la izquierda; el texto y los botones
+van encima, a la izquierda. Si hay una sola diapositiva, el sitio oculta las
+flechas y los puntos; con dos o mas, cambia sola cada 6 segundos (se detiene
+mientras el cursor esta encima) y se puede deslizar con el dedo.
+  Campo "Imagen" (obligatorio: el panel no deja quitarla; para quitar una
+  imagen hay que eliminar la diapositiva completa con "Eliminar"):
+    - Tamano recomendado: 2400 x 1000 px (relacion 2.4:1), como sugiere el
+      panel.
+    - Formato: JPG (o GIF animado) - Peso: menos de 1 MB (maximo 20 MB).
+    - Se recorta con object-fit: cover a la altura del banner (entre ~480 y
+      ~670 px). En computadora se ve casi completa; en celular se recorta a
+      una franja vertical del centro.
+    - La mitad izquierda queda oscurecida bajo el texto: el motivo principal
+      de la foto debe ir al centro o a la derecha. Evitar texto dentro de la
+      imagen.
   Campo "Titulo":
     - Recomendado 45 caracteres / maximo sugerido 60.
     - El titulo de la PRIMERA diapositiva es el H1 de la portada: cuidarlo
       para SEO.
   Campo "Subtitulo":
-    - Recomendado 90 caracteres / maximo sugerido 120.
+    - Recomendado 90 caracteres / maximo sugerido 120. En la portada se
+      muestra justificado en pantallas anchas.
   Campo "Enlace del boton" (link_url) y "Texto del boton" (link_label):
     - Texto del boton: 2-4 palabras. Recomendado 20 / maximo 25 caracteres.
-    - IMPORTANTE (propio de Tectuus): si estos dos campos se dejan vacios,
+    - El enlace debe ser una direccion COMPLETA (https://...). El servidor
+      rechaza rutas cortas como "/productos". Usar el dominio publico real
+      (ej. https://www.tectuus.mx/productos), NUNCA una direccion "localhost"
+      de pruebas.
+    - IMPORTANTE (propio de Tectuus): si falta cualquiera de los dos campos,
       la diapositiva NO se queda sin boton: muestra un boton fijo
       "Conoce nuestros productos" que lleva a /productos.
     - Ademas, TODAS las diapositivas llevan siempre un segundo boton fijo
@@ -116,31 +151,55 @@ deslizar con el dedo.
   ejemplo escrito en el codigo: 3 diapositivas ("Soluciones integrales para
   tu industria", "Seguridad y eficiencia en cada proyecto", "Tu operacion,
   siempre en marcha"), 6 clientes llamados "Cliente 1..6", un texto sobre
-  Tectuus y 3 tarjetas (EDRM, Compresoras, Valvuleria). Ese contenido NO es
-  editable: si aparece en el sitio en vivo, significa que el CMS no esta
-  respondiendo y hay que avisar a desarrollo.
+  Tectuus, 3 tarjetas (EDRM, Compresoras, Valvuleria) y un formulario. Ese
+  contenido NO es editable: si aparece en el sitio en vivo, significa que el
+  CMS no esta respondiendo y hay que avisar a desarrollo.
 
 --- 1.2 Texto enriquecido (rich_text) ----------------------------------------
-Es el bloque de texto de la portada, y tambien el unico lugar del sitio donde
-se puede poner un VIDEO.
+Es el bloque de texto de la portada. Tambien es el unico lugar del sitio
+donde se puede poner un VIDEO o una imagen junto al texto.
   Campo "Titulo": recomendado 50 / maximo 70 caracteres. Se puede dejar
-    vacio y el bloque sale sin encabezado.
-  Campo "Contenido (HTML)": se guarda EXACTAMENTE como se escribe.
+    vacio y el bloque sale sin encabezado. Si hay titulo y NO hay imagen ni
+    video, el bloque se acomoda en dos columnas: titulo a la izquierda,
+    texto a la derecha.
+  Campo "Contenido (HTML)" (obligatorio): se guarda EXACTAMENTE como se
+    escribe.
     - Recomendado 300-1500 caracteres (1-4 parrafos).
     - Si no se sabe HTML, escribir texto plano y separar parrafos con
       <p>...</p>. NO pegar HTML copiado de Word o Google Docs.
-    - En la portada de Tectuus el texto se muestra justificado; parrafos muy
-      cortos (una linea) se ven raros, funciona mejor con parrafos de 3
-      lineas o mas.
+    - Si el texto empieza con un <h1>, el sitio lo convierte solo en
+      subtitulo (<h2>): cada pagina tiene un unico H1.
+    - En pantallas anchas el texto se muestra JUSTIFICADO (con guiones de
+      corte automaticos); parrafos muy cortos (una linea) se ven raros,
+      funciona mejor con parrafos de 3 lineas o mas.
+    - Distintivo destacado: un parrafo escrito como
+      <p class="highlight_tag">Tectuus Proveedor autorizado de ...</p>
+      se muestra como una insignia verde con icono de certificado. Usar una
+      frase corta, una por bloque, normalmente al final. Ninguna otra clase
+      tiene efecto.
   Campo "Video (URL)" (opcional): URL de YouTube o Vimeo (se aceptan
     youtube.com/watch?v=, youtu.be/, /shorts/, vimeo.com/).
-    - Se convierte solo a un reproductor 16:9 de ancho maximo 52 rem.
+    - Se convierte solo a un reproductor 16:9 de ancho maximo 52 rem,
+      debajo del texto.
     - El video arranca SOLO y SIN SONIDO al cargar la pagina.
+  Campo "Portada del video" (image_video_url, opcional):
+    *** ATENCION: en Tectuus este campo NO es una portada de video. ***
+    Si el bloque NO tiene video, esta imagen se muestra a la DERECHA del
+    texto (a la izquierda queda el texto) y acompana al lector mientras baja
+    la pagina. Si el bloque tiene video, la imagen no se muestra.
+    - Tamano recomendado: 1600 x 900 px (relacion 16:9), JPG, menos de
+      500 KB - 1 MB.
+    - Se recorta a 16:9 (object-fit: cover).
+    - Hoy se usa en Sobre nosotros (ver 2.2); en la portada esta vacio.
 
 --- 1.3 Clientes (clients_showcase) ------------------------------------------
 Esta seccion tiene DOS modos y el sitio elige solo cual usar:
-  MODO A - rejilla compacta de logos: se usa cuando NINGUN cliente tiene
-    descripcion ni cita.
+  MODO A - cinta de logos en movimiento: se usa cuando NINGUN cliente tiene
+    descripcion ni cita. Los logos se desplazan solos de derecha a
+    izquierda en una franja blanca, sin fin (se detiene al pasar el
+    cursor). Se ven en escala de grises y a media opacidad, y toman su
+    color al pasar el cursor encima. El titulo se centra en mayusculas.
+    Es el modo que se usa hoy.
   MODO B - tarjetas con testimonio: se usa en cuanto AL MENOS UN cliente
     tiene descripcion o cita. Ojo: basta con que uno la tenga para que TODA
     la seccion cambie de aspecto. Conviene decidir un modo y aplicarlo a
@@ -149,40 +208,50 @@ Esta seccion tiene DOS modos y el sitio elige solo cual usar:
   Campo "Titulo de la seccion": recomendado 50 / maximo 70 caracteres.
     Si se deja vacio, el sitio pone "Nuestros clientes".
   Por cada cliente:
-    Campo "Logo":
+    Campo "Logo" (obligatorio: el panel no deja quitarlo; para quitar un
+    logo hay que eliminar el cliente completo con "Eliminar"):
       - 800 x 500 px (relacion 16:10), PNG con fondo transparente, menos de
         300 KB.
-      - Se muestra "completo" (object-fit: contain) con altura maxima de
-        2.75 rem (~44 px) y ancho maximo 10 rem. Los logos muy altos y
-        delgados se veran diminutos: funciona mejor un logo horizontal.
+      - Se muestra "completo" (object-fit: contain). En el MODO A, con
+        altura maxima de 5 rem (~80 px) y en gris; en el MODO B, con altura
+        maxima de 2.75 rem (~44 px) y ancho maximo 10 rem. Los logos muy
+        altos y delgados se veran diminutos: funciona mejor un logo
+        horizontal, y que se lea bien en escala de grises.
       - Si el archivo no carga, en su lugar se escribe el nombre del
         cliente (ver "la placa en blanco" arriba).
     Campo "Nombre" (obligatorio): 3-30 caracteres, maximo 40. Es tambien el
       texto alternativo del logo (accesibilidad y SEO).
-    Campo "Enlace" (opcional): sitio del cliente. Se abre en una pestana
-      nueva.
+    Campo "Enlace" (opcional): sitio del cliente, direccion completa
+      (https://...). Se abre en una pestana nueva.
     Campo "Descripcion": recomendado 100 / maximo 160 caracteres. Se muestra
       solo en el MODO B, y solo si ese cliente no tiene cita.
     Campo "Cita / testimonio": recomendado 120 / maximo 200 caracteres. NO
       escribir comillas: el sitio las pone.
     Campo "Autor de la cita": nombre y cargo de quien lo dijo. Si se deja
       vacio y hay cita, se firma con el nombre del cliente.
-  NOTA DE DISENO: la seccion se ve mejor con 3 clientes por fila. Con 1 o 2
-  clientes el bloque se estrecha solo para que no queden huecos enormes.
+  NOTA DE DISENO: en el MODO A, si hay pocos clientes la cinta los repite
+  para llenar el ancho (es normal ver el mismo logo varias veces). En el
+  MODO B la seccion se ve mejor con 3 clientes por fila; con 1 o 2 clientes
+  el bloque se estrecha solo para que no queden huecos enormes.
 
 --- 1.4 Formulario de contacto (lead_capture_form) ---------------------------
-Es el formulario del final de la portada. Los mensajes llegan al panel en
-Tectuus > Contacto.
-  Campo "Titulo": recomendado 40 / maximo 60 caracteres. Si se deja vacio se
-    usa "Escribenos".
+Es el formulario del final de la portada, sobre una banda azul oscuro. Los
+mensajes llegan al panel en Tectuus > Contacto.
+En Tectuus cada formulario va en dos columnas: a la IZQUIERDA un panel de
+contacto (ilustracion, encabezado y texto FIJOS, mas los datos de "Datos de
+contacto" y un boton "Escribenos por WhatsApp", ver 5.6); a la DERECHA la
+tarjeta del formulario con los campos de abajo.
+  Campo "Titulo" (obligatorio): recomendado 40 / maximo 60 caracteres. Es el
+    titulo de la tarjeta del formulario.
   Campo "Introduccion": recomendado 120 / maximo 160 caracteres.
-  Campo "Texto del boton": 2-4 palabras (ej. "Enviar"). Si se deja vacio se
-    usa "Enviar".
+  Campo "Texto del boton" (obligatorio): 2-4 palabras (ej. "Hablar con un
+    asesor"). Maximo 60 caracteres.
   Campo "Campos del formulario" (fields): BLOQUEADO, solo informativo.
-    En Tectuus los dos formularios piden exactamente: Nombre completo,
-    Correo electronico, Telefono y Mensaje (el telefono es opcional para el
-    visitante; los demas son obligatorios). El servidor RECHAZA cualquier
-    campo extra, asi que agregar campos requiere un desarrollador.
+    En Tectuus los dos formularios piden: Nombre completo, Correo
+    electronico, Telefono y Mensaje. Para el visitante solo Nombre y Correo
+    son obligatorios; Telefono y Mensaje son opcionales. El servidor
+    RECHAZA cualquier campo que la seccion no tenga declarado, y la lista no
+    se edita desde el panel: agregar campos requiere un desarrollador.
   Si el visitante envia demasiados mensajes seguidos (mas de 10 por minuto),
   el sitio le muestra "Recibimos demasiados envios. Espera un momento e
   intenta de nuevo." Es una proteccion antispam.
@@ -190,38 +259,45 @@ Tectuus > Contacto.
 --- 1.5 Datos de contacto, Redes sociales y Boton de WhatsApp ----------------
 Estos tres bloques se editan DENTRO de "Tectuus > Inicio" (aparecen debajo de
 las secciones de la portada), pero aplican a TODO el sitio: se ven en el pie
-de pagina de todas las paginas, en el encabezado y en el boton flotante.
+de pagina de todas las paginas, en el encabezado, en el panel de contacto
+junto a cada formulario y en el boton flotante.
 
   Datos de contacto (contact_info):
-    - "Direccion" (obligatorio): se muestra en el pie de pagina.
-    - "Telefono" (obligatorio): en el pie se convierte en un enlace para
-      llamar. Escribirlo legible (ej. "+52 55 1234 5678").
-    - "Correo" (obligatorio): en el pie se convierte en un enlace mailto.
+    - "Direccion" (obligatorio): se muestra en el pie de pagina y en el panel
+      de contacto (ahi es un enlace que abre Google Maps).
+    - "Telefono" (obligatorio): en el pie y en el panel se convierte en un
+      enlace para llamar. Escribirlo legible (ej. "+52 443 231 1120").
+    - "Correo" (obligatorio): se convierte en un enlace mailto.
     - "Horario": texto libre (ej. "Lunes a viernes de 9:00 a 18:00").
-    - "Informacion adicional": recomendado 150 / maximo 280 caracteres.
-    *** RELLENO ***: si el correo se deja vacio, el pie de pagina muestra
+    - "Informacion adicional": recomendado 150 / maximo 280 caracteres. Se
+      muestra en el pie y en el panel de contacto.
+    *** RELLENO ***: si el correo llega vacio (por ejemplo, si el CMS no
+    responde al generar el sitio), el pie de pagina muestra
     contacto@tectuus.com, que es un correo de relleno. Direccion, telefono,
-    horario e informacion adicional simplemente no aparecen si estan vacios.
+    horario e informacion adicional simplemente no aparecen si estan
+    vacios.
 
   Redes sociales (social_icons):
     - Por cada red: se elige la red de una lista (facebook, instagram,
-      twitter, linkedin, youtube, tiktok) y se pega el enlace completo.
-    - En Tectuus los iconos aparecen en DOS lugares: el encabezado (arriba a
-      la derecha) y el pie de pagina.
+      twitter, linkedin, youtube, tiktok) y se pega el enlace completo
+      (https://..., obligatorio).
+    - En Tectuus los iconos aparecen en TRES lugares: el encabezado (arriba
+      a la derecha), el menu de celular y el pie de pagina.
     - IMPORTANTE: solo se dibujan facebook, instagram, linkedin, youtube y
-      twitter. Si se captura tiktok, no se muestra nada.
+      twitter (con el icono de X). Si se captura tiktok, no se muestra nada.
     *** RELLENO ***: si no se captura ninguna red, se muestran iconos de
     Facebook / Instagram / LinkedIn que enlazan a "#" (no van a ningun
     lado). Hay que reemplazarlos por los perfiles reales.
 
   Boton de WhatsApp (whatsapp_button):
-    - "Telefono" (obligatorio): con codigo de pais, sin espacios ni signos
-      (ej. 525512345678).
+    - "Telefono" (obligatorio): con codigo de pais (ej. 524432311120). Los
+      espacios, el "+" y los guiones se ignoran.
     - "Mensaje prellenado": el texto que ya aparece escrito al abrir el chat
-      (ej. "Hola, quiero informacion sobre equipo para gas natural").
-    *** RELLENO ***: si no se captura telefono, el boton flotante usa el
-    numero falso 5215500000000. Ese boton esta visible en TODAS las paginas
-    del sitio, asi que es lo mas urgente de llenar.
+      (ej. "Hola, quiero informacion sobre equipo industrial.").
+    - Alimenta el boton flotante (visible en TODAS las paginas) y el boton
+      "Escribenos por WhatsApp" del panel de contacto.
+    - Si no hay telefono, el sitio NO muestra ninguno de los dos botones (ya
+      no usa un numero falso).
 
 ==============================================================================
 SECCION 2: SOBRE NOSOTROS (ruta /sobre-nosotros)
@@ -230,27 +306,41 @@ Ruta admin: Tectuus > Sobre nosotros
 
 --- 2.1 Encabezado de pagina (page_hero) -------------------------------------
   Campo "Titulo" (obligatorio): recomendado 40 / maximo 55 caracteres.
-    Es el H1 de la pagina. Si se deja vacio, la seccion entera NO se pinta.
+    Es el H1 de la pagina.
   Campo "Subtitulo": recomendado 90 / maximo 110 caracteres.
   Campo "Imagen":
     - 2400 x 900 px (relacion aprox. 2.6:1), JPG, menos de 1 MB.
-    - Se muestra al 45% de opacidad sobre un fondo oscuro con reticula.
-      Fotos muy claras pierden contraste: preferir tonos medios u oscuros.
+    - Se muestra a todo color, a lo ancho de la pantalla, con una altura de
+      ~290 a ~510 px segun la pantalla (en computadora conserva mas o menos
+      esa proporcion; en celular se recorta a los lados). Un degradado
+      oscuro desde la izquierda y desde abajo cubre la zona del texto, que
+      va abajo a la izquierda: el motivo principal de la foto debe ir al
+      centro o a la derecha.
     - Si se deja vacia, el encabezado sale como una banda oscura con
       reticula (se ve bien, no se rompe nada).
 
 --- 2.2 Texto enriquecido (rich_text) ----------------------------------------
 Mismas reglas que el punto 1.2 (titulo 50/70, contenido 300-1500 caracteres,
-video opcional de YouTube o Vimeo en 16:9 con autoplay sin sonido).
+video opcional de YouTube o Vimeo en 16:9 con autoplay sin sonido, clase
+highlight_tag).
+En esta pagina el campo "Portada del video" SI esta en uso: es la foto que
+se ve a la derecha del texto. Debajo de ella el sitio agrega una SEGUNDA
+imagen fija que no se edita desde el panel (ver 5.7).
 
 --- 2.3 Galeria de imagenes (image_gallery) ----------------------------------
+*** HOY ESTA OCULTA ***: el sitio no muestra esta seccion mientras tenga
+pies de foto de relleno ("Descripcion de la imagen..."). Se puede editar en
+el panel, pero los cambios no se ven hasta que desarrollo la vuelva a
+activar. Antes de pedirlo: cargar las fotos reales (hoy las tres son la
+misma) y sus pies de foto.
 Es la galeria de instalaciones, obra o equipo. Solo existe en esta pagina.
   Campo "Titulo de la seccion": recomendado 50 / maximo 70 caracteres.
   Por cada imagen:
-    Campo "Imagen":
+    Campo "Imagen" (obligatorio: el panel no deja quitarla; para quitar una
+    imagen hay que eliminar el elemento completo con "Eliminar"):
       - El panel sugiere 1200 x 800 px; para Tectuus la relacion correcta es
         4:3, asi que 1200 x 900 px es el tamano ideal.
-      - JPG, menos de 800 KB (maximo 5 MB).
+      - JPG, menos de 800 KB.
       - Se recorta a 4:3 (object-fit: cover): el centro es lo que siempre se
         ve.
       - Conviene subir todas las imagenes de la galeria con la MISMA
@@ -269,13 +359,19 @@ SECCION 3: CONTACTO (ruta /contacto)
 Ruta admin: Tectuus > Contacto
 ==============================================================================
 Esta pantalla del panel tiene dos partes: arriba, la BANDEJA de mensajes
-recibidos (solo lectura, con paginacion); abajo, las secciones editables de
-la pagina.
+recibidos (solo lectura, 20 por pagina, con columnas Origen, Nombre, Email,
+Telefono, Mensaje y Fecha); abajo, las secciones editables de la pagina.
 
   Secciones editables: page_hero (ver 2.1) y lead_capture_form (ver 1.4).
+  Igual que en la portada, el formulario va acompanado del panel de contacto
+  fijo (ver 5.6).
 
-  Los mensajes de esta pagina llegan etiquetados como "contacto" y los de la
-  portada como "inicio": asi se distingue de donde vino cada uno.
+  Columna "Origen": de donde vino cada mensaje.
+    - "Inicio"    -> formulario de la portada.
+    - "Contacto"  -> formulario de la pagina /contacto.
+    - "productos" -> formulario de cotizacion de una ficha de producto (ver
+                     4.5). OJO: el mensaje NO indica de que producto se
+                     trata, salvo que el visitante lo escriba.
 
   *** NOTA ***: el aviso por correo al recibir un mensaje NO esta
   implementado. La unica forma de enterarse de un mensaje nuevo es entrar a
@@ -288,66 +384,120 @@ Ruta admin: Tectuus > Productos
 Esta es la parte exclusiva de Tectuus y la unica del sitio donde SI se puede
 CREAR y BORRAR contenido, no solo editarlo.
 
-La pantalla tiene tres partes:
-  A) Categorias de producto
-  B) Productos
-  C) El encabezado (page_hero) de la pagina /productos
+La pantalla tiene tres partes, en este orden:
+  A) El encabezado (page_hero) de la pagina /productos
+  B) Categorias (boton "+ Nueva categoria")
+  C) Productos (boton "+ Nuevo producto")
 
 El catalogo NO es una seccion de la pagina: son datos propios. Por eso las
 categorias tambien alimentan el submenu "Productos" del menu del sitio y la
 barra de filtros del catalogo.
 
+En la pagina publica el catalogo se arma como una "repisa" por categoria:
+cada categoria con productos tiene su titulo y una fila de tarjetas que se
+desplaza de lado con flechas. Las tarjetas se construyen sobre todo con
+TEXTO (nombre, lema, resumen y hasta 3 especificaciones); la foto, si la hay,
+es solo una miniatura junto al nombre.
+
+--- 4.0 Convencion de nombres "CODIGO | lema" --------------------------------
+Tanto las categorias como los productos usan la barra vertical "|" para
+separar el nombre corto del lema:
+  "EDRM | Regulacion y Medicion con Control"
+  "DA300 | Potencia y flexibilidad para operaciones exigentes"
+Lo que va ANTES de la barra es el titulo (boton de filtro, titulo de la
+repisa, titulo de la tarjeta, H1 de la ficha); lo que va DESPUES se muestra
+como lema debajo, en letra mas pequena. Sin barra, todo el nombre es titulo.
+Ojo: el submenu "Productos" del menu principal muestra el nombre COMPLETO de
+la categoria (con el lema).
+
 --- 4.1 Categorias de producto -----------------------------------------------
-  Campo "Nombre" (obligatorio): recomendado 30 / maximo 50 caracteres.
-    Es lo que se ve en el submenu del menu principal y en los botones de
-    filtro del catalogo: nombres largos descuadran la barra de filtros.
-  Campo "Slug": se genera solo al crear; solo se ve y se edita al editar una
-    categoria existente. Minusculas, sin espacios ni acentos, con guiones
-    (ej. "estaciones-de-regulacion"). OJO: cambiarlo rompe los enlaces
-    /productos?category=... que ya se hayan compartido.
-  Campo "Posicion" (obligatorio): numero que define el orden en el submenu y
-    en la barra de filtros. 1 va primero.
-  Campo "Descripcion": texto corto. Hoy no se muestra en el sitio publico;
-    sirve de referencia interna.
-  Campo "Imagen": 800 x 500 px (16:10), menos de 5 MB. Igual que la
-    descripcion, hoy no se muestra en el sitio publico. Se puede dejar
-    vacia.
+  Campo "Nombre" (obligatorio): recomendado 30 / maximo 50 caracteres
+    (contando el lema). Puede llevar al inicio el numero de orden (ver 4.4)
+    y el lema despues de "|" (ver 4.0).
+    Ej.: "1 - EDRM | Regulacion y Medicion con Control".
+    El titulo (antes de la barra) es lo que se ve en los botones de filtro
+    del catalogo: titulos largos descuadran la barra de filtros.
+  Campo "Slug": se genera solo al crear, a partir del nombre (si el nombre
+    lleva numero de orden, el slug tambien: "1-edrm"); solo se ve y se edita
+    al editar una categoria existente. Minusculas, sin espacios ni acentos,
+    con guiones (ej. "estaciones-de-regulacion"). OJO: cambiarlo rompe los
+    enlaces /productos?category=... que ya se hayan compartido.
+  Campo "Posicion" (obligatorio): numero que define el orden en que el CMS
+    entrega las categorias. 1 va primero. OJO: el numero de orden escrito
+    en el nombre (ver 4.4) MANDA sobre este campo; "Posicion" solo decide el
+    orden de las categorias que no llevan numero en el nombre. Conviene que
+    los dos coincidan.
+  Campo "Descripcion": texto corto. Normalmente NO se muestra en el sitio
+    publico. Excepcion: si el nombre es UNA sola palabra sin "|" (ej.
+    "Servicios"), o si la descripcion lleva una "|", el sitio muestra la
+    descripcion EN LUGAR del nombre. Para evitar sorpresas: escribir el
+    nombre completo con su lema y dejar la descripcion vacia o igual al
+    nombre.
+  Campo "Imagen": 800 x 500 px (16:10). Hoy NO se muestra en el sitio
+    publico. Se puede dejar vacia.
   *** IMPORTANTE ***
   - Una categoria SIN productos igual aparece en el submenu y en el filtro,
-    y al seleccionarla el visitante ve un mensaje de "no hay resultados".
-    Es a proposito (son las lineas de producto del cliente), pero conviene
-    no dejar categorias vacias mucho tiempo.
-  - NO se puede borrar una categoria que todavia tenga productos: primero
-    hay que mover o borrar sus productos.
+    y al seleccionarla el visitante ve el mensaje "No encontramos productos
+    con esos criterios...". Es a proposito (son las lineas de producto del
+    cliente), pero conviene no dejar categorias vacias mucho tiempo. En el
+    catalogo, en cambio, una categoria sin productos no tiene repisa.
+  - NO se puede borrar una categoria que todavia tenga productos (el panel
+    responde "La categoria tiene productos asociados. Muevelos o eliminalos
+    primero.").
 
 --- 4.2 Productos ------------------------------------------------------------
   Campo "Categoria" (obligatorio): se elige de la lista. Hay que crear al
     menos una categoria antes de poder crear productos.
-  Campo "Nombre" (obligatorio): recomendado 50 / maximo 90 caracteres. Es el
-    H1 de la ficha del producto y el titulo de la pestana del navegador.
-  Campo "Slug": se genera solo al crear; solo se edita al editar un producto
+  Campo "Nombre" (obligatorio): recomendado 50 / maximo 90 caracteres
+    (contando el lema). Usar el formato "CODIGO | lema" (ver 4.0) y, si se
+    quiere fijar el orden, el numero al inicio (ver 4.4).
+    Ej.: "1 - DA300 | Potencia y flexibilidad para operaciones exigentes".
+    El codigo es el H1 de la ficha; el nombre completo (sin el numero) es el
+    titulo de la pestana del navegador.
+  Campo "Slug": se genera solo al crear, a partir del nombre (incluido el
+    numero de orden, si lo lleva); solo se edita al editar un producto
     existente. Es la direccion de la ficha: /productos/<slug>. Cambiarlo
     rompe el enlace anterior.
-  Campo "Descripcion": texto del detalle del producto.
-    - Recomendado 200-600 caracteres. Se muestra como un solo parrafo de
-      texto plano (NO acepta HTML ni saltos de linea con formato).
-    - Si se deja vacia, la ficha muestra "Escribenos para recibir la ficha
-      tecnica y las especificaciones de este equipo."
+  Campo "Descripcion" (OBLIGATORIO: el servidor no deja guardar sin ella).
+    El sitio la interpreta de una de dos formas:
+    a) TEXTO PLANO pegado de una ficha tecnica:
+       - Los renglones normales al inicio se unen en un solo parrafo de
+         resumen.
+       - Los renglones que empiezan con vineta ("•", "-", "*") y tienen la
+         forma "Etiqueta: valor" se convierten en la tabla
+         "Especificaciones" (ej. "• Presion de entrada: 60 psi").
+       - Las demas vinetas forman la lista "Caracteristicas".
+    b) HTML (si el texto lleva etiquetas como <p>, <ul>, <li>, <strong>):
+       - Se muestra tal cual en el bloque "Descripcion". Un parrafo que es
+         solo negritas (<p><strong>...</strong></p>) se convierte en
+         subtitulo. Se eliminan scripts, iframes y formularios.
+       - Se puede usar la clase highlight_tag (ver 1.2), ej.
+         <p class="highlight_tag">Tectuus Proveedor autorizado de
+         Fornovogas.</p>
+    En ambos casos el primer parrafo es el resumen que aparece en la tarjeta
+    del catalogo y en la descripcion para buscadores; las 3 primeras
+    especificaciones (o caracteristicas) tambien salen en la tarjeta.
+    Recomendado: resumen de 200-400 caracteres + especificaciones.
+    No dejar solo un "." como relleno: el sitio lo trata como vacio y la
+    ficha queda sin descripcion.
   Campo "Precio": numero con hasta 2 decimales.
     - Se muestra formateado en pesos mexicanos (ej. $189,500.50).
-    - DEJARLO VACIO tiene significado: la ficha muestra "Precio a cotizar",
-      que es lo normal en equipo industrial. No poner 0 para eso.
+    - DEJARLO VACIO tiene significado: la tarjeta muestra "Cotizar" y la
+      ficha "A cotizar", que es lo normal en equipo industrial. No poner 0
+      para eso.
   Campo "Imagenes": se pueden agregar varias, en orden.
     - Tamano recomendado: 1200 x 900 px (relacion 4:3), JPG, menos de
       800 KB.
-    - Se recortan a 4:3 tanto en la tarjeta del catalogo como en la ficha y
-      en las miniaturas.
-    - La PRIMERA imagen es la que se usa como portada en el catalogo y como
-      imagen al compartir el producto en redes sociales. Conviene que sea la
-      mas representativa.
+    - En la ficha se recortan a 4:3 (imagen grande y miniaturas). En la
+      tarjeta del catalogo la PRIMERA imagen sale como una miniatura
+      CUADRADA pequena (~56 px), recortada al centro: el equipo debe estar
+      centrado en la foto.
+    - La PRIMERA imagen es tambien la que se usa al compartir el producto
+      en redes sociales. Conviene que sea la mas representativa.
     - Si hay 2 o mas, la ficha muestra miniaturas para cambiar la imagen
       grande. Con una sola, no aparecen miniaturas.
-    - Si no se sube ninguna, se muestra la placa en blanco.
+    - Si no se sube ninguna, la tarjeta muestra un icono de industria y la
+      ficha no muestra el bloque "Imagenes".
     - Fondo recomendado: claro y uniforme, para que todas las fichas se vean
       consistentes.
   Casilla "Activo (visible en el sitio publico)":
@@ -357,42 +507,80 @@ barra de filtros del catalogo.
     - Importante: en el panel se siguen viendo los productos inactivos; en
       el sitio publico no.
   *** NOTA SOBRE LA PUBLICACION ***
-  El sitio se genera de forma estatica: los cambios en categorias y
-  productos se ven en el sitio publico hasta la siguiente
-  compilacion/despliegue, no al instante.
+  Como todo el sitio, los cambios en categorias y productos se ven en el
+  sitio publico hasta "Reconstruir sitio" (ver "PUBLICAR" al inicio), no al
+  instante.
 
 --- 4.3 Encabezado de la pagina /productos (page_hero) -----------------------
-  Mismas reglas que el punto 2.1. Si no se llena, el sitio muestra
-  "Productos" / "Equipo industrial para gas natural."
+  Mismas reglas que el punto 2.1. El sitio muestra "Productos" / "Equipo
+  industrial para gas natural." solo si el CMS no responde.
 
---- 4.4 Buscador y filtros del catalogo --------------------------------------
+--- 4.4 Orden de categorias y productos (numero al inicio del nombre) --------
+El CMS no tiene un campo de orden para los productos (y el de categorias,
+"Posicion", queda por debajo de este mecanismo), asi que el orden se fija
+escribiendo un NUMERO al inicio del nombre, seguido de un guion:
+  Categorias: "1 - EDRM", "2 - Compresores", "3 - Desarrollo de Software"
+  Productos:  "1 - EDRM-500", "2 - EDRM-1000", "3 - EDRM-2000"
+El numero solo define el orden y NUNCA se muestra en el sitio. Respetar el
+formato "N - Nombre" (numero, guion, nombre); "N. Nombre" o "N) Nombre" no
+funcionan.
+  CATEGORIAS: se ordenan por ese numero en todos lados a la vez (botones de
+    filtro, repisas del catalogo, submenu "Productos" y el nombre de linea
+    en la ficha). Las categorias SIN numero van despues de las numeradas, en
+    el orden de su campo "Posicion". El numero se quita del nombre siempre.
+  PRODUCTOS: se ordenan DENTRO de su categoria (en la repisa del catalogo,
+    en la lista "Mas de ..." de la ficha y en el titulo de la ficha). La
+    regla es de todo o nada por categoria: el orden por numero solo se
+    aplica si TODOS los productos de esa categoria llevan numero y NO hay
+    dos con el mismo numero. Si falta uno o se repite un numero, la
+    categoria entera se queda en el orden del servidor (alfabetico por
+    nombre) y los nombres se muestran TAL CUAL, con el numero visible. Al
+    agregar un producto a una categoria numerada, darle su numero.
+  Recordatorio: el slug se genera a partir del nombre, numero incluido
+  (ej. "1-edrm-500"). Si se prefiere una direccion sin numero, corregir el
+  slug al editar el producto, antes de compartir el enlace.
+
+--- 4.5 Ficha del producto (/productos/<slug>) -------------------------------
+Se arma sola con los datos del producto: ruta de navegacion (Productos >
+categoria > codigo), nombre y lema, Descripcion / Especificaciones /
+Caracteristicas, Imagenes, y a la derecha una tarjeta con el precio, el
+modelo, la linea, los botones "Cotizar ahora" y "Ver catalogo", y la lista
+"Mas de <categoria>" con hasta 4 productos de la misma categoria.
+Al final lleva un formulario de cotizacion FIJO (no editable desde el panel):
+  - Panel de contacto con el encabezado "Cotiza con un especialista".
+  - Formulario "Solicita una cotizacion", con el texto "Cuentanos que
+    necesitas de <codigo> y un asesor te contacta." y el boton "Enviar
+    solicitud".
+Los mensajes llegan a Tectuus > Contacto con origen "productos".
+
+--- 4.6 Buscador y filtros del catalogo --------------------------------------
 Automaticos, no se configuran. El visitante filtra por categoria con botones
-y busca por nombre; la busqueda ignora acentos ("medicion" encuentra
-"medición"). El contador de resultados y el mensaje de "sin resultados" son
-fijos.
+y busca por texto; la busqueda revisa el nombre del producto, su categoria,
+su resumen y sus especificaciones, e ignora acentos ("medicion" encuentra
+"medición"). El contador de resultados ("14 productos" / "3 de 14
+productos") y el mensaje de "sin resultados" son fijos.
 Si el catalogo esta completamente vacio, el sitio muestra el mensaje
-"Catalogo en preparacion" con un boton a /contacto.
+"Catalogo en preparacion" con un boton "Solicitar informacion" a /contacto.
 
 ==============================================================================
 SECCION 5: CONTENIDO FIJO EN EL CODIGO (no editable desde el panel)
 ==============================================================================
+Todo lo de esta seccion lo cambia un desarrollador. El detalle tecnico esta
+en tectuus/technical_debt.md.
 
 --- 5.1 Favicon y logotipo ---------------------------------------------------
-  *** ESTE ES EL PENDIENTE MAS VISIBLE DE TECTUUS ***
-  El archivo favicon.svg de este proyecto es todavia el icono generico de
-  ejemplo que trae Astro (identico, byte por byte, en los 4 sitios), y en
-  Tectuus ese archivo NO solo se usa como icono de la pestana: tambien se
-  dibuja como el LOGOTIPO junto a la palabra "TECTUUS" en el encabezado y en
-  el pie de pagina de todas las paginas.
-  Se necesita: el isotipo final de Tectuus en .svg (preferido) y .ico.
-  El nombre "TECTUUS" del logo es texto, no imagen.
+  El logotipo de Tectuus ya es el definitivo: logo-tectuus.png en el
+  encabezado y logo-tectuus-white.png (version blanca) en el pie de pagina.
+  El icono de la pestana es favicon.png. Son archivos del proyecto: para
+  cambiarlos hay que entregarlos a desarrollo.
 
 --- 5.2 Nombre del sitio y SEO -----------------------------------------------
   En src/config/seo.ts:
     - Nombre del sitio: "Tectuus"
-    - Titulo por defecto: "Tectuus - Soluciones en gas natural para tu
-      industria"
-    - Descripcion por defecto para buscadores.
+    - Titulo por defecto (portada): "Tectuus - Soluciones en gas natural
+      para tu industria"
+    - Descripcion por defecto para buscadores: "Tectuus: Contribuyendo al
+      aprovechamiento integral del gas natural en la industria Mexicana".
     - Dominio de produccion: https://www.tectuus.mx  <- CONFIRMAR que es el
       dominio final.
     - Imagen para compartir en redes (og:image): NO existe. Hace falta una
@@ -403,37 +591,68 @@ SECCION 5: CONTENIDO FIJO EN EL CODIGO (no editable desde el panel)
 
 --- 5.3 Menu de navegacion ---------------------------------------------------
   El menu viene del CMS (se arma con las paginas publicadas) y el submenu de
-  "Productos" se arma solo con las categorias del catalogo. Si el CMS no
-  responde, se usa un menu de emergencia: Inicio, Sobre nosotros, Productos,
-  Contacto.
+  "Productos" se arma solo con las categorias del catalogo (en el orden de
+  4.4). Si el CMS no responde, se usa un menu de emergencia: Inicio, Sobre
+  nosotros, Productos, Contacto.
   El boton "Escribenos" del encabezado es fijo y apunta a /contacto.
 
 --- 5.4 Textos fijos del pie de pagina ---------------------------------------
-  - Frase bajo el logo: "Ingenieria y equipo industrial para gas natural:
-    EDRM, compresoras y valvuleria."
+  - Frase bajo el logo: "Tectuus, contribuyendo al aprovechamiento integral
+    del gas natural en la industria Mexicana"
   - Linea inferior: "Tectuus, parte de GNU Gas Natural. Todos los derechos
     reservados, <ano>." El ano se calcula solo.
   - "Aviso de privacidad" y "Terminos y condiciones": HOY son solo texto, NO
     son enlaces. Faltan las paginas legales.
+
+--- 5.5 Bloque "Ingenieria que transforma necesidades en soluciones" ---------
+  En la portada, justo despues del texto enriquecido, hay un bloque con foto
+  a la izquierda (recortada a 4:3) y, a la derecha, el titulo "Ingenieria
+  que transforma necesidades en soluciones", tres parrafos ("Mas de 18 anos
+  transformando conocimiento...") y el remate en cursiva "Ingenieria y
+  control que impulsan cada proyecto.". Todo esta escrito en el codigo
+  (public/home/ingenieria-soluciones.jpg) porque ningun tipo de seccion del
+  CMS lleva imagen + titulo + texto.
+
+--- 5.6 Panel de contacto junto a cada formulario ----------------------------
+  Aparece a la izquierda de los formularios de la portada, de /contacto y de
+  las fichas de producto. Partes fijas:
+    - Ilustracion (dos globos de conversacion en verde,
+      public/contact-illustration.png).
+    - Encabezado: "Encuentra la solucion que necesitas" ("Cotiza con un
+      especialista" en las fichas de producto).
+    - Texto: "Cuentanos que equipo, tecnologia o solucion estas buscando.
+      Nuestro equipo puede orientarte para encontrar la opcion adecuada
+      para tu operacion."
+  Los datos de contacto y el boton de WhatsApp del panel SI son editables
+  (ver 1.5).
+
+--- 5.7 Segunda imagen de "Sobre nosotros" -----------------------------------
+  Debajo de la imagen del texto enriquecido de /sobre-nosotros (la que se
+  carga en "Portada del video") el sitio agrega una segunda foto fija
+  (public/about/nuestra-experiencia.jpg, un ingeniero revisando planos). El
+  CMS solo admite una imagen por bloque de texto.
 
 ==============================================================================
 TABLA RESUMEN RAPIDA DE IMAGENES (valores para TECTUUS)
 ==============================================================================
 Elemento                        | Tamano recomendado | Relacion | Formato | Peso max
 --------------------------------|--------------------|----------|---------|---------
-Banner del carrusel (portada)   | 1600 x 1200 px     | 4:3 (*)  | JPG     | 1 MB
+Banner del carrusel (portada)   | 2400 x 1000 px     | 2.4:1    | JPG/GIF | 1 MB
 Encabezado de pagina interior   | 2400 x 900 px      | 2.6:1    | JPG     | 1 MB
+Imagen junto al texto (*)       | 1600 x 900 px      | 16:9     | JPG     | 1 MB
 Logo de cliente                 | 800 x 500 px       | 16:10    | PNG**   | 300 KB
-Imagen de galeria               | 1200 x 900 px      | 4:3      | JPG     | 800 KB
-Imagen de producto              | 1200 x 900 px      | 4:3      | JPG     | 800 KB
+Imagen de galeria (hoy oculta)  | 1200 x 900 px      | 4:3      | JPG     | 800 KB
+Imagen de producto              | 1200 x 900 px      | 4:3 (***)| JPG     | 800 KB
 Imagen de categoria (no se ve)  | 800 x 500 px       | 16:10    | JPG     | 500 KB
 Imagen para compartir en redes  | 1200 x 630 px      | 1.91:1   | JPG     | 500 KB
   (hoy no existe, ver 5.2)      |                    |          |         |
-(*) El panel sugiere 2400x1000 (2.4:1) porque es el valor generico de los
-    otros sitios; en Tectuus el banner se recorta a 4:3. Seguir esta tabla.
-(**) PNG con fondo transparente. Los logos se muestran completos (contain)
-    con altura maxima ~44 px: preferir logos horizontales.
-Limite absoluto del servidor para cualquier imagen: 5 MB.
+(*) Campo "Portada del video" del texto enriquecido. En Tectuus se muestra a
+    la derecha del texto cuando el bloque no tiene video (ver 1.2).
+(**) PNG con fondo transparente. Los logos se muestran completos (contain),
+    en gris en la cinta de logos: preferir logos horizontales.
+(***) En la tarjeta del catalogo la primera imagen se recorta a un cuadrado
+    pequeno: centrar el equipo en la foto.
+Limite absoluto del servidor para cualquier imagen: 20 MB.
 
 ==============================================================================
 TABLA RESUMEN RAPIDA DE TEXTOS
@@ -451,50 +670,71 @@ Descripcion de cliente                   | 100 caracteres     | 160
 Cita / testimonio de cliente             | 120 caracteres     | 200
 Titulo del formulario de contacto        | 40 caracteres      | 60
 Introduccion del formulario              | 120 caracteres     | 160
+Texto del boton del formulario           | 2-4 palabras       | 60 (limite duro)
 Informacion adicional (contacto)         | 150 caracteres     | 280
 Nombre de categoria de producto          | 30 caracteres      | 50
 Nombre de producto                       | 50 caracteres      | 90
-Descripcion de producto                  | 200-600 caracteres | sin limite duro
+Resumen de la descripcion de producto    | 200-400 caracteres | sin limite duro
 Pie de foto de galeria                   | 40-80 caracteres   | 120
 Contenido de texto enriquecido           | 300-1500 caracteres| sin limite duro
 
-NOTA FINAL: ninguno de estos limites es forzado por el sistema. El panel
-avisa con un contador, pero deja guardar. Son recomendaciones de diseno.
+NOTA FINAL: salvo el texto del boton del formulario (60 caracteres), ninguno
+de estos limites es forzado por el sistema. El panel avisa con un contador,
+pero deja guardar. Son recomendaciones de diseno.
 
 ==============================================================================
 PENDIENTES TECNICOS DETECTADOS (para reportar a desarrollo, no para el editor)
 ==============================================================================
-1. El favicon por defecto de Astro se usa como LOGOTIPO de Tectuus en el
-   encabezado y en el pie de pagina de todo el sitio. Es lo mas visible de
-   corregir: hace falta el isotipo real en .svg y .ico.
-2. La recomendacion de imagen del carrusel en el panel (2400x1000, 2.4:1) no
-   corresponde con lo que hace este sitio (recorte 4:3). O se corrige el
-   texto de ayuda del panel para Tectuus, o se cambia el recorte del
-   componente. Hoy el editor recibe una instruccion equivocada.
-3. Los campos "Descripcion" e "Imagen" de las CATEGORIAS de producto se
-   capturan en el panel pero no se muestran en ningun lado del sitio
-   publico. O se usan (por ejemplo, en una portada de categoria), o se
-   quitan del formulario para no hacer trabajar al editor de mas.
-4. La descripcion del producto se pinta como texto plano en un solo parrafo:
-   no admite listas ni saltos de linea. Para fichas tecnicas de equipo
-   industrial probablemente haga falta texto enriquecido o una tabla de
-   especificaciones.
-5. Falta la imagen para compartir en redes (og:image, 1200x630) y confirmar
-   el dominio de produccion https://www.tectuus.mx.
-6. "Aviso de privacidad" y "Terminos y condiciones" del pie son texto sin
-   enlace: faltan las paginas legales.
-7. No hay aviso por correo cuando llega un mensaje del formulario: la unica
-   via es revisar la bandeja del panel. Esta registrado como decision, pero
-   conviene confirmarlo con el cliente.
-8. Si el CMS no responde, la portada cae a un contenido de ejemplo completo
-   escrito en el codigo (3 banners, 6 "Cliente 1..6", 3 tarjetas EDRM /
-   Compresoras / Valvuleria). Sirve para que la pagina nunca se vea vacia,
-   pero hay que verificar en el sitio en vivo que no sea lo que se esta
-   publicando hoy.
-9. Los botones fijos del carrusel ("Conoce nuestros productos" y
-   "Contactanos") no son editables. Confirmar si el cliente los quiere asi.
+1. El boton del banner de la portada apunta hoy a
+   http://localhost:4321/productos (una direccion de pruebas): en el sitio
+   en vivo ese boton no lleva a ningun lado. Corregirlo en el panel con la
+   direccion publica completa. De fondo, el servidor exige direcciones
+   completas (https://...) en "Enlace del boton", lo que empuja a escribir
+   dominios a mano; convendria aceptar rutas internas como "/productos".
+2. El panel sigue diciendo "5 MB" en el mensaje de archivo demasiado grande
+   y en las ayudas de los campos de imagen, pero el servidor acepta hasta
+   20 MB y el panel bloquea a partir de 25 MB. Unificar los tres valores.
+3. En Tectuus el campo "Portada del video" del texto enriquecido es en
+   realidad la imagen lateral del bloque (y su ayuda dice 1280x720). El
+   nombre y la ayuda confunden al editor.
+4. La galeria "Nuestra experiencia" de /sobre-nosotros esta oculta desde el
+   codigo porque en el CMS tiene fotos repetidas y pies de foto de relleno.
+   El panel no permite ocultar una sola seccion; hoy hay que pedirlo a
+   desarrollo.
+5. Hay contenido fijo en el codigo que el cliente probablemente quiera
+   editar: el bloque "Ingenieria que transforma necesidades en soluciones"
+   de la portada, la segunda imagen de Sobre nosotros, y la ilustracion y
+   los textos del panel de contacto (ver seccion 5 y
+   tectuus/technical_debt.md). Hacen falta campos nuevos en el CMS (imagen
+   en rich_text, varias imagenes por rich_text, textos e imagen del panel
+   de contacto).
+6. El formulario de cotizacion de las fichas de producto no guarda de que
+   producto se trata: el mensaje llega con origen "productos" y nada mas.
+   Ademas la bandeja muestra "productos" en minusculas y su encabezado dice
+   "Mensajes recibidos desde los formularios de Inicio y Contacto".
+7. El orden del catalogo depende de escribir numeros en los nombres (ver
+   4.4): el campo "Posicion" de categorias queda en segundo plano, los
+   productos no tienen campo de orden, y el slug generado arrastra el
+   numero. Un campo de orden real en categorias y productos lo resolveria.
+8. La "Descripcion" de las categorias casi no se usa (solo como nombre de
+   respaldo, ver 4.1) y la "Imagen" de categoria no se muestra en ningun
+   lado. O se usan, o se quitan del formulario.
+9. La descripcion del producto se escribe en un cuadro de texto simple, pero
+   el sitio la interpreta como HTML o como ficha tecnica con vinetas (ver
+   4.2), sin vista previa. Un editor de texto enriquecido o una tabla de
+   especificaciones en el panel evitaria errores.
+10. Falta la imagen para compartir en redes (og:image, 1200x630) y confirmar
+    el dominio de produccion https://www.tectuus.mx.
+11. "Aviso de privacidad" y "Terminos y condiciones" del pie son texto sin
+    enlace: faltan las paginas legales.
+12. No hay aviso por correo cuando llega un mensaje del formulario: la unica
+    via es revisar la bandeja del panel. Esta registrado como decision, pero
+    conviene confirmarlo con el cliente.
+13. Si el CMS no responde, la portada cae a un contenido de ejemplo completo
+    escrito en el codigo (3 banners, 6 "Cliente 1..6", 3 tarjetas EDRM /
+    Compresoras / Valvuleria). Sirve para que la pagina nunca se vea vacia,
+    pero hay que verificar en el sitio en vivo que no sea lo que se esta
+    publicando hoy.
+14. Los botones fijos del carrusel ("Conoce nuestros productos" y
+    "Contactanos") no son editables. Confirmar si el cliente los quiere asi.
 ==============================================================================
-
-- **Ordering**: the CMS has no sort field for categories or products, so editors order them with a numeric prefix on the name (`1 - EDRM`, `2 - Compresores`; `1 - EDRM-500`). The prefix only sets the order and is never shown on the site. Keep the `N - Name` format (number, dash).
-  - **Categories** are sorted by the prefix in `fetchCategories()`, so the chips, shelves and Productos submenu all share one order. Categories without a prefix keep API order after the numbered ones.
-  - **Products** are sorted within their category by `orderByPrefix()`, on the catalog shelves and on the product page (title, "Más de …" list). A category is only reordered when **every** product in it has a prefix and no two share a number. Otherwise the whole category keeps the server's order and names unchanged, prefixes included.

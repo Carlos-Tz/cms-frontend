@@ -35,7 +35,7 @@ const {
 
 <div class="card" id={`${formId}-panel`}>
   <img class="card__brand-logo" src={logo.src} width={logo.width} height={logo.height} alt="GNU Gas Natural" />
-  <p class="card__title" style="margin-bottom: 1rem;">{title}</p>
+  <p class="card__title lead-form__title" style="margin-bottom: 1rem;">{title}</p>
   {intro && <p class="card__text" style="margin-bottom: 1rem;">{intro}</p>}
   <form id={formId}>
     {fields.map((field) => {

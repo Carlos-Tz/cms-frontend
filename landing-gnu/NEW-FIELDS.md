@@ -1,16 +1,16 @@
-# New CMS fields needed
+# Campos nuevos que necesita el CMS
 
-Fields the frontend is already built to render, but that don't exist in the
-CMS/admin yet. Each entry: the section type, the field, its shape, and where
-it's used.
+Campos que el frontend ya está preparado para renderizar, pero que todavía no
+existen en el CMS/panel. Cada entrada indica: el tipo de sección, el campo, su
+forma y dónde se usa.
 
 ---
 
 ## `feature_grid.image`
 
-An optional 16:9 banner image above the section title, rendered on top of
-the existing icon-card grid (`feature_grid.items`). Reference size: **1024 x
-576px** (16:9), same convention as `page_hero.image`.
+Una imagen de banner 16:9 opcional arriba del título de la sección, que se renderiza
+encima de la cuadrícula de tarjetas con ícono que ya existe (`feature_grid.items`).
+Tamaño de referencia: **1024 x 576px** (16:9), la misma convención que `page_hero.image`.
 
 ```json
 {
@@ -25,10 +25,10 @@ the existing icon-card grid (`feature_grid.items`). Reference size: **1024 x
 }
 ```
 
-| Field   | Type             | Required | Notes                                   |
+| Campo   | Tipo             | Requerido | Notas                                   |
 | ------- | ---------------- | -------- | ---------------------------------------- |
-| `image` | string (media path) or null | No | 1024x576px (16:9). Section renders without a banner when omitted — fully backward compatible with existing `feature_grid` sections (e.g. `/sobre-nosotros/valores`). |
+| `image` | string (ruta de medio) o null | No | 1024x576px (16:9). Si se omite, la sección se renderiza sin banner — totalmente compatible con las secciones `feature_grid` existentes (p. ej. `/sobre-nosotros/valores`). |
 
-Frontend: `src/components/sections/FeatureGrid.astro` already reads
-`Astro.props.image` and renders it via `mediaUrl()` — nothing else to change
-once the admin exposes the field and a page sets it.
+Frontend: `src/components/sections/FeatureGrid.astro` ya lee
+`Astro.props.image` y la renderiza con `mediaUrl()` — no hay nada más que
+cambiar una vez que el panel exponga el campo y una página lo defina.
