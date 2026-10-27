@@ -79,7 +79,7 @@ const config = JSON.stringify({ comparableFuels, gasNaturalPrice, apiBase: BASE_
     <div class="simulator__result" aria-live="polite">
       <div class="simulator__result-glow" aria-hidden="true"></div>
       <p class="simulator__result-label simulator__result-label--top">Ahorro mensual estimado</p>
-      <p class="simulator__result-value savings-simulator-value">$0 MXN</p>
+      <p class="simulator__result-value savings-simulator-value"><span class="simulator__result-amount">$0</span> <span class="simulator__result-currency">MXN</span></p>
       <p class="simulator__result-label savings-simulator-annual">Ahorro anual estimado: $0 MXN</p>
       <div class="simulator__meter" aria-hidden="true"><span class="simulator__meter-fill savings-simulator-meter"></span></div>
       <p class="simulator__percent savings-simulator-percent" hidden></p>
@@ -121,18 +121,22 @@ const config = JSON.stringify({ comparableFuels, gasNaturalPrice, apiBase: BASE_
 
   const FALLBACK_SAVINGS_RATE = 0.35;
   const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const money = (value: number) => `$${Math.round(value).toLocaleString("es-MX")} MXN`;
+  const amount = (value: number) => `$${Math.round(value).toLocaleString("es-MX")}`;
+  // Non-breaking space: "MXN" never wraps onto a line of its own.
+  const money = (value: number) => `${amount(value)} MXN`;
 
+  // Counts the big result up. Only the number span changes ("MXN" is its own
+  // span), so the line keeps a stable shape while the digits roll.
   function animateCount(el: HTMLElement, from: number, to: number, duration: number) {
     if (prefersReducedMotion || from === to) {
-      el.textContent = money(to);
+      el.textContent = amount(to);
       return;
     }
     const start = performance.now();
     function tick(now: number) {
       const progress = Math.min(1, (now - start) / duration);
       const eased = 1 - Math.pow(1 - progress, 3);
-      el.textContent = money(from + (to - from) * eased);
+      el.textContent = amount(from + (to - from) * eased);
       if (progress < 1) requestAnimationFrame(tick);
     }
     requestAnimationFrame(tick);
@@ -173,6 +177,7 @@ const config = JSON.stringify({ comparableFuels, gasNaturalPrice, apiBase: BASE_
     const input = root.querySelector<HTMLInputElement>(".savings-simulator-spend");
     const submit = root.querySelector<HTMLButtonElement>('button[type="submit"]');
     const valueEl = root.querySelector<HTMLElement>(".savings-simulator-value");
+    const amountEl = valueEl?.querySelector<HTMLElement>(".simulator__result-amount");
     const annualEl = root.querySelector<HTMLElement>(".savings-simulator-annual");
     const meterEl = root.querySelector<HTMLElement>(".savings-simulator-meter");
     const percentEl = root.querySelector<HTMLElement>(".savings-simulator-percent");
@@ -219,7 +224,7 @@ const config = JSON.stringify({ comparableFuels, gasNaturalPrice, apiBase: BASE_
       showBreakdown(serverResult);
       const monthly = serverResult ? Math.max(0, Math.round(serverResult.savings)) : localSavings(config, fuel, spend);
 
-      animateCount(valueEl, animate ? currentMonthly : monthly, monthly, animate ? 650 : 0);
+      animateCount(amountEl ?? valueEl, animate ? currentMonthly : monthly, monthly, animate ? 650 : 0);
       currentMonthly = monthly;
       valueEl.classList.remove("is-updated");
       void valueEl.offsetWidth;

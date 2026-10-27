@@ -1821,6 +1821,24 @@ body.nav-open {
   transform: scale(1.04);
 }
 
+/* Amount and "MXN" stay on one line, so the count-up can't flip the value
+   between one and two lines (which made the card jump on large amounts).
+   The size follows the result card's width (cqi), so six-figure amounts
+   still fit; "MXN" is a smaller suffix. */
+.simulator__result {
+  container-type: inline-size;
+}
+
+.simulator__result-value {
+  white-space: nowrap;
+  font-size: min(3rem, 15cqi);
+}
+
+.simulator__result-currency {
+  font-size: 0.5em;
+  letter-spacing: 0;
+}
+
 .simulator__result-label {
   margin-top: 0.375rem;
   font-size: 0.8125rem;
@@ -5092,6 +5110,35 @@ body:not(:has(.whatsapp-fab)) .sim-fab {
 .field textarea:focus {
   outline: none;
   box-shadow: 0 0 0 4px rgba(31, 92, 169, 0.22);
+}
+
+/* Simulator fields echo the "Calcular ahorro" button once clicked/focused:
+   the brand gradient as the border (a white padding-box layer over a
+   gradient border-box layer) and the button's blue glow. The select keeps
+   its chevron as the top layer. */
+.sim .field:not(.field--on-dark) :is(input, select):focus {
+  border-color: transparent;
+  background: linear-gradient(#ffffff, #ffffff) padding-box, var(--gradient-brand) border-box;
+  box-shadow: var(--shadow-glow);
+}
+
+.sim .field:not(.field--on-dark) select:focus {
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%231f5ca9' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E")
+      right 1rem center / 0.875rem no-repeat padding-box,
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    var(--gradient-brand) border-box;
+}
+
+/* Dark floating panel: a sky-blue border and the same glow (a white
+   padding-box layer would break the translucent dark field). */
+.sim .field--on-dark :is(input, select):focus {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-glow);
+}
+
+.sim__money:focus-within .sim__money-sign {
+  color: var(--color-accent);
 }
 
 /* The contact band and the stations map below it read as one block. */
