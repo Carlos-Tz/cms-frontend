@@ -215,4 +215,12 @@ const stepLabel = (index: number) => String(index + 1).padStart(2, "0");
 	.feature-card:hover .feature-rule {
 		background-size: 40% 3px;
 	}
+
+	/* The CMS artwork is 2.67:1. Across a phone-width card that is a ~120px
+	   strip, so the frame gets taller and the crop absorbs the difference. */
+	@media (max-width: 560px) {
+		.feature-media {
+			aspect-ratio: 16 / 9;
+		}
+	}
 </style>
