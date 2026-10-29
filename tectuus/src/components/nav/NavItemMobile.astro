@@ -13,6 +13,11 @@ const hasChildren = item.children?.length > 0;
   <details class="nav-mobile__item">
     <summary>{item.title}</summary>
     <div class="nav-mobile__sublist">
+      {/* The summary only opens the list, so the section's own page needs
+          its own link (the desktop label links there directly). */}
+      <a class="nav-mobile__all" href={item.path}>
+        Ver todo<i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+      </a>
       {item.children.map((child) =>
         child.children?.length > 0 ? (
           <details class="nav-mobile__item nav-mobile__item--nested">

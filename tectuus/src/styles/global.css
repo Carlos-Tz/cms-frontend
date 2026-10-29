@@ -600,16 +600,36 @@ button {
   background: var(--color-bg);
 }
 
-.nav-mobile a {
-  padding: 0.7rem 0;
-  font-size: 0.9375rem;
+/* Menu rows only: the drawer also holds the "Escríbenos" button and the
+   social icons, which keep their own styles. Block-level so every link is
+   its own row — inside a submenu the links are not flex children, and
+   inline they ran together into one line. */
+/* :where() keeps this at single-class weight so the submenu's own link
+   rules (.nav-mobile__sublist a) still win over it. */
+.nav-mobile :where(a:not(.btn-primary):not(.social-icon)) {
+  display: block;
+  padding: 0.85rem 0;
+  font-size: 1rem;
   color: var(--color-text);
   border-bottom: 1px solid var(--color-border);
 }
 
-
 .nav-mobile .btn-primary {
+  margin-top: 1.5rem;
+  justify-content: center;
+  width: 100%;
+}
+
+.nav-mobile .social-row--nav-mobile {
   margin-top: 1.25rem;
+  gap: 0.75rem;
+}
+
+/* Thumb-sized targets in the drawer. */
+.nav-mobile .social-icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 1rem;
 }
 
 .nav-item {
@@ -709,9 +729,28 @@ button {
 .nav-mobile__item summary {
   list-style: none;
   cursor: pointer;
-  padding: 0.7rem 0;
-  font-size: 0.9375rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  font-size: 1rem;
   border-bottom: 1px solid var(--color-border);
+}
+
+/* Chevron on the right, turning as the submenu opens. */
+.nav-mobile__item summary::after {
+  content: "\f078";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  font-size: 0.75rem;
+  color: var(--color-text-60);
+  transition: transform 0.2s var(--ease-out);
+}
+
+.nav-mobile__item[open] > summary::after {
+  transform: rotate(180deg);
+  color: var(--color-primary);
 }
 
 .nav-mobile__item summary::-webkit-details-marker {
@@ -724,14 +763,32 @@ button {
 }
 
 .nav-mobile__sublist {
-  padding-left: 0.9rem;
-  border-left: 1px solid var(--color-line-soft);
-  margin: 0.35rem 0 0.35rem 0.25rem;
+  padding-left: 1rem;
+  border-left: 2px solid var(--color-line-soft);
+  margin: 0.25rem 0 0.75rem 0.15rem;
 }
 
 .nav-mobile__sublist a {
-  font-size: 0.875rem;
+  padding: 0.7rem 0;
+  font-size: 0.9375rem;
   color: var(--color-text-60);
+}
+
+.nav-mobile__sublist a:last-child {
+  border-bottom: none;
+}
+
+/* "Ver todo" — the section's own page, set apart as an action. */
+.nav-mobile__all {
+  display: flex !important;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--color-accent-alt) !important;
+}
+
+.nav-mobile__all i {
+  font-size: 0.75rem;
 }
 
 .nav-mobile__item--nested summary {
@@ -2197,6 +2254,50 @@ button {
   .contact-split {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  /* Stacked above the form, the panel reads as the section's intro: art,
+     heading and copy centred; the contact rows stay left-aligned beside
+     their icons (centred text next to icons scans badly) but the block
+     itself is centred. */
+  .contact-panel {
+    text-align: center;
+  }
+
+  .contact-panel__art img {
+    max-width: 12rem;
+    margin-inline: auto;
+  }
+
+  .contact-panel__heading {
+    margin-top: 1.25rem;
+  }
+
+  .contact-panel__intro {
+    margin-inline: auto;
+  }
+
+  .contact-panel__details {
+    grid-template-columns: repeat(2, auto);
+    justify-content: center;
+    text-align: left;
+  }
+
+  .contact-panel__whatsapp {
+    display: flex;
+    width: max-content;
+    margin-inline: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .contact-panel__details {
+    grid-template-columns: auto;
+  }
+
+  .contact-panel__whatsapp {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
 /* The illustration is a cut-out (transparent PNG), so it sits straight on
@@ -2261,11 +2362,6 @@ button {
   gap: 1rem 1.25rem;
 }
 
-@media (max-width: 520px) {
-  .contact-panel__details {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
 
 .contact-panel__item {
   display: flex;
@@ -2890,6 +2986,49 @@ button {
 @media (max-width: 800px) {
   .footer-grid {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+}
+
+/* Phones: one column, with the short navigation list set in two columns so
+   the footer isn't a long single-file scroll, and room at the bottom so the
+   WhatsApp button never sits on the legal line. */
+@media (max-width: 640px) {
+  .site-footer {
+    padding-top: 2.5rem;
+  }
+
+  .footer-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+  .brand--on-dark .brand__logo {
+    height: 3.25rem;
+  }
+
+  .footer-tagline {
+    margin-top: 1rem;
+  }
+
+  .footer-nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 1rem;
+  }
+
+  .footer-nav .footer-heading {
+    grid-column: 1 / -1;
+  }
+
+  .footer-link {
+    padding: 0.45rem 0;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: 2rem;
+    padding-bottom: 4.5rem;
   }
 }
 

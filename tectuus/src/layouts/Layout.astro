@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
 import { fetchData, FALLBACK_IMAGE } from "../functions/fetch";
-import { fetchCategories } from "../functions/catalog";
+import { categoryLabel, fetchCategories } from "../functions/catalog";
 import { seo } from "../config/seo";
 import NavItem from "../components/nav/NavItem.astro";
 import NavItemMobile from "../components/nav/NavItemMobile.astro";
@@ -51,7 +51,9 @@ const categories = await fetchCategories();
 const categoryChildren: MenuItem[] = categories.map((category) => ({
   slug: category.slug,
   path: `/productos?category=${category.slug}`,
-  title: category.name,
+  // Short label ("EDRM", not "EDRM | Regulación y Medición con Control"),
+  // the same one the catalog filter chips use.
+  title: categoryLabel(category).head,
   children: [],
 }));
 
@@ -244,12 +246,12 @@ const whatsappHref = whatsappDigits
               ))}
             </div>
           </div>
-          <div>
+          <nav class="footer-nav" aria-label="Pie de página">
             <p class="footer-heading">Navegación</p>
             {menuItems.map((item) => (
               <a class="footer-link" href={item.path}>{item.title}</a>
             ))}
-          </div>
+          </nav>
           <div>
             <p class="footer-heading">Contacto</p>
             {footerAddress && (
